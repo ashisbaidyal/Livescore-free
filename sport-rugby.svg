@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5f2a31"/>
+      <stop offset="100%" stop-color="#2f1519"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="280" rx="20" fill="url(#g)"/>
+  <ellipse cx="112" cy="140" rx="74" ry="50" fill="#d9ab84"/>
+  <path d="M72 116c20 16 20 34 0 50" fill="none" stroke="#8a5336" stroke-width="6"/>
+  <path d="M152 116c-20 16-20 34 0 50" fill="none" stroke="#8a5336" stroke-width="6"/>
+  <line x1="98" y1="140" x2="126" y2="140" stroke="#f6ebdf" stroke-width="5"/>
+  <text x="212" y="130" fill="#ffe7ea" font-size="44" font-family="Arial, sans-serif" font-weight="700">Rugby</text>
+  <text x="212" y="170" fill="#efc0c7" font-size="22" font-family="Arial, sans-serif">Set-piece and score feed</text>
+</svg>

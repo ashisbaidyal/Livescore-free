@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1b3f7a"/>
+      <stop offset="100%" stop-color="#0d1f3d"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="280" rx="20" fill="url(#g)"/>
+  <circle cx="112" cy="140" r="66" fill="#ffffff" opacity="0.92"/>
+  <polygon points="112,99 131,112 124,135 100,135 93,112" fill="#1f2b4f"/>
+  <g stroke="#1f2b4f" stroke-width="7" fill="none" opacity="0.9">
+    <path d="M112 74v20"/>
+    <path d="M112 186v20"/>
+    <path d="M78 140h20"/>
+    <path d="M146 140h20"/>
+  </g>
+  <text x="212" y="130" fill="#d9ebff" font-size="44" font-family="Arial, sans-serif" font-weight="700">Football</text>
+  <text x="212" y="170" fill="#98badf" font-size="22" font-family="Arial, sans-serif">Live match coverage</text>
+</svg>

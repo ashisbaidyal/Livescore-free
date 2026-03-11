@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#356081"/>
+      <stop offset="100%" stop-color="#1a3144"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="280" rx="20" fill="url(#g)"/>
+  <circle cx="104" cy="158" r="24" fill="#0f1319"/>
+  <rect x="132" y="88" width="16" height="112" rx="8" fill="#b88f62"/>
+  <path d="M148 176h52c10 0 16 6 16 14v10h-20v-8h-48z" fill="#d2b086"/>
+  <text x="242" y="130" fill="#e5f3ff" font-size="44" font-family="Arial, sans-serif" font-weight="700">Hockey</text>
+  <text x="242" y="170" fill="#b9d6ee" font-size="22" font-family="Arial, sans-serif">Ice match timelines</text>
+</svg>

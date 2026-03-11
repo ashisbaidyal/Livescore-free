@@ -1,0 +1,14 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LiveScoreFree mark">
+  <rect width="512" height="512" rx="96" fill="none"/>
+  <path d="M90 130h332c22 0 40 18 40 40v116c0 22-18 40-40 40H90c-22 0-40-18-40-40V170c0-22 18-40 40-40Z" fill="#FFFFFF" stroke="#122544" stroke-width="24"/>
+  <line x1="104" y1="76" x2="104" y2="138" stroke="#122544" stroke-width="24" stroke-linecap="round"/>
+  <line x1="190" y1="76" x2="190" y2="138" stroke="#122544" stroke-width="24" stroke-linecap="round"/>
+  <line x1="262" y1="76" x2="262" y2="138" stroke="#122544" stroke-width="24" stroke-linecap="round"/>
+  <line x1="328" y1="76" x2="328" y2="138" stroke="#122544" stroke-width="24" stroke-linecap="round"/>
+  <line x1="132" y1="210" x2="256" y2="204" stroke="#122544" stroke-width="24" stroke-linecap="round"/>
+  <line x1="132" y1="258" x2="256" y2="254" stroke="#122544" stroke-width="24" stroke-linecap="round"/>
+  <line x1="286" y1="204" x2="402" y2="202" stroke="#43B94E" stroke-width="24" stroke-linecap="round"/>
+  <line x1="286" y1="254" x2="358" y2="252" stroke="#43B94E" stroke-width="24" stroke-linecap="round"/>
+  <line x1="286" y1="229" x2="326" y2="229" stroke="#43B94E" stroke-width="24" stroke-linecap="round"/>
+  <line x1="218" y1="326" x2="206" y2="436" stroke="#122544" stroke-width="24" stroke-linecap="round"/>
+</svg>

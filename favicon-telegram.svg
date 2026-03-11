@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Telegram">
+  <rect x="1" y="1" width="22" height="22" rx="6" fill="#2AABEE"/>
+  <path d="M18.8 6.2L4.9 11.6c-.7.3-.7 1.2.1 1.4l3.5 1 1.2 3.7c.2.6 1 .8 1.4.3l1.9-2.3 3.5 2.5c.6.4 1.4.1 1.5-.6l2.1-10c.1-.8-.6-1.5-1.3-1.2z" fill="#fff"/>
+  <path d="M8.4 13.9l7.7-6.2-6.4 7.5-.4 2.1-.9-3.4z" fill="#2AABEE"/>
+</svg>

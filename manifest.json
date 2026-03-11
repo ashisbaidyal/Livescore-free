@@ -1,0 +1,49 @@
+{
+  "name": "LiveScoreFree | Live Scores, Trending Matches, Top Leagues",
+  "short_name": "LiveScoreFree",
+  "description": "Fast live scores, commentary, lineups, player stats, and results for football, cricket, basketball, tennis, and top leagues.",
+  "start_url": "/live",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#071322",
+  "theme_color": "#071322",
+  "orientation": "any",
+  "lang": "en",
+  "categories": ["sports", "news"],
+  "icons": [
+    {
+      "src": "logo-mark.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-mark.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live Now",
+      "description": "Open live scoreboard",
+      "url": "/live"
+    },
+    {
+      "name": "Trending Matches",
+      "description": "Open trending matches",
+      "url": "/trending"
+    },
+    {
+      "name": "Top Leagues",
+      "description": "Open top leagues page",
+      "url": "/top-leagues"
+    },
+    {
+      "name": "Results",
+      "description": "Open today's results",
+      "url": "/results"
+    }
+  ]
+}

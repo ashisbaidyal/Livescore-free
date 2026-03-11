@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+  <defs>
+    <radialGradient id="bg" cx="52%" cy="38%" r="72%">
+      <stop offset="0%" stop-color="#32488f"/>
+      <stop offset="56%" stop-color="#1a2f67"/>
+      <stop offset="100%" stop-color="#08152f"/>
+    </radialGradient>
+    <radialGradient id="lights" cx="50%" cy="6%" r="56%">
+      <stop offset="0%" stop-color="#d7ecff" stop-opacity="0.85"/>
+      <stop offset="55%" stop-color="#8cb8ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#8cb8ff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <ellipse cx="800" cy="180" rx="740" ry="230" fill="url(#lights)"/>
+  <ellipse cx="800" cy="208" rx="690" ry="120" fill="none" stroke="#d6e8ff" stroke-opacity="0.45" stroke-width="8" filter="url(#blur)"/>
+  <ellipse cx="800" cy="228" rx="610" ry="95" fill="none" stroke="#9cd3ff" stroke-opacity="0.35" stroke-width="6" filter="url(#blur)"/>
+  <g opacity="0.45">
+    <circle cx="170" cy="130" r="2.3" fill="#ffffff"/>
+    <circle cx="260" cy="94" r="2" fill="#d3e8ff"/>
+    <circle cx="1250" cy="118" r="2.4" fill="#ffffff"/>
+    <circle cx="1410" cy="160" r="1.9" fill="#d1ddff"/>
+    <circle cx="1100" cy="84" r="1.7" fill="#ffffff"/>
+  </g>
+  <ellipse cx="800" cy="860" rx="980" ry="250" fill="#081327" fill-opacity="0.62"/>
+  <ellipse cx="800" cy="920" rx="720" ry="120" fill="#0a1b3b" fill-opacity="0.7"/>
+</svg>
