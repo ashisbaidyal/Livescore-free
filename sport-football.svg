@@ -1,19 +1,60 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280" fill="none">
+
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1b3f7a"/>
-      <stop offset="100%" stop-color="#0d1f3d"/>
+    <linearGradient id="football-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#29435f"/>
+      <stop offset="100%" stop-color="#0f1727"/>
     </linearGradient>
+    <radialGradient id="football-light" cx="50%" cy="0%" r="80%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="54%" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="football-frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3f3226"/>
+      <stop offset="100%" stop-color="#161617"/>
+    </linearGradient>
+    <clipPath id="football-clip"><rect x="28" y="18" width="544" height="244" rx="30"/></clipPath>
+    <filter id="football-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
   </defs>
-  <rect width="600" height="280" rx="20" fill="url(#g)"/>
-  <circle cx="112" cy="140" r="66" fill="#ffffff" opacity="0.92"/>
-  <polygon points="112,99 131,112 124,135 100,135 93,112" fill="#1f2b4f"/>
-  <g stroke="#1f2b4f" stroke-width="7" fill="none" opacity="0.9">
-    <path d="M112 74v20"/>
-    <path d="M112 186v20"/>
-    <path d="M78 140h20"/>
-    <path d="M146 140h20"/>
+  <rect width="600" height="280" fill="url(#football-frame)"/>
+  <rect x="20" y="14" width="560" height="252" rx="34" fill="#201a16"/>
+  <g clip-path="url(#football-clip)">
+    <rect x="28" y="18" width="544" height="244" rx="30" fill="url(#football-bg)"/>
+    <rect x="28" y="18" width="544" height="244" rx="30" fill="url(#football-light)"/>
+    <circle cx="300" cy="30" r="180" fill="#ffffff" opacity="0.08"/>
+    <rect x="28" y="176" width="544" height="86" fill="#0b1017" opacity="0.22"/>
+    
+  <path d="M80 196 C176 116, 426 116, 520 196" stroke="#f4fff4" stroke-opacity="0.42" stroke-width="6" stroke-linecap="round"/>
+  <path d="M300 64 L300 216" stroke="#f4fff4" stroke-opacity="0.42" stroke-width="4"/>
+  
+    <g opacity="0.78">
+      <circle cx="94" cy="36" r="10" fill="#ffffff"/>
+      <circle cx="126" cy="36" r="10" fill="#ffffff"/>
+      <circle cx="474" cy="36" r="10" fill="#ffffff"/>
+      <circle cx="506" cy="36" r="10" fill="#ffffff"/>
+    </g>
+    <rect x="44" y="34" width="76" height="76" rx="38" fill="#61d96b" opacity="0.92"/>
+    <circle cx="82" cy="72" r="26" fill="#ffffff" opacity="0.18"/>
+    <path d="M70 72c10-12 24-12 34 0" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.72"/>
+    <path d="M64 88c12 7 31 7 42 0" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.72"/>
+    <text x="144" y="64" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="34" font-weight="800">Football</text>
+    <text x="144" y="98" fill="#f3f6fb" font-family="Manrope, Arial, sans-serif" font-size="18" opacity="0.88">Live match coverage</text>
+    <g opacity="0.22" filter="url(#football-glow)"><rect x="120" y="132" width="360" height="88" rx="44" fill="#5db6ff"/></g>
+    
+  <circle cx="300" cy="144" r="44" fill="#f7fafc"/>
+  <polygon points="300,114 316,126 310,146 290,146 284,126" fill="#1f2b4f"/>
+  <g stroke="#1f2b4f" stroke-width="4" opacity="0.86">
+    <path d="M300 100v18"/><path d="M300 170v18"/>
+    <path d="M265 144h18"/><path d="M317 144h18"/>
   </g>
-  <text x="212" y="130" fill="#d9ebff" font-size="44" font-family="Arial, sans-serif" font-weight="700">Football</text>
-  <text x="212" y="170" fill="#98badf" font-size="22" font-family="Arial, sans-serif">Live match coverage</text>
+  
+  </g>
+  <rect x="28" y="18" width="544" height="244" rx="30" stroke="#f1d9a7" stroke-opacity="0.78"/>
+  <rect x="64" y="10" width="472" height="3" rx="2" fill="#fff0c6" opacity="0.82"/>
+  <rect x="64" y="266" width="472" height="3" rx="2" fill="#fff0c6" opacity="0.82"/>
+
 </svg>

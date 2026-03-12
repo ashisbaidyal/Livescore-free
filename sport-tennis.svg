@@ -1,14 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280" fill="none">
+
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#5d8a27"/>
-      <stop offset="100%" stop-color="#2f4a12"/>
+    <linearGradient id="tennis-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#57724b"/>
+      <stop offset="100%" stop-color="#141915"/>
     </linearGradient>
+    <radialGradient id="tennis-light" cx="50%" cy="0%" r="80%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="54%" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tennis-frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3f3226"/>
+      <stop offset="100%" stop-color="#161617"/>
+    </linearGradient>
+    <clipPath id="tennis-clip"><rect x="28" y="18" width="544" height="244" rx="30"/></clipPath>
+    <filter id="tennis-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
   </defs>
-  <rect width="600" height="280" rx="20" fill="url(#g)"/>
-  <circle cx="112" cy="140" r="66" fill="#d8f56a"/>
-  <path d="M66 112c20-14 68-14 92 0" fill="none" stroke="#ffffff" stroke-width="7"/>
-  <path d="M66 168c20 14 68 14 92 0" fill="none" stroke="#ffffff" stroke-width="7"/>
-  <text x="212" y="130" fill="#f2ffde" font-size="44" font-family="Arial, sans-serif" font-weight="700">Tennis</text>
-  <text x="212" y="170" fill="#d4efad" font-size="22" font-family="Arial, sans-serif">Point-by-point feed</text>
+  <rect width="600" height="280" fill="url(#tennis-frame)"/>
+  <rect x="20" y="14" width="560" height="252" rx="34" fill="#201a16"/>
+  <g clip-path="url(#tennis-clip)">
+    <rect x="28" y="18" width="544" height="244" rx="30" fill="url(#tennis-bg)"/>
+    <rect x="28" y="18" width="544" height="244" rx="30" fill="url(#tennis-light)"/>
+    <circle cx="300" cy="30" r="180" fill="#ffffff" opacity="0.08"/>
+    <rect x="28" y="176" width="544" height="86" fill="#0b1017" opacity="0.12"/>
+    
+  <rect x="94" y="62" width="412" height="156" rx="10" fill="#c9975f" opacity="0.24"/>
+  <path d="M300 62v156M94 140h412" stroke="#f2ede6" stroke-width="3" opacity="0.76"/>
+  <circle cx="300" cy="140" r="24" stroke="#f2ede6" stroke-width="3" opacity="0.76"/>
+  
+    <g opacity="0.78">
+      <circle cx="94" cy="36" r="10" fill="#ffffff"/>
+      <circle cx="126" cy="36" r="10" fill="#ffffff"/>
+      <circle cx="474" cy="36" r="10" fill="#ffffff"/>
+      <circle cx="506" cy="36" r="10" fill="#ffffff"/>
+    </g>
+    <rect x="44" y="34" width="76" height="76" rx="38" fill="#d8f46b" opacity="0.92"/>
+    <circle cx="82" cy="72" r="26" fill="#ffffff" opacity="0.18"/>
+    <path d="M70 72c10-12 24-12 34 0" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.72"/>
+    <path d="M64 88c12 7 31 7 42 0" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.72"/>
+    <text x="144" y="64" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="34" font-weight="800">Tennis</text>
+    <text x="144" y="98" fill="#f3f6fb" font-family="Manrope, Arial, sans-serif" font-size="18" opacity="0.88">Point-by-point feed</text>
+    <g opacity="0.22" filter="url(#tennis-glow)"><rect x="120" y="132" width="360" height="88" rx="44" fill="#6fc0ff"/></g>
+    
+  <circle cx="258" cy="142" r="24" fill="#d8f46b"/>
+  <circle cx="342" cy="142" r="24" fill="#d8f46b"/>
+  <path d="M258 104 C220 128, 220 156, 258 180" stroke="#fffef5" stroke-width="3" opacity="0.76"/>
+  <path d="M342 104 C380 128, 380 156, 342 180" stroke="#fffef5" stroke-width="3" opacity="0.76"/>
+  
+  </g>
+  <rect x="28" y="18" width="544" height="244" rx="30" stroke="#f1d9a7" stroke-opacity="0.78"/>
+  <rect x="64" y="10" width="472" height="3" rx="2" fill="#fff0c6" opacity="0.82"/>
+  <rect x="64" y="266" width="472" height="3" rx="2" fill="#fff0c6" opacity="0.82"/>
+
 </svg>

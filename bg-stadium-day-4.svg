@@ -1,21 +1,76 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" fill="none">
+
   <defs>
-    <radialGradient id="bg" cx="50%" cy="33%" r="76%">
-      <stop offset="0%" stop-color="#d4e2ff"/>
-      <stop offset="54%" stop-color="#afc5eb"/>
-      <stop offset="100%" stop-color="#89a2cb"/>
+    <linearGradient id="day4-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c2dcff"/>
+      <stop offset="100%" stop-color="#f6fbff"/>
+    </linearGradient>
+    <radialGradient id="day4-sun" cx="50%" cy="18%" r="52%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.72"/>
+      <stop offset="36%" stop-color="#fff4cc" stop-opacity="0.36"/>
+      <stop offset="100%" stop-color="#fff4cc" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="halo" cx="50%" cy="12%" r="56%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.97"/>
-      <stop offset="48%" stop-color="#edf4ff" stop-opacity="0.42"/>
-      <stop offset="100%" stop-color="#edf4ff" stop-opacity="0"/>
-    </radialGradient>
+    <linearGradient id="day4-crowd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#99afc7"/>
+      <stop offset="100%" stop-color="#5a6f87"/>
+    </linearGradient>
+    <linearGradient id="day4-turf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#77cf6c"/>
+      <stop offset="100%" stop-color="#338144"/>
+    </linearGradient>
+    <linearGradient id="day4-roof" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d8e4ef" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#6b7f99" stop-opacity="0.82"/>
+    </linearGradient>
+    <linearGradient id="day4-board" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1f39"/>
+      <stop offset="100%" stop-color="#132f55"/>
+    </linearGradient>
+    <filter id="day4-blur" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
   </defs>
-  <rect width="1600" height="1000" fill="url(#bg)"/>
-  <ellipse cx="800" cy="205" rx="770" ry="245" fill="url(#halo)"/>
-  <ellipse cx="800" cy="250" rx="730" ry="136" fill="none" stroke="#f6fbff" stroke-opacity="0.62" stroke-width="6"/>
-  <ellipse cx="800" cy="282" rx="650" ry="104" fill="none" stroke="#d4e4ff" stroke-opacity="0.53" stroke-width="5"/>
-  <ellipse cx="800" cy="310" rx="566" ry="78" fill="none" stroke="#c0d7fb" stroke-opacity="0.45" stroke-width="4"/>
-  <ellipse cx="800" cy="852" rx="980" ry="250" fill="#8199c0" fill-opacity="0.32"/>
-  <ellipse cx="800" cy="928" rx="734" ry="114" fill="#7a91b8" fill-opacity="0.44"/>
+  <rect width="1600" height="1000" fill="url(#day4-sky)"/>
+  <ellipse cx="800" cy="120" rx="520" ry="210" fill="url(#day4-sun)"/>
+  
+  <ellipse cx="800" cy="138" rx="720" ry="280" fill="none" stroke="url(#day4-roof)" stroke-width="24" opacity="0.98"/>
+  <ellipse cx="800" cy="126" rx="420" ry="156" fill="none" stroke="#d5e7f7" stroke-width="10" opacity="0.8"/>
+  <path d="M126 240 C356 132 1244 132 1474 240" stroke="#d5e7f7" stroke-width="8" opacity="0.68"/>
+  <path d="M166 274 C394 176 1206 176 1434 274" stroke="#d5e7f7" stroke-width="6" opacity="0.48"/>
+  <g opacity="0.72">
+    <path d="M148 250 L626 352" stroke="#d5e7f7" stroke-width="3"/>
+    <path d="M1452 250 L974 352" stroke="#d5e7f7" stroke-width="3"/>
+    <path d="M512 0 L640 354" stroke="#d5e7f7" stroke-width="2.5" opacity="0.52"/>
+    <path d="M1088 0 L960 354" stroke="#d5e7f7" stroke-width="2.5" opacity="0.52"/>
+  </g>
+  <polygon points="40,360 560,300 660,650 -60,760" fill="url(#day4-crowd)" opacity="0.95"/>
+  <polygon points="1030,300 1560,360 1660,760 940,650" fill="url(#day4-crowd)" opacity="0.95"/>
+  <path d="M0 518 C280 458, 1320 458, 1600 518 L1600 618 C1290 574, 310 574, 0 618 Z" fill="url(#day4-crowd)" opacity="0.88"/>
+  <rect x="336" y="238" width="310" height="132" rx="14" fill="url(#day4-board)" stroke="#8bbcff" stroke-opacity="0.28"/>
+  <rect x="954" y="252" width="232" height="102" rx="12" fill="url(#day4-board)" stroke="#8bbcff" stroke-opacity="0.24"/>
+  <rect x="388" y="286" width="208" height="20" rx="10" fill="#6ce27e" opacity="0.8"/>
+  <rect x="388" y="316" width="160" height="12" rx="6" fill="#ffffff" opacity="0.92"/>
+  <rect x="988" y="286" width="120" height="14" rx="7" fill="#70c0ff" opacity="0.78"/>
+  <rect x="988" y="312" width="152" height="10" rx="5" fill="#ffffff" opacity="0.84"/>
+  <path d="M220 628 L1380 628 L1600 980 L0 980 Z" fill="url(#day4-turf)"/>
+  <path d="M470 640 L1130 640 L1282 980 L318 980 Z" fill="#3c7f42" opacity="0.44"/>
+  <path d="M800 628 L800 980" stroke="#f3fff3" stroke-width="4" opacity="0.86"/>
+  <ellipse cx="800" cy="732" rx="126" ry="54" stroke="#f3fff3" stroke-width="4" opacity="0.86"/>
+  <path d="M570 966 C654 858, 946 858, 1030 966" stroke="#f3fff3" stroke-width="4" opacity="0.88"/>
+  <path d="M220 628 C462 704, 1138 704, 1380 628" stroke="#c9e6c9" stroke-width="2" opacity="0.24"/>
+  <path d="M176 718 C448 804, 1152 804, 1424 718" stroke="#c9e6c9" stroke-width="2" opacity="0.16"/>
+  <g opacity="0.28">
+    <rect x="0" y="608" width="1600" height="80" fill="#ffffff" filter="url(#day4-blur)"/>
+  </g>
+  <g fill="#dfe8ff" opacity="0.78">
+    <circle cx="184" cy="228" r="7"/>
+    <circle cx="224" cy="220" r="6"/>
+    <circle cx="266" cy="214" r="5"/>
+    <circle cx="1332" cy="228" r="7"/>
+    <circle cx="1372" cy="220" r="6"/>
+    <circle cx="1414" cy="214" r="5"/>
+  </g>
+  <rect x="0" y="0" width="1600" height="1000" fill="url(#day4-sky)" opacity="0.02"/>
+
 </svg>
