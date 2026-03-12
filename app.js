@@ -71,6 +71,25 @@ const LEAGUE_IMAGE_MAP = {
   f1: "sport-f1.svg",
   default: "sport-default.svg"
 };
+const LEAGUE_VISUAL_MATCHERS = {
+  "eng.1": { names: ["Premier League", "English Premier League", "Premier League EPL"], sportNames: ["Soccer"] },
+  "esp.1": { names: ["La Liga", "Spanish La Liga", "Primera Division"], sportNames: ["Soccer"] },
+  "uefa.champions": { names: ["UEFA Champions League", "Champions League"], sportNames: ["Soccer"] },
+  "ita.1": { names: ["Serie A", "Italian Serie A"], sportNames: ["Soccer"] },
+  "ger.1": { names: ["Bundesliga", "German Bundesliga"], sportNames: ["Soccer"] },
+  "fra.1": { names: ["Ligue 1", "French Ligue 1"], sportNames: ["Soccer"] },
+  "ned.1": { names: ["Eredivisie", "Dutch Eredivisie"], sportNames: ["Soccer"] },
+  nba: { names: ["NBA", "National Basketball Association"], sportNames: ["Basketball"] },
+  ncaamb: { names: ["NCAA Basketball", "NCAA Division I Mens Basketball"], sportNames: ["Basketball"] },
+  nfl: { names: ["NFL", "National Football League"], sportNames: ["American Football"] },
+  nhl: { names: ["NHL", "National Hockey League"], sportNames: ["Ice Hockey"] },
+  mlb: { names: ["MLB", "Major League Baseball"], sportNames: ["Baseball"] },
+  tennis: { names: ["ATP Tour", "ATP World Tour", "WTA Tour", "Tennis"], sportNames: ["Tennis"] },
+  cricket: { names: ["Indian Premier League", "ICC Cricket World Cup", "Cricket"], sportNames: ["Cricket"] },
+  rugby: { names: ["Rugby World Cup", "Six Nations Championship", "United Rugby Championship", "Rugby"], sportNames: ["Rugby"] },
+  mma: { names: ["UFC", "Ultimate Fighting Championship", "MMA"], sportNames: ["Mixed Martial Arts"] },
+  f1: { names: ["Formula 1", "F1 World Championship", "Formula One"], sportNames: ["Motorsport"] }
+};
 const SPORT_CONTEXT_TONES = {
   football: { accent: "57 181 74", glow: "79 181 255" },
   cricket: { accent: "47 149 64", glow: "255 182 72" },
@@ -291,7 +310,8 @@ const state = {
   providerStatus: {
     espn: { ok: false, matches: 0, lastFetch: 0, lastError: "" },
     sportsdb: { ok: false, matches: 0, lastFetch: 0, lastError: "" }
-  }
+  },
+  leagueVisuals: {}
 };
 
 const qs = (selector, parent = document) => parent.querySelector(selector);
@@ -664,14 +684,60 @@ function getDominantSportGroup() {
   return dominantSport;
 }
 
+function normalizeRemoteImageUrl(value) {
+  const text = String(value || "").trim();
+  if (!text) {
+    return "";
+  }
+  return text.replace(/^http:\/\//i, "https://");
+}
+
+function getLeagueVisualConfig(leagueKey, sportGroup = "") {
+  const liveVisual = leagueKey ? state.leagueVisuals?.[leagueKey] : null;
+  if (liveVisual?.imagePath) {
+    return {
+      imagePath: liveVisual.imagePath,
+      fit: liveVisual.fit || "cover",
+      position: liveVisual.position || "center"
+    };
+  }
+  if (leagueKey && LEAGUE_IMAGE_MAP[leagueKey]) {
+    return {
+      imagePath: LEAGUE_IMAGE_MAP[leagueKey],
+      fit: "cover",
+      position: "center"
+    };
+  }
+  if (sportGroup && SPORT_IMAGE_MAP[sportGroup]) {
+    return {
+      imagePath: SPORT_IMAGE_MAP[sportGroup],
+      fit: "cover",
+      position: "center"
+    };
+  }
+  return {
+    imagePath: LEAGUE_IMAGE_MAP.default || SPORT_IMAGE_MAP.default,
+    fit: "cover",
+    position: "center"
+  };
+}
+
 function getLeagueImagePath(leagueKey, sportGroup = "") {
+  return getLeagueVisualConfig(leagueKey, sportGroup).imagePath;
+}
+
+function getLeagueIconPath(leagueKey, sportGroup = "") {
+  const liveVisual = leagueKey ? state.leagueVisuals?.[leagueKey] : null;
+  if (liveVisual?.iconPath) {
+    return liveVisual.iconPath;
+  }
   if (leagueKey && LEAGUE_IMAGE_MAP[leagueKey]) {
     return LEAGUE_IMAGE_MAP[leagueKey];
   }
   if (sportGroup && SPORT_IMAGE_MAP[sportGroup]) {
     return SPORT_IMAGE_MAP[sportGroup];
   }
-  return LEAGUE_IMAGE_MAP.default || SPORT_IMAGE_MAP.default;
+  return SPORT_IMAGE_MAP.default;
 }
 
 function getSportContextTone(sportGroup = "") {
@@ -692,7 +758,7 @@ function resolveRouteVisualContext(route, fallbackSport = "") {
   }
 
   const imagePath = leagueKey
-    ? getLeagueImagePath(leagueKey, sportGroup)
+    ? getLeagueVisualConfig(leagueKey, sportGroup).imagePath
     : sportGroup
       ? getSportImagePath(sportGroup)
       : SPORT_IMAGE_MAP.default;
@@ -1056,6 +1122,116 @@ async function cachedJson(url, ttlMs = 25000) {
   const data = await response.json();
   requestCache.set(url, { time: now, data });
   return data;
+}
+
+function scoreSportsDbLeagueCandidate(candidate, matcher = {}, fallbackLabel = "") {
+  const candidateNames = [
+    candidate?.strLeague,
+    candidate?.strLeagueAlternate,
+    candidate?.strLeague2
+  ].map((value) => slugify(value)).filter(Boolean);
+  const matchNames = [...(matcher.names || []), fallbackLabel]
+    .map((value) => slugify(value))
+    .filter(Boolean);
+  const candidateSport = String(candidate?.strSport || "").trim().toLowerCase();
+  const matchSports = (matcher.sportNames || [])
+    .map((value) => String(value || "").trim().toLowerCase())
+    .filter(Boolean);
+
+  let score = 0;
+  if (matchSports.length && matchSports.includes(candidateSport)) {
+    score += 12;
+  }
+
+  for (const name of matchNames) {
+    if (!name) {
+      continue;
+    }
+    if (candidateNames.includes(name)) {
+      score += 24;
+      continue;
+    }
+    if (candidateNames.some((candidateName) => candidateName.includes(name) || name.includes(candidateName))) {
+      score += 14;
+    }
+  }
+
+  if (candidate?.strCountry && matcher.region && slugify(candidate.strCountry) === slugify(matcher.region)) {
+    score += 3;
+  }
+
+  return score;
+}
+
+function pickLeagueVisualImage(detail) {
+  return normalizeRemoteImageUrl(
+    detail?.strBanner ||
+      detail?.strFanart1 ||
+      detail?.strFanart2 ||
+      detail?.strFanart3 ||
+      detail?.strFanart4 ||
+      detail?.strPoster ||
+      detail?.strBadge ||
+      detail?.strLogo ||
+      ""
+  );
+}
+
+function pickLeagueVisualIcon(detail) {
+  return normalizeRemoteImageUrl(detail?.strBadge || detail?.strLogo || detail?.strPoster || "");
+}
+
+async function fetchLeagueVisualsSnapshot() {
+  const leagueDirectory = await cachedJson(`${SPORTSDB_BASE}/all_leagues.php`, 1000 * 60 * 60 * 12);
+  const availableLeagues = Array.isArray(leagueDirectory?.leagues)
+    ? leagueDirectory.leagues
+    : Array.isArray(leagueDirectory?.countries)
+      ? leagueDirectory.countries
+      : [];
+
+  if (!availableLeagues.length) {
+    return {};
+  }
+
+  const visuals = {};
+
+  await Promise.all(
+    Object.entries(LEAGUES).map(async ([leagueKey, leagueConfig]) => {
+      const matcher = LEAGUE_VISUAL_MATCHERS[leagueKey] || {};
+      const best = availableLeagues
+        .map((candidate) => ({
+          candidate,
+          score: scoreSportsDbLeagueCandidate(candidate, {
+            ...matcher,
+            region: LEAGUE_REGIONS[leagueKey] || ""
+          }, leagueConfig.label || leagueKey)
+        }))
+        .sort((left, right) => right.score - left.score)[0];
+
+      if (!best || best.score < 18 || !best.candidate?.idLeague) {
+        return;
+      }
+
+      try {
+        const details = await cachedJson(`${SPORTSDB_BASE}/lookupleague.php?id=${encodeURIComponent(best.candidate.idLeague)}`, 1000 * 60 * 60 * 12);
+        const detail = Array.isArray(details?.leagues) ? details.leagues[0] : Array.isArray(details?.countries) ? details.countries[0] : null;
+        const imagePath = pickLeagueVisualImage(detail);
+        if (!imagePath) {
+          return;
+        }
+        visuals[leagueKey] = {
+          imagePath,
+          iconPath: pickLeagueVisualIcon(detail),
+          fit: "cover",
+          position: "center"
+        };
+      } catch (_error) {
+        // keep existing fallback image for this league
+      }
+    })
+  );
+
+  return visuals;
 }
 
 function buildMatchFromEvent(event, leagueKey, leagueConfig, seenSlugs) {
@@ -1886,6 +2062,7 @@ async function refreshData({ silent = false } = {}) {
 
   state.refreshPromise = (async () => {
     let failed = 0;
+    const leagueVisualsPromise = fetchLeagueVisualsSnapshot().catch(() => state.leagueVisuals || {});
 
     const nextEvents = {};
     const espnTasks = Object.entries(LEAGUES).map(async ([leagueKey, leagueConfig]) => {
@@ -1919,8 +2096,14 @@ async function refreshData({ silent = false } = {}) {
 
     await Promise.all(sportsDbTasks);
 
+    const nextLeagueVisuals = await leagueVisualsPromise;
+
     state.eventsByLeague = nextEvents;
     state.externalEvents = externalEvents;
+    state.leagueVisuals = {
+      ...(state.leagueVisuals || {}),
+      ...(nextLeagueVisuals || {})
+    };
 
     const espnMatchCount = Object.values(nextEvents).reduce((sum, events) => sum + (Array.isArray(events) ? events.length : 0), 0);
     state.providerStatus.espn = {
@@ -2703,10 +2886,11 @@ function normalizeBackgroundPosition(value) {
 
 function buildAutoBackgroundAttrs({ sportGroup = "", leagueKey = "", fit = "cover", position = "center", strength = 0.22 } = {}) {
   const safeSport = SPORT_GROUPS[sportGroup] ? sportGroup : "";
-  const imagePath = getLeagueImagePath(leagueKey, safeSport);
+  const visual = getLeagueVisualConfig(leagueKey, safeSport);
+  const imagePath = visual.imagePath;
   const tone = getSportContextTone(safeSport);
-  const safeFit = normalizeBackgroundFit(fit);
-  const safePosition = normalizeBackgroundPosition(position);
+  const safeFit = normalizeBackgroundFit(fit || visual.fit || "cover");
+  const safePosition = normalizeBackgroundPosition(position || visual.position || "center");
   const safeStrength = Math.max(0.08, Math.min(0.44, Number(strength) || 0.22));
 
   const attrs = [
@@ -3086,7 +3270,7 @@ function renderHomePage() {
                 position: "center",
                 strength: 0.25
               })}>
-                <img class="league-art" src="${escapeHtml(getLeagueImagePath(league.key, league.sportGroup))}" alt="${escapeHtml(league.label)}" loading="lazy">
+                <img class="league-art" src="${escapeHtml(getLeagueImagePath(league.key, league.sportGroup))}" alt="${escapeHtml(league.label)}" loading="lazy" onerror="this.onerror=null;this.src='${escapeHtml(LEAGUE_IMAGE_MAP[league.key] || SPORT_IMAGE_MAP[league.sportGroup] || SPORT_IMAGE_MAP.default)}'">
                 <h3>${escapeHtml(league.label)}</h3>
                 <p>${escapeHtml(league.region)}</p>
                 <p>${league.live} live / ${league.total} total today</p>
@@ -3440,7 +3624,7 @@ function renderTopLeaguesPage() {
                 position: "center",
                 strength: 0.25
               })}>
-                <img class="league-art" src="${escapeHtml(getLeagueImagePath(league.key, league.sportGroup))}" alt="${escapeHtml(league.label)}" loading="lazy">
+                <img class="league-art" src="${escapeHtml(getLeagueImagePath(league.key, league.sportGroup))}" alt="${escapeHtml(league.label)}" loading="lazy" onerror="this.onerror=null;this.src='${escapeHtml(LEAGUE_IMAGE_MAP[league.key] || SPORT_IMAGE_MAP[league.sportGroup] || SPORT_IMAGE_MAP.default)}'">
                 <h3>${escapeHtml(league.label)}</h3>
                 <p>${escapeHtml(league.region)}</p>
                 <p>${league.live} live now</p>
@@ -7933,7 +8117,7 @@ function executeSearch(query) {
   for (const [key, league] of Object.entries(LEAGUES)) {
     if (league.label.toLowerCase().includes(term)) {
       const sport = league.sportGroup || "football";
-      hits.push({ type: "League", label: league.label, route: routeForLeague(key), icon: getLeagueImagePath(key, sport), isImage: true });
+      hits.push({ type: "League", label: league.label, route: routeForLeague(key), icon: getLeagueIconPath(key, sport), isImage: true });
     }
   }
 

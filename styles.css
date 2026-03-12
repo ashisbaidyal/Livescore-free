@@ -173,6 +173,12 @@ body[data-bg-scene="custom"]::before {
   background-image: url("bg-stadium-day-4.svg");
 }
 
+body[data-bg-league]:not([data-bg-scene="custom"])::before {
+  background-image: var(--page-context-bg-image);
+  background-size: cover;
+  background-position: center;
+}
+
 a {
   color: inherit;
   text-decoration: none;
