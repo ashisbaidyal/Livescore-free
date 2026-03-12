@@ -1,4 +1,29 @@
 User-agent: *
 Allow: /
+Disallow: /404.html
 
+# API endpoints
+Allow: /api/
+
+# Crawl rate
+Crawl-delay: 1
+
+# Sitemaps
 Sitemap: https://livescorefree.online/sitemap.xml
+
+# Specific rules for search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 1

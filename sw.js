@@ -1,8 +1,9 @@
-const CACHE_NAME = "lsf-v41";
+const CACHE_NAME = "lsf-v42";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/styles.css",
+  "/api-config.js",
   "/app.js",
   "/manifest.json",
   "/logo-day.svg",
