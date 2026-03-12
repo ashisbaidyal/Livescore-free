@@ -1,8 +1,12 @@
 /**
- * API Configuration for LiveScoreFree
+ * API Configuration for LiveScoreFree v2.0
  * 
  * Defines API endpoints and base URLs based on environment
  * Can use either direct external APIs or proxied Vercel endpoints
+ * 
+ * @version 2.0
+ * @updated 2026-03-13
+ * @domain livescorefree.online
  */
 
 // ===== CONFIGURATION =====
@@ -11,9 +15,12 @@
 // Set to false to use external APIs directly (ESPN, TheSportsDB)
 const USE_VERCEL_PROXY = true;
 
+// Supported domains for production
+const PRODUCTION_DOMAINS = ['livescorefree.online', 'www.livescorefree.online', 'api.livescorefree.online'];
+
 // Environment detection
-const isDevelopment = !window.location.hostname.includes('livescorefree.online');
-const isProduction = window.location.hostname.includes('livescorefree.online');
+const isDevelopment = !PRODUCTION_DOMAINS.some(domain => window.location.hostname.includes(domain));
+const isProduction = PRODUCTION_DOMAINS.some(domain => window.location.hostname.includes(domain));
 
 // ===== API ENDPOINTS =====
 
