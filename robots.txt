@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://livescorefree.com/sitemap.xml
+Sitemap: https://livescorefree.online/sitemap.xml
