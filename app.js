@@ -215,7 +215,7 @@ const SPORTSDB_SPORTS = {
 
 const SEO_BASE = {
   site: "LiveScoreFree",
-  origin: "https://livescorefree.com"
+  origin: "https://livescorefree.online"
 };
 
 const GLOBAL_SEO_KEYWORDS = [
