@@ -1,0 +1,71 @@
+/**
+ * LiveScoreFree Community Credits & Information
+ * https://livescorefree.online
+ * Last Updated: 2026-03-13
+ */
+
+// CREATOR
+Creator: LiveScoreFree Community
+Contact: contact@livescorefree.online
+URL: https://livescorefree.online
+
+// MISSION
+LiveScoreFree is a free, community-powered sports scoreboard providing real-time
+live scores, match commentary, player lineups, teams statistics, and results for
+football, cricket, basketball, tennis, and all major sports leagues worldwide.
+
+// TECHNOLOGY
+Built with: Vanilla JavaScript, Service Workers, Progressive Web App
+Hosted on: Vercel Global CDN
+Data Sources: ESPN API, TheSportsDB
+Frontend Framework: None (Lightweight vanilla JS)
+Performance: 100% client-side rendering, offline support
+
+// PRINCIPLES
+- Free and accessible to all users worldwide
+- No paywall, no ads, community-supported
+- Fast, lightweight, and mobile-optimized
+- Privacy-focused: no tracking, no data collection
+- Open to community contributions
+
+// FEATURES
+✓ Live Scores (Real-time updates)
+✓ Trending Matches (Community engagement)
+✓ Upcoming Matches (Schedule)
+✓ Match History (Results archive)
+✓ Top Leagues (Featured competitions)
+✓ Multi-Sport Support (Football, Cricket, Basketball, Tennis, etc.)
+✓ Mobile Responsive (PWA ready)
+✓ Offline Support (Service Worker)
+✓ Dark/Light Themes
+✓ Multi-Language Support
+
+// LEGAL
+Privacy Policy: https://livescorefree.online/privacy-policy
+Terms of Service: https://livescorefree.online/terms-of-service
+Data Sources: https://livescorefree.online/data-sources
+DMCA Policy: https://livescorefree.online/dmca-policy
+
+// COMMUNITY
+Contributing: Join our GitHub community
+License: MIT (Source available)
+Support: Donate via Ko-fi (https://livescorefree.online/donate)
+
+// SEO & CRAWLING
+We welcome responsible crawling from search engines. Please respect:
+- robots.txt (https://livescorefree.online/robots.txt)
+- Sitemap (https://livescorefree.online/sitemap.xml)
+- Crawl-delay recommendations for optimal experience
+
+// PERFORMANCE
+- Sitemap: 30+ main routes + dynamic sport/league pages
+- Updated: Daily
+- Mobile-first design
+- Core Web Vitals optimized
+- Google Safe Browsing compatible
+
+// DEVELOPMENT
+Last Updated: 2026-03-13
+Version: 2.0
+Repository: https://github.com/ashisbaidyal/Livescore-free
+Issue Tracker: GitHub Issues

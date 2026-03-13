@@ -34,6 +34,10 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="logo-mark.svg">
   <link rel="apple-touch-icon" href="logo-mark.svg">
+  <!-- DNS Prefetch and Preconnect for External Services (Performance & Google Crawl Optimization) -->
+  <link rel="dns-prefetch" href="https://site.api.espn.com">
+  <link rel="dns-prefetch" href="https://www.thesportsdb.com">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -63,6 +67,52 @@
   }
   </script>
   <script type="application/ld+json" id="dynamic-schema"></script>
+  <!-- Breadcrumb Structured Data for Better SEO -->
+  <script type="application/ld+json" id="breadcrumb-schema">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://livescorefree.online"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Live Scores",
+        "item": "https://livescorefree.online/live"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Top Leagues",
+        "item": "https://livescorefree.online/top-leagues"
+      }
+    ]
+  }
+  </script>
+  <!-- Organization Structured Data for Rich Results -->
+  <script type="application/ld+json" id="organization-schema">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "LiveScoreFree",
+    "url": "https://livescorefree.online",
+    "logo": "https://livescorefree.online/logo-mark.svg",
+    "description": "Free community-powered sports scoreboard with live scores, commentary, lineups, and results",
+    "sameAs": [
+      "https://twitter.com/LiveScoreFree"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "availableLanguage": ["en"]
+    }
+  }
+  </script>
 </head>
 <body>
   <header class="site-header">

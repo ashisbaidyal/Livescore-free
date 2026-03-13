@@ -2,23 +2,32 @@ User-agent: *
 Allow: /
 Disallow: /404.html
 
-# API endpoints
+# API endpoints - Allow crawling
 Allow: /api/
 
-# Crawl rate
+# Crawl rate - Generous default
 Crawl-delay: 1
+Request-rate: 10/1s
 
 # Sitemaps
 Sitemap: https://livescorefree.online/sitemap.xml
+Sitemap: https://livescorefree.online/humans.txt
 
-# Specific rules for search engines
+# Specific rules for search engines - Optimized for faster crawling
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 0
+Request-rate: no limit
+
+User-agent: Googlebot-News
+Allow: /
+Crawl-delay: 0
+Request-rate: no limit
 
 User-agent: Bingbot
 Allow: /
-Crawl-delay: 1
+Crawl-delay: 0.5
+Request-rate: 100/1s
 
 User-agent: Slurp
 Allow: /
@@ -27,3 +36,23 @@ Crawl-delay: 1
 User-agent: Baiduspider
 Allow: /
 Crawl-delay: 1
+
+# Allow DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 0
+
+# Disallow low-quality bots
+User-agent: AhrefsBot
+User-agent: SemrushBot
+User-agent: DotBot
+User-agent: MJ12bot
+Disallow: /
+
+# Allow social media crawlers
+User-agent: facebookexternalhit
+User-agent: Twitterbot
+User-agent: Linkedinbot
+User-agent: WhatsApp
+Allow: /
+Crawl-delay: 0
