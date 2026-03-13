@@ -2864,6 +2864,284 @@ textarea {
   background-position: center, right top, left bottom, center;
 }
 
+/* Premium Sport Badges & Real-Time Banner System */
+
+.sport-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%);
+  color: var(--text);
+  border: 1px solid var(--line);
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.sport-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border-color: var(--accent);
+}
+
+/* Sport-Specific Badge Colors */
+.sport-badge[data-sport="football"] {
+  background: linear-gradient(135deg, #39b54a 0%, #2f9540 100%);
+  color: white;
+  border-color: #4bc555;
+}
+
+.sport-badge[data-sport="cricket"] {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border-color: #ffb74d;
+}
+
+.sport-badge[data-sport="basketball"] {
+  background: linear-gradient(135deg, #ff6b35 0%, #e64a19 100%);
+  color: white;
+  border-color: #ff8557;
+}
+
+.sport-badge[data-sport="tennis"] {
+  background: linear-gradient(135deg, #84e45f 0%, #64c93f 100%);
+  color: #1a1a1a;
+  border-color: #a5f980;
+}
+
+.sport-badge[data-sport="nfl"] {
+  background: linear-gradient(135deg, #ff5555 0%, #cc2222 100%);
+  color: white;
+  border-color: #ff7777;
+}
+
+.sport-badge[data-sport="hockey"] {
+  background: linear-gradient(135deg, #4fb5ff 0%, #2a8ad9 100%);
+  color: white;
+  border-color: #74c8ff;
+}
+
+.sport-badge[data-sport="baseball"] {
+  background: linear-gradient(135deg, #42a5ff 0%, #1e88e5 100%);
+  color: white;
+  border-color: #64b5f6;
+}
+
+.sport-badge[data-sport="rugby"] {
+  background: linear-gradient(135deg, #ff6b54 0%, #d84315 100%);
+  color: white;
+  border-color: #ff8876;
+}
+
+.sport-badge[data-sport="mma"] {
+  background: linear-gradient(135deg, #d84545 0%, #a01919 100%);
+  color: white;
+  border-color: #ff7070;
+}
+
+.sport-badge[data-sport="f1"] {
+  background: linear-gradient(135deg, #ff6600 0%, #cc3300 100%);
+  color: white;
+  border-color: #ff9933;
+}
+
+/* Real-Time Live Banner */
+.realtime-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 12px 20px;
+  background: linear-gradient(90deg, 
+    var(--surface) 0%, 
+    rgba(79, 181, 255, 0.1) 50%, 
+    var(--surface) 100%);
+  border-bottom: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.realtime-banner::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff4b57;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.4;
+    transform: scale(1.3);
+  }
+}
+
+.realtime-banner-status {
+  color: var(--accent);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Premium Card System */
+.premium-card {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top right, rgba(79, 181, 255, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(79, 181, 255, 0.15);
+  border-color: var(--accent);
+}
+
+.premium-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.premium-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.premium-card-meta {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Google-Style Sport League Grid */
+.sport-league-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.sport-league-item {
+  background: linear-gradient(135deg, var(--surface-soft) 0%, var(--surface) 100%);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 80px;
+}
+
+.sport-league-item:hover {
+  background: linear-gradient(135deg, var(--accent) 0%, rgba(79, 181, 255, 0.6) 100%);
+  color: white;
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(79, 181, 255, 0.2);
+}
+
+.sport-league-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.sport-league-name {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Match Card Premium Design */
+.match-card-premium {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.match-card-premium:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 20px rgba(79, 181, 255, 0.15);
+}
+
+.match-card-header-premium {
+  padding: 12px 16px;
+  background: linear-gradient(90deg, rgba(79, 181, 255, 0.05) 0%, transparent 100%);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.match-status-premium {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+}
+
+.match-time-premium {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Premium Typography */
+.text-premium-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.text-premium-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
 @media (max-width: 1040px) {
   .header-inner {
     flex-wrap: wrap;
