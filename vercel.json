@@ -17,8 +17,10 @@
     "ENABLE_ANALYTICS": "true",
     "ENABLE_CORS": "true"
   },
-  "buildEnvironment": {
-    "NODE_VERSION": "18.x"
+  "build": {
+    "env": {
+      "NODE_VERSION": "18.x"
+    }
   },
   "functions": {
     "api/**/*.js": {
