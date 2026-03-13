@@ -11,7 +11,6 @@ Request-rate: 10/1s
 
 # Sitemaps
 Sitemap: https://livescorefree.online/sitemap.xml
-Sitemap: https://livescorefree.online/humans.txt
 
 # Specific rules for search engines - Optimized for faster crawling
 User-agent: Googlebot
