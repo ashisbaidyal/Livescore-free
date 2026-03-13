@@ -1,30 +1,22 @@
 /**
- * /api/live.js
+ * /api/live
  * Endpoint: GET /api/live?sport=football&limit=50
  * Returns: Live and upcoming match data from ESPN and TheSportsDB
  * Caching: 15 seconds
- * 
+ *
  * @author LiveScoreFree Team
  * @version 2.0
  * @updated 2026-03-13
  */
 
-const ESPN_BASE = process.env.ESPN_API_BASE || "https://site.api.espn.com/apis/site/v2/sports";
-const SPORTSDB_BASE = process.env.SPORTSDB_API_BASE || "https://www.thesportsdb.com/api/v1/json/123";
-const API_VERSION = process.env.API_VERSION || "2.0";
-const LOG_LEVEL = (process.env.LOG_LEVEL || "info").toLowerCase();
-
-// Cache with TTL
-const cache = new Map();
-const CACHE_TTL = parseInt(process.env.CACHE_TTL_LIVE || "15000", 10); // 15 seconds
-const MAX_CACHE_ENTRIES = parseInt(process.env.MAX_CACHE_ENTRIES || "100", 10);
-const REQUEST_TIMEOUT = parseInt(process.env.API_TIMEOUT || "8000", 10); // 8 seconds timeout
-
-// Request rate limiting
-const requestCounts = new Map();
-const RATE_LIMIT_WINDOW = parseInt(process.env.RATE_LIMIT_WINDOW || "60000", 10); // 1 minute
-const MAX_REQUESTS_PER_WINDOW = parseInt(process.env.MAX_REQUESTS_PER_WINDOW || "100", 10);
-const ENABLE_RATE_LIMITING = (process.env.ENABLE_RATE_LIMITING || "true").toLowerCase() === "true";
+import {
+  getEnv,
+  getIntEnv,
+  getBoolEnv,
+  getClientIp,
+  getCorsHeaders,
+  jsonResponse
+} from "../_shared.js";
 
 const SPORT_FEEDS = {
   football: "soccer/eng.1",
@@ -40,39 +32,50 @@ const SPORT_FEEDS = {
   default: "soccer/eng.1"
 };
 
+const cache = new Map();
+const requestCounts = new Map();
+
 function getCacheKey(sport) {
   return `live-${sport}`;
 }
 
-function isCacheValid(timestamp) {
-  return Date.now() - timestamp < CACHE_TTL;
+function isCacheValid(timestamp, ttl) {
+  return Date.now() - timestamp < ttl;
 }
 
-function checkRateLimit(ip) {
-  if (!ENABLE_RATE_LIMITING) return true;
+function pruneCache(maxEntries) {
+  if (cache.size > maxEntries) {
+    const oldestKey = cache.keys().next().value;
+    cache.delete(oldestKey);
+  }
+}
+
+function checkRateLimit(ip, windowMs, maxRequests, enabled) {
+  if (!enabled) return true;
 
   const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW;
-  
+  const windowStart = now - windowMs;
+
   if (!requestCounts.has(ip)) {
     requestCounts.set(ip, []);
   }
-  
-  const requests = requestCounts.get(ip).filter(t => t > windowStart);
-  
-  if (requests.length >= MAX_REQUESTS_PER_WINDOW) {
+
+  const requests = requestCounts.get(ip).filter((t) => t > windowStart);
+
+  if (requests.length >= maxRequests) {
+    requestCounts.set(ip, requests);
     return false;
   }
-  
+
   requests.push(now);
   requestCounts.set(ip, requests);
   return true;
 }
 
-async function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
+async function fetchWithTimeout(url, options = {}, timeout = 8000) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -86,18 +89,18 @@ async function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
   }
 }
 
-async function fetchEspnMatches(sportFeed = "soccer/eng.1") {
+async function fetchEspnMatches(espnBase, sportFeed, timeout) {
   try {
-    const url = `${ESPN_BASE}/${sportFeed}/events?limit=50&status=in,upcoming`;
+    const url = `${espnBase}/${sportFeed}/events?limit=50&status=in,upcoming`;
     const response = await fetchWithTimeout(url, {
-      headers: { 
+      headers: {
         "User-Agent": "LiveScoreFree-Bot/2.0",
         "Accept": "application/json"
       }
-    });
-    
+    }, timeout);
+
     if (!response.ok) throw new Error(`ESPN API error: ${response.status}`);
-    
+
     const data = await response.json();
     return data.events || [];
   } catch (error) {
@@ -106,18 +109,18 @@ async function fetchEspnMatches(sportFeed = "soccer/eng.1") {
   }
 }
 
-async function fetchSportsDbMatches(league = "133602") {
+async function fetchSportsDbMatches(sportsDbBase, timeout) {
   try {
-    const url = `${SPORTSDB_BASE}/eventslast.php?id=${league}`;
+    const url = `${sportsDbBase}/eventslast.php?id=133602`;
     const response = await fetchWithTimeout(url, {
       headers: {
         "User-Agent": "LiveScoreFree-Bot/2.0",
         "Accept": "application/json"
       }
-    });
-    
+    }, timeout);
+
     if (!response.ok) throw new Error(`SportsDB API error: ${response.status}`);
-    
+
     const data = await response.json();
     return data.results || [];
   } catch (error) {
@@ -159,52 +162,72 @@ function normalizeSport(event) {
   return map[sport] || "football";
 }
 
-function pruneCache() {
-  if (cache.size > MAX_CACHE_ENTRIES) {
-    const oldestKey = cache.keys().next().value;
-    cache.delete(oldestKey);
-  }
-}
-
-export default async function handler(req, res) {
+export async function onRequest(context) {
+  const { request, env } = context;
   const startTime = Date.now();
+
+  const API_VERSION = getEnv(env, "API_VERSION", "2.0");
+  const CACHE_TTL = getIntEnv(env, "CACHE_TTL_LIVE", 15000);
+  const MAX_CACHE_ENTRIES = getIntEnv(env, "MAX_CACHE_ENTRIES", 100);
+  const REQUEST_TIMEOUT = getIntEnv(env, "API_TIMEOUT", 8000);
+  const RATE_LIMIT_WINDOW = getIntEnv(env, "RATE_LIMIT_WINDOW", 60000);
+  const MAX_REQUESTS_PER_WINDOW = getIntEnv(env, "MAX_REQUESTS_PER_WINDOW", 100);
+  const ENABLE_RATE_LIMITING = getBoolEnv(env, "ENABLE_RATE_LIMITING", true);
+  const LOG_LEVEL = getEnv(env, "LOG_LEVEL", "info").toLowerCase();
+  const ESPN_BASE = getEnv(env, "ESPN_API_BASE", "https://site.api.espn.com/apis/site/v2/sports");
+  const SPORTSDB_BASE = getEnv(env, "SPORTSDB_API_BASE", "https://www.thesportsdb.com/api/v1/json/123");
+
   const cacheSeconds = Math.max(1, Math.floor(CACHE_TTL / 1000));
+  const baseHeaders = getCorsHeaders(request, env, {
+    "Content-Type": "application/json",
+    "Cache-Control": `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 2}`,
+    "X-API-Version": API_VERSION
+  });
 
-  // CORS Headers
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept");
-  res.setHeader("Content-Type", "application/json");
-  res.setHeader("Cache-Control", `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 2}`);
-  res.setHeader("X-API-Version", API_VERSION);
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: baseHeaders });
   }
 
-  // Rate limiting
-  const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
-  if (!checkRateLimit(clientIp)) {
-    res.setHeader("Retry-After", Math.ceil(RATE_LIMIT_WINDOW / 1000).toString());
-    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
-    return res.status(429).json({
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return jsonResponse({
+      success: false,
+      error: "Method not allowed",
+      version: API_VERSION
+    }, {
+      status: 405,
+      headers: {
+        ...baseHeaders,
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
+    });
+  }
+
+  const url = new URL(request.url);
+  const sport = (url.searchParams.get("sport") || "football").toLowerCase();
+  const limitRaw = parseInt(url.searchParams.get("limit") || "50", 10);
+  const limit = Math.min(Number.isFinite(limitRaw) ? limitRaw : 50, 200);
+  const cacheKey = getCacheKey(sport);
+
+  const clientIp = getClientIp(request);
+  if (!checkRateLimit(clientIp, RATE_LIMIT_WINDOW, MAX_REQUESTS_PER_WINDOW, ENABLE_RATE_LIMITING)) {
+    return jsonResponse({
       success: false,
       error: "Rate limit exceeded",
       message: "Too many requests. Please wait a moment.",
       version: API_VERSION
+    }, {
+      status: 429,
+      headers: {
+        ...baseHeaders,
+        "Retry-After": Math.ceil(RATE_LIMIT_WINDOW / 1000).toString(),
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
     });
   }
 
-  const sport = (req.query.sport || "football").toLowerCase();
-  const sportFeed = SPORT_FEEDS[sport] || SPORT_FEEDS.default;
-  const limit = Math.min(parseInt(req.query.limit) || 50, 200); // Cap at 200
-  const cacheKey = getCacheKey(sport);
-
-  // Check cache
   const cached = cache.get(cacheKey);
-  if (cached && isCacheValid(cached.timestamp)) {
-    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
-    return res.status(200).json({
+  if (cached && isCacheValid(cached.timestamp, CACHE_TTL)) {
+    return jsonResponse({
       success: true,
       data: cached.data,
       cached: true,
@@ -212,48 +235,62 @@ export default async function handler(req, res) {
       timestamp: cached.timestamp,
       count: cached.data.length,
       version: API_VERSION
+    }, {
+      status: 200,
+      headers: {
+        ...baseHeaders,
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
     });
   }
 
   try {
-    // Fetch from ESPN first
-    const espnMatches = await fetchEspnMatches(sportFeed);
+    const sportFeed = SPORT_FEEDS[sport] || SPORT_FEEDS.default;
+    const espnMatches = await fetchEspnMatches(ESPN_BASE, sportFeed, REQUEST_TIMEOUT);
     let normalizedMatches = espnMatches.map(normalizeMatch);
 
-    // If ESPN feed is empty, fallback to SportsDB
     if (!normalizedMatches.length) {
-      const sportsDbMatches = await fetchSportsDbMatches();
+      const sportsDbMatches = await fetchSportsDbMatches(SPORTSDB_BASE, REQUEST_TIMEOUT);
       normalizedMatches = sportsDbMatches.map(normalizeMatch);
     }
 
     normalizedMatches = normalizedMatches.slice(0, limit);
 
-    // Store in cache
     cache.set(cacheKey, {
       data: normalizedMatches,
       timestamp: Date.now()
     });
-    
-    pruneCache();
 
-    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
-    return res.status(200).json({
+    pruneCache(MAX_CACHE_ENTRIES);
+
+    return jsonResponse({
       success: true,
       data: normalizedMatches,
       cached: false,
       timestamp: Date.now(),
       count: normalizedMatches.length,
       version: API_VERSION
+    }, {
+      status: 200,
+      headers: {
+        ...baseHeaders,
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
     });
   } catch (error) {
     if (LOG_LEVEL !== "silent") {
       console.error("[API/live] Request error:", error);
     }
-    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
-    return res.status(500).json({
+    return jsonResponse({
       success: false,
       error: error.message || "Failed to fetch live matches",
       timestamp: Date.now()
+    }, {
+      status: 500,
+      headers: {
+        ...baseHeaders,
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
     });
   }
 }

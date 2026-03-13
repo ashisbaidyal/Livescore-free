@@ -16,7 +16,7 @@ football, cricket, basketball, tennis, and all major sports leagues worldwide.
 
 // TECHNOLOGY
 Built with: Vanilla JavaScript, Service Workers, Progressive Web App
-Hosted on: Vercel Global CDN
+Hosted on: Cloudflare Global Network
 Data Sources: ESPN API, TheSportsDB
 Frontend Framework: None (Lightweight vanilla JS)
 Performance: 100% client-side rendering, offline support

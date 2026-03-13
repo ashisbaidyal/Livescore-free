@@ -1,5 +1,5 @@
 @echo off
-REM Deployment Verification Script for LiveScoreFree
+REM Deployment Verification Script for LiveScoreFree (Cloudflare)
 REM Run this after deploying to verify everything is working
 
 echo.
@@ -18,13 +18,22 @@ echo [2/8] Recent Commits:
 git log --oneline -3
 echo.
 
-REM Check Domain File
-echo [3/8] Checking CNAME File...
-if exist CNAME (
-    echo CNAME File Contents:
-    type CNAME
+REM Check Cloudflare Config Files
+echo [3/8] Checking Cloudflare config files...
+if exist wrangler.toml (
+    echo Found wrangler.toml
 ) else (
-    echo ERROR: CNAME file not found!
+    echo ERROR: wrangler.toml not found!
+)
+if exist _headers (
+    echo Found _headers
+) else (
+    echo ERROR: _headers not found!
+)
+if exist _redirects (
+    echo Found _redirects
+) else (
+    echo ERROR: _redirects not found!
 )
 echo.
 
@@ -33,9 +42,28 @@ echo [4/8] Checking index.html...
 findstr /i "og:url" index.html | findstr ">"
 echo.
 
-REM Check vercel.json
-echo [5/8] Checking vercel.json...
-findstr /i "ALLOWED_ORIGINS" vercel.json
+REM Check Cloudflare Functions
+echo [5/8] Checking Cloudflare Functions...
+if exist functions\api\live.js (
+    echo Found functions\api\live.js
+) else (
+    echo ERROR: functions\api\live.js not found!
+)
+if exist functions\api\timeline.js (
+    echo Found functions\api\timeline.js
+) else (
+    echo ERROR: functions\api\timeline.js not found!
+)
+if exist functions\api\standings.js (
+    echo Found functions\api\standings.js
+) else (
+    echo ERROR: functions\api\standings.js not found!
+)
+if exist functions\api\health.js (
+    echo Found functions\api\health.js
+) else (
+    echo ERROR: functions\api\health.js not found!
+)
 echo.
 
 REM Check Service Worker version
@@ -64,8 +92,8 @@ echo ============================================================
 echo.
 echo Next Steps:
 echo 1. Push changes: git push origin main
-echo 2. Check Vercel Dashboard for deployment status
+echo 2. Check Cloudflare Pages dashboard for deployment status
 echo 3. Verify https://livescorefree.online loads correctly
-echo 4. Test API at https://api.livescorefree.online/live
+echo 4. Test API at https://api.livescorefree.online/api/live
 echo 5. Clear browser cache and verify service worker updates
 echo.

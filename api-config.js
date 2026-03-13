@@ -2,7 +2,7 @@
  * API Configuration for LiveScoreFree v2.0
  * 
  * Defines API endpoints and base URLs based on environment
- * Can use either direct external APIs or proxied Vercel endpoints
+ * Can use either direct external APIs or proxied Cloudflare endpoints
  * 
  * @version 2.0
  * @updated 2026-03-13
@@ -11,12 +11,12 @@
 
 // ===== CONFIGURATION =====
 
-// Set to true to use Vercel proxy (https://api.livescorefree.online)
+// Set to true to use Cloudflare proxy (https://api.livescorefree.online)
 // Set to false to use external APIs directly (ESPN, TheSportsDB)
-const USE_VERCEL_PROXY = true;
+const USE_CLOUDFLARE_PROXY = true;
 
 // Supported domains for production
-const PRODUCTION_DOMAINS = ['livescorefree.online', 'www.livescorefree.online', 'api.livescorefree.online'];
+const PRODUCTION_DOMAINS = ['livescorefree.online', 'www.livescorefree.online', 'api.livescorefree.online', 'pages.dev'];
 
 // Environment detection
 const isDevelopment = !PRODUCTION_DOMAINS.some(domain => window.location.hostname.includes(domain));
@@ -25,7 +25,7 @@ const isProduction = PRODUCTION_DOMAINS.some(domain => window.location.hostname.
 // ===== API ENDPOINTS =====
 
 const API_CONFIG = {
-  // Development: Use external APIs directly (no Vercel needed)
+  // Development: Use external APIs directly (no proxy needed)
   development: {
     live: {
       baseUrl: 'https://site.api.espn.com/apis/site/v2/sports',
@@ -44,25 +44,25 @@ const API_CONFIG = {
     }
   },
 
-  // Production: Use Vercel proxy by default
+  // Production: Use Cloudflare proxy by default
   production: {
     live: {
       baseUrl: 'https://api.livescorefree.online',
-      endpoint: '/live',
+      endpoint: '/api/live',
       ttl: 15000, // 15 seconds
       corsEnabled: true,
       credentials: 'omit'
     },
     timeline: {
       baseUrl: 'https://api.livescorefree.online',
-      endpoint: '/timeline',
+      endpoint: '/api/timeline',
       ttl: 10000, // 10 seconds
       corsEnabled: true,
       credentials: 'omit'
     },
     standings: {
       baseUrl: 'https://api.livescorefree.online',
-      endpoint: '/standings',
+      endpoint: '/api/standings',
       ttl: 3600000, // 1 hour
       corsEnabled: true,
       credentials: 'omit'
@@ -92,8 +92,8 @@ function buildApiUrl(endpoint, params = {}) {
 
   let url;
   
-  if (isProduction && USE_VERCEL_PROXY) {
-    // Production: Use Vercel proxy
+  if (isProduction && USE_CLOUDFLARE_PROXY) {
+    // Production: Use Cloudflare proxy
     url = `${endpointConfig.baseUrl}${endpointConfig.endpoint}`;
     
     // Add query parameters
@@ -188,11 +188,11 @@ const LiveScoreAPI = {
   },
 
   /**
-   * Check if using Vercel proxy
+   * Check if using Cloudflare proxy
    * @returns {boolean}
    */
   isUsingProxy() {
-    return isProduction && USE_VERCEL_PROXY;
+    return isProduction && USE_CLOUDFLARE_PROXY;
   },
 
   /**

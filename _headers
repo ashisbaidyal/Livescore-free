@@ -1,0 +1,67 @@
+/*
+  Cache-Control: public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
+  Content-Security-Policy: default-src 'self' https:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:
+  X-API-Version: 2.0
+
+/api/*
+  Cache-Control: public, max-age=60, s-maxage=60, stale-while-revalidate=120
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Accept, X-API-Key
+  Access-Control-Allow-Credentials: false
+  Access-Control-Max-Age: 86400
+  X-API-Version: 2.0
+  X-RateLimit-Limit: 100
+  X-RateLimit-Window: 60000
+
+/api/health
+  Cache-Control: public, max-age=10, s-maxage=10
+
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+  Service-Worker-Allowed: /
+  Content-Type: application/javascript
+
+/manifest.json
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=86400, s-maxage=86400
+
+/robots.txt
+  Cache-Control: public, max-age=86400, s-maxage=86400
+  Content-Type: text/plain; charset=utf-8
+
+/sitemap.xml
+  Cache-Control: public, max-age=86400, s-maxage=86400
+  Content-Type: text/plain; charset=utf-8
+
+/humans.txt
+  Cache-Control: public, max-age=86400, s-maxage=86400
+  Content-Type: text/plain; charset=utf-8
+
+/.well-known/*
+  Cache-Control: public, max-age=86400, s-maxage=86400
+  Content-Type: text/plain; charset=utf-8
+
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable

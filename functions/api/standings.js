@@ -1,24 +1,11 @@
 /**
- * /api/standings.js
+ * /api/standings
  * Endpoint: GET /api/standings?league=eng.1
- * Returns: League standings table (Rank, Team, Points, Played, Won, Lost)
+ * Returns: League standings table
  * Caching: 3600 seconds (1 hour)
  */
 
-const ESPN_BASE = process.env.ESPN_API_BASE || "https://site.api.espn.com/apis/site/v2/sports";
-const API_VERSION = process.env.API_VERSION || "2.0";
-const REQUEST_TIMEOUT = parseInt(process.env.API_TIMEOUT || "8000", 10);
-const CACHE_TTL = parseInt(process.env.CACHE_TTL_STANDINGS || "3600000", 10); // 1 hour default
-
-const cache = new Map();
-
-function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
-
-  return fetch(url, { ...options, signal: controller.signal })
-    .finally(() => clearTimeout(timer));
-}
+import { getEnv, getIntEnv, getCorsHeaders, jsonResponse } from "../_shared.js";
 
 const LEAGUE_MAPPING = {
   "eng.1": "soccer/eng.1",
@@ -32,13 +19,23 @@ const LEAGUE_MAPPING = {
   "mlb": "baseball/mlb"
 };
 
-async function fetchEspnStandings(leagueId) {
+const cache = new Map();
+
+function fetchWithTimeout(url, options = {}, timeout = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
+
+async function fetchEspnStandings(espnBase, leagueId, timeout) {
   try {
     const espnLeague = LEAGUE_MAPPING[leagueId] || `soccer/${leagueId}`;
-    const url = `${ESPN_BASE}/${espnLeague}/standings`;
+    const url = `${espnBase}/${espnLeague}/standings`;
     const response = await fetchWithTimeout(url, {
       headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
-    });
+    }, timeout);
 
     if (!response.ok) throw new Error(`ESPN API error: ${response.status}`);
 
@@ -76,44 +73,54 @@ function extractStandings(data) {
   return standings;
 }
 
-function normalizeStandings(data) {
-  return data.map((item, idx) => ({
-    rank: idx + 1,
-    teamName: item.strTeam || "",
-    teamId: item.idTeam || "",
-    played: parseInt(item.intPlayed) || 0,
-    won: parseInt(item.intWin) || 0,
-    lost: parseInt(item.intLoss) || 0,
-    drawn: parseInt(item.intDraw) || 0,
-    points: parseInt(item.intPoints) || 0,
-    goalsFor: 0,
-    goalsAgainst: 0,
-    goalDifference: 0
-  }));
-}
-
-export default async function handler(req, res) {
+export async function onRequest(context) {
+  const { request, env } = context;
   const startTime = Date.now();
+
+  const ESPN_BASE = getEnv(env, "ESPN_API_BASE", "https://site.api.espn.com/apis/site/v2/sports");
+  const API_VERSION = getEnv(env, "API_VERSION", "2.0");
+  const REQUEST_TIMEOUT = getIntEnv(env, "API_TIMEOUT", 8000);
+  const CACHE_TTL = getIntEnv(env, "CACHE_TTL_STANDINGS", 3600000);
+
   const cacheSeconds = Math.max(1, Math.floor(CACHE_TTL / 1000));
+  const baseHeaders = getCorsHeaders(request, env, {
+    "Content-Type": "application/json",
+    "Cache-Control": `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 2}`,
+    "X-API-Version": API_VERSION
+  });
 
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Content-Type", "application/json");
-  res.setHeader("Cache-Control", `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 2}`);
-  res.setHeader("X-API-Version", API_VERSION);
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: baseHeaders });
   }
 
-  const { league } = req.query;
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return jsonResponse({
+      success: false,
+      error: "Method not allowed",
+      version: API_VERSION
+    }, {
+      status: 405,
+      headers: {
+        ...baseHeaders,
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
+    });
+  }
+
+  const url = new URL(request.url);
+  const league = url.searchParams.get("league");
 
   if (!league) {
-    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
-    return res.status(400).json({
+    return jsonResponse({
       success: false,
       error: "Missing league parameter",
       version: API_VERSION
+    }, {
+      status: 400,
+      headers: {
+        ...baseHeaders,
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
     });
   }
 
@@ -121,37 +128,45 @@ export default async function handler(req, res) {
   const cached = cache.get(cacheKey);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
-    return res.status(200).json({
+    return jsonResponse({
       success: true,
       data: cached.data,
       cached: true,
       timestamp: cached.timestamp,
       leagueId: league,
       version: API_VERSION
+    }, {
+      status: 200,
+      headers: {
+        ...baseHeaders,
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
     });
   }
 
   try {
-    const standings = await fetchEspnStandings(league);
+    const standings = await fetchEspnStandings(ESPN_BASE, league, REQUEST_TIMEOUT);
 
     if (standings.length === 0) {
-      res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
-      return res.status(404).json({
+      return jsonResponse({
         success: false,
         error: `No standings found for league: ${league}`,
         version: API_VERSION
+      }, {
+        status: 404,
+        headers: {
+          ...baseHeaders,
+          "X-Response-Time": `${Date.now() - startTime}ms`
+        }
       });
     }
 
-    // Cache results
     cache.set(cacheKey, {
       data: standings,
       timestamp: Date.now()
     });
 
-    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
-    return res.status(200).json({
+    return jsonResponse({
       success: true,
       data: standings,
       cached: false,
@@ -159,14 +174,25 @@ export default async function handler(req, res) {
       teamCount: standings.length,
       lastUpdated: new Date().toISOString(),
       version: API_VERSION
+    }, {
+      status: 200,
+      headers: {
+        ...baseHeaders,
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
     });
   } catch (error) {
     console.error("Standings API error:", error);
-    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
-    return res.status(500).json({
+    return jsonResponse({
       success: false,
       error: error.message || "Failed to fetch standings",
       version: API_VERSION
+    }, {
+      status: 500,
+      headers: {
+        ...baseHeaders,
+        "X-Response-Time": `${Date.now() - startTime}ms`
+      }
     });
   }
 }
