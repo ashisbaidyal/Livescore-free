@@ -8,8 +8,10 @@
  * @updated 2026-03-13
  */
 
-const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports";
-const SPORTSDB_BASE = "https://www.thesportsdb.com/api/v1/json/123";
+const ESPN_BASE = process.env.ESPN_API_BASE || "https://site.api.espn.com/apis/site/v2/sports";
+const SPORTSDB_BASE = process.env.SPORTSDB_API_BASE || "https://www.thesportsdb.com/api/v1/json/123";
+const REQUEST_TIMEOUT = parseInt(process.env.API_TIMEOUT || "5000", 10);
+const API_VERSION = process.env.API_VERSION || "2.0";
 
 const healthCheck = {
   lastCheck: 0,
@@ -24,7 +26,7 @@ async function checkEspnHealth() {
   const startTime = Date.now();
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
     
     const response = await fetch(`${ESPN_BASE}/soccer/eng.1/events?limit=1`, {
       signal: controller.signal,
@@ -52,12 +54,12 @@ async function checkSportsDbHealth() {
   const startTime = Date.now();
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
     
-    const response = await fetch(
-      `${SPORTSDB_BASE}/leaguestable.php?l=133602&s=2025`,
-      { signal: controller.timeout }
-    );
+    const response = await fetch(`${SPORTSDB_BASE}/leaguestable.php?l=133602&s=2025`, {
+      signal: controller.signal,
+      headers: { "User-Agent": "LiveScoreFree-Health-Check/2.0" }
+    });
     
     clearTimeout(timeout);
     const latency = Date.now() - startTime;
@@ -119,6 +121,6 @@ export default async function handler(req, res) {
     environment: process.env.VERCEL_ENV || "unknown",
     region: process.env.VERCEL_REGION || "unknown",
     providers: healthCheck.status,
-    version: "2.0"
+    version: API_VERSION
   });
 }

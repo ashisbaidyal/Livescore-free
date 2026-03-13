@@ -5,11 +5,20 @@
  * Caching: 3600 seconds (1 hour)
  */
 
-const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports";
-const SPORTSDB_BASE = "https://www.thesportsdb.com/api/v1/json/123";
+const ESPN_BASE = process.env.ESPN_API_BASE || "https://site.api.espn.com/apis/site/v2/sports";
+const API_VERSION = process.env.API_VERSION || "2.0";
+const REQUEST_TIMEOUT = parseInt(process.env.API_TIMEOUT || "8000", 10);
+const CACHE_TTL = parseInt(process.env.CACHE_TTL_STANDINGS || "3600000", 10); // 1 hour default
 
 const cache = new Map();
-const CACHE_TTL = 3600000; // 1 hour
+
+function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
 
 const LEAGUE_MAPPING = {
   "eng.1": "soccer/eng.1",
@@ -27,7 +36,7 @@ async function fetchEspnStandings(leagueId) {
   try {
     const espnLeague = LEAGUE_MAPPING[leagueId] || `soccer/${leagueId}`;
     const url = `${ESPN_BASE}/${espnLeague}/standings`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
     });
 
@@ -84,9 +93,14 @@ function normalizeStandings(data) {
 }
 
 export default async function handler(req, res) {
+  const startTime = Date.now();
+  const cacheSeconds = Math.max(1, Math.floor(CACHE_TTL / 1000));
+
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=7200");
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 2}`);
+  res.setHeader("X-API-Version", API_VERSION);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -95,9 +109,11 @@ export default async function handler(req, res) {
   const { league } = req.query;
 
   if (!league) {
+    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
     return res.status(400).json({
       success: false,
-      error: "Missing league parameter"
+      error: "Missing league parameter",
+      version: API_VERSION
     });
   }
 
@@ -105,12 +121,14 @@ export default async function handler(req, res) {
   const cached = cache.get(cacheKey);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
     return res.status(200).json({
       success: true,
       data: cached.data,
       cached: true,
       timestamp: cached.timestamp,
-      leagueId: league
+      leagueId: league,
+      version: API_VERSION
     });
   }
 
@@ -118,9 +136,11 @@ export default async function handler(req, res) {
     const standings = await fetchEspnStandings(league);
 
     if (standings.length === 0) {
+      res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
       return res.status(404).json({
         success: false,
-        error: `No standings found for league: ${league}`
+        error: `No standings found for league: ${league}`,
+        version: API_VERSION
       });
     }
 
@@ -130,19 +150,23 @@ export default async function handler(req, res) {
       timestamp: Date.now()
     });
 
+    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
     return res.status(200).json({
       success: true,
       data: standings,
       cached: false,
       leagueId: league,
       teamCount: standings.length,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      version: API_VERSION
     });
   } catch (error) {
     console.error("Standings API error:", error);
+    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
     return res.status(500).json({
       success: false,
-      error: error.message || "Failed to fetch standings"
+      error: error.message || "Failed to fetch standings",
+      version: API_VERSION
     });
   }
 }

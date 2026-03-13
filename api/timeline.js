@@ -5,16 +5,30 @@
  * Caching: 10 seconds
  */
 
-const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports";
-const SPORTSDB_BASE = "https://www.thesportsdb.com/api/v1/json/123";
+const ESPN_BASE = process.env.ESPN_API_BASE || "https://site.api.espn.com/apis/site/v2/sports";
+const SPORTSDB_BASE = process.env.SPORTSDB_API_BASE || "https://www.thesportsdb.com/api/v1/json/123";
+const REQUEST_TIMEOUT = parseInt(process.env.API_TIMEOUT || "8000", 10);
+const CACHE_TTL = parseInt(process.env.CACHE_TTL_TIMELINE || "10000", 10); // 10 seconds default
+const API_VERSION = process.env.API_VERSION || "2.0";
 
 const cache = new Map();
-const CACHE_TTL = 10000; // 10 seconds
+
+async function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 async function fetchEspnTimeline(matchId) {
   try {
     const url = `${ESPN_BASE}/soccer/eng.1/events/${matchId}`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
     });
 
@@ -31,7 +45,9 @@ async function fetchEspnTimeline(matchId) {
 async function fetchSportsDbTimeline(eventId) {
   try {
     const url = `${SPORTSDB_BASE}/eventslast.php?id=${eventId}`;
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url, {
+      headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
+    });
 
     if (!response.ok) throw new Error(`SportsDB API error: ${response.status}`);
 
@@ -41,6 +57,16 @@ async function fetchSportsDbTimeline(eventId) {
     console.error("SportsDB timeline fetch error:", error);
     return [];
   }
+}
+
+function getEventPlayer(event = {}) {
+  return (
+    event.athlete?.displayName ||
+    event.athlete?.fullName ||
+    event.player?.displayName ||
+    event.player?.fullName ||
+    ""
+  );
 }
 
 function extractTimeline(data) {
@@ -57,7 +83,7 @@ function extractTimeline(data) {
             description: event.description || "",
             team: competitor.team?.displayName || "",
             teamId: competitor.team?.id || "",
-            player: event.athlète?.displayName || "",
+            player: getEventPlayer(event),
             timestamp: event.date || Date.now()
           });
         });
@@ -123,9 +149,14 @@ function normalizeEventType(type) {
 }
 
 export default async function handler(req, res) {
+  const startTime = Date.now();
+  const cacheSeconds = Math.max(1, Math.floor(CACHE_TTL / 1000));
+
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=20");
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 2}`);
+  res.setHeader("X-API-Version", API_VERSION);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -134,9 +165,11 @@ export default async function handler(req, res) {
   const { match: matchId } = req.query;
 
   if (!matchId) {
+    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
     return res.status(400).json({
       success: false,
-      error: "Missing match parameter"
+      error: "Missing match parameter",
+      version: API_VERSION
     });
   }
 
@@ -144,34 +177,45 @@ export default async function handler(req, res) {
   const cached = cache.get(cacheKey);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
     return res.status(200).json({
       success: true,
       data: cached.data,
       cached: true,
-      timestamp: cached.timestamp
+      timestamp: cached.timestamp,
+      version: API_VERSION
     });
   }
 
   try {
-    const timeline = await fetchEspnTimeline(matchId);
+    let timeline = await fetchEspnTimeline(matchId);
+
+    // Fallback to SportsDB if ESPN returns no events
+    if (!timeline.length) {
+      timeline = await fetchSportsDbTimeline(matchId);
+    }
 
     cache.set(cacheKey, {
       data: timeline,
       timestamp: Date.now()
     });
 
+    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
     return res.status(200).json({
       success: true,
       data: timeline,
       cached: false,
       matchId,
-      eventCount: timeline.length
+      eventCount: timeline.length,
+      version: API_VERSION
     });
   } catch (error) {
     console.error("Timeline API error:", error);
+    res.setHeader("X-Response-Time", `${Date.now() - startTime}ms`);
     return res.status(500).json({
       success: false,
-      error: error.message || "Failed to fetch timeline"
+      error: error.message || "Failed to fetch timeline",
+      version: API_VERSION
     });
   }
 }

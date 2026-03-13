@@ -189,6 +189,42 @@ const SPORT_GROUPS = {
   f1: { label: "F1", icon: "F1", leagues: ["f1"], description: "Formula 1 live score coverage." }
 };
 
+// Image assets per sport/league (used for headers, cards, fallbacks)
+const SPORT_IMAGE_MAP = {
+  football: "sport-football.svg",
+  cricket: "sport-cricket.svg",
+  basketball: "sport-basketball.svg",
+  tennis: "sport-tennis.svg",
+  nfl: "sport-nfl.svg",
+  hockey: "sport-hockey.svg",
+  baseball: "sport-baseball.svg",
+  rugby: "sport-rugby.svg",
+  mma: "sport-mma.svg",
+  f1: "sport-f1.svg",
+  default: "sport-default.svg"
+};
+
+const LEAGUE_IMAGE_MAP = {
+  "eng.1": SPORT_IMAGE_MAP.football,
+  "esp.1": SPORT_IMAGE_MAP.football,
+  "uefa.champions": SPORT_IMAGE_MAP.football,
+  "ita.1": SPORT_IMAGE_MAP.football,
+  "ger.1": SPORT_IMAGE_MAP.football,
+  "fra.1": SPORT_IMAGE_MAP.football,
+  "ned.1": SPORT_IMAGE_MAP.football,
+  cricket: SPORT_IMAGE_MAP.cricket,
+  nba: SPORT_IMAGE_MAP.basketball,
+  ncaamb: SPORT_IMAGE_MAP.basketball,
+  tennis: SPORT_IMAGE_MAP.tennis,
+  nfl: SPORT_IMAGE_MAP.nfl,
+  nhl: SPORT_IMAGE_MAP.hockey,
+  mlb: SPORT_IMAGE_MAP.baseball,
+  rugby: SPORT_IMAGE_MAP.rugby,
+  mma: SPORT_IMAGE_MAP.mma,
+  f1: SPORT_IMAGE_MAP.f1,
+  default: SPORT_IMAGE_MAP.default
+};
+
 const SPORT_ALIASES = {
   soccer: "football",
   football: "football",
