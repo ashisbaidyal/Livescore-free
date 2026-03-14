@@ -15,6 +15,8 @@ const SUPPORT_POPUP_INTERVAL_MS = 1000 * 60 * 22;
 const APP_BOOT_TS = Date.now();
 const BACKGROUND_MODE_KEY = "lsf_background_mode";
 const CUSTOM_BACKGROUND_KEY = "lsf_custom_background";
+const PWA_PROMPT_KEY = "lsf_pwa_prompt_dismissed_v1";
+const PWA_INSTALLED_KEY = "lsf_pwa_installed_v1";
 const BACKGROUND_ROTATION_MS = 22000;
 const BACKGROUND_SCENE_GROUPS = {
   live: ["arena-1"],
@@ -1812,8 +1814,8 @@ function sendMatchNotification(title, body, tag = "") {
   try {
     const options = {
       body,
-      icon: "logo-mark.svg",
-      badge: "logo-mark.svg",
+      icon: "logo-mark-192.png",
+      badge: "logo-mark-32.png",
       tag: tag || undefined
     };
     if (navigator.serviceWorker?.controller && navigator.serviceWorker.ready) {
@@ -3201,15 +3203,15 @@ function renderHomePage() {
       strength: 0.24
     })}>
       ${renderSeoHeroPanel({
-        eyebrow: "Trusted community-powered sports coverage",
+        eyebrow: "Trusted, fast, and transparent sports coverage",
         title: "LiveScoreFree",
-        lead: "Fast live scores, fixtures, results, lineups, commentary, player stats, and match pages built for worldwide sports fans.",
+        lead: "Fast live scores, fixtures, results, lineups, commentary, and stats — organized clearly with transparent data sources for fans worldwide.",
         actionsHtml: heroActions,
-        trustItems: ["Auto-updating live scores", "League, team, and player pages", "Legal and data-source pages included", "Worldwide sports coverage"],
+        trustItems: ["Fast live score refreshes", "Team, league, and player pages", "Transparent data sources & legal pages", "Worldwide coverage"],
         panelLabel: "Search-ready sports index",
-        panelTitle: "Live scores, fixtures, and results that are easy to trust",
-        panelLead: "Structured pages for live matches, upcoming fixtures, results, teams, players, and top leagues help users find updates quickly.",
-        keywordItems: ["Football live scores", "Cricket live scores", "Basketball scores", "Tennis live updates", "Upcoming fixtures", "Match results", "Team pages", "Player stats"]
+        panelTitle: "Live scores and results you can trust",
+        panelLead: "Clean structure, consistent URLs, and dedicated match pages help fans and search engines find updates quickly.",
+        keywordItems: ["Live scores", "Live fixtures", "Match results", "Lineups and stats", "Team pages", "Player stats", "Top leagues", "Trending matches"]
       })}
       <div class="hero-stat-grid">
         <div class="stat-box"><strong>${state.liveMatches.length}</strong><span>Live Now</span></div>
@@ -3253,7 +3255,7 @@ function renderHomePage() {
       </aside>
       <div class="panel live-main-preview auto-bg-surface">
         <h2>Live Match Center</h2>
-        <p class="subtle">Open any live match to access Summary, Stats, Lineups, Standings, H2H, Preview, and Events tabs.</p>
+        <p class="subtle">Open any live match for Summary, Stats, Lineups, Standings, H2H, Preview, and Events updates.</p>
         ${renderMatchGrid(state.liveMatches, "No live matches available right now.")}
       </div>
     </section>
@@ -3261,7 +3263,7 @@ function renderHomePage() {
     <section class="section">
       <div class="section-head">
         <h2>Live Now</h2>
-        <p>Auto-updating scoreboard for football, cricket, basketball, tennis, and more.</p>
+        <p>Fast live scores across football, cricket, basketball, tennis, and more.</p>
       </div>
       ${renderMatchGrid(state.liveMatches.slice(0, 16), "No matches are live right now. Check today's matches below.")}
     </section>
@@ -3269,7 +3271,7 @@ function renderHomePage() {
     <section class="section">
       <div class="section-head">
         <h2>Upcoming Matches</h2>
-        <p>Scheduled fixtures across sports. Open a match page to set kickoff reminders.</p>
+        <p>Upcoming fixtures with kickoff times and dedicated match pages.</p>
       </div>
       ${renderMatchGrid(state.upcomingMatches.slice(0, 16), "No upcoming matches are scheduled right now.")}
     </section>
@@ -3277,7 +3279,7 @@ function renderHomePage() {
     <section class="section">
       <div class="section-head">
         <h2>Trending Matches</h2>
-        <p>Priority ranking by live status, top leagues, and match recency.</p>
+        <p>Trending by live status, league priority, and recent activity.</p>
       </div>
       ${renderMatchGrid(trendingMatches(), "Trending matches will appear when schedules are available.")}
     </section>
@@ -3285,7 +3287,7 @@ function renderHomePage() {
     <section class="section">
       <div class="section-head">
         <h2>Today's Matches</h2>
-        <p>Every listed match opens its own page with live score, commentary, lineups, stats, and timeline animation.</p>
+        <p>Every match opens a live page with scores, commentary, lineups, stats, and timeline updates.</p>
       </div>
       ${renderMatchGrid(state.matches.slice(0, 24), "Today's schedule is currently unavailable.")}
     </section>
@@ -3293,7 +3295,7 @@ function renderHomePage() {
     <section class="section">
       <div class="section-head">
         <h2>Top Leagues</h2>
-        <p>Real-time counts across major competitions.</p>
+        <p>Live and total match counts across major competitions.</p>
       </div>
       <div class="league-grid">
         ${leagues
@@ -3320,7 +3322,7 @@ function renderHomePage() {
     <section class="section">
       <div class="section-head">
         <h2>Live Matches By Sport</h2>
-        <p>Direct hubs for core sports requested for index speed and structure.</p>
+        <p>Quick access hubs for core sports with clean, indexable structure.</p>
       </div>
       <div class="sport-links">
         ${sports
@@ -3335,8 +3337,8 @@ function renderHomePage() {
     <section class="section support-section">
       <div class="support-card">
         <div>
-          <h2>Fuel Faster Live Updates</h2>
-          <p>Support from $1 or any amount keeps LiveScoreFree fast, free, and accessible while funding meaningful support for people who need it.</p>
+          <h2>Support Fast, Trusted Live Scores</h2>
+          <p>Support from $1 keeps LiveScoreFree fast, free, and transparent while funding meaningful community support.</p>
         </div>
         <div class="support-card-actions">
           <a class="kofi-link kofi-link-solid" href="https://ko-fi.com/livescorefree" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a>
@@ -3348,7 +3350,7 @@ function renderHomePage() {
     ${renderRevenueModelSection()}
     ${renderTrustSignalsSection({
       title: "Growth & Trust",
-      lead: "Fast pages, real-time updates, and transparent support metrics help users and advertisers trust the platform."
+      lead: "Fast pages, real-time updates, and transparent support metrics build trust for fans and partners."
     })}
   `;
 
@@ -7260,7 +7262,7 @@ function renderDonationPage() {
           </div>
         </div>
         <div class="donation-logo-wrap">
-          <img src="logo-mark.svg" alt="LiveScoreFree logo mark" class="donation-logo-mark" loading="lazy">
+          <img src="logo-mark-192.png" alt="LiveScoreFree logo mark" class="donation-logo-mark" loading="lazy">
         </div>
       </section>
 
@@ -7747,7 +7749,122 @@ function updateProgressBar() {
   bar.style.transform = `scaleX(${progress})`;
 }
 
+function isPwaInstalled() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function shouldShowPwaPrompt() {
+  if (window.location.protocol === "file:") {
+    return false;
+  }
+  if (isPwaInstalled()) {
+    return false;
+  }
+  if (localStorage.getItem(PWA_INSTALLED_KEY) === "1") {
+    return false;
+  }
+  if (localStorage.getItem(PWA_PROMPT_KEY) === "1") {
+    return false;
+  }
+  return true;
+}
+
+function setupPwaPrompt() {
+  const prompt = qs("#pwa-prompt");
+  if (!prompt) {
+    return;
+  }
+  const installBtn = qs("#pwa-install-btn", prompt);
+  const dismissBtn = qs("#pwa-dismiss-btn", prompt);
+  const iosTip = qs("#pwa-ios-tip", prompt);
+  let deferredPrompt = null;
+
+  function showPrompt(mode) {
+    if (!shouldShowPwaPrompt()) {
+      return;
+    }
+    prompt.removeAttribute("hidden");
+    if (mode === "ios") {
+      iosTip?.removeAttribute("hidden");
+      installBtn?.setAttribute("hidden", "");
+    } else {
+      iosTip?.setAttribute("hidden", "");
+      installBtn?.removeAttribute("hidden");
+    }
+  }
+
+  function hidePrompt() {
+    prompt.setAttribute("hidden", "");
+  }
+
+  dismissBtn?.addEventListener("click", () => {
+    localStorage.setItem(PWA_PROMPT_KEY, "1");
+    hidePrompt();
+  });
+
+  installBtn?.addEventListener("click", async () => {
+    if (!deferredPrompt) {
+      return;
+    }
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    if (choice?.outcome === "accepted") {
+      localStorage.setItem(PWA_INSTALLED_KEY, "1");
+      hidePrompt();
+    } else {
+      localStorage.setItem(PWA_PROMPT_KEY, "1");
+      hidePrompt();
+    }
+    deferredPrompt = null;
+  });
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    showPrompt("install");
+  });
+
+  window.addEventListener("appinstalled", () => {
+    localStorage.setItem(PWA_INSTALLED_KEY, "1");
+    hidePrompt();
+  });
+
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  if (isIos && !isPwaInstalled()) {
+    setTimeout(() => {
+      if (!deferredPrompt) {
+        showPrompt("ios");
+      }
+    }, 1200);
+  }
+}
+
 function wireGlobalEvents() {
+  const header = qs(".site-header");
+  let headerCompact = false;
+  let headerTicking = false;
+
+  function setHeaderOffset() {
+    if (!header) {
+      return;
+    }
+    const height = header.getBoundingClientRect().height || 0;
+    document.body.style.setProperty("--header-offset", `${Math.ceil(height)}px`);
+  }
+
+  function updateHeaderCompact() {
+    headerTicking = false;
+    if (!header) {
+      return;
+    }
+    const shouldCompact = (window.scrollY || 0) > 120;
+    if (shouldCompact !== headerCompact) {
+      header.classList.toggle("site-header--compact", shouldCompact);
+      headerCompact = shouldCompact;
+    }
+    setHeaderOffset();
+  }
+
   document.addEventListener("click", async (event) => {
     if (event.target.id === "support-popup") {
       dismissSupportPopup();
@@ -7867,7 +7984,7 @@ function wireGlobalEvents() {
       return;
     }
 
-    if (isTouchMenuInfoEnabled() && link.hasAttribute("data-nav")) {
+    if (isTouchMenuInfoEnabled() && link.hasAttribute("data-nav") && !link.closest(".app-dock")) {
       const now = Date.now();
       const armedUntil = Number(link.getAttribute("data-touch-armed-until") || 0);
       if (now > armedUntil) {
@@ -7905,10 +8022,18 @@ function wireGlobalEvents() {
 
   window.addEventListener("scroll", () => {
     hideTouchMenuInfo();
+    if (!header) {
+      return;
+    }
+    if (!headerTicking) {
+      headerTicking = true;
+      requestAnimationFrame(updateHeaderCompact);
+    }
   }, { passive: true });
 
   window.addEventListener("resize", () => {
     hideTouchMenuInfo();
+    updateHeaderCompact();
   });
 
   window.addEventListener("keydown", (event) => {
@@ -7950,8 +8075,11 @@ function wireGlobalEvents() {
       }
       const open = nav.classList.toggle("open");
       mobileToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      setHeaderOffset();
     });
   }
+
+  updateHeaderCompact();
 
   const navBackButton = qs("#nav-back-btn");
   if (navBackButton) {
@@ -8249,6 +8377,7 @@ async function init() {
   renderFooterContent();
   renderHeaderSearchControl();
 
+  setupPwaPrompt();
   wireGlobalEvents();
   initTheme();
   loadHistory();

@@ -1,5 +1,5 @@
-const CACHE_NAME = "lsf-v43";
-const CACHE_VERSION = "v43";
+const CACHE_NAME = "lsf-v46";
+const CACHE_VERSION = "v46";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -7,10 +7,15 @@ const APP_SHELL = [
   "/api-config.js",
   "/app.js",
   "/manifest.json",
-  "/logo-day.svg",
-  "/logo-night.svg",
-  "/logo.svg",
-  "/logo-mark.svg",
+  "/logo-day.png",
+  "/logo-night.png",
+  "/logo.png",
+  "/logo-mark.png",
+  "/logo-mark-512.png",
+  "/logo-mark-192.png",
+  "/logo-mark-180.png",
+  "/logo-mark-32.png",
+  "/logo-mark-16.png",
   "/favicon-share.svg",
   "/favicon-link.svg",
   "/favicon-whatsapp.svg",
