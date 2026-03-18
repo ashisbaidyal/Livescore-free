@@ -610,6 +610,8 @@ function renderDonationProgress({ compact = false } = {}) {
 
 const THIRD_PARTY_AD_CONTAINER_ID = "container-01fac86ec9e3085bcb989e025d13aa86";
 const THIRD_PARTY_AD_INVOKE_SRC = "https://pl28913139.profitablecpmratenetwork.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js";
+const THIRD_PARTY_AD_EMBED_HTML = `<script async="async" data-cfasync="false" src="${THIRD_PARTY_AD_INVOKE_SRC}"></script>
+  <div id="${THIRD_PARTY_AD_CONTAINER_ID}"></div>`;
 const THIRD_PARTY_AD_FALLBACK_TIMEOUT_MS = 4500;
 const THIRD_PARTY_AD_FRAME_MONITOR_MS = 12000;
 const THIRD_PARTY_AD_FRAME_POLL_MS = 250;
@@ -760,29 +762,43 @@ function applyNativePromoFallback(wrapper, route, index = 0) {
   wrapper.innerHTML = renderNativePromoBannerInner(config);
 }
 
+function createNativeAdBandElement(route, index = 0) {
+  const band = document.createElement("section");
+  band.className = "section ad-band ad-band--injected";
+  band.appendChild(createNativeAdSlotElement(route, index));
+  return band;
+}
+
 function ensureMinimumNativeBanners(route) {
   const main = qs("#main");
-  if (!main || qs(".native-ad-banner", main)) {
+  if (!main) {
+    return;
+  }
+  const existingBanners = qsa(".native-ad-banner", main);
+  if (existingBanners.length >= 3) {
     return;
   }
 
-  let primaryBand = qs(".ad-band", main);
-  if (!primaryBand) {
-    primaryBand = document.createElement("section");
-    primaryBand.className = "section ad-band ad-band--injected";
-    const anchor = Array.from(main.children).find(
-      (node) => !node.matches("#global-share-widget, .pwa-app-header, .pwa-quick-grid")
-    );
-    if (anchor?.parentNode === main) {
-      anchor.insertAdjacentElement("afterend", primaryBand);
-    } else {
-      main.appendChild(primaryBand);
+  const contentChildren = Array.from(main.children).filter(
+    (node) => !node.matches("#global-share-widget, .pwa-app-header, .pwa-quick-grid, .ad-band")
+  );
+  const firstAnchor = contentChildren[0] || null;
+  const middleAnchor = contentChildren[Math.max(0, Math.floor((contentChildren.length - 1) / 2))] || firstAnchor;
+
+  for (let index = existingBanners.length; index < 3; index += 1) {
+    const band = createNativeAdBandElement(route, index);
+    if (index === 0 && firstAnchor?.parentNode === main) {
+      firstAnchor.insertAdjacentElement("beforebegin", band);
+      continue;
     }
+    if (index === 1 && middleAnchor?.parentNode === main) {
+      middleAnchor.insertAdjacentElement("afterend", band);
+      continue;
+    }
+    main.appendChild(band);
   }
-  primaryBand.appendChild(createNativeAdSlotElement(route, 0));
 }
 
-// This Adsterra widget only supports one placement instance per document, so each slot runs inside its own iframe.
 function buildThirdPartyAdFrameMarkup() {
   return `<!doctype html>
 <html lang="en">
@@ -812,8 +828,7 @@ function buildThirdPartyAdFrameMarkup() {
   </style>
 </head>
 <body>
-  <div id="${THIRD_PARTY_AD_CONTAINER_ID}"></div>
-  <script async data-cfasync="false" src="${THIRD_PARTY_AD_INVOKE_SRC}"></script>
+  ${THIRD_PARTY_AD_EMBED_HTML}
 </body>
 </html>`;
 }
@@ -879,6 +894,19 @@ function createThirdPartyAdFrame(wrapper) {
   return iframe;
 }
 
+function ensureThirdPartyAdMount(wrapper) {
+  let slot = wrapper?.querySelector('div[id^="container-native-ad-"]');
+  if (slot) {
+    return slot;
+  }
+
+  slot = document.createElement("div");
+  nativeAdCounter += 1;
+  slot.id = `container-native-ad-${nativeAdCounter}`;
+  wrapper?.replaceChildren(slot);
+  return slot;
+}
+
 function attachThirdPartyAdFrame(wrapper, slot, route, index = 0) {
   if (!wrapper || !slot || wrapper.dataset.adLoaded === "true") {
     return;
@@ -932,7 +960,6 @@ function attachThirdPartyAdFrame(wrapper, slot, route, index = 0) {
       return;
     }
     stopWatching();
-    applyNativePromoFallback(wrapper, route, index);
   }, THIRD_PARTY_AD_FALLBACK_TIMEOUT_MS);
 
   iframe.addEventListener("load", tick);
@@ -942,11 +969,7 @@ function attachThirdPartyAdFrame(wrapper, slot, route, index = 0) {
 
 function activateNativeAds(route) {
   qsa(".native-ad-banner[data-ad-slot]").forEach((wrapper, index) => {
-    const slot = wrapper.querySelector('div[id^="container-native-ad-"]');
-    if (!slot) {
-      applyNativePromoFallback(wrapper, route, index);
-      return;
-    }
+    const slot = ensureThirdPartyAdMount(wrapper);
     attachThirdPartyAdFrame(wrapper, slot, route, index);
   });
 }
