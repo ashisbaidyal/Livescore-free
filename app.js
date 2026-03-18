@@ -624,6 +624,18 @@ function renderAdSlot({ title, size, placement, ctaPath = "/advertise" }) {
   `;
 }
 
+function createNativeAdSlotElement(route, index = 0) {
+  const config = getNativeBannerConfigs(route)[index % 3];
+  const template = document.createElement("template");
+  template.innerHTML = renderAdSlot({
+    title: config.title,
+    size: index === 0 ? "728x90" : "Native Sponsor",
+    placement: config.lead,
+    ctaPath: config.ctaPath
+  }).trim();
+  return template.content.firstElementChild;
+}
+
 function getRouteDisplayLabel(route = {}) {
   switch (route?.type) {
     case "home":
@@ -753,40 +765,39 @@ function ensureMinimumNativeBanners(route) {
     return;
   }
 
-  const existingCount = qsa(".native-ad-banner", main).length;
-  const requiredCount = 3;
-  const missingCount = Math.max(0, requiredCount - existingCount);
-  if (!missingCount) {
-    return;
-  }
-
-  const shareWidget = qs("#global-share-widget", main);
-  const contentBlocks = Array.from(main.children).filter(
-    (node) => !node.matches("#global-share-widget, .pwa-app-header, .pwa-quick-grid")
-  );
-  const insertionTargets = [
-    contentBlocks[1] || contentBlocks[0] || null,
-    contentBlocks[Math.max(1, Math.floor(contentBlocks.length / 2))] || null,
-    shareWidget || contentBlocks[contentBlocks.length - 1] || null
-  ];
-
-  for (let i = 0; i < missingCount; i += 1) {
-    const section = document.createElement("section");
-    section.className = "section ad-band ad-band--injected";
-    section.innerHTML = renderNativePromoBanner(getNativeBannerConfigs(route)[(existingCount + i) % 3]);
-
-    if (i === missingCount - 1 && shareWidget && shareWidget.parentNode === main) {
-      main.insertBefore(section, shareWidget);
-      continue;
-    }
-
-    const target = insertionTargets[Math.min(i, insertionTargets.length - 1)];
-    if (target?.parentNode === main) {
-      target.insertAdjacentElement("afterend", section);
+  let primaryBand = qs(".ad-band", main);
+  if (!primaryBand) {
+    primaryBand = document.createElement("section");
+    primaryBand.className = "section ad-band";
+    const anchor = Array.from(main.children).find(
+      (node) => !node.matches("#global-share-widget, .pwa-app-header, .pwa-quick-grid")
+    );
+    if (anchor?.parentNode === main) {
+      anchor.insertAdjacentElement("afterend", primaryBand);
     } else {
-      main.appendChild(section);
+      main.appendChild(primaryBand);
     }
   }
+
+  const allBanners = Array.from(new Set(qsa(".native-ad-banner", main)));
+  const selectedBanners = allBanners.slice(0, 3);
+
+  selectedBanners.forEach((banner) => {
+    if (banner.parentNode !== primaryBand) {
+      primaryBand.appendChild(banner);
+    }
+  });
+
+  for (let index = selectedBanners.length; index < 3; index += 1) {
+    primaryBand.appendChild(createNativeAdSlotElement(route, index));
+  }
+
+  allBanners.slice(3).forEach((banner) => banner.remove());
+  qsa(".ad-band", main).forEach((band) => {
+    if (band !== primaryBand && !band.querySelector(".native-ad-banner")) {
+      band.remove();
+    }
+  });
 }
 
 function activateNativeAds(route) {
@@ -836,10 +847,14 @@ function preloadVisualAsset(url) {
 function hydrateVisualMedia(scope = document) {
   qsa("img", scope).forEach((img, index) => {
     img.classList.add("media-smooth");
+    img.setAttribute("loading", "eager");
     if (!img.getAttribute("decoding")) {
       img.setAttribute("decoding", "async");
     }
-    if (index < 3 && !img.getAttribute("fetchpriority")) {
+    if (
+      (index < 6 || img.matches(".brand-logo, .nav-header-logo, .pwa-prompt-icon, .pwa-app-logo")) &&
+      !img.getAttribute("fetchpriority")
+    ) {
       img.setAttribute("fetchpriority", "high");
     }
     const markLoaded = () => img.classList.add("is-loaded");
@@ -863,7 +878,7 @@ function preloadCriticalVisualAssets() {
     preloadVisualAsset(theme === "day" ? `/bg-stadium-day-${sceneMatch[1]}.svg` : `/bg-stadium-night-${sceneMatch[1]}.svg`);
   }
 
-  qsa("#main img").slice(0, 8).forEach((img) => {
+  qsa("img").forEach((img) => {
     preloadVisualAsset(img.currentSrc || img.getAttribute("src") || "");
   });
 }
@@ -9591,6 +9606,7 @@ function needsDataRoute(routeType) {
 async function renderRoute() {
   const path = getCurrentPath();
   state.activePath = path;
+  nativeAdCounter = 0;
 
   const route = parseRoute(path);
   applyPageClassesForRoute(route);
@@ -9672,7 +9688,6 @@ async function renderRoute() {
   wireNotificationControls();
   maybeShowSupportPopup(route);
 
-  nativeAdCounter = 0;
   ensureMinimumNativeBanners(route);
   activateNativeAds(route);
   hydrateVisualMedia(document);

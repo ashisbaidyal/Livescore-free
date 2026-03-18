@@ -8367,6 +8367,11 @@ body {
 }
 
 /* --- Native Ad Banner --- */
+.ad-band {
+  display: grid;
+  gap: 12px;
+}
+
 .native-ad-banner {
   width: 100%;
   max-width: 728px;
