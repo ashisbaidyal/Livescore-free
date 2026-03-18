@@ -20,7 +20,9 @@ export async function onRequest(context) {
     return next();
   }
 
-  const rewrittenUrl = new URL("/index.html", request.url);
+  // Rewrite SPA routes to the site root so Cloudflare serves index.html
+  // without hitting the /index.html -> / canonical redirect rule.
+  const rewrittenUrl = new URL("/", request.url);
   const rewrittenRequest = new Request(rewrittenUrl.toString(), request);
   if (env && env.ASSETS && typeof env.ASSETS.fetch === "function") {
     return env.ASSETS.fetch(rewrittenRequest);

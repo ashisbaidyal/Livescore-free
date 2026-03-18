@@ -103,6 +103,11 @@ function validateSpaRouting() {
   if (!fallbackHtml.includes('"/?route="')) {
     fail("404.html is missing the GitHub Pages route fallback redirect.");
   }
+
+  const middleware = readFileSync(path.join(rootDir, "functions/_middleware.js"), "utf8");
+  if (redirects.includes("/index.html / 301") && middleware.includes('new URL("/index.html", request.url)')) {
+    fail("functions/_middleware.js rewrites to /index.html while _redirects redirects /index.html to /. This causes redirect loops on Cloudflare Pages.");
+  }
 }
 
 function validateWrangler() {
