@@ -607,31 +607,258 @@ function renderAdSlot({ title, size, placement, ctaPath = "/advertise" }) {
   nativeAdCounter++;
   const containerId = `container-native-ad-${nativeAdCounter}`;
   return `
-    <div class="native-ad-banner" data-ad-slot="${nativeAdCounter}">
+    <div class="native-ad-banner"
+         data-ad-slot="${nativeAdCounter}"
+         data-ad-title="${escapeHtml(title || "Sponsored placement")}"
+         data-ad-size="${escapeHtml(size || "Native")}"
+         data-ad-placement="${escapeHtml(placement || "Premium in-content sponsor block")}"
+         data-ad-cta-path="${escapeHtml(ctaPath)}">
       <div id="${containerId}"></div>
     </div>
   `;
 }
 
-function activateNativeAds() {
-  const banners = document.querySelectorAll('.native-ad-banner[data-ad-slot]');
+function getRouteDisplayLabel(route = {}) {
+  switch (route?.type) {
+    case "home":
+      return "the homepage";
+    case "live":
+      return "the live scores page";
+    case "upcoming":
+      return "the upcoming matches page";
+    case "trending":
+      return "the trending matches page";
+    case "results":
+      return "the results page";
+    case "history":
+      return "the match history page";
+    case "top-leagues":
+      return "the top leagues page";
+    case "league":
+      return LEAGUES[route.leagueKey]?.label ? `${LEAGUES[route.leagueKey].label}` : "this league page";
+    case "sport":
+      return SPORT_GROUPS[route.sport]?.label ? `${SPORT_GROUPS[route.sport].label}` : "this sport hub";
+    case "match":
+      return "this match center";
+    case "team":
+      return "this team page";
+    case "player":
+      return "this player page";
+    case "advertise":
+      return "the advertiser info page";
+    default:
+      return "LiveScoreFree";
+  }
+}
+
+function getNativeBannerConfigs(route = {}) {
+  const pageLabel = getRouteDisplayLabel(route);
+  return [
+    {
+      eyebrow: "Sponsored",
+      title: `Advertise on ${pageLabel}`,
+      lead: "Native placements stay aligned with the score experience without breaking the reading flow.",
+      ctaLabel: "Advertise",
+      ctaPath: "/advertise",
+      accent: "brand"
+    },
+    {
+      eyebrow: "Partner",
+      title: "Reach high-intent sports fans",
+      lead: "Homepage, league, team, player, and match pages are available for premium brand placements.",
+      ctaLabel: "See placements",
+      ctaPath: "/advertise",
+      accent: "reach"
+    },
+    {
+      eyebrow: "Support",
+      title: "Keep LiveScoreFree fast and free",
+      lead: "Support smoother live updates, cleaner visuals, and broader score coverage for fans worldwide.",
+      ctaLabel: "Support",
+      ctaPath: "/donate",
+      accent: "support"
+    }
+  ];
+}
+
+function buildNativeBannerConfig(wrapper, route, index = 0) {
+  const presets = getNativeBannerConfigs(route);
+  const preset = presets[index % presets.length];
+  if (!wrapper) {
+    return preset;
+  }
+
+  return {
+    ...preset,
+    title: wrapper.dataset.adTitle || preset.title,
+    lead: wrapper.dataset.adPlacement || preset.lead,
+    ctaPath: wrapper.dataset.adCtaPath || preset.ctaPath,
+    meta: wrapper.dataset.adSize || ""
+  };
+}
+
+function renderNativePromoBannerInner(config) {
+  return `
+    <div class="native-ad-shell">
+      <div class="native-ad-copy">
+        <span class="native-ad-eyebrow">${escapeHtml(config.eyebrow || "Sponsored")}</span>
+        <strong>${escapeHtml(config.title || "Premium sponsor placement")}</strong>
+        <p>${escapeHtml(config.lead || "Native promotion block")}</p>
+      </div>
+      <div class="native-ad-actions">
+        ${config.meta ? `<span class="native-ad-meta">${escapeHtml(config.meta)}</span>` : ""}
+        <a class="btn btn-primary native-ad-cta" data-link href="${escapeHtml(config.ctaPath || "/advertise")}">${escapeHtml(config.ctaLabel || "Learn more")}</a>
+      </div>
+    </div>
+  `;
+}
+
+function renderNativePromoBanner(config) {
+  const accent = config?.accent || "brand";
+  return `
+    <div class="native-ad-banner native-ad-banner--promo native-ad-banner--${escapeHtml(accent)}">
+      ${renderNativePromoBannerInner(config || {})}
+    </div>
+  `;
+}
+
+function applyNativePromoFallback(wrapper, route, index = 0) {
+  if (!wrapper || wrapper.dataset.adFallbackApplied === "1") {
+    return;
+  }
+  const config = buildNativeBannerConfig(wrapper, route, index);
+  wrapper.dataset.adFallbackApplied = "1";
+  wrapper.removeAttribute("data-ad-slot");
+  wrapper.classList.add("native-ad-banner--promo", `native-ad-banner--${config.accent || "brand"}`);
+  wrapper.innerHTML = renderNativePromoBannerInner(config);
+}
+
+function hasResolvedAdCreative(wrapper) {
+  const slot = wrapper?.querySelector('div[id^="container-"]');
+  return Boolean(
+    wrapper?.querySelector("iframe, img, ins, object, embed") ||
+    (slot && slot.childElementCount > 0)
+  );
+}
+
+function ensureMinimumNativeBanners(route) {
+  const main = qs("#main");
+  if (!main) {
+    return;
+  }
+
+  const existingCount = qsa(".native-ad-banner", main).length;
+  const requiredCount = 3;
+  const missingCount = Math.max(0, requiredCount - existingCount);
+  if (!missingCount) {
+    return;
+  }
+
+  const shareWidget = qs("#global-share-widget", main);
+  const contentBlocks = Array.from(main.children).filter(
+    (node) => !node.matches("#global-share-widget, .pwa-app-header, .pwa-quick-grid")
+  );
+  const insertionTargets = [
+    contentBlocks[1] || contentBlocks[0] || null,
+    contentBlocks[Math.max(1, Math.floor(contentBlocks.length / 2))] || null,
+    shareWidget || contentBlocks[contentBlocks.length - 1] || null
+  ];
+
+  for (let i = 0; i < missingCount; i += 1) {
+    const section = document.createElement("section");
+    section.className = "section ad-band ad-band--injected";
+    section.innerHTML = renderNativePromoBanner(getNativeBannerConfigs(route)[(existingCount + i) % 3]);
+
+    if (i === missingCount - 1 && shareWidget && shareWidget.parentNode === main) {
+      main.insertBefore(section, shareWidget);
+      continue;
+    }
+
+    const target = insertionTargets[Math.min(i, insertionTargets.length - 1)];
+    if (target?.parentNode === main) {
+      target.insertAdjacentElement("afterend", section);
+    } else {
+      main.appendChild(section);
+    }
+  }
+}
+
+function activateNativeAds(route) {
+  const banners = qsa(".native-ad-banner[data-ad-slot]");
   if (!banners.length) return;
   let activated = false;
-  banners.forEach((wrapper) => {
+  banners.forEach((wrapper, index) => {
     const slot = wrapper.querySelector('div[id^="container-native-ad-"]');
     if (!slot || slot.dataset.adLoaded) return;
     if (activated) {
-      wrapper.style.display = 'none';
+      applyNativePromoFallback(wrapper, route, index);
       return;
     }
-    slot.id = 'container-01fac86ec9e3085bcb989e025d13aa86';
-    slot.dataset.adLoaded = 'true';
-    const script = document.createElement('script');
+    slot.id = "container-01fac86ec9e3085bcb989e025d13aa86";
+    slot.dataset.adLoaded = "true";
+    const script = document.createElement("script");
     script.async = true;
-    script.setAttribute('data-cfasync', 'false');
-    script.src = 'https://pl28913139.effectivegatecpm.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js';
+    script.setAttribute("data-cfasync", "false");
+    script.src = "https://pl28913139.effectivegatecpm.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js";
+    script.onerror = () => applyNativePromoFallback(wrapper, route, index);
     wrapper.appendChild(script);
+    setTimeout(() => {
+      if (!hasResolvedAdCreative(wrapper)) {
+        applyNativePromoFallback(wrapper, route, index);
+      }
+    }, 3200);
     activated = true;
+  });
+}
+
+const preloadedVisualAssets = new Set();
+
+function preloadVisualAsset(url) {
+  if (!url || preloadedVisualAssets.has(url)) {
+    return;
+  }
+  try {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = url;
+    preloadedVisualAssets.add(url);
+  } catch (_error) {
+    // ignore preload errors
+  }
+}
+
+function hydrateVisualMedia(scope = document) {
+  qsa("img", scope).forEach((img, index) => {
+    img.classList.add("media-smooth");
+    if (!img.getAttribute("decoding")) {
+      img.setAttribute("decoding", "async");
+    }
+    if (index < 3 && !img.getAttribute("fetchpriority")) {
+      img.setAttribute("fetchpriority", "high");
+    }
+    const markLoaded = () => img.classList.add("is-loaded");
+    if (img.complete && img.naturalWidth > 0) {
+      markLoaded();
+    } else {
+      img.addEventListener("load", markLoaded, { once: true });
+      img.addEventListener("error", markLoaded, { once: true });
+    }
+  });
+}
+
+function preloadCriticalVisualAssets() {
+  const theme = document.documentElement.getAttribute("data-theme") === "day" ? "day" : "night";
+  preloadVisualAsset(theme === "day" ? "/logo-day.png" : "/logo-night.png");
+  preloadVisualAsset("/logo-mark-192.png");
+
+  const scene = document.body?.getAttribute("data-bg-scene") || "";
+  const sceneMatch = scene.match(/^arena-(\d)$/);
+  if (sceneMatch) {
+    preloadVisualAsset(theme === "day" ? `/bg-stadium-day-${sceneMatch[1]}.svg` : `/bg-stadium-night-${sceneMatch[1]}.svg`);
+  }
+
+  qsa("#main img").slice(0, 8).forEach((img) => {
+    preloadVisualAsset(img.currentSrc || img.getAttribute("src") || "");
   });
 }
 
@@ -2601,8 +2828,11 @@ function showToast(text) {
 }
 
 function detectThemeByTime() {
+  if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+    return "night";
+  }
   const hour = new Date().getHours();
-  return hour >= 6 && hour < 18 ? "day" : "night";
+  return hour >= 7 && hour < 18 ? "day" : "night";
 }
 
 function applyTheme(theme) {
@@ -9412,9 +9642,12 @@ async function renderRoute() {
   updateLastUpdatedLabel();
   wireNotificationControls();
   maybeShowSupportPopup(route);
-  // Activate native ad banners after page render
+
   nativeAdCounter = 0;
-  activateNativeAds();
+  ensureMinimumNativeBanners(route);
+  activateNativeAds(route);
+  hydrateVisualMedia(document);
+  preloadCriticalVisualAssets();
 }
 function updateProgressBar() {
   const bar = qs("#top-progress-bar");
@@ -9456,6 +9689,7 @@ function setupPwaPrompt() {
   const dismissBtn = qs("#pwa-dismiss-btn", prompt);
   const iosTip = qs("#pwa-ios-tip", prompt);
   let deferredPrompt = null;
+  let promptTimer = null;
 
   function showPrompt(mode) {
     if (!shouldShowPwaPrompt()) {
@@ -9471,7 +9705,13 @@ function setupPwaPrompt() {
     }
   }
 
+  function schedulePrompt(mode, delay = 3600) {
+    clearTimeout(promptTimer);
+    promptTimer = setTimeout(() => showPrompt(mode), delay);
+  }
+
   function hidePrompt() {
+    clearTimeout(promptTimer);
     prompt.setAttribute("hidden", "");
   }
 
@@ -9499,7 +9739,7 @@ function setupPwaPrompt() {
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     deferredPrompt = event;
-    showPrompt("install");
+    schedulePrompt("install", 4200);
   });
 
   window.addEventListener("appinstalled", () => {
@@ -9509,11 +9749,7 @@ function setupPwaPrompt() {
 
   const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
   if (isIos && !isPwaInstalled()) {
-    setTimeout(() => {
-      if (!deferredPrompt) {
-        showPrompt("ios");
-      }
-    }, 1200);
+    schedulePrompt("ios", 3800);
   }
 }
 
