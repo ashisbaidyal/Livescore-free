@@ -5,3 +5,4 @@ desktop.ini
 *.tmp
 *.bak
 .vscode/
+node_modules/
