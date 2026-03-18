@@ -610,6 +610,12 @@ function renderDonationProgress({ compact = false } = {}) {
 
 const THIRD_PARTY_AD_CONTAINER_ID = "container-01fac86ec9e3085bcb989e025d13aa86";
 const THIRD_PARTY_AD_INVOKE_SRC = "https://pl28913139.profitablecpmratenetwork.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js";
+const THIRD_PARTY_AD_FALLBACK_TIMEOUT_MS = 4500;
+const THIRD_PARTY_AD_FRAME_MONITOR_MS = 12000;
+const THIRD_PARTY_AD_FRAME_POLL_MS = 250;
+const THIRD_PARTY_AD_DEFAULT_HEIGHT = 320;
+const THIRD_PARTY_AD_MIN_HEIGHT = 120;
+const THIRD_PARTY_AD_MAX_HEIGHT = 900;
 
 let nativeAdCounter = 0;
 function renderAdSlot({ title, size, placement, ctaPath = "/advertise" }) {
@@ -754,17 +760,9 @@ function applyNativePromoFallback(wrapper, route, index = 0) {
   wrapper.innerHTML = renderNativePromoBannerInner(config);
 }
 
-function hasResolvedAdCreative(wrapper) {
-  const slot = wrapper?.querySelector('div[id^="container-"]');
-  return Boolean(
-    wrapper?.querySelector("iframe, img, ins, object, embed") ||
-    (slot && slot.childElementCount > 0)
-  );
-}
-
 function ensureMinimumNativeBanners(route) {
   const main = qs("#main");
-  if (!main) {
+  if (!main || qs(".native-ad-banner", main)) {
     return;
   }
 
@@ -781,59 +779,175 @@ function ensureMinimumNativeBanners(route) {
       main.appendChild(primaryBand);
     }
   }
-
-  const allBanners = Array.from(new Set(qsa(".native-ad-banner", main)));
-  const selectedBanners = allBanners.slice(0, 3);
-
-  selectedBanners.forEach((banner) => {
-    if (banner.parentNode !== primaryBand) {
-      primaryBand.appendChild(banner);
-    }
-  });
-
-  for (let index = selectedBanners.length; index < 3; index += 1) {
-    primaryBand.appendChild(createNativeAdSlotElement(route, index));
-  }
-
-  allBanners.slice(3).forEach((banner) => banner.remove());
-  qsa(".ad-band", main).forEach((band) => {
-    if (band !== primaryBand && !band.querySelector(".native-ad-banner")) {
-      band.remove();
-    }
-  });
+  primaryBand.appendChild(createNativeAdSlotElement(route, 0));
 }
 
-function createThirdPartyAdScript() {
-  const script = document.createElement("script");
-  script.async = true;
-  script.setAttribute("data-cfasync", "false");
-  script.src = THIRD_PARTY_AD_INVOKE_SRC;
-  return script;
+// This Adsterra widget only supports one placement instance per document, so each slot runs inside its own iframe.
+function buildThirdPartyAdFrameMarkup() {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base target="_top">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    body {
+      min-height: ${THIRD_PARTY_AD_MIN_HEIGHT}px;
+      display: flex;
+      justify-content: center;
+    }
+
+    #${THIRD_PARTY_AD_CONTAINER_ID} {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="${THIRD_PARTY_AD_CONTAINER_ID}"></div>
+  <script async data-cfasync="false" src="${THIRD_PARTY_AD_INVOKE_SRC}"></script>
+</body>
+</html>`;
+}
+
+function getThirdPartyAdDocument(iframe) {
+  try {
+    return iframe?.contentDocument || iframe?.contentWindow?.document || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function measureThirdPartyAdHeight(iframe) {
+  const frameDocument = getThirdPartyAdDocument(iframe);
+  if (!frameDocument?.body) {
+    return 0;
+  }
+
+  const { body, documentElement } = frameDocument;
+  const measuredHeight = Math.max(
+    body.scrollHeight,
+    body.offsetHeight,
+    body.clientHeight,
+    documentElement?.scrollHeight || 0,
+    documentElement?.offsetHeight || 0,
+    documentElement?.clientHeight || 0
+  );
+
+  return Math.min(Math.max(measuredHeight, THIRD_PARTY_AD_MIN_HEIGHT), THIRD_PARTY_AD_MAX_HEIGHT);
+}
+
+function syncThirdPartyAdFrameHeight(iframe) {
+  const nextHeight = measureThirdPartyAdHeight(iframe);
+  if (!nextHeight) {
+    return false;
+  }
+  iframe.style.height = `${nextHeight}px`;
+  return true;
+}
+
+function hasResolvedThirdPartyAdFrame(iframe) {
+  const frameDocument = getThirdPartyAdDocument(iframe);
+  const slot = frameDocument?.getElementById(THIRD_PARTY_AD_CONTAINER_ID);
+  if (!slot) {
+    return false;
+  }
+
+  return Boolean(
+    slot.querySelector('a[href], img, iframe, object, embed, [class*="__bn"], [class*="__bn-container"]') ||
+    slot.childElementCount > 0
+  );
+}
+
+function createThirdPartyAdFrame(wrapper) {
+  const iframe = document.createElement("iframe");
+  iframe.className = "native-ad-frame";
+  iframe.loading = "lazy";
+  iframe.referrerPolicy = "unsafe-url";
+  iframe.scrolling = "no";
+  iframe.title = wrapper.dataset.adTitle || "Sponsored content";
+  iframe.setAttribute("aria-label", iframe.title);
+  iframe.style.height = `${THIRD_PARTY_AD_DEFAULT_HEIGHT}px`;
+  return iframe;
+}
+
+function attachThirdPartyAdFrame(wrapper, slot, route, index = 0) {
+  if (!wrapper || !slot || wrapper.dataset.adLoaded === "true") {
+    return;
+  }
+
+  wrapper.dataset.adLoaded = "true";
+  const iframe = createThirdPartyAdFrame(wrapper);
+  slot.replaceWith(iframe);
+
+  const startedAt = Date.now();
+  let resolvedAt = 0;
+  let stopped = false;
+
+  const stopWatching = () => {
+    if (stopped) {
+      return;
+    }
+    stopped = true;
+    clearInterval(pollId);
+    clearTimeout(fallbackTimer);
+  };
+
+  const tick = () => {
+    if (!document.contains(wrapper)) {
+      stopWatching();
+      return;
+    }
+
+    syncThirdPartyAdFrameHeight(iframe);
+
+    if (hasResolvedThirdPartyAdFrame(iframe)) {
+      wrapper.dataset.adResolved = "true";
+      if (!resolvedAt) {
+        resolvedAt = Date.now();
+      }
+      if (Date.now() - resolvedAt >= 2500) {
+        stopWatching();
+      }
+      return;
+    }
+
+    if (Date.now() - startedAt >= THIRD_PARTY_AD_FRAME_MONITOR_MS) {
+      stopWatching();
+    }
+  };
+
+  const pollId = setInterval(tick, THIRD_PARTY_AD_FRAME_POLL_MS);
+  const fallbackTimer = setTimeout(() => {
+    if (hasResolvedThirdPartyAdFrame(iframe)) {
+      tick();
+      return;
+    }
+    stopWatching();
+    applyNativePromoFallback(wrapper, route, index);
+  }, THIRD_PARTY_AD_FALLBACK_TIMEOUT_MS);
+
+  iframe.addEventListener("load", tick);
+  iframe.srcdoc = buildThirdPartyAdFrameMarkup();
+  tick();
 }
 
 function activateNativeAds(route) {
-  const banners = qsa(".native-ad-banner[data-ad-slot]");
-  if (!banners.length) return;
-  let activated = false;
-  banners.forEach((wrapper, index) => {
+  qsa(".native-ad-banner[data-ad-slot]").forEach((wrapper, index) => {
     const slot = wrapper.querySelector('div[id^="container-native-ad-"]');
-    if (!slot || slot.dataset.adLoaded) return;
-    if (activated) {
+    if (!slot) {
       applyNativePromoFallback(wrapper, route, index);
       return;
     }
-    slot.id = THIRD_PARTY_AD_CONTAINER_ID;
-    slot.replaceChildren();
-    slot.dataset.adLoaded = "true";
-    const script = createThirdPartyAdScript();
-    script.onerror = () => applyNativePromoFallback(wrapper, route, index);
-    wrapper.insertBefore(script, slot);
-    setTimeout(() => {
-      if (!hasResolvedAdCreative(wrapper)) {
-        applyNativePromoFallback(wrapper, route, index);
-      }
-    }, 3200);
-    activated = true;
+    attachThirdPartyAdFrame(wrapper, slot, route, index);
   });
 }
 

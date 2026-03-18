@@ -8395,6 +8395,14 @@ body {
   justify-content: center;
 }
 
+.native-ad-frame {
+  width: 100%;
+  display: block;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
 .native-ad-banner:empty,
 .native-ad-banner:not(:has(*)) {
   display: none;
