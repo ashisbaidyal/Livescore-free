@@ -608,6 +608,9 @@ function renderDonationProgress({ compact = false } = {}) {
   `;
 }
 
+const THIRD_PARTY_AD_CONTAINER_ID = "container-01fac86ec9e3085bcb989e025d13aa86";
+const THIRD_PARTY_AD_INVOKE_SRC = "https://pl28913139.profitablecpmratenetwork.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js";
+
 let nativeAdCounter = 0;
 function renderAdSlot({ title, size, placement, ctaPath = "/advertise" }) {
   nativeAdCounter++;
@@ -768,7 +771,7 @@ function ensureMinimumNativeBanners(route) {
   let primaryBand = qs(".ad-band", main);
   if (!primaryBand) {
     primaryBand = document.createElement("section");
-    primaryBand.className = "section ad-band";
+    primaryBand.className = "section ad-band ad-band--injected";
     const anchor = Array.from(main.children).find(
       (node) => !node.matches("#global-share-widget, .pwa-app-header, .pwa-quick-grid")
     );
@@ -800,6 +803,14 @@ function ensureMinimumNativeBanners(route) {
   });
 }
 
+function createThirdPartyAdScript() {
+  const script = document.createElement("script");
+  script.async = true;
+  script.setAttribute("data-cfasync", "false");
+  script.src = THIRD_PARTY_AD_INVOKE_SRC;
+  return script;
+}
+
 function activateNativeAds(route) {
   const banners = qsa(".native-ad-banner[data-ad-slot]");
   if (!banners.length) return;
@@ -811,14 +822,12 @@ function activateNativeAds(route) {
       applyNativePromoFallback(wrapper, route, index);
       return;
     }
-    slot.id = "container-01fac86ec9e3085bcb989e025d13aa86";
+    slot.id = THIRD_PARTY_AD_CONTAINER_ID;
+    slot.replaceChildren();
     slot.dataset.adLoaded = "true";
-    const script = document.createElement("script");
-    script.async = true;
-    script.setAttribute("data-cfasync", "false");
-    script.src = "https://pl28913139.effectivegatecpm.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js";
+    const script = createThirdPartyAdScript();
     script.onerror = () => applyNativePromoFallback(wrapper, route, index);
-    wrapper.appendChild(script);
+    wrapper.insertBefore(script, slot);
     setTimeout(() => {
       if (!hasResolvedAdCreative(wrapper)) {
         applyNativePromoFallback(wrapper, route, index);

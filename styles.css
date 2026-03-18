@@ -475,7 +475,7 @@ body {
   line-height: 1.5;
   position: relative;
   padding-top: var(--header-offset, 0px);
-  --page-context-bg-image: url("sport-default.svg"); /* Sport-level banner images from TheSportsDB CDN â€” used as fallback when no league key matches */
+  --page-context-bg-image: url("sport-default.svg"); /* Sport-level banner images from TheSportsDB CDN - used as fallback when no league key matches */
   --page-context-accent-rgb: 79 181 255;
   --page-context-glow-rgb: 57 181 74;
 }
@@ -8386,6 +8386,12 @@ body {
   min-height: 90px;
   display: flex;
   align-items: center;
+  justify-content: center;
+}
+
+.native-ad-banner > div[id^="container-"] {
+  width: 100%;
+  display: flex;
   justify-content: center;
 }
 
