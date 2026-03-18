@@ -131,6 +131,12 @@ const PLAYER_TABS = [
   { id: "matches", label: "Matches" }
 ];
 
+const PROXIED_DATA_HOSTS = new Set([
+  "site.api.espn.com",
+  "www.thesportsdb.com",
+  "gnews.io"
+]);
+
 const LEAGUES = {
   // ── Football / Soccer ──
   "eng.1": { feed: "soccer/eng.1", label: "Premier League", sportGroup: "football" },
@@ -1555,15 +1561,38 @@ function getStatusText(match) {
   return match.statusDetail || formatDateTime(match.date);
 }
 
+function buildBrowserDataUrl(url) {
+  const raw = String(url || "");
+  if (!raw) {
+    return raw;
+  }
+
+  try {
+    const parsed = new URL(raw, window.location.origin);
+    if (parsed.origin === window.location.origin) {
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+
+    if (/^https?:$/i.test(parsed.protocol) && PROXIED_DATA_HOSTS.has(parsed.hostname)) {
+      return `/api/proxy?url=${encodeURIComponent(parsed.toString())}`;
+    }
+  } catch (_error) {
+    return raw;
+  }
+
+  return raw;
+}
+
 async function cachedJson(url, ttlMs = 25000) {
   const now = Date.now();
   const cached = requestCache.get(url);
   if (cached && now - cached.time < ttlMs) {
     return cached.data;
   }
-  const response = await fetch(url, { cache: "no-store" });
+  const requestUrl = buildBrowserDataUrl(url);
+  const response = await fetch(requestUrl, { cache: "no-store" });
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} for ${url}`);
+    throw new Error(`HTTP ${response.status} for ${requestUrl}`);
   }
   const data = await response.json();
   requestCache.set(url, { time: now, data });
@@ -4717,7 +4746,7 @@ const SPORT_BG_HIGHLIGHTS = {
 };
 
 // Free sports news via GNews API (100 req/day no-auth plan)
-const GNEWS_SPORTS_URL = "https://gnews.io/api/v4/top-headlines?category=sports&lang=en&max=10&apikey=pub_test";
+const GNEWS_SPORTS_URL = "https://gnews.io/api/v4/top-headlines?category=sports&lang=en&max=10&apikey=bb2e7574e2e25ab91a92d53bab05f374";
 
 let _highlightNewsCache = null;
 let _highlightNewsTs = 0;
@@ -4729,7 +4758,7 @@ async function fetchSportsNews() {
   }
   try {
     // Uses GNews free API — returns up to 10 sport headlines with images
-    const res = await fetch(`https://gnews.io/api/v4/top-headlines?category=sports&lang=en&max=10&apikey=bb2e7574e2e25ab91a92d53bab05f374`, { signal: AbortSignal.timeout(6000) });
+    const res = await fetch(buildBrowserDataUrl(GNEWS_SPORTS_URL), { signal: AbortSignal.timeout(6000) });
     const data = await res.json();
     const articles = (data.articles || []).filter((a) => a.image && a.title);
     _highlightNewsCache = articles;

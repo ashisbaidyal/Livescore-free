@@ -153,6 +153,7 @@ const requiredFiles = [
   "functions/api/timeline.js",
   "functions/api/standings.js",
   "functions/api/health.js",
+  "functions/api/proxy.js",
   "functions/api/cricket-live.js",
   "functions/api/nhl-live.js",
   "functions/api/mlb-live.js"
