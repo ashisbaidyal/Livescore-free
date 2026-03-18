@@ -609,9 +609,7 @@ function renderDonationProgress({ compact = false } = {}) {
 }
 
 const THIRD_PARTY_AD_CONTAINER_ID = "container-01fac86ec9e3085bcb989e025d13aa86";
-const THIRD_PARTY_AD_INVOKE_SRC = "https://pl28913139.profitablecpmratenetwork.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js";
-const THIRD_PARTY_AD_EMBED_HTML = `<script async="async" data-cfasync="false" src="${THIRD_PARTY_AD_INVOKE_SRC}"></script>
-  <div id="${THIRD_PARTY_AD_CONTAINER_ID}"></div>`;
+const THIRD_PARTY_AD_FRAME_PATH = "/adsterra-frame.html";
 const THIRD_PARTY_AD_FALLBACK_TIMEOUT_MS = 4500;
 const THIRD_PARTY_AD_FRAME_MONITOR_MS = 12000;
 const THIRD_PARTY_AD_FRAME_POLL_MS = 250;
@@ -671,40 +669,6 @@ function ensureMinimumNativeBanners(route) {
     }
     main.appendChild(band);
   }
-}
-
-function buildThirdPartyAdFrameMarkup() {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <base target="_top">
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: transparent;
-      overflow: hidden;
-    }
-
-    body {
-      min-height: ${THIRD_PARTY_AD_MIN_HEIGHT}px;
-      display: flex;
-      justify-content: center;
-    }
-
-    #${THIRD_PARTY_AD_CONTAINER_ID} {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-  </style>
-</head>
-<body>
-  ${THIRD_PARTY_AD_EMBED_HTML}
-</body>
-</html>`;
 }
 
 function getThirdPartyAdDocument(iframe) {
@@ -837,7 +801,7 @@ function attachThirdPartyAdFrame(wrapper, slot, route, index = 0) {
   }, THIRD_PARTY_AD_FALLBACK_TIMEOUT_MS);
 
   iframe.addEventListener("load", tick);
-  iframe.srcdoc = buildThirdPartyAdFrameMarkup();
+  iframe.src = THIRD_PARTY_AD_FRAME_PATH;
   tick();
 }
 
