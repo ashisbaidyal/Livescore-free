@@ -620,146 +620,20 @@ const THIRD_PARTY_AD_MIN_HEIGHT = 120;
 const THIRD_PARTY_AD_MAX_HEIGHT = 900;
 
 let nativeAdCounter = 0;
-function renderAdSlot({ title, size, placement, ctaPath = "/advertise" }) {
+function renderAdSlot() {
   nativeAdCounter++;
   const containerId = `container-native-ad-${nativeAdCounter}`;
   return `
-    <div class="native-ad-banner"
-         data-ad-slot="${nativeAdCounter}"
-         data-ad-title="${escapeHtml(title || "Sponsored placement")}"
-         data-ad-size="${escapeHtml(size || "Native")}"
-         data-ad-placement="${escapeHtml(placement || "Premium in-content sponsor block")}"
-         data-ad-cta-path="${escapeHtml(ctaPath)}">
+    <div class="native-ad-banner" data-ad-slot="${nativeAdCounter}">
       <div id="${containerId}"></div>
     </div>
   `;
 }
 
 function createNativeAdSlotElement(route, index = 0) {
-  const config = getNativeBannerConfigs(route)[index % 3];
   const template = document.createElement("template");
-  template.innerHTML = renderAdSlot({
-    title: config.title,
-    size: index === 0 ? "728x90" : "Native Sponsor",
-    placement: config.lead,
-    ctaPath: config.ctaPath
-  }).trim();
+  template.innerHTML = renderAdSlot().trim();
   return template.content.firstElementChild;
-}
-
-function getRouteDisplayLabel(route = {}) {
-  switch (route?.type) {
-    case "home":
-      return "the homepage";
-    case "live":
-      return "the live scores page";
-    case "upcoming":
-      return "the upcoming matches page";
-    case "trending":
-      return "the trending matches page";
-    case "results":
-      return "the results page";
-    case "history":
-      return "the match history page";
-    case "top-leagues":
-      return "the top leagues page";
-    case "league":
-      return LEAGUES[route.leagueKey]?.label ? `${LEAGUES[route.leagueKey].label}` : "this league page";
-    case "sport":
-      return SPORT_GROUPS[route.sport]?.label ? `${SPORT_GROUPS[route.sport].label}` : "this sport hub";
-    case "match":
-      return "this match center";
-    case "team":
-      return "this team page";
-    case "player":
-      return "this player page";
-    case "advertise":
-      return "the advertiser info page";
-    default:
-      return "LiveScoreFree";
-  }
-}
-
-function getNativeBannerConfigs(route = {}) {
-  const pageLabel = getRouteDisplayLabel(route);
-  return [
-    {
-      eyebrow: "Sponsored",
-      title: `Advertise on ${pageLabel}`,
-      lead: "Native placements stay aligned with the score experience without breaking the reading flow.",
-      ctaLabel: "Advertise",
-      ctaPath: "/advertise",
-      accent: "brand"
-    },
-    {
-      eyebrow: "Partner",
-      title: "Reach high-intent sports fans",
-      lead: "Homepage, league, team, player, and match pages are available for premium brand placements.",
-      ctaLabel: "See placements",
-      ctaPath: "/advertise",
-      accent: "reach"
-    },
-    {
-      eyebrow: "Support",
-      title: "Keep LiveScoreFree fast and free",
-      lead: "Support smoother live updates, cleaner visuals, and broader score coverage for fans worldwide.",
-      ctaLabel: "Support",
-      ctaPath: "/donate",
-      accent: "support"
-    }
-  ];
-}
-
-function buildNativeBannerConfig(wrapper, route, index = 0) {
-  const presets = getNativeBannerConfigs(route);
-  const preset = presets[index % presets.length];
-  if (!wrapper) {
-    return preset;
-  }
-
-  return {
-    ...preset,
-    title: wrapper.dataset.adTitle || preset.title,
-    lead: wrapper.dataset.adPlacement || preset.lead,
-    ctaPath: wrapper.dataset.adCtaPath || preset.ctaPath,
-    meta: wrapper.dataset.adSize || ""
-  };
-}
-
-function renderNativePromoBannerInner(config) {
-  return `
-    <div class="native-ad-shell">
-      <div class="native-ad-copy">
-        <span class="native-ad-eyebrow">${escapeHtml(config.eyebrow || "Sponsored")}</span>
-        <strong>${escapeHtml(config.title || "Premium sponsor placement")}</strong>
-        <p>${escapeHtml(config.lead || "Native promotion block")}</p>
-      </div>
-      <div class="native-ad-actions">
-        ${config.meta ? `<span class="native-ad-meta">${escapeHtml(config.meta)}</span>` : ""}
-        <a class="btn btn-primary native-ad-cta" data-link href="${escapeHtml(config.ctaPath || "/advertise")}">${escapeHtml(config.ctaLabel || "Learn more")}</a>
-      </div>
-    </div>
-  `;
-}
-
-function renderNativePromoBanner(config) {
-  const accent = config?.accent || "brand";
-  return `
-    <div class="native-ad-banner native-ad-banner--promo native-ad-banner--${escapeHtml(accent)}">
-      ${renderNativePromoBannerInner(config || {})}
-    </div>
-  `;
-}
-
-function applyNativePromoFallback(wrapper, route, index = 0) {
-  if (!wrapper || wrapper.dataset.adFallbackApplied === "1") {
-    return;
-  }
-  const config = buildNativeBannerConfig(wrapper, route, index);
-  wrapper.dataset.adFallbackApplied = "1";
-  wrapper.removeAttribute("data-ad-slot");
-  wrapper.classList.add("native-ad-banner--promo", `native-ad-banner--${config.accent || "brand"}`);
-  wrapper.innerHTML = renderNativePromoBannerInner(config);
 }
 
 function createNativeAdBandElement(route, index = 0) {
