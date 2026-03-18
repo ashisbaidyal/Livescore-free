@@ -1,9 +1,8 @@
-const CACHE_NAME = "lsf-v50";
-const CACHE_VERSION = "v50";
+const CACHE_NAME = "lsf-v49";
+const CACHE_VERSION = "v49";
 const APP_SHELL = [
   "/",
   "/index.html",
-  "/adsterra-frame.html",
   "/styles.css",
   "/api-config.js",
   "/app.js",

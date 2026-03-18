@@ -608,22 +608,15 @@ function renderDonationProgress({ compact = false } = {}) {
   `;
 }
 
-const THIRD_PARTY_AD_CONTAINER_ID = "container-01fac86ec9e3085bcb989e025d13aa86";
-const THIRD_PARTY_AD_FRAME_PATH = "/adsterra-frame.html";
-const THIRD_PARTY_AD_FALLBACK_TIMEOUT_MS = 4500;
-const THIRD_PARTY_AD_FRAME_MONITOR_MS = 12000;
-const THIRD_PARTY_AD_FRAME_POLL_MS = 250;
-const THIRD_PARTY_AD_DEFAULT_HEIGHT = 320;
-const THIRD_PARTY_AD_MIN_HEIGHT = 120;
-const THIRD_PARTY_AD_MAX_HEIGHT = 900;
+const THIRD_PARTY_AD_EMBED_HTML = `<script async="async" data-cfasync="false" src="https://pl28913139.profitablecpmratenetwork.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js"></script>
+  <div id="container-01fac86ec9e3085bcb989e025d13aa86"></div>`;
 
 let nativeAdCounter = 0;
 function renderAdSlot() {
   nativeAdCounter++;
-  const containerId = `container-native-ad-${nativeAdCounter}`;
   return `
     <div class="native-ad-banner" data-ad-slot="${nativeAdCounter}">
-      <div id="${containerId}"></div>
+      ${THIRD_PARTY_AD_EMBED_HTML}
     </div>
   `;
 }
@@ -671,145 +664,8 @@ function ensureMinimumNativeBanners(route) {
   }
 }
 
-function getThirdPartyAdDocument(iframe) {
-  try {
-    return iframe?.contentDocument || iframe?.contentWindow?.document || null;
-  } catch (_) {
-    return null;
-  }
-}
-
-function measureThirdPartyAdHeight(iframe) {
-  const frameDocument = getThirdPartyAdDocument(iframe);
-  if (!frameDocument?.body) {
-    return 0;
-  }
-
-  const { body, documentElement } = frameDocument;
-  const measuredHeight = Math.max(
-    body.scrollHeight,
-    body.offsetHeight,
-    body.clientHeight,
-    documentElement?.scrollHeight || 0,
-    documentElement?.offsetHeight || 0,
-    documentElement?.clientHeight || 0
-  );
-
-  return Math.min(Math.max(measuredHeight, THIRD_PARTY_AD_MIN_HEIGHT), THIRD_PARTY_AD_MAX_HEIGHT);
-}
-
-function syncThirdPartyAdFrameHeight(iframe) {
-  const nextHeight = measureThirdPartyAdHeight(iframe);
-  if (!nextHeight) {
-    return false;
-  }
-  iframe.style.height = `${nextHeight}px`;
-  return true;
-}
-
-function hasResolvedThirdPartyAdFrame(iframe) {
-  const frameDocument = getThirdPartyAdDocument(iframe);
-  const slot = frameDocument?.getElementById(THIRD_PARTY_AD_CONTAINER_ID);
-  if (!slot) {
-    return false;
-  }
-
-  return Boolean(
-    slot.querySelector('a[href], img, iframe, object, embed, [class*="__bn"], [class*="__bn-container"]') ||
-    slot.childElementCount > 0
-  );
-}
-
-function createThirdPartyAdFrame(wrapper) {
-  const iframe = document.createElement("iframe");
-  iframe.className = "native-ad-frame";
-  iframe.loading = "lazy";
-  iframe.referrerPolicy = "unsafe-url";
-  iframe.scrolling = "no";
-  iframe.title = wrapper.dataset.adTitle || "Sponsored content";
-  iframe.setAttribute("aria-label", iframe.title);
-  iframe.style.height = `${THIRD_PARTY_AD_DEFAULT_HEIGHT}px`;
-  return iframe;
-}
-
-function ensureThirdPartyAdMount(wrapper) {
-  let slot = wrapper?.querySelector('div[id^="container-native-ad-"]');
-  if (slot) {
-    return slot;
-  }
-
-  slot = document.createElement("div");
-  nativeAdCounter += 1;
-  slot.id = `container-native-ad-${nativeAdCounter}`;
-  wrapper?.replaceChildren(slot);
-  return slot;
-}
-
-function attachThirdPartyAdFrame(wrapper, slot, route, index = 0) {
-  if (!wrapper || !slot || wrapper.dataset.adLoaded === "true") {
-    return;
-  }
-
-  wrapper.dataset.adLoaded = "true";
-  const iframe = createThirdPartyAdFrame(wrapper);
-  slot.replaceWith(iframe);
-
-  const startedAt = Date.now();
-  let resolvedAt = 0;
-  let stopped = false;
-
-  const stopWatching = () => {
-    if (stopped) {
-      return;
-    }
-    stopped = true;
-    clearInterval(pollId);
-    clearTimeout(fallbackTimer);
-  };
-
-  const tick = () => {
-    if (!document.contains(wrapper)) {
-      stopWatching();
-      return;
-    }
-
-    syncThirdPartyAdFrameHeight(iframe);
-
-    if (hasResolvedThirdPartyAdFrame(iframe)) {
-      wrapper.dataset.adResolved = "true";
-      if (!resolvedAt) {
-        resolvedAt = Date.now();
-      }
-      if (Date.now() - resolvedAt >= 2500) {
-        stopWatching();
-      }
-      return;
-    }
-
-    if (Date.now() - startedAt >= THIRD_PARTY_AD_FRAME_MONITOR_MS) {
-      stopWatching();
-    }
-  };
-
-  const pollId = setInterval(tick, THIRD_PARTY_AD_FRAME_POLL_MS);
-  const fallbackTimer = setTimeout(() => {
-    if (hasResolvedThirdPartyAdFrame(iframe)) {
-      tick();
-      return;
-    }
-    stopWatching();
-  }, THIRD_PARTY_AD_FALLBACK_TIMEOUT_MS);
-
-  iframe.addEventListener("load", tick);
-  iframe.src = THIRD_PARTY_AD_FRAME_PATH;
-  tick();
-}
-
 function activateNativeAds(route) {
-  qsa(".native-ad-banner[data-ad-slot]").forEach((wrapper, index) => {
-    const slot = ensureThirdPartyAdMount(wrapper);
-    attachThirdPartyAdFrame(wrapper, slot, route, index);
-  });
+  return;
 }
 
 const preloadedVisualAssets = new Set();
@@ -10539,10 +10395,19 @@ async function init() {
   }, REFRESH_INTERVAL_MS);
 }
 
-init().catch((error) => {
+function handleInitError(error) {
   console.error(error);
   const main = qs("#main");
   if (main) {
     main.innerHTML = `<div class="message-box">Unexpected app error: ${escapeHtml(error.message || "unknown")}</div>`;
   }
-});
+}
+
+const canBootstrapBrowserApp =
+  typeof window !== "undefined" &&
+  typeof document !== "undefined" &&
+  typeof navigator !== "undefined";
+
+if (canBootstrapBrowserApp) {
+  init().catch(handleInitError);
+}
