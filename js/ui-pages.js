@@ -48,12 +48,16 @@ import {
 export async function renderRoute() {
   const path = getCurrentPath();
   const route = parseRoute(path);
+  console.log("renderRoute called for path:", path, "Route:", route);
   state.activePath = path;
   
   applyPageClassesForRoute(route);
 
   const main = qs("#main");
-  if (!main) return;
+  if (!main) {
+    console.error("Critical: #main container not found!");
+    return;
+  }
 
   switch (route.type) {
     case "home": await renderHomePage(main); break;
@@ -66,11 +70,11 @@ export async function renderRoute() {
     case "league": await renderLeaguePage(main, route); break;
     case "match": await renderMatchPage(main, route); break;
     case "sport": await renderSportPage(main, route); break;
-    case "donate": renderArticlePage(main, "Donate", "Support our mission.", "<p>Support us on Ko-fi.</p>"); break;
-    case "privacy-policy": renderArticlePage(main, "Privacy Policy", "How we handle data.", "<p>We respect your privacy.</p>"); break;
-    case "terms-of-service": renderArticlePage(main, "Terms of Service", "Our terms.", "<p>Standard terms apply.</p>"); break;
-    case "feedback": renderFeedbackPage(main); break;
-    case "about": renderArticlePage(main, "About", "Our mission.", "<p>LiveScoreFree is for fans.</p>"); break;
+    case "advertise": renderArticlePage(main, "Advertise", "Boost your reach with LiveScoreFree.", "<p>LiveScoreFree is a community-powered platform reaching thousands of sports fans worldwide. Contact us for premium ad placements.</p>"); break;
+    case "data-sources": renderArticlePage(main, "Data Sources", "Our trusted data partners.", "<p>We source our live scores from industry leaders including ESPN, TheSportsDB, and official league feeds to ensure maximum accuracy and speed.</p>"); break;
+    case "dmca-policy": renderArticlePage(main, "DMCA Policy", "Copyright and safety guidelines.", "<p>LiveScoreFree respects intellectual property rights. If you believe your content has been used without authorization, please contact our DMCA agent.</p>"); break;
+    case "contact": renderArticlePage(main, "Contact Us", "We're here to help.", "<p>Questions or feedback? Reach out to the LiveScoreFree team at support@livescorefree.online.</p>"); break;
+    case "about": renderArticlePage(main, "About LiveScoreFree", "Our mission and vision.", "<p>LiveScoreFree was built by fans, for fans. We provide a community-powered, ad-supported platform for the most accurate and fastest live scores available.</p>"); break;
     case "not-found": renderNotFoundPage(main); break;
     default: renderNotFoundPage(main);
   }

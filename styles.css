@@ -8484,8 +8484,8 @@ body {
 }
 
 .brand-logo {
-  height: clamp(54px, 5vw, 68px);
-  max-width: min(46vw, 320px);
+  height: clamp(62px, 6vw, 84px);
+  max-width: min(48vw, 360px);
 }
 
 .main > :is(.section, .article, .share-widget) {

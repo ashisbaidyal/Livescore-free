@@ -79,6 +79,7 @@ function wireGlobalEvents() {
 
 async function init() {
   try {
+    console.log("Initializing app...");
     renderFooterContent();
     wireGlobalEvents();
     
@@ -97,6 +98,7 @@ async function init() {
     migrateLegacyHashPath();
 
     // Initial Render
+    console.log("Triggering initial renderRoute...");
     await renderRoute();
 
     // Data bootstrap
