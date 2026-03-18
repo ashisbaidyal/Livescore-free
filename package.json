@@ -1,5 +1,9 @@
 {
-  "dependencies": {
-    "puppeteer": "^24.39.1"
+  "name": "livescorefree",
+  "private": true,
+  "version": "2.0.0",
+  "scripts": {
+    "validate": "node scripts/validate-deployment.mjs",
+    "check:syntax": "node scripts/validate-deployment.mjs --syntax-only"
   }
 }

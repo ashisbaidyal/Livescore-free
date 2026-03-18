@@ -1,5 +1,5 @@
-const CACHE_NAME = "lsf-v48";
-const CACHE_VERSION = "v48";
+const CACHE_NAME = "lsf-v49";
+const CACHE_VERSION = "v49";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -97,6 +97,10 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") {
+    return;
+  }
+
   const requestUrl = new URL(event.request.url);
   
   // Check if it's an external API call
@@ -144,6 +148,6 @@ self.addEventListener("fetch", (event) => {
           console.debug(`[SW] Request failed for ${requestUrl.pathname}:`, error.message);
           return caches.match("/index.html");
         })
-    )
+    })
   );
 });

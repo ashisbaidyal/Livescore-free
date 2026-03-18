@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 
-# Deployment Verification Script for LiveScoreFree (Cloudflare)
-# Run this after deploying to verify everything is working
+# Deployment Verification Script for LiveScoreFree
+# Run this before or after deploying to verify the repo and deployment targets.
 
 Write-Host ""
 Write-Host "============================================================"
@@ -39,12 +39,10 @@ if (Test-Path "_redirects") {
 Write-Host ""
 
 # Validate HTML
-Write-Host "[4/8] Checking index.html..."
-$htmlContent = Get-Content "index.html" -Raw
-if ($htmlContent -match 'og:url.*content="https://livescorefree.online"') {
-    Write-Host "OK: og:url tag is properly formatted" -ForegroundColor Green
-} else {
-    Write-Host "WARNING: og:url tag may have issues" -ForegroundColor Yellow
+Write-Host "[4/8] Running local validation..."
+node scripts/validate-deployment.mjs
+if ($LASTEXITCODE -ne 0) {
+    throw "Local validation failed."
 }
 Write-Host ""
 
@@ -68,20 +66,20 @@ Write-Host ""
 # Check Service Worker version
 Write-Host "[6/8] Checking Service Worker Version..."
 $swContent = Get-Content "sw.js" -Raw
-if ($swContent -match 'CACHE_NAME = "lsf-v43"') {
-    Write-Host "OK: Service Worker version v43" -ForegroundColor Green
+if ($swContent -match 'const CACHE_NAME = "(lsf-v[^"]+)"') {
+    Write-Host "OK: Service Worker cache $($matches[1])" -ForegroundColor Green
 } else {
-    Write-Host "WARNING: Service Worker version not expected" -ForegroundColor Yellow
+    Write-Host "WARNING: Service Worker cache name not found" -ForegroundColor Yellow
 }
 Write-Host ""
 
 # Check API Config
 Write-Host "[7/8] Checking API Configuration..."
 $apiContent = Get-Content "api-config.js" -Raw
-if ($apiContent -match "PRODUCTION_DOMAINS") {
-    Write-Host "OK: Production domains configured" -ForegroundColor Green
+if ($apiContent -match "getProxyBaseUrl") {
+    Write-Host "OK: Same-origin/proxy API resolution configured" -ForegroundColor Green
 } else {
-    Write-Host "WARNING: Production domains not configured!" -ForegroundColor Yellow
+    Write-Host "WARNING: Proxy API resolution helper not found!" -ForegroundColor Yellow
 }
 Write-Host ""
 
@@ -104,6 +102,6 @@ Write-Host "Next Steps:"
 Write-Host "  1. Push changes: git push origin main"
 Write-Host "  2. Check Cloudflare Pages dashboard for deployment status"
 Write-Host "  3. Verify: https://livescorefree.online"
-Write-Host "  4. Test API: https://api.livescorefree.online/api/live"
+Write-Host "  4. Test API: https://livescorefree.online/api/live"
 Write-Host "  5. Verify service worker updates in browser DevTools"
 Write-Host ""

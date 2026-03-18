@@ -25,6 +25,42 @@ export function getClientIp(request) {
   return "unknown";
 }
 
+function normalizeOriginValue(value) {
+  return String(value || "").trim().replace(/\/$/, "");
+}
+
+function originMatchesPattern(origin, pattern) {
+  const safeOrigin = normalizeOriginValue(origin);
+  const safePattern = normalizeOriginValue(pattern);
+
+  if (!safeOrigin || !safePattern) {
+    return false;
+  }
+
+  if (safePattern === "*" || safeOrigin === safePattern) {
+    return true;
+  }
+
+  const wildcardMatch = safePattern.match(/^(https?):\/\/\*\.([^/]+)$/i);
+  if (!wildcardMatch) {
+    return false;
+  }
+
+  try {
+    const originUrl = new URL(safeOrigin);
+    const expectedProtocol = `${wildcardMatch[1].toLowerCase()}:`;
+    const expectedHostname = wildcardMatch[2].toLowerCase();
+    const originHostname = originUrl.hostname.toLowerCase();
+
+    return originUrl.protocol === expectedProtocol && (
+      originHostname === expectedHostname ||
+      originHostname.endsWith(`.${expectedHostname}`)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function getCorsHeaders(request, env, extra = {}) {
   const allowed = getEnv(env, "ALLOWED_ORIGINS", "*");
   const origin = request.headers.get("Origin");
@@ -32,7 +68,8 @@ export function getCorsHeaders(request, env, extra = {}) {
 
   if (allowed !== "*" && origin) {
     const allowedList = allowed.split(",").map((item) => item.trim()).filter(Boolean);
-    allowOrigin = allowedList.includes(origin) ? origin : (allowedList[0] || "*");
+    const matchingOrigin = allowedList.find((item) => originMatchesPattern(origin, item));
+    allowOrigin = matchingOrigin ? origin : (allowedList[0] || "*");
   }
 
   return {

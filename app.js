@@ -2185,8 +2185,8 @@ function sendMatchNotification(title, body, tag = "") {
   try {
     const options = {
       body,
-      icon: "logo-mark-192.png",
-      badge: "logo-mark-32.png",
+      icon: "/logo-mark-192.png",
+      badge: "/logo-mark-32.png",
       tag: tag || undefined
     };
     if (navigator.serviceWorker?.controller && navigator.serviceWorker.ready) {
@@ -10207,7 +10207,7 @@ async function init() {
   await renderRoute();
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch(() => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
       // ignore registration failures
     });
   }

@@ -11,16 +11,32 @@
 
 // ===== CONFIGURATION =====
 
-// Set to true to use Cloudflare proxy (https://api.livescorefree.online)
-// Set to false to use external APIs directly (ESPN, TheSportsDB)
+// Set to true to use Cloudflare Pages Functions.
+// Set to false to use external APIs directly (ESPN, TheSportsDB).
 const USE_CLOUDFLARE_PROXY = true;
 
-// Supported domains for production
-const PRODUCTION_DOMAINS = ['livescorefree.online', 'www.livescorefree.online', 'api.livescorefree.online', 'pages.dev'];
+// Supported hosts for production and preview environments.
+const PRODUCTION_DOMAINS = ["livescorefree.online", "www.livescorefree.online", "api.livescorefree.online"];
+
+function isProductionHost(hostname) {
+  return PRODUCTION_DOMAINS.includes(hostname) || hostname.endsWith(".pages.dev");
+}
+
+function getProxyBaseUrl() {
+  const explicitBaseUrl = typeof window.__LIVESCORE_API_BASE_URL__ === "string"
+    ? window.__LIVESCORE_API_BASE_URL__.trim()
+    : "";
+
+  if (explicitBaseUrl) {
+    return explicitBaseUrl.replace(/\/+$/, "");
+  }
+
+  return window.location.origin.replace(/\/+$/, "");
+}
 
 // Environment detection
-const isDevelopment = !PRODUCTION_DOMAINS.some(domain => window.location.hostname.includes(domain));
-const isProduction = PRODUCTION_DOMAINS.some(domain => window.location.hostname.includes(domain));
+const isProduction = isProductionHost(window.location.hostname);
+const isDevelopment = !isProduction;
 
 // ===== API ENDPOINTS =====
 
@@ -47,21 +63,18 @@ const API_CONFIG = {
   // Production: Use Cloudflare proxy by default
   production: {
     live: {
-      baseUrl: 'https://api.livescorefree.online',
       endpoint: '/api/live',
       ttl: 15000, // 15 seconds
       corsEnabled: true,
       credentials: 'omit'
     },
     timeline: {
-      baseUrl: 'https://api.livescorefree.online',
       endpoint: '/api/timeline',
       ttl: 10000, // 10 seconds
       corsEnabled: true,
       credentials: 'omit'
     },
     standings: {
-      baseUrl: 'https://api.livescorefree.online',
       endpoint: '/api/standings',
       ttl: 3600000, // 1 hour
       corsEnabled: true,
@@ -93,8 +106,8 @@ function buildApiUrl(endpoint, params = {}) {
   let url;
   
   if (isProduction && USE_CLOUDFLARE_PROXY) {
-    // Production: Use Cloudflare proxy
-    url = `${endpointConfig.baseUrl}${endpointConfig.endpoint}`;
+    // Production: Use the current deployment origin unless explicitly overridden.
+    url = `${getProxyBaseUrl()}${endpointConfig.endpoint}`;
     
     // Add query parameters
     const queryString = new URLSearchParams(params).toString();
@@ -120,7 +133,6 @@ async function fetchWithFallback(url, options = {}) {
       ...options,
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'LiveScoreFree-Bot/1.0',
         ...options.headers
       }
     });

@@ -1,6 +1,6 @@
 # Auto-Deployment Configuration
 
-Date: March 13, 2026
+Date: March 18, 2026
 Status: ACTIVE AND READY
 
 ---
@@ -11,8 +11,9 @@ Status: ACTIVE AND READY
 
 ## Deployment Platform
 - Cloudflare Pages (static site + Pages Functions)
-- Custom domains:
+- Primary origin:
   - https://livescorefree.online
+- Optional secondary API/domain:
   - https://api.livescorefree.online
 
 ## Key Configuration Files
@@ -41,14 +42,14 @@ SPORTSDB_API_BASE=https://www.thesportsdb.com/api/v1/json/123
 ENABLE_CORS=true
 LOG_LEVEL=info
 ENABLE_ANALYTICS=true
-ALLOWED_ORIGINS=https://livescorefree.online,https://www.livescorefree.online,https://api.livescorefree.online
+ALLOWED_ORIGINS=https://livescorefree.online,https://www.livescorefree.online,https://api.livescorefree.online,https://*.pages.dev
 
 ## Verification
 - Frontend:
   - curl -I https://livescorefree.online/
 - API:
-  - curl https://api.livescorefree.online/api/health
-  - curl https://api.livescorefree.online/api/live?limit=1
+  - curl https://livescorefree.online/api/health
+  - curl https://livescorefree.online/api/live?limit=1
 - Crawl files:
   - curl -I https://livescorefree.online/robots.txt
   - curl -I https://livescorefree.online/sitemap.xml
@@ -58,9 +59,10 @@ ALLOWED_ORIGINS=https://livescorefree.online,https://www.livescorefree.online,ht
 - Project Logs: Cloudflare Pages -> Functions logs
 
 ## Notes
-- Use scripts/verify-deployment.ps1 or scripts/verify-deployment.bat after changes.
+- Use `npm run validate` and then `scripts/verify-deployment.ps1` or `scripts/verify-deployment.bat` after changes.
 - Cloudflare Pages uses _redirects for SPA routing and _headers for cache/security.
+- `api-config.js` resolves proxy API calls against the current deployment origin, so Pages preview URLs work without extra edits.
 
 ---
 
-Last Verified: March 13, 2026
+Last Verified: March 18, 2026
