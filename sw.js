@@ -1,5 +1,5 @@
-const CACHE_NAME = "lsf-v46";
-const CACHE_VERSION = "v46";
+const CACHE_NAME = "lsf-v48";
+const CACHE_VERSION = "v48";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "/api-config.js",
   "/app.js",
   "/manifest.json",
+  "/favicon.ico",
   "/logo-day.png",
   "/logo-night.png",
   "/logo.png",
@@ -99,7 +100,10 @@ self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
   
   // Check if it's an external API call
-  const isApiCall = requestUrl.hostname.includes("espn.com") || requestUrl.hostname.includes("thesportsdb.com");
+  const isApiCall =
+    requestUrl.hostname.includes("espn.com") ||
+    requestUrl.hostname.includes("thesportsdb.com") ||
+    requestUrl.pathname.startsWith("/api/");
   
   // Network-first strategy for API calls
   if (isApiCall) {

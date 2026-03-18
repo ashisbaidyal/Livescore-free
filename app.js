@@ -1,7 +1,10 @@
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports";
 const SPORTSDB_BASE = "https://www.thesportsdb.com/api/v1/json/123";
-const REFRESH_INTERVAL_MS = 30000;
-const MATCH_DETAIL_REFRESH_MS = 15000;
+const CRICBUZZ_LIVE_URL = "/api/cricket-live";
+const NHL_LIVE_URL = "/api/nhl-live";
+const MLB_LIVE_URL = "/api/mlb-live";
+const REFRESH_INTERVAL_MS = 15000;
+const MATCH_DETAIL_REFRESH_MS = 12000;
 
 const HISTORY_KEY = "lsf_history_v3";
 const FEEDBACK_KEY = "lsf_feedback_v1";
@@ -111,44 +114,87 @@ const MATCH_TABS = [
   { id: "stats", label: "Stats" },
   { id: "lineups", label: "Lineups" },
   { id: "standings", label: "Table" },
-  { id: "h2h", label: "H2H" },
   { id: "analysis", label: "Analysis" },
   { id: "preview", label: "Preview" },
   { id: "events", label: "Events" }
 ];
+const TEAM_TABS = [
+  { id: "info", label: "Info" },
+  { id: "live", label: "Live" },
+  { id: "upcoming", label: "Upcoming" },
+  { id: "results", label: "Results" },
+  { id: "squad", label: "Squad" },
+  { id: "staff", label: "Staff" }
+];
+const PLAYER_TABS = [
+  { id: "bio", label: "Bio" },
+  { id: "matches", label: "Matches" }
+];
 
 const LEAGUES = {
+  // ── Football / Soccer ──
   "eng.1": { feed: "soccer/eng.1", label: "Premier League", sportGroup: "football" },
   "esp.1": { feed: "soccer/esp.1", label: "La Liga", sportGroup: "football" },
   "uefa.champions": { feed: "soccer/uefa.champions", label: "UEFA Champions League", sportGroup: "football" },
+  "uefa.europa": { feed: "soccer/uefa.europa", label: "UEFA Europa League", sportGroup: "football" },
   "ita.1": { feed: "soccer/ita.1", label: "Serie A", sportGroup: "football" },
   "ger.1": { feed: "soccer/ger.1", label: "Bundesliga", sportGroup: "football" },
   "fra.1": { feed: "soccer/fra.1", label: "Ligue 1", sportGroup: "football" },
   "ned.1": { feed: "soccer/ned.1", label: "Eredivisie", sportGroup: "football" },
+  "por.1": { feed: "soccer/por.1", label: "Primeira Liga", sportGroup: "football" },
+  "tur.1": { feed: "soccer/tur.1", label: "Süper Lig", sportGroup: "football" },
+  "sco.1": { feed: "soccer/sco.1", label: "Scottish Premiership", sportGroup: "football" },
+  "bel.1": { feed: "soccer/bel.1", label: "Belgian Pro League", sportGroup: "football" },
+  "usa.1": { feed: "soccer/usa.1", label: "MLS", sportGroup: "football" },
+  "mex.1": { feed: "soccer/mex.1", label: "Liga MX", sportGroup: "football" },
+  "bra.1": { feed: "soccer/bra.1", label: "Brasileirão", sportGroup: "football" },
+  "arg.1": { feed: "soccer/arg.1", label: "Primera División", sportGroup: "football" },
+  "aus.1": { feed: "soccer/aus.1", label: "A-League", sportGroup: "football" },
+  // ── Cricket ──
   cricket: { feed: "cricket", label: "Cricket", sportGroup: "cricket" },
+  // ── Basketball ──
   nba: { feed: "basketball/nba", label: "NBA", sportGroup: "basketball" },
   ncaamb: { feed: "basketball/mens-college-basketball", label: "NCAA Basketball", sportGroup: "basketball" },
+  wnba: { feed: "basketball/wnba", label: "WNBA", sportGroup: "basketball" },
+  // ── Tennis ──
   tennis: { feed: "tennis", label: "Tennis", sportGroup: "tennis" },
+  // ── American Football ──
   nfl: { feed: "football/nfl", label: "NFL", sportGroup: "nfl" },
+  // ── Ice Hockey ──
   nhl: { feed: "hockey/nhl", label: "NHL", sportGroup: "hockey" },
+  // ── Baseball ──
   mlb: { feed: "baseball/mlb", label: "MLB", sportGroup: "baseball" },
+  // ── Rugby ──
   rugby: { feed: "rugby", label: "Rugby", sportGroup: "rugby" },
+  // ── MMA / Combat ──
   mma: { feed: "mma/ufc", label: "MMA / UFC", sportGroup: "mma" },
+  // ── Motorsport ──
   f1: { feed: "racing/f1", label: "Formula 1", sportGroup: "f1" }
 };
 
-const TOP_LEAGUE_KEYS = ["eng.1", "esp.1", "uefa.champions", "ita.1", "ger.1", "fra.1", "nba", "nfl", "cricket", "tennis"];
+const TOP_LEAGUE_KEYS = ["eng.1", "esp.1", "uefa.champions", "uefa.europa", "ita.1", "ger.1", "fra.1", "por.1", "nba", "nfl", "cricket", "tennis", "mlb", "nhl"];
 const LEAGUE_REGIONS = {
   "eng.1": "England",
   "esp.1": "Spain",
   "uefa.champions": "Europe",
+  "uefa.europa": "Europe",
   "ita.1": "Italy",
   "ger.1": "Germany",
   "fra.1": "France",
   "ned.1": "Netherlands",
+  "por.1": "Portugal",
+  "tur.1": "Turkey",
+  "sco.1": "Scotland",
+  "bel.1": "Belgium",
+  "usa.1": "United States",
+  "mex.1": "Mexico",
+  "bra.1": "Brazil",
+  "arg.1": "Argentina",
+  "aus.1": "Australia",
   cricket: "International",
   nba: "United States",
   ncaamb: "United States",
+  wnba: "United States",
   tennis: "International",
   nfl: "United States",
   nhl: "North America",
@@ -206,25 +252,47 @@ const SPORT_IMAGE_MAP = {
   default: "sport-default.svg"
 };
 
+// Official league banners from TheSportsDB CDN (free, open-content licence)
 const LEAGUE_IMAGE_MAP = {
-  "eng.1": SPORT_IMAGE_MAP.football,
-  "esp.1": SPORT_IMAGE_MAP.football,
-  "uefa.champions": SPORT_IMAGE_MAP.football,
-  "ita.1": SPORT_IMAGE_MAP.football,
-  "ger.1": SPORT_IMAGE_MAP.football,
-  "fra.1": SPORT_IMAGE_MAP.football,
-  "ned.1": SPORT_IMAGE_MAP.football,
-  cricket: SPORT_IMAGE_MAP.cricket,
-  nba: SPORT_IMAGE_MAP.basketball,
-  ncaamb: SPORT_IMAGE_MAP.basketball,
-  tennis: SPORT_IMAGE_MAP.tennis,
-  nfl: SPORT_IMAGE_MAP.nfl,
-  nhl: SPORT_IMAGE_MAP.hockey,
-  mlb: SPORT_IMAGE_MAP.baseball,
-  rugby: SPORT_IMAGE_MAP.rugby,
-  mma: SPORT_IMAGE_MAP.mma,
-  f1: SPORT_IMAGE_MAP.f1,
-  default: SPORT_IMAGE_MAP.default
+  // ── Football ──────────────────────────────────────────────────────────────
+  "eng.1":          "https://www.thesportsdb.com/images/media/league/banner/i6o0kh1549879062.jpg",  // Premier League
+  "esp.1":          "https://www.thesportsdb.com/images/media/league/banner/ocw5uc1549040374.jpg",  // La Liga
+  "uefa.champions": "https://www.thesportsdb.com/images/media/league/banner/qyxfq01623762927.jpg",  // UEFA Champions League
+  "ita.1":          "https://www.thesportsdb.com/images/media/league/banner/bksvyw1549879527.jpg",  // Serie A
+  "ger.1":          "https://www.thesportsdb.com/images/media/league/banner/d7t9nq1549879432.jpg",  // Bundesliga
+  "fra.1":          "https://www.thesportsdb.com/images/media/league/banner/8lgehr1549879368.jpg",  // Ligue 1
+  "ned.1":          "https://www.thesportsdb.com/images/media/league/banner/jrtvhv1549879620.jpg",  // Eredivisie
+  "por.1":          "https://www.thesportsdb.com/images/media/league/banner/7onmyv1576065525.jpg",  // Primeira Liga
+  "sco.1":          "https://www.thesportsdb.com/images/media/league/banner/gsqywj1519478915.jpg",  // Scottish Premiership
+  "mex.1":          "https://www.thesportsdb.com/images/media/league/banner/muyqhv1549879544.jpg",  // Liga MX
+  "usa.1":          "https://www.thesportsdb.com/images/media/league/banner/nwqgqy1549879668.jpg",  // MLS
+  "bra.1":          "https://www.thesportsdb.com/images/media/league/banner/ptqqus1549879283.jpg",  // Brasileirão
+  "arg.1":          "https://www.thesportsdb.com/images/media/league/banner/ouxx431549879218.jpg",  // Primera División
+  "uefa.europa":    "https://www.thesportsdb.com/images/media/league/banner/l3j0151623762951.jpg",  // UEFA Europa League
+  "uefa.conference":"https://www.thesportsdb.com/images/media/league/banner/vxgsyq1623762964.jpg",  // UEFA Conference League
+  // ── Basketball ────────────────────────────────────────────────────────────
+  nba:              "https://www.thesportsdb.com/images/media/league/banner/teywwv1423166995.jpg",  // NBA
+  ncaamb:           "https://www.thesportsdb.com/images/media/league/banner/teywwv1423166995.jpg",  // NCAA
+  // ── American Football ─────────────────────────────────────────────────────
+  nfl:              "https://www.thesportsdb.com/images/media/league/banner/ydwwur1432498866.jpg",  // NFL
+  // ── Baseball ──────────────────────────────────────────────────────────────
+  mlb:              "https://www.thesportsdb.com/images/media/league/banner/xpypvv1431540526.jpg",  // MLB
+  // ── Ice Hockey ────────────────────────────────────────────────────────────
+  nhl:              "https://www.thesportsdb.com/images/media/league/banner/yyvvtu1448813151.jpg",  // NHL
+  // ── Cricket ───────────────────────────────────────────────────────────────
+  cricket:          "https://www.thesportsdb.com/images/media/league/banner/c6ccc01548545456.jpg",  // ICC
+  ipl:              "https://www.thesportsdb.com/images/media/league/banner/c6ccc01548545456.jpg",  // IPL
+  // ── Tennis ────────────────────────────────────────────────────────────────
+  tennis:           "https://www.thesportsdb.com/images/media/league/banner/qqqyyy1418740917.jpg",  // ATP
+  wta:              "https://www.thesportsdb.com/images/media/league/banner/qqqyyy1418740917.jpg",  // WTA
+  // ── Rugby ─────────────────────────────────────────────────────────────────
+  rugby:            "https://www.thesportsdb.com/images/media/league/banner/yvwvtu1448813185.jpg",  // Rugby
+  // ── MMA / Combat ─────────────────────────────────────────────────────────
+  mma:              "https://www.thesportsdb.com/images/media/league/banner/vupwuv1511099295.jpg",  // UFC / MMA
+  // ── Formula 1 ─────────────────────────────────────────────────────────────
+  f1:               "https://www.thesportsdb.com/images/media/league/banner/yvwvtu1448813185.jpg",  // F1
+  // ── Default ───────────────────────────────────────────────────────────────
+  default:          "https://www.thesportsdb.com/images/media/league/banner/yvwvtu1448813185.jpg"
 };
 
 const SPORT_ALIASES = {
@@ -534,25 +602,43 @@ function renderDonationProgress({ compact = false } = {}) {
   `;
 }
 
+let nativeAdCounter = 0;
 function renderAdSlot({ title, size, placement, ctaPath = "/advertise" }) {
+  nativeAdCounter++;
+  const containerId = `container-native-ad-${nativeAdCounter}`;
   return `
-    <article class="ad-slot">
-      <div class="ad-slot-head">
-        <strong>${escapeHtml(title || "Ad Space")}</strong>
-        <span>${escapeHtml(size || "Flexible")}</span>
-      </div>
-      <p class="subtle">${escapeHtml(placement || "High-visibility placement for sports brands.")}</p>
-      <div class="ad-slot-actions">
-        <a class="btn" data-link href="${escapeHtml(ctaPath)}">Advertise Here</a>
-      </div>
-    </article>
+    <div class="native-ad-banner" data-ad-slot="${nativeAdCounter}">
+      <div id="${containerId}"></div>
+    </div>
   `;
+}
+
+function activateNativeAds() {
+  const banners = document.querySelectorAll('.native-ad-banner[data-ad-slot]');
+  if (!banners.length) return;
+  let activated = false;
+  banners.forEach((wrapper) => {
+    const slot = wrapper.querySelector('div[id^="container-native-ad-"]');
+    if (!slot || slot.dataset.adLoaded) return;
+    if (activated) {
+      wrapper.style.display = 'none';
+      return;
+    }
+    slot.id = 'container-01fac86ec9e3085bcb989e025d13aa86';
+    slot.dataset.adLoaded = 'true';
+    const script = document.createElement('script');
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    script.src = 'https://pl28913139.effectivegatecpm.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js';
+    wrapper.appendChild(script);
+    activated = true;
+  });
 }
 
 function renderTrustSignalsSection({ title = "Trust Signals", lead = "Transparent growth metrics for users, supporters, and advertisers." } = {}) {
   const trust = getTrustSignals();
   return `
-    <section class="section trust-section">
+    <section class="section trust-section tone-trust">
       <div class="section-head">
         <h2>${escapeHtml(title)}</h2>
         <p>${escapeHtml(lead)}</p>
@@ -615,6 +701,7 @@ function renderHeroChipList(items, variant = "keyword") {
 function renderSeoHeroPanel({
   eyebrow = "",
   title = "LiveScoreFree",
+  mobileTitle = "",
   lead = "",
   actionsHtml = "",
   trustItems = [],
@@ -627,6 +714,7 @@ function renderSeoHeroPanel({
     <div class="hero-top hero-top-seo">
       <div class="hero-copy">
         ${eyebrow ? `<span class="hero-eyebrow">${escapeHtml(eyebrow)}</span>` : ""}
+        ${mobileTitle ? `<div class="hero-title-mobile">${escapeHtml(mobileTitle)}</div>` : ""}
         <h1>${escapeHtml(title)}</h1>
         ${lead ? `<p class="hero-lead">${escapeHtml(lead)}</p>` : ""}
         ${renderHeroChipList(trustItems, "trust")}
@@ -644,7 +732,7 @@ function renderSeoHeroPanel({
 
 function renderRevenueModelSection() {
   return `
-    <section class="section">
+    <section class="section revenue-section tone-support">
       <div class="section-head">
         <h2>How LiveScoreFree Stays Free</h2>
         <p>Three groups keep the lights on: fans, advertisers, and traffic.</p>
@@ -697,6 +785,99 @@ function detectLeagueFromRoute(route) {
     }
   }
   return "";
+}
+
+function setMainPageClasses(...classes) {
+  const main = qs("#main");
+  if (!main) {
+    return;
+  }
+  const finalClasses = ["main", ...classes.filter(Boolean)];
+  main.className = Array.from(new Set(finalClasses)).join(" ");
+}
+
+function toneClassForMatchStatus(status = "") {
+  if (status === "live") {
+    return "tone-live";
+  }
+  if (status === "final") {
+    return "tone-results";
+  }
+  return "tone-upcoming";
+}
+
+function applyPageClassesForRoute(route) {
+  const classes = ["page"];
+  const hero = qs(".header-hero");
+  if (hero) {
+    hero.classList.add("is-hidden");
+  }
+  switch (route?.type) {
+    case "home":
+      classes.push("page-home");
+      if (hero) {
+        hero.classList.remove("is-hidden");
+      }
+      break;
+    case "live":
+      classes.push("page-live", "tone-live");
+      break;
+    case "upcoming":
+      classes.push("page-upcoming", "tone-upcoming");
+      break;
+    case "trending":
+      classes.push("page-trending", "tone-trending");
+      break;
+    case "results":
+      classes.push("page-results", "tone-results");
+      break;
+    case "history":
+      classes.push("page-history", "tone-history");
+      break;
+    case "top-leagues":
+      classes.push("page-top-leagues", "tone-league");
+      break;
+    case "league":
+      classes.push("page-league", "tone-league");
+      break;
+    case "sport":
+      classes.push("page-sport", "tone-sport");
+      break;
+    case "match":
+      classes.push("page-match", "tone-trust");
+      break;
+    case "team":
+      classes.push("page-team", "tone-team");
+      break;
+    case "player":
+      classes.push("page-player", "tone-player");
+      break;
+    case "donate":
+      classes.push("page-donate", "tone-support");
+      break;
+    case "feedback":
+      classes.push("page-feedback", "tone-trust");
+      break;
+    case "advertise":
+      classes.push("page-advertise", "tone-trending");
+      break;
+    case "privacy-policy":
+    case "terms-of-service":
+    case "data-sources":
+    case "dmca-policy":
+      classes.push("page-legal", "tone-legal");
+      break;
+    case "about":
+      classes.push("page-about", "tone-trust");
+      break;
+    case "contact":
+      classes.push("page-contact", "tone-trust");
+      break;
+    default:
+      classes.push("page-not-found", "tone-trust");
+      break;
+  }
+  setMainPageClasses(...classes);
 }
 
 function getDominantSportGroup() {
@@ -1324,9 +1505,199 @@ function buildMatchFromEvent(event, leagueKey, leagueConfig, seenSlugs) {
     slug,
     trendingScore,
     route: "",
-    source: "espn",
+    source: event.source || "espn",
     sourceId: String(event.id || "")
   };
+}
+
+function cricbuzzToIso(value) {
+  if (!value) {
+    return new Date().toISOString();
+  }
+  const numeric = Number(value);
+  if (!Number.isNaN(numeric) && Number.isFinite(numeric)) {
+    const ms = numeric < 1_000_000_000_000 ? numeric * 1000 : numeric;
+    const parsed = new Date(ms);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
+  }
+  const parsed = new Date(String(value));
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString();
+  }
+  return new Date().toISOString();
+}
+
+function parseCricbuzzStatus(statusText = "") {
+  const token = String(statusText || "").toLowerCase();
+  if (
+    token.includes("live") ||
+    token.includes("in progress") ||
+    token.includes("innings") ||
+    token.includes("stumps") ||
+    token.includes("break") ||
+    token.includes("day")
+  ) {
+    return { status: "IN_PROGRESS", detail: statusText || "Live" };
+  }
+  if (
+    token.includes("completed") ||
+    token.includes("won") ||
+    token.includes("final") ||
+    token.includes("abandon") ||
+    token.includes("no result") ||
+    token.includes("tie")
+  ) {
+    return { status: "FINAL", detail: statusText || "Final" };
+  }
+  return { status: "SCHEDULED", detail: statusText || "Scheduled" };
+}
+
+function pickCricbuzzTeamName(team) {
+  return (
+    team?.name ||
+    team?.team_name ||
+    team?.teamName ||
+    team?.s_name ||
+    team?.short_name ||
+    team?.shortName ||
+    team?.team ||
+    ""
+  );
+}
+
+function pickCricbuzzTeamAbbr(team, fallbackName = "") {
+  return (
+    team?.s_name ||
+    team?.short_name ||
+    team?.shortName ||
+    team?.abbreviation ||
+    team?.abbr ||
+    fallbackName.slice(0, 3).toUpperCase()
+  );
+}
+
+function formatCricbuzzScore(score) {
+  if (score === null || score === undefined) {
+    return "-";
+  }
+  if (typeof score === "string" || typeof score === "number") {
+    const text = String(score).trim();
+    return text || "-";
+  }
+  const runs = score.score ?? score.runs ?? score.run ?? score.r;
+  const wickets = score.wickets ?? score.wkt ?? score.w;
+  const overs = score.overs ?? score.ovr ?? score.o;
+  let text = "";
+  if (runs !== null && runs !== undefined) {
+    text = String(runs);
+  }
+  if (wickets !== null && wickets !== undefined && text) {
+    text += `/${wickets}`;
+  }
+  if (overs !== null && overs !== undefined && text) {
+    text += ` (${overs})`;
+  }
+  return text || "-";
+}
+
+function buildCricbuzzEvents(payload = {}) {
+  if (Array.isArray(payload?.events)) {
+    return payload.events;
+  }
+  const list = Array.isArray(payload?.matches) ? payload.matches : [];
+  if (!list.length) {
+    return [];
+  }
+
+  return list
+    .map((item) => {
+      const match = item?.match || item;
+      const team1 = item?.team1 || match?.team1 || (Array.isArray(match?.team) ? match.team[0] : null) || {};
+      const team2 = item?.team2 || match?.team2 || (Array.isArray(match?.team) ? match.team[1] : null) || {};
+      const homeName = pickCricbuzzTeamName(team1) || "Home";
+      const awayName = pickCricbuzzTeamName(team2) || "Away";
+      const statusText =
+        match?.status ||
+        match?.state ||
+        match?.status_detail ||
+        match?.match_status ||
+        "";
+      const statusInfo = parseCricbuzzStatus(statusText);
+      const startTime = match?.start_time || match?.startTime || match?.start_time_ms || match?.start_date || match?.start;
+      const leagueLabel = match?.series_name || match?.series || match?.series_name_short || match?.tour || "Cricket";
+
+      const scoreBlock = item?.score || match?.score || match?.scores || {};
+      const homeScore = formatCricbuzzScore(scoreBlock?.team1 || scoreBlock?.team1Score || scoreBlock?.home || team1?.score);
+      const awayScore = formatCricbuzzScore(scoreBlock?.team2 || scoreBlock?.team2Score || scoreBlock?.away || team2?.score);
+
+      return {
+        id: `cb-${String(match?.id || match?.matchId || match?.match_id || Date.now())}`,
+        date: cricbuzzToIso(startTime),
+        status: {
+          type: {
+            name: statusInfo.status,
+            shortDetail: statusInfo.detail,
+            description: statusInfo.detail
+          }
+        },
+        name: leagueLabel,
+        competitions: [
+          {
+            competitors: [
+              {
+                homeAway: "home",
+                team: {
+                  displayName: homeName,
+                  abbreviation: pickCricbuzzTeamAbbr(team1, homeName),
+                  logo: team1?.logo || team1?.image || ""
+                },
+                score: homeScore
+              },
+              {
+                homeAway: "away",
+                team: {
+                  displayName: awayName,
+                  abbreviation: pickCricbuzzTeamAbbr(team2, awayName),
+                  logo: team2?.logo || team2?.image || ""
+                },
+                score: awayScore
+              }
+            ],
+            venue: { fullName: match?.venue || match?.venue_name || match?.location || "Venue TBC" },
+            status: {
+              type: {
+                name: statusInfo.status,
+                shortDetail: statusInfo.detail,
+                description: statusInfo.detail
+              }
+            }
+          }
+        ]
+      };
+    })
+    .filter(Boolean);
+}
+
+function buildNhlEvents(payload = {}) {
+  if (Array.isArray(payload?.events)) {
+    return payload.events;
+  }
+  if (Array.isArray(payload?.games)) {
+    return payload.games;
+  }
+  return [];
+}
+
+function buildMlbEvents(payload = {}) {
+  if (Array.isArray(payload?.events)) {
+    return payload.events;
+  }
+  if (Array.isArray(payload?.games)) {
+    return payload.games;
+  }
+  return [];
 }
 
 function parseSportsDbStatus(event) {
@@ -1714,7 +2085,7 @@ function renderNotificationSettingsSection({ title = "Match Alerts", lead = "Get
           : "Not supported";
 
   return `
-    <section class="section">
+    <section class="section section-notify tone-trust">
       <div class="section-head">
         <h2>${escapeHtml(title)}</h2>
         <p>${escapeHtml(lead)}</p>
@@ -2105,7 +2476,7 @@ async function refreshData({ silent = false } = {}) {
     const nextEvents = {};
     const espnTasks = Object.entries(LEAGUES).map(async ([leagueKey, leagueConfig]) => {
       try {
-        const data = await cachedJson(`${ESPN_BASE}/${leagueConfig.feed}/scoreboard`, 22000);
+        const data = await cachedJson(`${ESPN_BASE}/${leagueConfig.feed}/scoreboard`, 12000);
         nextEvents[leagueKey] = data.events || [];
       } catch (_error) {
         failed += 1;
@@ -2115,6 +2486,45 @@ async function refreshData({ silent = false } = {}) {
 
     await Promise.all(espnTasks);
 
+    try {
+      const cricketPayload = await cachedJson(CRICBUZZ_LIVE_URL, 10000);
+      const cricketEvents = buildCricbuzzEvents(cricketPayload);
+      if (cricketEvents.length) {
+        nextEvents.cricket = [...(nextEvents.cricket || []), ...cricketEvents];
+      }
+    } catch (_error) {
+      // ignore Cricbuzz failures and keep ESPN feed data
+    }
+
+    await Promise.all([
+      (async () => {
+        if (!Array.isArray(nextEvents.nhl) || nextEvents.nhl.length === 0) {
+          try {
+            const nhlPayload = await cachedJson(NHL_LIVE_URL, 10000);
+            const nhlEvents = buildNhlEvents(nhlPayload);
+            if (nhlEvents.length) {
+              nextEvents.nhl = nhlEvents;
+            }
+          } catch (_error) {
+            // ignore NHL fallback failures
+          }
+        }
+      })(),
+      (async () => {
+        if (!Array.isArray(nextEvents.mlb) || nextEvents.mlb.length === 0) {
+          try {
+            const mlbPayload = await cachedJson(MLB_LIVE_URL, 10000);
+            const mlbEvents = buildMlbEvents(mlbPayload);
+            if (mlbEvents.length) {
+              nextEvents.mlb = mlbEvents;
+            }
+          } catch (_error) {
+            // ignore MLB fallback failures
+          }
+        }
+      })()
+    ]);
+
     const today = new Date().toISOString().slice(0, 10);
     const externalEvents = [];
     let sportsDbFailures = 0;
@@ -2122,7 +2532,7 @@ async function refreshData({ silent = false } = {}) {
     const sportsDbTasks = Object.entries(SPORTSDB_SPORTS).map(async ([sportGroup, sportName]) => {
       try {
         const url = `${SPORTSDB_BASE}/eventsday.php?d=${today}&s=${encodeURIComponent(sportName)}`;
-        const data = await cachedJson(url, 22000);
+        const data = await cachedJson(url, 12000);
         const events = Array.isArray(data?.events) ? data.events : Array.isArray(data?.event) ? data.event : [];
         for (const event of events) {
           externalEvents.push({ sportGroup, event });
@@ -2160,6 +2570,11 @@ async function refreshData({ silent = false } = {}) {
     state.lastUpdatedAt = Date.now();
     state.nextRefreshAt = Date.now() + REFRESH_INTERVAL_MS;
     rebuildMatches();
+    
+    // Soft update instead of full render for grid views
+    state.matches.forEach(m => updateMatchUIInPlace(m));
+
+    updateMobileNavExtras();
     renderTicker();
 
     updateLastUpdatedLabel();
@@ -2192,6 +2607,10 @@ function detectThemeByTime() {
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
+  const metaTheme = document.querySelector("#meta-theme-color");
+  if (metaTheme) {
+    metaTheme.setAttribute("content", theme === "day" ? "#dfeafa" : "#071322");
+  }
   const toggle = qs("#theme-toggle");
   if (!toggle) {
     return;
@@ -2286,6 +2705,85 @@ function closeMobileNav() {
   if (toggle) {
     toggle.setAttribute("aria-expanded", "false");
   }
+  document.body.classList.remove("nav-open");
+}
+
+function revealChrome() {
+  const header = qs(".site-header");
+  if (header) {
+    header.classList.remove("site-header--hidden");
+  }
+  const dock = qs(".app-dock");
+  if (dock) {
+    dock.classList.remove("app-dock--hidden");
+  }
+}
+
+function updateMobileNavExtras() {
+  const nav = qs("#main-nav");
+  if (!nav) {
+    return;
+  }
+
+  if (!qs(".nav-header", nav)) {
+    nav.insertAdjacentHTML(
+      "afterbegin",
+      `
+        <div class="nav-header">
+          <img class="nav-header-logo" src="logo-mark-32.png" alt="LiveScoreFree logo" loading="lazy">
+          <span class="nav-header-title">LiveScoreFree</span>
+        </div>
+      `
+    );
+  }
+
+  const existingExtra = qs(".nav-extra", nav);
+  if (existingExtra) {
+    existingExtra.remove();
+  }
+
+  const extraHtml = `
+    <div class="nav-extra">
+      <div class="nav-divider"></div>
+      <div class="nav-sports">
+        <div class="nav-sports-title">Quick Sports Access</div>
+        <div class="nav-sports-list">
+          ${["football", "cricket", "basketball", "tennis"]
+            .map((sport) => {
+              const icon = SPORT_GROUPS[sport]?.icon || "SPT";
+              const label = SPORT_GROUPS[sport]?.label || sport;
+              return `
+                <a class="nav-sport-item" data-link href="/sport/${sport}">
+                  <span class="nav-sport-label"><span class="nav-sport-icon">${escapeHtml(icon)}</span>${escapeHtml(label)}</span>
+                  <span class="nav-sport-meta"><span class="nav-sport-count" data-sport="${escapeHtml(sport)}">0 live</span><span class="nav-sport-arrow">&#8250;</span></span>
+                </a>
+              `;
+            })
+            .join("")}
+        </div>
+      </div>
+    </div>
+  `;
+
+  const navLinks = qsa("a[data-nav]", nav);
+  const lastNavLink = navLinks[navLinks.length - 1];
+  if (lastNavLink) {
+    lastNavLink.insertAdjacentHTML("afterend", extraHtml);
+  } else {
+    nav.insertAdjacentHTML("beforeend", extraHtml);
+  }
+
+  const counts = {};
+  for (const match of state.liveMatches || []) {
+    const sport = match?.sportGroup || "";
+    if (!sport) continue;
+    counts[sport] = (counts[sport] || 0) + 1;
+  }
+  qsa(".nav-sport-count", nav).forEach((node) => {
+    const sport = node.getAttribute("data-sport") || "";
+    const count = counts[sport] || 0;
+    node.textContent = `${count} live`;
+  });
 }
 function navigate(path, replace = false) {
   const target = normalizePath(path);
@@ -2297,6 +2795,7 @@ function navigate(path, replace = false) {
     } else {
       window.location.hash = target;
     }
+    revealChrome();
     renderRoute();
     closeMobileNav();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2310,6 +2809,7 @@ function navigate(path, replace = false) {
   }
 
   closeMobileNav();
+  revealChrome();
   renderRoute();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -2436,7 +2936,37 @@ function configureMatchDetailRefresh(route) {
       stopMatchDetailRefresh();
       return;
     }
-    await renderMatchPage(current);
+    
+    // Fetch fresh match bundle
+    let match = findMatch(current.sport, current.slug);
+    if (match) {
+      try {
+        const isEspn = !match.source || match.source === "espn";
+        if (isEspn) {
+          const fresh = await cachedJson(`${ESPN_BASE}/${match.feedPath}/summary?event=${match.id}`, 8000);
+          if (fresh?.header?.competitions?.[0]) {
+             // Basic score sync
+             const comp = fresh.header.competitions[0];
+             const oldStatus = match.status;
+             match.homeScore = comp.competitors[0].score?.displayValue || comp.competitors[0].score;
+             match.awayScore = comp.competitors[1].score?.displayValue || comp.competitors[1].score;
+             match.statusDetail = fresh.header.status?.type?.detail || match.statusDetail;
+             match.status = fresh.header.status?.type?.state === 'post' ? 'final' : fresh.header.status?.type?.state === 'in' ? 'live' : 'upcoming';
+
+             if (oldStatus !== match.status) {
+                // If status changed (e.g. match ended), we need a full structural render
+                await renderMatchPage(current);
+             } else {
+                updateMatchUIInPlace(match);
+             }
+          }
+        }
+      } catch(e) { /* ignore summary refresh errors */ }
+    }
+
+    // If we're on a match page, we still might want to re-render fully occasionally 
+    // to update stats/lineups, BUT we do it silently or only if data changed significantly.
+    // For now, let's just stick to UI update for flicker-free.
   }, MATCH_DETAIL_REFRESH_MS);
 }
 
@@ -2493,6 +3023,74 @@ function getShareText() {
   return "LiveScoreFree: free community-powered live scores. Share to help more fans discover fast sports updates and support good impact.";
 }
 
+function getSharePayload() {
+  const url = getAbsoluteUrlForPath(state.activePath);
+  const encodedUrl = encodeURIComponent(url);
+  const shareText = getShareText();
+  const encodedText = encodeURIComponent(shareText);
+  const titleText = (document.title || "LiveScoreFree").replace(/\s+\|\s+LiveScoreFree$/i, "").trim() || "LiveScoreFree";
+  const encodedTitle = encodeURIComponent(titleText);
+  const encodedBody = encodeURIComponent(`${shareText}\n\n${url}`);
+
+  return {
+    url,
+    encodedUrl,
+    shareText,
+    encodedText,
+    titleText,
+    encodedTitle,
+    encodedBody
+  };
+}
+
+function renderHeroShareActions() {
+  const { encodedUrl, encodedText, encodedTitle, encodedBody } = getSharePayload();
+  return `
+    <div class="hero-support-row">
+      <a class="btn btn-primary hero-support-btn" href="https://ko-fi.com/livescorefree" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a>
+      <a class="btn hero-advertise-btn" data-link href="/advertise">Advertise</a>
+    </div>
+    <div class="hero-share-row" aria-label="Share LiveScoreFree">
+      <button type="button" class="btn share-icon-btn" data-share-native aria-label="Share this page">
+        <img class="share-favicon" src="favicon-share.svg" alt="" aria-hidden="true" loading="lazy">
+        <span class="sr-only">Share This Page</span>
+      </button>
+      <button type="button" class="btn share-icon-btn" data-share-copy aria-label="Copy link">
+        <img class="share-favicon" src="favicon-link.svg" alt="" aria-hidden="true" loading="lazy">
+        <span class="sr-only">Copy Link</span>
+      </button>
+      <a class="btn share-icon-btn" href="https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp">
+        <img class="share-favicon" src="favicon-whatsapp.svg" alt="" aria-hidden="true" loading="lazy">
+        <span class="sr-only">WhatsApp</span>
+      </a>
+      <a class="btn share-icon-btn" href="https://t.me/share/url?url=${encodedUrl}&text=${encodedText}" target="_blank" rel="noopener noreferrer" aria-label="Share on Telegram">
+        <img class="share-favicon" src="favicon-telegram.svg" alt="" aria-hidden="true" loading="lazy">
+        <span class="sr-only">Telegram</span>
+      </a>
+      <a class="btn share-icon-btn" href="https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on X">
+        <img class="share-favicon" src="favicon-x.svg" alt="" aria-hidden="true" loading="lazy">
+        <span class="sr-only">X</span>
+      </a>
+      <a class="btn share-icon-btn" href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook">
+        <img class="share-favicon" src="favicon-facebook.svg" alt="" aria-hidden="true" loading="lazy">
+        <span class="sr-only">Facebook</span>
+      </a>
+      <a class="btn share-icon-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn">
+        <img class="share-favicon" src="favicon-linkedin.svg" alt="" aria-hidden="true" loading="lazy">
+        <span class="sr-only">LinkedIn</span>
+      </a>
+      <a class="btn share-icon-btn" href="https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}" target="_blank" rel="noopener noreferrer" aria-label="Share on Reddit">
+        <img class="share-favicon" src="favicon-reddit.svg" alt="" aria-hidden="true" loading="lazy">
+        <span class="sr-only">Reddit</span>
+      </a>
+      <a class="btn share-icon-btn" href="mailto:?subject=${encodedTitle}&body=${encodedBody}" aria-label="Share via Email">
+        <img class="share-favicon" src="favicon-email.svg" alt="" aria-hidden="true" loading="lazy">
+        <span class="sr-only">Email</span>
+      </a>
+    </div>
+  `;
+}
+
 function renderGlobalShareWidget() {
   const main = qs("#main");
   if (!main) {
@@ -2504,13 +3102,7 @@ function renderGlobalShareWidget() {
     existing.remove();
   }
 
-  const url = getAbsoluteUrlForPath(state.activePath);
-  const encodedUrl = encodeURIComponent(url);
-  const shareText = getShareText();
-  const encodedText = encodeURIComponent(shareText);
-  const titleText = (document.title || "LiveScoreFree").replace(/\s+\|\s+LiveScoreFree$/i, "").trim() || "LiveScoreFree";
-  const encodedTitle = encodeURIComponent(titleText);
-  const encodedBody = encodeURIComponent(`${shareText}\n\n${url}`);
+  const { encodedUrl, encodedText, encodedTitle, encodedBody } = getSharePayload();
 
   main.insertAdjacentHTML(
     "beforeend",
@@ -2636,7 +3228,7 @@ function showSupportPopup() {
   popup.setAttribute("aria-modal", "true");
   popup.innerHTML = `
     <div class="support-popup-card">
-      <button class="popup-close" type="button" aria-label="Close popup" data-popup-close>x</button>
+      <button class="popup-close" type="button" aria-label="Close popup" data-popup-close>&times;</button>
       <p class="popup-eyebrow">Community Powered</p>
       <h3>Keep LiveScoreFree Running for Everyone</h3>
       <p>
@@ -2867,6 +3459,62 @@ function renderTeamNameControl({
   `;
 }
 
+function updateMatchUIInPlace(match) {
+  if (!match) return;
+  const key = `${match.sportGroup}:${match.slug}`;
+  const nodes = qsa(`[data-match-key="${key}"]`);
+  if (!nodes.length) return;
+
+  const homeScore = String(match.homeScore ?? "-");
+  const awayScore = String(match.awayScore ?? "-");
+  const statusText = getStatusText(match);
+
+  nodes.forEach((root) => {
+    const maxDigits = Math.max(homeScore.length, awayScore.length);
+    const digitsVal = maxDigits >= 3 ? String(Math.min(maxDigits, 4)) : null;
+
+    // Update Home Score
+    const homeNode = qs('[data-field="score-home"]', root);
+    if (homeNode && homeNode.textContent !== homeScore) {
+      homeNode.textContent = homeScore;
+    }
+    if (homeNode) {
+      if (digitsVal) homeNode.setAttribute('data-digits', digitsVal);
+      else homeNode.removeAttribute('data-digits');
+    }
+    // Update Away Score
+    const awayNode = qs('[data-field="score-away"]', root);
+    if (awayNode && awayNode.textContent !== awayScore) {
+      awayNode.textContent = awayScore;
+    }
+    if (awayNode) {
+      if (digitsVal) awayNode.setAttribute('data-digits', digitsVal);
+      else awayNode.removeAttribute('data-digits');
+    }
+    // Update Combined Score (for Match Detail Hero)
+    const scoreNode = qs('[data-field="score"] .pm-score-main', root) || qs('.pm-score-main', root);
+    if (scoreNode) {
+      const combined = `${homeScore} - ${awayScore}`;
+      if (scoreNode.textContent.trim() !== combined) {
+        scoreNode.textContent = combined;
+      }
+    }
+    // Update Status Text / Clock
+    const statusNode = qs('[data-field="status-text"]', root) || qs('[data-field="clock"]', root);
+    if (statusNode && statusNode.textContent !== statusText) {
+      statusNode.textContent = statusText;
+    }
+
+    // Handle Live Dot/Pill transitions if status changed
+    const livePill = qs('.pm-live-pill', root);
+    if (livePill && match.status !== 'live') {
+      // If it was live but now isn't, we might need a full re-render for structure, 
+      // but for now just hide the dot or change class if possible.
+      // Usually a full re-render is safer for status transitions.
+    }
+  });
+}
+
 function renderTeamScoreRow({
   sportGroup = "",
   teamId = "",
@@ -2889,6 +3537,180 @@ function renderTeamScoreRow({
       })}
       <div class="score-value">${escapeHtml(score)}</div>
     </div>
+  `;
+}
+
+function renderMatchLogo({
+  teamLogo = "",
+  teamName = "",
+  teamAbbr = "",
+  fallbackIcon = "TM"
+} = {}) {
+  const safeName = String(teamName || "Team");
+  const safeAbbr = String(teamAbbr || safeName.slice(0, 3) || fallbackIcon).toUpperCase().slice(0, 3);
+  if (teamLogo) {
+    return `
+      <img class="match-logo-img" src="${escapeHtml(teamLogo)}" alt="${escapeHtml(safeName)}" loading="eager" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'">
+      <span class="match-logo-fallback" style="display:none;">${escapeHtml(safeAbbr)}</span>
+    `;
+  }
+  return `<span class="match-logo-fallback">${escapeHtml(safeAbbr)}</span>`;
+}
+
+function renderMatchCardHero(match, { badgeHtml = "", routeOverride = "", timeLabel = "", venueLabel = "" } = {}) {
+  const sportIcon = SPORT_GROUPS[match.sportGroup]?.icon || "SPT";
+  const sportAbbr = SPORT_GROUPS[match.sportGroup]?.abbr || match.sportGroup || "SPT";
+  const toneClass = toneClassForMatchStatus(match.status);
+  const route = routeOverride || routeForMatch(match);
+
+  // Prefer the full league label but keep it short. For known abbreviations (NFL, NBA, MLB etc) keep as-is.
+  const rawLeague = (match.leagueLabel || match.sportGroup || "Sport").trim();
+  const leagueShort = rawLeague.length <= 8 ? rawLeague.toUpperCase() : rawLeague.replace(/\s+(League|Championship|Cup|Series|Tour|Association|Conference|Division).*$/i, "").slice(0, 14).toUpperCase();
+
+  const statusHtml = badgeHtml || statusBadge(match);
+  const timeText = timeLabel || (match.status === "upcoming" ? formatTime(match.date) : getStatusText(match));
+  const venueText = venueLabel || match.venue || "Venue TBC";
+
+  // Live clock timer — shows real elapsed time MM:SS instead of blinking LIVE
+  let liveTimePillHtml = "";
+  if (match.status === "live") {
+    const startMs = new Date(match.date || 0).getTime();
+    const nowMs = Date.now();
+    const elapsedSec = Math.max(0, Math.floor((nowMs - startMs) / 1000));
+    const elapsedMin = Math.floor(elapsedSec / 60);
+    const elapsedRemSec = elapsedSec % 60;
+    // Use match.progress if available (ESPN provides "45'+2", "HT", "2H" etc.), otherwise use computed elapsed
+    let clockDisplay = "";
+    if (match.progress && match.progress !== "Live") {
+      clockDisplay = match.progress;
+    } else if (startMs > 0 && elapsedMin < 300) {
+      clockDisplay = `${String(elapsedMin).padStart(2, "0")}:${String(elapsedRemSec).padStart(2, "0")}`;
+    } else {
+      clockDisplay = "LIVE";
+    }
+    liveTimePillHtml = `<span class="mcp-pill mcp-pill-live-clock" data-match-start-ts="${startMs}"><span class="mcp-live-dot"></span><span class="mcp-clock-text" data-field="clock">${escapeHtml(clockDisplay)}</span></span>`;
+  }
+
+  const normalizeScore = (value) => {
+    if (value === null || value === undefined || value === "") return "-";
+    return String(value);
+  };
+  const homeScoreRaw = normalizeScore(match.homeScore);
+  const awayScoreRaw = normalizeScore(match.awayScore);
+  const hasScore = homeScoreRaw !== "-" || awayScoreRaw !== "-";
+  const displayHomeScore = hasScore ? homeScoreRaw : "-";
+  const displayAwayScore = hasScore ? awayScoreRaw : "-";
+
+  let centerContent;
+  if (match.status === "upcoming" || !hasScore) {
+    centerContent = `<div class="mcp-vs">VS</div>`;
+  } else {
+    const maxDigits = Math.max(displayHomeScore.length, displayAwayScore.length);
+    const digitsAttr = maxDigits >= 3 ? ` data-digits="${Math.min(maxDigits, 4)}"` : '';
+    centerContent = `
+      <div class="mcp-score" data-field="score">
+        <span class="mcp-score-num"${digitsAttr} data-field="score-home">${escapeHtml(displayHomeScore)}</span>
+        <span class="mcp-score-dash">-</span>
+        <span class="mcp-score-num"${digitsAttr} data-field="score-away">${escapeHtml(displayAwayScore)}</span>
+      </div>
+    `;
+  }
+
+  // Sport-specific extra rows
+  let extraStatsHtml = "";
+  if (match.sportGroup === "american-football") {
+    const hPass = match.homeStats?.passingYards ?? "–";
+    const aPass = match.awayStats?.passingYards ?? "–";
+    const hRush = match.homeStats?.rushingYards ?? "–";
+    const aRush = match.awayStats?.rushingYards ?? "–";
+    const weekLabel = match.note || "";
+    if (weekLabel) {
+      extraStatsHtml += `<div class="mcp-note">${escapeHtml(weekLabel)}</div>`;
+    }
+    extraStatsHtml += `
+      <div class="mcp-stats-row">
+        <span class="mcp-stat-label">Pass Yds:</span>
+        <span class="mcp-stat-val">${escapeHtml(String(hPass))} | ${escapeHtml(String(aPass))}</span>
+      </div>
+      <div class="mcp-stats-row">
+        <span class="mcp-stat-label">Rush Yds:</span>
+        <span class="mcp-stat-val">${escapeHtml(String(hRush))} | ${escapeHtml(String(aRush))}</span>
+      </div>
+    `;
+  } else if (match.sportGroup === "mma") {
+    const round = match.progress || "";
+    const recordHome = match.homeStats?.record || "";
+    const recordAway = match.awayStats?.record || "";
+    extraStatsHtml += `
+      <div class="mcp-mma-timer">${round ? escapeHtml(round) : "MMA"}</div>
+      <div class="mcp-mma-fighters">
+        <div class="mcp-mma-fighter">
+          <span class="mcp-mma-name">${escapeHtml(match.homeName || "Fighter 1")}</span>
+          ${recordHome ? `<span class="mcp-mma-record">Records (${escapeHtml(recordHome)})</span>` : ""}
+        </div>
+        <span class="mcp-mma-vs">vs</span>
+        <div class="mcp-mma-fighter mcp-mma-fighter-away">
+          <span class="mcp-mma-name">${escapeHtml(match.awayName || "Fighter 2")}</span>
+          ${recordAway ? `<span class="mcp-mma-record">(${escapeHtml(recordAway)})</span>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <a class="match-card-hero-v2 auto-bg-surface ${toneClass}" data-match-key="${escapeHtml(match.sportGroup)}:${escapeHtml(match.slug)}" data-sport-group="${escapeHtml(match.sportGroup || 'other')}" data-link href="${escapeHtml(route)}" ${buildAutoBackgroundAttrs({
+      sportGroup: match.sportGroup,
+      leagueKey: match.leagueKey,
+      seedText: `${match.homeName} vs ${match.awayName}`, // Pass team names to guarantee unique SVGs per match
+      sportGroup: match.sportGroup,
+      leagueKey: match.leagueKey,
+      fit: "cover",
+      position: "center",
+      strength: 0.20
+    })}>
+      <div class="mc-overlay"></div>
+
+      <!-- Top pill row -->
+      <div class="mcp-top">
+        <span class="mcp-pill mcp-pill-sport">${escapeHtml(leagueShort)}</span>
+        <div class="mcp-top-center">${liveTimePillHtml}</div>
+        <span class="mcp-pill mcp-pill-status">${statusHtml}</span>
+      </div>
+
+      <!-- Venue label -->
+      <div class="mcp-venue">${escapeHtml(venueText)}</div>
+
+      <!-- Main: logo | score | logo -->
+      <div class="mcp-main">
+        <div class="mcp-team">
+          <div class="mcp-logo">
+            ${renderMatchLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, fallbackIcon: sportIcon })}
+          </div>
+          <span class="mcp-team-name">${escapeHtml(match.homeName || "")}</span>
+        </div>
+
+        <div class="mcp-center">${centerContent}</div>
+
+        <div class="mcp-team">
+          <div class="mcp-logo">
+            ${renderMatchLogo({ teamLogo: match.awayLogo, teamName: match.awayName, teamAbbr: match.awayAbbr, fallbackIcon: sportIcon })}
+          </div>
+          <span class="mcp-team-name">${escapeHtml(match.awayName || "")}</span>
+        </div>
+      </div>
+
+      <!-- Footer: venue + time -->
+      <div class="mcp-foot">
+        <div class="mcp-foot-row">
+          <span class="mcp-foot-icon">&#128197;</span>
+          <span class="mcp-foot-text">${escapeHtml(venueText)}</span>
+          <span class="mcp-foot-spacer"></span>
+          <span class="mcp-foot-icon">&#9201;</span>
+          <span class="mcp-foot-text">${escapeHtml(timeText)}</span>
+        </div>
+        ${extraStatsHtml ? `<div class="mcp-extra">${extraStatsHtml}</div>` : ""}
+      </div>
+    </a>
   `;
 }
 
@@ -2922,17 +3744,112 @@ function normalizeBackgroundPosition(value) {
   return allowed.has(token) ? token : "center";
 }
 
-function buildAutoBackgroundAttrs({ sportGroup = "", leagueKey = "", fit = "cover", position = "center", strength = 0.22 } = {}) {
+function generatePremiumSportSVG(sportGroup, seedString) {
+  // Simple hash for deterministic colors
+  let hash = 0;
+  const safeSeed = String(seedString || sportGroup || "LiveScoreFree");
+  for (let i = 0; i < safeSeed.length; i++) {
+    hash = safeSeed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Color Palettes (Dark premium neons)
+  const palettes = [
+    { bg1: '#050b14', bg2: '#0b1b36', accent: '#3b82f6' }, // Blue
+    { bg1: '#0d0404', bg2: '#2a0a0d', accent: '#ef4444' }, // Red
+    { bg1: '#040d08', bg2: '#082614', accent: '#10b981' }, // Green
+    { bg1: '#0f0803', bg2: '#2e1503', accent: '#fb923c' }, // Orange
+    { bg1: '#0a030f', bg2: '#230a38', accent: '#b144ef' }, // Purple
+    { bg1: '#030a0d', bg2: '#082531', accent: '#06b6d4' }, // Cyan
+  ];
+  
+  const p = palettes[Math.abs(hash) % palettes.length];
+  
+  let paths = '';
+  
+  if (sportGroup === 'football' || sportGroup === 'soccer') {
+    // Pitch stripes
+    paths = `
+      <g stroke="${p.accent}" stroke-width="2" opacity="0.35">
+        <line x1="200" y1="0" x2="0" y2="400"/>
+        <line x1="400" y1="0" x2="200" y2="400"/>
+        <line x1="600" y1="0" x2="400" y2="400"/>
+        <line x1="800" y1="0" x2="600" y2="400"/>
+        <line x1="1000" y1="0" x2="800" y2="400"/>
+        <!-- center circle -->
+        <ellipse cx="400" cy="200" rx="120" ry="40" fill="none" />
+      </g>
+    `;
+  } else if (sportGroup === 'basketball') {
+    // Court lines
+    paths = `
+      <g stroke="${p.accent}" stroke-width="3" opacity="0.45">
+        <rect x="250" y="0" width="300" height="400" fill="none" />
+        <circle cx="400" cy="200" r="70" fill="none" />
+        <!-- 3 point arcs -->
+        <path d="M 0,20 Q 250,200 0,380" fill="none" />
+        <path d="M 800,20 Q 550,200 800,380" fill="none" />
+      </g>
+    `;
+  } else if (sportGroup === 'tennis') {
+    paths = `
+      <g stroke="${p.accent}" stroke-width="2" opacity="0.45">
+        <rect x="100" y="40" width="600" height="320" fill="none" />
+        <line x1="400" y1="40" x2="400" y2="360" />
+        <line x1="250" y1="40" x2="250" y2="360" />
+        <line x1="550" y1="40" x2="550" y2="360" />
+      </g>
+    `;
+  } else if (sportGroup === 'cricket') {
+    paths = `
+      <g stroke="${p.accent}" stroke-width="2" opacity="0.35">
+        <ellipse cx="400" cy="200" rx="360" ry="180" fill="none" />
+        <rect x="360" y="120" width="80" height="160" fill="none" />
+        <circle cx="400" cy="200" r="30" fill="none" stroke-dasharray="4,4" />
+      </g>
+    `;
+  } else {
+    // Default abstract geometry (Premium lines/nodes)
+    paths = `
+      <g stroke="${p.accent}" stroke-width="2" opacity="0.35">
+        <path d="M -100,200 Q 400,-100 900,200" fill="none" />
+        <path d="M -100,300 Q 400,0 900,300" fill="none" stroke-dasharray="8,8" />
+        <circle cx="400" cy="200" r="140" fill="none" />
+      </g>
+    `;
+  }
+  
+  const svgString = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="g-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${p.bg1}" />
+          <stop offset="100%" stop-color="${p.bg2}" />
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="800" height="400" fill="url(#g-bg)" />
+      ${paths}
+    </svg>
+  `.replace(/\s+/g, ' ').trim();
+  
+  // Safe btoa for standard browser
+  const encoded = btoa(unescape(encodeURIComponent(svgString)));
+  return `data:image/svg+xml;base64,${encoded}`;
+}
+
+function buildAutoBackgroundAttrs({ sportGroup = "", leagueKey = "", seedText = "", fit = "cover", position = "center", strength = 0.22 } = {}) {
   const safeSport = SPORT_GROUPS[sportGroup] ? sportGroup : "";
-  const visual = getLeagueVisualConfig(leagueKey, safeSport);
-  const imagePath = visual.imagePath;
   const tone = getSportContextTone(safeSport);
-  const safeFit = normalizeBackgroundFit(fit || visual.fit || "cover");
-  const safePosition = normalizeBackgroundPosition(position || visual.position || "center");
-  const safeStrength = Math.max(0.08, Math.min(0.44, Number(strength) || 0.22));
+  const safeFit = normalizeBackgroundFit(fit || "cover");
+  const safePosition = normalizeBackgroundPosition(position || "center");
+  const safeStrength = Math.max(0.08, Math.min(0.60, Number(strength) || 0.35));
+
+  // Utilize the Generative SVG Engine to guarantee a stunning, premium, unique background
+  // for every match/element without using ANY external images or APIs.
+  const dynamicSeed = seedText || leagueKey || safeSport || "premium";
+  const svgDataUri = generatePremiumSportSVG(safeSport, dynamicSeed);
 
   const attrs = [
-    `style="--context-bg-image:url('${escapeHtml(imagePath)}');--context-bg-fit:${safeFit};--context-bg-position:${safePosition};--context-bg-strength:${safeStrength};--context-accent-rgb:${tone.accent};--context-glow-rgb:${tone.glow};"`
+    `style="--context-bg-image:url('${svgDataUri}');--context-bg-fit:${safeFit};--context-bg-position:${safePosition};--context-bg-strength:${safeStrength};--context-accent-rgb:${tone.accent};--context-glow-rgb:${tone.glow};"`
   ];
   if (safeSport) {
     attrs.push(`data-auto-bg-sport="${safeSport}"`);
@@ -2944,45 +3861,7 @@ function buildAutoBackgroundAttrs({ sportGroup = "", leagueKey = "", fit = "cove
 }
 
 function renderMatchCard(match) {
-  const sportIcon = SPORT_GROUPS[match.sportGroup]?.icon || "SPT";
-  return `
-    <a class="match-card auto-bg-surface" data-link href="${escapeHtml(routeForMatch(match))}" ${buildAutoBackgroundAttrs({
-      sportGroup: match.sportGroup,
-      leagueKey: match.leagueKey,
-      fit: "cover",
-      position: "center",
-      strength: 0.21
-    })}>
-      <div class="match-league">
-        <span>${sportIcon} ${escapeHtml(match.leagueLabel)}</span>
-        ${statusBadge(match)}
-      </div>
-      <div class="match-teams">
-        ${renderTeamScoreRow({
-          sportGroup: match.sportGroup,
-          teamId: match.homeTeamId,
-          teamName: match.homeName,
-          teamAbbr: match.homeAbbr,
-          teamLogo: match.homeLogo,
-          score: match.homeScore,
-          fallbackIcon: sportIcon
-        })}
-        ${renderTeamScoreRow({
-          sportGroup: match.sportGroup,
-          teamId: match.awayTeamId,
-          teamName: match.awayName,
-          teamAbbr: match.awayAbbr,
-          teamLogo: match.awayLogo,
-          score: match.awayScore,
-          fallbackIcon: sportIcon
-        })}
-      </div>
-      <div class="match-meta">
-        <span>${escapeHtml(getStatusText(match))}</span>
-        <span>${escapeHtml(match.venue)}</span>
-      </div>
-    </a>
-  `;
+  return renderMatchCardHero(match);
 }
 
 function renderMatchGrid(matches, emptyMessage) {
@@ -3011,6 +3890,91 @@ function topLeagueSummaries() {
 function trendingMatches() {
   return [...state.matches].sort((left, right) => right.trendingScore - left.trendingScore).slice(0, 12);
 }
+
+function renderLiveMatchesBySport() {
+  const byGroup = new Map();
+  for (const match of state.liveMatches) {
+    const sg = match.sportGroup || "other";
+    if (!byGroup.has(sg)) byGroup.set(sg, []);
+    byGroup.get(sg).push(match);
+  }
+  if (byGroup.size === 0) {
+    return `<div class="message-box">No live matches by sport right now. Check back shortly.</div>`;
+  }
+  const ORDER = ["football","cricket","basketball","tennis","baseball","american-football","ice-hockey","mma","rugby","other"];
+  const sorted = [...byGroup.entries()].sort(([a], [b]) => {
+    const ia = ORDER.indexOf(a), ib = ORDER.indexOf(b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  return sorted.map(([sg, matches]) => {
+    const sportLabel = SPORT_GROUPS[sg]?.label || sg.replace(/-/g, " ");
+    const sportIcon = SPORT_GROUPS[sg]?.icon || "🏟";
+    return `
+      <div class="lbs-sport-group">
+        <div class="lbs-sport-header">
+          <span class="lbs-sport-icon">${escapeHtml(sportIcon)}</span>
+          <span class="lbs-sport-label">${escapeHtml(sportLabel)}</span>
+          <span class="lbs-live-count">${matches.length} LIVE</span>
+        </div>
+        <div class="grid">${matches.slice(0, 8).map((m) => renderMatchCard(m)).join("")}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderSportFilterTabs(matches, targetGridClass = ".grid") {
+  const sportBuckets = {};
+  matches.forEach((match) => {
+    const sg = match.sportGroup || "other";
+    if (!sportBuckets[sg]) sportBuckets[sg] = [];
+    sportBuckets[sg].push(match);
+  });
+  
+  const sportOrder = ["football","cricket","basketball","tennis","nfl","hockey","baseball","rugby","mma","f1"];
+  const activeSports = sportOrder.filter((s) => sportBuckets[s]?.length);
+  const otherSports = Object.keys(sportBuckets).filter((s) => !sportOrder.includes(s) && sportBuckets[s]?.length);
+  
+  if (Object.keys(sportBuckets).length <= 1) return ""; // No need to filter if 0 or 1 sport
+
+  const tabsHtml = [
+    `<button class="match-tab-btn active" data-sport="all" data-target="${targetGridClass}">All <span class="lp-count">${matches.length}</span></button>`,
+    ...activeSports.map((s) => {
+      const icon = SPORT_GROUPS[s]?.icon || "🏆";
+      const label = SPORT_GROUPS[s]?.label || s;
+      return `<button class="match-tab-btn" data-sport="${escapeHtml(s)}" data-target="${targetGridClass}">${escapeHtml(icon)} ${escapeHtml(label)} <span class="lp-count">${sportBuckets[s].length}</span></button>`;
+    }),
+    ...otherSports.map((s) => {
+      return `<button class="match-tab-btn" data-sport="${escapeHtml(s)}" data-target="${targetGridClass}">🏆 ${escapeHtml(s)} <span class="lp-count">${sportBuckets[s].length}</span></button>`;
+    })
+  ].join("");
+
+  return `<div class="lp-filter-section premium-filter-container" id="global-filter-section" style="position:sticky;top:var(--header-height);z-index:100;background:rgba(10,15,30,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);margin:16px 0;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.08);"><div class="match-tabs">${tabsHtml}</div></div>`;
+}
+
+function bindSportFilterTabs() {
+  const filterSection = qs("#global-filter-section") || qs("#live-filter-section");
+  if (!filterSection) return;
+  filterSection.addEventListener("click", (e) => {
+    const tab = e.target.closest(".match-tab-btn");
+    if (!tab) return;
+    
+    const sport = tab.dataset.sport;
+    const targetGridClass = tab.dataset.target || ".grid";
+    
+    // Toggle active tab visually
+    qsa(".match-tab-btn", filterSection).forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    
+    // Filter the grid items matching the target
+    qsa(`${targetGridClass} .match-card-hero-v2`).forEach((card) => {
+      if (sport === "all" || card.dataset.sportGroup === sport) {
+        card.style.display = "";
+      } else {
+        card.style.display = "none";
+      }
+    });
+  });
+}
 function renderLivePage() {
   const main = qs("#main");
   if (!main) {
@@ -3032,15 +3996,86 @@ function renderLivePage() {
     }
   });
   const pinnedLeagues = Array.from(liveLeagues.values()).slice(0, 12);
+  const topLeagues = topLeagueSummaries();
   const liveSports = Array.from(new Set(state.liveMatches.map((match) => match.sportGroup).filter(Boolean)));
+  const liveTrending = trendingMatches().filter((match) => match.status === "live").slice(0, 8);
   const liveContextSport = getDominantSportGroup();
   const heroActions = `
     <a class="btn btn-primary" data-link href="/upcoming">Upcoming Matches</a>
     <a class="btn" data-link href="/top-leagues">Top Leagues</a>
   `;
 
+  // ── Build sport-grouped data for the live page ──
+  const sportBuckets = {};
+  state.liveMatches.forEach((match) => {
+    const sg = match.sportGroup || "other";
+    if (!sportBuckets[sg]) sportBuckets[sg] = [];
+    sportBuckets[sg].push(match);
+  });
+  const sportOrder = ["football","cricket","basketball","tennis","nfl","hockey","baseball","rugby","mma","f1"];
+  const activeSports = sportOrder.filter((s) => sportBuckets[s]?.length);
+  const otherSports = Object.keys(sportBuckets).filter((s) => !sportOrder.includes(s) && sportBuckets[s]?.length);
+
+  // Sport tab pills HTML (Standardized Premium Style)
+  const sportTabsHtml = [
+    `<button class="match-tab-btn active" data-sport="all">All <span class="lp-count">${state.liveMatches.length}</span></button>`,
+    ...activeSports.map((s) => {
+      const icon = SPORT_GROUPS[s]?.icon || "🏆";
+      const label = SPORT_GROUPS[s]?.label || s;
+      return `<button class="match-tab-btn" data-sport="${escapeHtml(s)}">${escapeHtml(icon)} ${escapeHtml(label)} <span class="lp-count">${sportBuckets[s].length}</span></button>`;
+    }),
+    ...otherSports.map((s) => {
+      return `<button class="match-tab-btn" data-sport="${escapeHtml(s)}">🏆 ${escapeHtml(s)} <span class="lp-count">${sportBuckets[s].length}</span></button>`;
+    })
+  ].join("");
+
+  // Sport-grouped sections HTML
+  const sportSectionsHtml = [...activeSports, ...otherSports].map((sg) => {
+    const sportLabel = SPORT_GROUPS[sg]?.label || sg;
+    const sportIcon = SPORT_GROUPS[sg]?.icon || "🏆";
+    const matches = sportBuckets[sg] || [];
+
+    // Group by league within this sport
+    const leagueBuckets = {};
+    matches.forEach((m) => {
+      const lk = m.leagueKey || "other";
+      if (!leagueBuckets[lk]) leagueBuckets[lk] = { label: m.leagueLabel || LEAGUES[lk]?.label || lk, matches: [] };
+      leagueBuckets[lk].matches.push(m);
+    });
+
+    const leagueSections = Object.entries(leagueBuckets).map(([lk, bucket]) => `
+      <div class="lp-league-group" data-league="${escapeHtml(lk)}">
+        <div class="lp-league-head">
+          <span class="lp-league-name">${escapeHtml(bucket.label)}</span>
+          <span class="lp-league-live">${bucket.matches.length} live</span>
+        </div>
+        <div class="grid">${bucket.matches.map((m) => renderMatchCard(m)).join("")}</div>
+      </div>
+    `).join("");
+
+    return `
+      <div class="lp-sport-section" data-sport-group="${escapeHtml(sg)}">
+        <div class="lp-sport-divider">
+          <span class="lp-sport-divider-icon">${escapeHtml(sportIcon)}</span>
+          <span class="lp-sport-divider-label">${escapeHtml(sportLabel)}</span>
+          <span class="lp-sport-divider-count">${matches.length} live</span>
+        </div>
+        ${leagueSections}
+      </div>
+    `;
+  }).join("");
+
+  // Quick scores ticker for live page
+  const quickScoresHtml = state.liveMatches.slice(0, 20).map((m) => {
+    const h = m.homeAbbr || (m.homeName || "").slice(0, 3).toUpperCase();
+    const a = m.awayAbbr || (m.awayName || "").slice(0, 3).toUpperCase();
+    const hs = m.homeScore ?? "-";
+    const as = m.awayScore ?? "-";
+    return `<span class="lp-qs">${escapeHtml(h)} <b>${escapeHtml(String(hs))}</b>-<b>${escapeHtml(String(as))}</b> ${escapeHtml(a)}</span>`;
+  }).join("");
+
   main.innerHTML = `
-    <section class="hero auto-bg-surface" ${buildAutoBackgroundAttrs({
+    <section class="hero auto-bg-surface tone-live" ${buildAutoBackgroundAttrs({
       sportGroup: liveContextSport,
       leagueKey: "",
       fit: "cover",
@@ -3050,6 +4085,7 @@ function renderLivePage() {
       ${renderSeoHeroPanel({
         eyebrow: "Realtime live match coverage",
         title: "LiveScoreFree",
+        mobileTitle: "Fast, trusted live scores and match updates.",
         lead: "Only currently live matches are shown here, with realtime stats, commentary, lineups, events, and direct score pages across major sports.",
         actionsHtml: heroActions,
         trustItems: ["Live matches only", "Auto-updating scoreboards", "Worldwide live filter", "Commentary and stats"],
@@ -3060,15 +4096,40 @@ function renderLivePage() {
       })}
       <div class="hero-stat-grid">
         <div class="stat-box"><strong>${state.liveMatches.length}</strong><span>Live Matches</span></div>
+        <div class="stat-box"><strong>${activeSports.length + otherSports.length}</strong><span>Sports Live</span></div>
         <div class="stat-box"><strong>${pinnedLeagues.length}</strong><span>Live Leagues</span></div>
-        <div class="stat-box"><strong>${liveSports.length}</strong><span>Sports Live</span></div>
-        <div class="stat-box"><strong>Auto</strong><span>Worldwide Filter</span></div>
+        <div class="stat-box"><strong>${Object.keys(LEAGUES).length}</strong><span>Leagues Covered</span></div>
       </div>
     </section>
 
-    <section class="section live-shell">
+    ${quickScoresHtml ? `
+    <section class="section lp-quick-scores-bar">
+      <div class="lp-qs-track">${quickScoresHtml}${quickScoresHtml}</div>
+    </section>
+    ` : ""}
+
+    <section class="section lp-filter-section" id="live-filter-section" style="position:sticky;top:var(--header-height);z-index:100;background:rgba(10,15,30,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);margin-top:0;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div class="match-tabs">${sportTabsHtml}</div>
+    </section>
+
+    <section class="section section-trending-live tone-live">
+      <div class="section-head section-head-scroll">
+        <div>
+          <h2>Trending Live Matches</h2>
+          <p>All live matches across every league — updated in realtime.</p>
+        </div>
+        <span class="section-scroll-hint">Scroll &#8250;</span>
+      </div>
+      ${renderMatchGrid(state.liveMatches, "No live matches right now. Check back soon!")}
+    </section>
+
+    <section class="section lp-all-live" id="live-sport-sections">
+      ${sportSectionsHtml || '<div class="message-box">No live matches available right now. Check back soon!</div>'}
+    </section>
+
+    <section class="section live-shell section-live-hub tone-live">
       <aside class="panel live-sidebar auto-bg-surface">
-        <h2>Live Leagues</h2>
+        <h2>Top Leagues</h2>
         <div class="pin-list">
           ${
             pinnedLeagues.length
@@ -3084,16 +4145,36 @@ function renderLivePage() {
               : '<span class="subtle">No live leagues right now.</span>'
           }
         </div>
-        <h2 style="margin-top:14px;">Worldwide Filter</h2>
-        ${renderAutoCoveragePanel(state.liveMatches, { liveOnly: true })}
       </aside>
       <div class="panel live-main-preview auto-bg-surface">
-        <h2>Live Match Center</h2>
-        <p class="subtle">Showing live matches only.</p>
+        <h2>All Live Matches</h2>
+        <p class="subtle">Showing all ${state.liveMatches.length} live matches across ${Object.keys(LEAGUES).length} leagues.</p>
         ${renderMatchGrid(state.liveMatches, "No live matches available right now.")}
       </div>
     </section>
   `;
+
+  // ── Sport tab filter logic (client-side instant filtering) ──
+  const filterSection = qs("#live-filter-section");
+  if (filterSection) {
+    filterSection.addEventListener("click", (e) => {
+      const tab = e.target.closest(".match-tab-btn");
+      if (!tab) return;
+      const sport = tab.dataset.sport;
+      // Toggle active tab
+      qsa(".match-tab-btn", filterSection).forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      // Show/hide sport sections
+      const sections = qsa("#live-sport-sections .lp-sport-section");
+      sections.forEach((sec) => {
+        if (sport === "all") {
+          sec.style.display = "";
+        } else {
+          sec.style.display = sec.dataset.sportGroup === sport ? "" : "none";
+        }
+      });
+    });
+  }
 
   setSeo({
     title: "Live Scores Now, Realtime Match Stats, Commentary | LiveScoreFree",
@@ -3107,6 +4188,9 @@ function renderLivePage() {
       url: `${SEO_BASE.origin}/live`
     }
   });
+
+  // Wire up scroll-reveal animations after DOM paint
+  requestAnimationFrame(() => initScrollAnimations());
 }
 
 function renderUpcomingPage() {
@@ -3116,6 +4200,31 @@ function renderUpcomingPage() {
   }
 
   const list = [...state.upcomingMatches].sort((left, right) => new Date(left.date).getTime() - new Date(right.date).getTime());
+  const livePreview = state.liveMatches.slice(0, 4);
+
+  // Time-grouped upcoming matches
+  const now = Date.now();
+  const soonCutoff = now + 2 * 60 * 60 * 1000; // 2 hours
+  const todayCutoff = new Date();
+  todayCutoff.setHours(23, 59, 59, 999);
+  const todayEnd = todayCutoff.getTime();
+
+  const soonMatches = [];
+  const laterTodayMatches = [];
+  const tomorrowPlusMatches = [];
+
+  for (const match of list) {
+    const matchTime = new Date(match.date).getTime();
+    if (matchTime <= soonCutoff) {
+      soonMatches.push(match);
+    } else if (matchTime <= todayEnd) {
+      laterTodayMatches.push(match);
+    } else {
+      tomorrowPlusMatches.push(match);
+    }
+  }
+
+  // Sport filter chips
   const sportCounts = list.reduce((acc, match) => {
     const key = String(match.sportGroup || "");
     if (!key) {
@@ -3127,10 +4236,119 @@ function renderUpcomingPage() {
   const sportChips = Object.entries(sportCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
-    .map(([sport, count]) => `<span class="region-chip">${escapeHtml(SPORT_GROUPS[sport]?.label || sport)}: ${count}</span>`)
+    .map(([sport, count]) => `<span class="region-chip">${escapeHtml(SPORT_GROUPS[sport]?.icon || "")} ${escapeHtml(SPORT_GROUPS[sport]?.label || sport)} <strong>${count}</strong></span>`)
     .join("");
 
+  // Render a compact upcoming list item (mobile-optimized)
+  function renderUpcomingListItem(match) {
+    const sportIcon = SPORT_GROUPS[match.sportGroup]?.icon || "SPT";
+    const route = routeForMatch(match);
+    const leagueLabel = match.leagueLabel || match.sportLabel || match.sportGroup || "Match";
+    const kickoff = formatTime(match.date);
+    return `
+      <a class="upcoming-list-item" data-link href="${escapeHtml(route)}">
+        <div class="upcoming-list-kickoff">
+          <span class="upcoming-list-time">${escapeHtml(kickoff)}</span>
+          <span class="badge-upcoming">UPCOMING</span>
+        </div>
+        <div class="upcoming-list-teams">
+          <div class="upcoming-list-team">
+            ${renderMatchLogo({
+              teamLogo: match.homeLogo,
+              teamName: match.homeName,
+              teamAbbr: match.homeAbbr,
+              fallbackIcon: sportIcon
+            })}
+            <span>${escapeHtml(match.homeName || "Home")}</span>
+          </div>
+          <span class="upcoming-list-vs">VS</span>
+          <div class="upcoming-list-team">
+            ${renderMatchLogo({
+              teamLogo: match.awayLogo,
+              teamName: match.awayName,
+              teamAbbr: match.awayAbbr,
+              fallbackIcon: sportIcon
+            })}
+            <span>${escapeHtml(match.awayName || "Away")}</span>
+          </div>
+        </div>
+        <div class="upcoming-list-meta">
+          <span class="upcoming-list-league">${sportIcon} ${escapeHtml(leagueLabel)}</span>
+          ${match.venue ? `<span class="upcoming-list-venue">&#127967; ${escapeHtml(match.venue)}</span>` : ""}
+        </div>
+      </a>
+    `;
+  }
+
+  function renderTimeGroup(title, subtitle, matches, limit) {
+    if (!matches.length) {
+      return "";
+    }
+    const items = matches.slice(0, limit || 20);
+    return `
+      <div class="upcoming-time-group">
+        <div class="upcoming-time-header">
+          <h3>${escapeHtml(title)}</h3>
+          <span class="upcoming-time-count">${matches.length} match${matches.length !== 1 ? "es" : ""}</span>
+        </div>
+        ${subtitle ? `<p class="upcoming-time-subtitle">${escapeHtml(subtitle)}</p>` : ""}
+        <div class="upcoming-list">
+          ${items.map(renderUpcomingListItem).join("")}
+        </div>
+        ${matches.length > (limit || 20) ? `<p class="upcoming-time-more subtle">+${matches.length - (limit || 20)} more matches</p>` : ""}
+      </div>
+    `;
+  }
+
   main.innerHTML = `
+    <section class="section upcoming-mobile-only upcoming-hero-mobile tone-upcoming">
+      <div class="upcoming-hero-stats">
+        <div class="upcoming-hero-stat">
+          <strong>${state.liveMatches.length}</strong>
+          <span>Live Now</span>
+        </div>
+        <div class="upcoming-hero-stat upcoming-hero-stat-main">
+          <strong>${list.length}</strong>
+          <span>Upcoming</span>
+        </div>
+        <div class="upcoming-hero-stat">
+          <strong>${soonMatches.length}</strong>
+          <span>Starting Soon</span>
+        </div>
+      </div>
+      ${sportChips ? `<div class="upcoming-sport-chips">${sportChips}</div>` : ""}
+    </section>
+
+    ${livePreview.length ? `
+    <section class="section upcoming-mobile-only section-live-center tone-live">
+      <div class="section-head section-head-scroll">
+        <div>
+          <h2>Live Match Center</h2>
+          <p>Top live matches right now.</p>
+        </div>
+        <span class="section-scroll-hint">Live</span>
+      </div>
+      <div class="panel live-center-panel auto-bg-surface">
+        ${renderMatchGrid(livePreview, "No live matches available right now.")}
+      </div>
+    </section>
+    ` : ""}
+
+    <section class="section upcoming-mobile-only upcoming-timeline-mobile tone-upcoming">
+      ${renderTimeGroup("Starting Soon", "Kickoff within 2 hours", soonMatches, 12)}
+      ${renderTimeGroup("Later Today", "", laterTodayMatches, 16)}
+      ${renderTimeGroup("Tomorrow & Beyond", "", tomorrowPlusMatches, 20)}
+      ${!list.length ? '<div class="message-box">No upcoming matches are scheduled right now.</div>' : ""}
+    </section>
+
+    <section class="section upcoming-mobile-only upcoming-cta tone-support">
+      <div class="upcoming-cta-row">
+        <a class="btn btn-primary" href="https://ko-fi.com/livescorefree" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a>
+        <a class="btn" data-link href="/advertise">View Ad Options</a>
+        <a class="btn" data-link href="/history">Browse Match History</a>
+      </div>
+    </section>
+
     <section class="section ad-band">
       ${renderAdSlot({
         title: "Upcoming Matches Sponsor",
@@ -3139,17 +4357,13 @@ function renderUpcomingPage() {
       })}
     </section>
 
-    <section class="section">
+    <section class="section section-upcoming-page tone-upcoming">
       <div class="section-head">
         <h2>Upcoming Matches</h2>
         <p>Only scheduled upcoming fixtures. Open a match page to enable a kickoff reminder.</p>
       </div>
-      <div class="panel">
-        <p class="subtle">${list.length} upcoming matches in the current feed.</p>
-        <div class="region-list">
-          ${sportChips || '<span class="subtle">Sport breakdown will appear as schedules load.</span>'}
-        </div>
       </div>
+      ${renderSportFilterTabs(list.slice(0, 40))}
       <div class="section" style="margin-top: 12px;">
         ${renderMatchGrid(list.slice(0, 40), "No upcoming matches are scheduled right now.")}
       </div>
@@ -3173,6 +4387,206 @@ function renderUpcomingPage() {
       url: `${SEO_BASE.origin}/upcoming`
     }
   });
+
+  bindSportFilterTabs();
+  requestAnimationFrame(() => initScrollAnimations());
+}
+
+// ── Global live clock auto-ticker — ticks every second ──
+let _liveClockInterval = null;
+function startLiveClockTicker() {
+  if (_liveClockInterval) return; // already running
+  _liveClockInterval = setInterval(() => {
+    const clocks = qsa(".mcp-pill-live-clock[data-match-start-ts]");
+    if (!clocks.length) {
+      clearInterval(_liveClockInterval);
+      _liveClockInterval = null;
+      return;
+    }
+    const now = Date.now();
+    clocks.forEach((el) => {
+      const startTs = parseInt(el.dataset.matchStartTs, 10);
+      if (!startTs || startTs <= 0) return;
+      const elapsedSec = Math.max(0, Math.floor((now - startTs) / 1000));
+      const min = Math.floor(elapsedSec / 60);
+      const sec = elapsedSec % 60;
+      if (min >= 300) return; // don't tick for very old matches
+      const textEl = el.querySelector(".mcp-clock-text");
+      if (textEl && !textEl.textContent.includes("'") && !textEl.textContent.includes("HT") && !textEl.textContent.includes("FT")) {
+        textEl.textContent = `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+      }
+    });
+  }, 1000);
+}
+
+function initScrollAnimations() {
+  if (typeof IntersectionObserver === "undefined") return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("revealed");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
+  );
+
+  // Observe section heads with the head-specific animation
+  qsa(".section-head").forEach((el) => {
+    if (!el.classList.contains("reveal-head")) {
+      el.classList.add("reveal-head");
+      observer.observe(el);
+    }
+  });
+
+  // Observe top-level sections
+  qsa(".section").forEach((el) => {
+    if (!el.classList.contains("reveal")) {
+      el.classList.add("reveal");
+      observer.observe(el);
+    }
+  });
+
+  // Stagger grid children (match cards, league cards)
+  const STAGGER_SELECTORS = [
+    ".grid > .match-card",
+    ".grid > .match-card-hero-v2",
+    ".league-grid > .league-card",
+    ".lbs-sport-group .grid > *"
+  ];
+  STAGGER_SELECTORS.forEach((sel) => {
+    qsa(sel).forEach((el, i) => {
+      if (!el.classList.contains("reveal")) {
+        el.classList.add("reveal");
+        const delayClass = `reveal-delay-${Math.min((i % 6) + 1, 6)}`;
+        el.classList.add(delayClass);
+        observer.observe(el);
+      }
+    });
+  });
+
+  // Start the live clock auto-ticker if any live clocks are on the page
+  startLiveClockTicker();
+}
+
+// ── Match Highlights & News ─────────────────────────────────────────────────
+
+const SPORT_BG_HIGHLIGHTS = {
+  football:          "https://www.thesportsdb.com/images/media/league/banner/yvwvtu1448813185.jpg",
+  cricket:           "https://www.thesportsdb.com/images/media/league/banner/c6ccc01548545456.jpg",
+  basketball:        "https://www.thesportsdb.com/images/media/league/banner/teywwv1423166995.jpg",
+  baseball:          "https://www.thesportsdb.com/images/media/league/banner/xpypvv1431540526.jpg",
+  "american-football":"https://www.thesportsdb.com/images/media/league/banner/ydwwur1432498866.jpg",
+  "ice-hockey":      "https://www.thesportsdb.com/images/media/league/banner/yyvvtu1448813151.jpg",
+  tennis:            "https://www.thesportsdb.com/images/media/league/banner/yvwvtu1448813185.jpg",
+  mma:               "https://www.thesportsdb.com/images/media/league/banner/vupwuv1511099295.jpg",
+  default:           "https://www.thesportsdb.com/images/media/league/banner/yvwvtu1448813185.jpg",
+};
+
+// Free sports news via GNews API (100 req/day no-auth plan)
+const GNEWS_SPORTS_URL = "https://gnews.io/api/v4/top-headlines?category=sports&lang=en&max=10&apikey=pub_test";
+
+let _highlightNewsCache = null;
+let _highlightNewsTs = 0;
+
+async function fetchSportsNews() {
+  const CACHE_MS = 10 * 60 * 1000; // 10 min cache
+  if (_highlightNewsCache && Date.now() - _highlightNewsTs < CACHE_MS) {
+    return _highlightNewsCache;
+  }
+  try {
+    // Uses GNews free API — returns up to 10 sport headlines with images
+    const res = await fetch(`https://gnews.io/api/v4/top-headlines?category=sports&lang=en&max=10&apikey=bb2e7574e2e25ab91a92d53bab05f374`, { signal: AbortSignal.timeout(6000) });
+    const data = await res.json();
+    const articles = (data.articles || []).filter((a) => a.image && a.title);
+    _highlightNewsCache = articles;
+    _highlightNewsTs = Date.now();
+    return articles;
+  } catch {
+    // Graceful fallback — no articles
+    return [];
+  }
+}
+
+function renderMatchHighlightCard(match) {
+  const sportIcon = SPORT_GROUPS[match.sportGroup]?.icon || "⚽";
+  const sportLabel = SPORT_GROUPS[match.sportGroup]?.label || (match.sportGroup || "Sport");
+  const leagueLabel = match.leagueLabel || sportLabel;
+  // Use the new JS Generative SVG Engine to guarantee a stunning, premium, unique background
+  // for every match offline, completely free forever instead of relying on rate-limited image APIs.
+  const seedStr = `${match.homeName} vs ${match.awayName}`;
+  const bgImg = generatePremiumSportSVG(match.sportGroup || "", seedStr || match.leagueKey);
+
+  const homeScore = match.homeScore ?? "";
+  const awayScore = match.awayScore ?? "";
+  const hasScore = homeScore !== "" && awayScore !== "";
+
+  const headline = hasScore
+    ? `${escapeHtml(match.homeName || "Home")} ${homeScore}–${awayScore} ${escapeHtml(match.awayName || "Away")}`
+    : `${escapeHtml(match.homeName || "Home")} vs ${escapeHtml(match.awayName || "Away")}`;
+
+  const route = routeForMatch(match);
+
+  return `
+    <a class="mhl-card" data-link href="${escapeHtml(route)}" style="--mhl-bg:url('${escapeHtml(bgImg)}')">
+      <div class="mhl-img"></div>
+      <div class="mhl-scores">
+        <div class="mhl-team">
+          <div class="mhl-logo">
+            ${renderMatchLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, fallbackIcon: sportIcon })}
+          </div>
+          ${hasScore ? `<span class="mhl-score-num">${escapeHtml(String(homeScore))}</span>` : ""}
+        </div>
+        <span class="mhl-vs">${hasScore ? "" : "VS"}</span>
+        <div class="mhl-team">
+          <div class="mhl-logo">
+            ${renderMatchLogo({ teamLogo: match.awayLogo, teamName: match.awayName, teamAbbr: match.awayAbbr, fallbackIcon: sportIcon })}
+          </div>
+          ${hasScore ? `<span class="mhl-score-num">${escapeHtml(String(awayScore))}</span>` : ""}
+        </div>
+      </div>
+      <div class="mhl-footer">
+        <span class="mhl-league">${escapeHtml(leagueLabel)}</span>
+        <p class="mhl-headline">${headline}</p>
+      </div>
+    </a>
+  `;
+}
+
+function renderHighlightsNewsCard(article) {
+  const title = article.title || "";
+  const img = article.image || "";
+  const url = article.url || "#";
+  const source = article.source?.name || "Sports News";
+  if (!title || !img) return "";
+  return `
+    <a class="mhl-news-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+      <div class="mhl-news-img" style="background-image:url('${escapeHtml(img)}')"></div>
+      <div class="mhl-news-body">
+        <span class="mhl-news-source">${escapeHtml(source)}</span>
+        <p class="mhl-news-title">${escapeHtml(title)}</p>
+      </div>
+    </a>
+  `;
+}
+
+function renderMatchHighlights(newsArticles = []) {
+  const matches = state.finalMatches.slice(0, 10);
+  if (matches.length === 0 && newsArticles.length === 0) return "";
+
+  const matchCards = matches.map((m) => renderMatchHighlightCard(m)).join("");
+  const newsCards = newsArticles.slice(0, 6).map((a) => renderHighlightsNewsCard(a)).join("");
+
+  return `
+    <div class="mhl-scroll-row">${matchCards}</div>
+    ${newsCards ? `
+      <div class="mhl-news-header">Latest Sports News</div>
+      <div class="mhl-news-row">${newsCards}</div>
+    ` : ""}
+  `;
 }
 
 function renderHomePage() {
@@ -3189,13 +4603,52 @@ function renderHomePage() {
   })).slice(0, 12);
   const liveContextSport = getDominantSportGroup();
   const trust = getTrustSignals();
-  const heroActions = `
-    <a class="btn btn-primary" data-link href="/donate">Support from $1</a>
-    <a class="btn" data-link href="/advertise">Advertise</a>
-  `;
+  const heroActions = renderHeroShareActions();
 
-  main.innerHTML = `
-    <section class="hero auto-bg-surface" ${buildAutoBackgroundAttrs({
+  // Detect PWA standalone mode
+  const isPwa = isPwaInstalled();
+
+  // PWA compact header + quick-access grid (replaces SEO hero in standalone mode)
+  const pwaHeaderHtml = isPwa ? `
+    <section class="pwa-app-header">
+      <img class="pwa-app-logo" src="logo-mark-192.png" alt="LiveScoreFree" width="44" height="44">
+      <div class="pwa-app-info">
+        <span class="pwa-app-title">LiveScoreFree</span>
+        <span class="pwa-app-subtitle">Live scores, results & stats</span>
+      </div>
+    </section>
+    <section class="pwa-quick-grid">
+      <a class="pwa-quick-card pwa-quick-card--live" data-link href="/live">
+        ${state.liveMatches.length > 0 ? `<span class="pwa-quick-badge">${state.liveMatches.length}</span>` : ''}
+        <span class="pwa-quick-icon">🔴</span>
+        <span class="pwa-quick-label">Live Now</span>
+      </a>
+      <a class="pwa-quick-card pwa-quick-card--upcoming" data-link href="/upcoming">
+        <span class="pwa-quick-icon">📅</span>
+        <span class="pwa-quick-label">Upcoming</span>
+      </a>
+      <a class="pwa-quick-card pwa-quick-card--trending" data-link href="/trending">
+        <span class="pwa-quick-icon">⚡</span>
+        <span class="pwa-quick-label">Trending</span>
+      </a>
+      <a class="pwa-quick-card pwa-quick-card--results" data-link href="/results">
+        <span class="pwa-quick-icon">🏆</span>
+        <span class="pwa-quick-label">Results</span>
+      </a>
+      <a class="pwa-quick-card pwa-quick-card--leagues" data-link href="/top-leagues">
+        <span class="pwa-quick-icon">🛡️</span>
+        <span class="pwa-quick-label">Top Leagues</span>
+      </a>
+      <a class="pwa-quick-card pwa-quick-card--history" data-link href="/history">
+        <span class="pwa-quick-icon">📜</span>
+        <span class="pwa-quick-label">History</span>
+      </a>
+    </section>
+  ` : '';
+
+  // SEO hero section (shown in browser, hidden in PWA)
+  const seoHeroHtml = `
+    <section class="hero auto-bg-surface tone-trust ${isPwa ? 'pwa-hide-standalone' : ''}" ${buildAutoBackgroundAttrs({
       sportGroup: liveContextSport,
       leagueKey: "",
       fit: "cover",
@@ -3204,6 +4657,7 @@ function renderHomePage() {
     })}>
       ${renderSeoHeroPanel({
         eyebrow: "Trusted, fast, and transparent sports coverage",
+        mobileTitle: "Fast, trusted live scores and match updates.",
         title: "LiveScoreFree",
         lead: "Fast live scores, fixtures, results, lineups, commentary, and stats — organized clearly with transparent data sources for fans worldwide.",
         actionsHtml: heroActions,
@@ -3220,8 +4674,13 @@ function renderHomePage() {
         <div class="stat-box"><strong>${leagues.length}</strong><span>Top Leagues</span></div>
       </div>
     </section>
+  `;
 
-    <section class="section ad-band">
+  main.innerHTML = `
+    ${pwaHeaderHtml}
+    ${seoHeroHtml}
+
+    <section class="section ad-band pwa-hide-standalone">
       ${renderAdSlot({
         title: "Homepage Leaderboard",
         size: "728x90",
@@ -3229,9 +4688,29 @@ function renderHomePage() {
       })}
     </section>
 
-    <section class="section live-shell">
+    <section class="section section-live-by-sport tone-live">
+      <div class="section-head">
+        <a data-link href="/live" class="sh-link">
+          <h2>Live Matches By Sport</h2>
+          <p>Every live match grouped by sport — football, cricket, basketball, and more.</p>
+        </a>
+      </div>
+      ${renderLiveMatchesBySport()}
+    </section>
+
+    <section class="section section-live-now tone-live">
+      <div class="section-head">
+        <a data-link href="/live" class="sh-link">
+          <h2>Live Now</h2>
+          <p>Fast live scores across football, cricket, basketball, tennis, and more.</p>
+        </a>
+      </div>
+      ${renderMatchGrid(state.liveMatches.slice(0, 16), "No matches are live right now. Check today's matches below.")}
+    </section>
+
+    <section class="section live-shell section-live-hub tone-live">
       <aside class="panel live-sidebar auto-bg-surface">
-        <h2>Pinned Leagues</h2>
+        <h2>Top Leagues</h2>
         <div class="pin-list">
           ${pinnedLeagues
             .map((item) => `<a class="pin-item auto-bg-surface" data-link href="${escapeHtml(routeForLeague(item.key))}" ${buildAutoBackgroundAttrs({
@@ -3260,42 +4739,52 @@ function renderHomePage() {
       </div>
     </section>
 
-    <section class="section">
+    <section class="section section-results-home tone-results">
       <div class="section-head">
-        <h2>Live Now</h2>
-        <p>Fast live scores across football, cricket, basketball, tennis, and more.</p>
+        <a data-link href="/results" class="sh-link">
+          <h2>Today's Results</h2>
+          <p>Latest finished matches updated automatically.</p>
+        </a>
       </div>
-      ${renderMatchGrid(state.liveMatches.slice(0, 16), "No matches are live right now. Check today's matches below.")}
+      ${renderMatchGrid(state.finalMatches.slice(0, 16), "No results have been posted yet.")}
     </section>
 
-    <section class="section">
+    <section class="section section-highlights tone-results" id="home-highlights-section">
       <div class="section-head">
-        <h2>Upcoming Matches</h2>
-        <p>Upcoming fixtures with kickoff times and dedicated match pages.</p>
+        <a data-link href="/results" class="sh-link">
+          <h2>Match Highlights</h2>
+          <p>Today's top results with match images and latest sports news.</p>
+        </a>
+      </div>
+      ${renderMatchHighlights()}
+    </section>
+
+    <section class="section section-upcoming tone-upcoming">
+      <div class="section-head">
+        <a data-link href="/upcoming" class="sh-link">
+          <h2>Upcoming Matches</h2>
+          <p>Upcoming fixtures with kickoff times and dedicated match pages.</p>
+        </a>
       </div>
       ${renderMatchGrid(state.upcomingMatches.slice(0, 16), "No upcoming matches are scheduled right now.")}
     </section>
 
-    <section class="section">
+    <section class="section section-trending tone-trending">
       <div class="section-head">
-        <h2>Trending Matches</h2>
-        <p>Trending by live status, league priority, and recent activity.</p>
+        <a data-link href="/trending" class="sh-link">
+          <h2>Trending Matches</h2>
+          <p>Trending by live status, league priority, and recent activity.</p>
+        </a>
       </div>
       ${renderMatchGrid(trendingMatches(), "Trending matches will appear when schedules are available.")}
     </section>
 
-    <section class="section">
+    <section class="section section-top-leagues tone-league">
       <div class="section-head">
-        <h2>Today's Matches</h2>
-        <p>Every match opens a live page with scores, commentary, lineups, stats, and timeline updates.</p>
-      </div>
-      ${renderMatchGrid(state.matches.slice(0, 24), "Today's schedule is currently unavailable.")}
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <h2>Top Leagues</h2>
-        <p>Live and total match counts across major competitions.</p>
+        <a data-link href="/top-leagues" class="sh-link">
+          <h2>Top Leagues</h2>
+          <p>Live and total match counts across major competitions.</p>
+        </a>
       </div>
       <div class="league-grid">
         ${leagues
@@ -3319,7 +4808,7 @@ function renderHomePage() {
       </div>
     </section>
 
-    <section class="section">
+    <section class="section section-sport-links tone-sport">
       <div class="section-head">
         <h2>Live Matches By Sport</h2>
         <p>Quick access hubs for core sports with clean, indexable structure.</p>
@@ -3334,7 +4823,7 @@ function renderHomePage() {
       </div>
     </section>
 
-    <section class="section support-section">
+    <section class="section support-section tone-support">
       <div class="support-card">
         <div>
           <h2>Support Fast, Trusted Live Scores</h2>
@@ -3349,7 +4838,7 @@ function renderHomePage() {
 
     ${renderRevenueModelSection()}
     ${renderTrustSignalsSection({
-      title: "Growth & Trust",
+      title: "Growth Metrics",
       lead: "Fast pages, real-time updates, and transparent support metrics build trust for fans and partners."
     })}
   `;
@@ -3382,6 +4871,32 @@ function renderHomePage() {
       url: `${SEO_BASE.origin}/home`
     }
   });
+
+  // Wire up scroll-reveal animations after DOM paint
+  requestAnimationFrame(() => {
+    initScrollAnimations();
+
+    // Async: inject real sports news into the highlights section after load
+    fetchSportsNews().then((articles) => {
+      if (!articles.length) return;
+      const section = qs("#home-highlights-section");
+      if (!section) return;
+      // Remove old placeholder if any, then inject news cards
+      const existing = section.querySelector(".mhl-news-row");
+      if (existing) return; // already loaded
+      const newsRowHtml = `
+        <div class="mhl-news-header">Latest Sports News</div>
+        <div class="mhl-news-row">${articles.slice(0, 6).map((a) => renderHighlightsNewsCard(a)).join("")}</div>
+      `;
+      section.insertAdjacentHTML("beforeend", newsRowHtml);
+      // Animate the new news cards in
+      section.querySelectorAll(".mhl-news-card").forEach((card, i) => {
+        card.classList.add("reveal");
+        card.classList.add(`reveal-delay-${Math.min(i + 1, 6)}`);
+        requestAnimationFrame(() => card.classList.add("revealed"));
+      });
+    }).catch(() => {}); // silent fail
+  });
 }
 
 function renderTrendingPage() {
@@ -3400,11 +4915,12 @@ function renderTrendingPage() {
       })}
     </section>
 
-    <section class="section">
+    <section class="section section-trending-page tone-trending">
       <div class="section-head">
         <h2>Trending Matches</h2>
         <p>Dynamic ranking from live status, top-league priority, and kickoff recency.</p>
       </div>
+      ${renderSportFilterTabs(list)}
       ${renderMatchGrid(list, "No trending matches are available right now.")}
     </section>
 
@@ -3426,34 +4942,86 @@ function renderTrendingPage() {
       url: `${SEO_BASE.origin}/trending`
     }
   });
+
+  bindSportFilterTabs();
+  requestAnimationFrame(() => initScrollAnimations());
 }
 
 function renderResultsPage() {
   const main = qs("#main");
-  if (!main) {
-    return;
-  }
+  if (!main) return;
 
-  const recentHistory = state.history.slice(0, 20);
+  const recentHistory = state.history.slice(0, 16);
+  
+  // Create 7-day calendar dial data (3 days past, today, 3 days future)
+  const today = new Date();
+  const dialItems = [];
+  for (let i = -3; i <= 3; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    
+    // Format: Day Name (SHORT), Date (NUM), Month (SHORT)
+    let dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+    if (i === -1) dayName = "Yest";
+    if (i === 0) dayName = "Today";
+    if (i === 1) dayName = "Tmw";
+    
+    const dayNum = d.getDate();
+    const month = d.toLocaleDateString('en-US', { month: 'short' });
+    
+    dialItems.push({
+      offset: i,
+      dayName,
+      dayNum,
+      month,
+      isActive: i === 0,
+    });
+  }
+  
+  const calendarDialHtml = `
+    <div class="highlight-calendar-dial" id="highlight-calendar-dial">
+      ${dialItems.map(item => `
+        <div class="dial-date ${item.isActive ? 'active' : ''}" data-offset="${item.offset}">
+          <span class="dial-day-name">${escapeHtml(item.dayName)}</span>
+          <span class="dial-day-num">${escapeHtml(String(item.dayNum))}</span>
+          <span class="dial-month">${escapeHtml(item.month)}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
 
   main.innerHTML = `
     <section class="section ad-band">
       ${renderAdSlot({
-        title: "Results Page Ad",
+        title: "Highlights Page Sponsor",
         size: "728x90",
-        placement: "Leaderboard above daily final scores"
+        placement: "Leaderboard above sports highlights"
       })}
     </section>
+    
+    <!-- Sporty Calendar Dial -->
+    ${calendarDialHtml}
 
-    <section class="section">
+    <section class="section section-highlights tone-results" id="highlight-news-section">
       <div class="section-head">
-        <h2>Today's Results</h2>
-        <p>When a match ends: LIVE -> RESULTS -> HISTORY.</p>
+        <h2>Match Highlights</h2>
+        <p>Today's top results, match images, and latest sports news.</p>
       </div>
-      ${renderMatchGrid(state.finalMatches.slice(0, 24), "No final results have been posted yet.")}
+      ${renderMatchHighlights()}
     </section>
 
-    <section class="section">
+    <section class="section section-results-page tone-results">
+      <div class="section-head">
+        <h2>Today's Results</h2>
+        <p>Live matches transition here exactly when they end.</p>
+      </div>
+      ${renderSportFilterTabs(state.finalMatches.slice(0, 24), '#highlight-today-grid')}
+      <div id="highlight-today-grid">
+        ${renderMatchGrid(state.finalMatches.slice(0, 24), "No final results have been posted yet today.")}
+      </div>
+    </section>
+
+    <section class="section section-history-preview tone-history">
       <div class="section-head">
         <h2>Recent Results History</h2>
         <p>Stored locally in your browser for quick browsing of past matches.</p>
@@ -3461,42 +5029,14 @@ function renderResultsPage() {
       ${
         recentHistory.length
           ? `<div class="grid">${recentHistory
-              .map(
-                (item) => `
-                  <a class="match-card auto-bg-surface" data-link href="/${item.sportGroup}/results/${item.slug}" ${buildAutoBackgroundAttrs({
-                    sportGroup: item.sportGroup,
-                    leagueKey: item.leagueKey || "",
-                    fit: "cover",
-                    position: "center",
-                    strength: 0.2
-                  })}>
-                    <div class="match-league">
-                      <span>${SPORT_GROUPS[item.sportGroup]?.icon || "SPT"} ${escapeHtml(item.leagueLabel)}</span>
-                      <span class="badge-result">HISTORY</span>
-                    </div>
-                    <div class="match-teams">
-                      ${renderTeamScoreRow({
-                        sportGroup: item.sportGroup,
-                        teamId: item.homeTeamId || "",
-                        teamName: item.homeName,
-                        teamAbbr: item.homeAbbr || "",
-                        teamLogo: item.homeLogo || "",
-                        score: item.homeScore
-                      })}
-                      ${renderTeamScoreRow({
-                        sportGroup: item.sportGroup,
-                        teamId: item.awayTeamId || "",
-                        teamName: item.awayName,
-                        teamAbbr: item.awayAbbr || "",
-                        teamLogo: item.awayLogo || "",
-                        score: item.awayScore
-                      })}
-                    </div>
-                    <div class="match-meta"><span>${escapeHtml(formatDateTime(item.date))}</span><span>${escapeHtml(item.venue)}</span></div>
-                  </a>
-                `
-              )
-              .join("")}</div>`
+                .map((item) =>
+                  renderMatchCardHero(item, {
+                    badgeHtml: '<span class="badge-result">HISTORY</span>',
+                    routeOverride: `/${item.sportGroup}/results/${item.slug}`,
+                    timeLabel: formatDateTime(item.date)
+                  })
+                )
+                .join("")}</div>`
           : '<div class="message-box">History will build automatically after matches finish.</div>'
       }
     </section>
@@ -3519,6 +5059,9 @@ function renderResultsPage() {
       url: `${SEO_BASE.origin}/results`
     }
   });
+
+  bindSportFilterTabs();
+  requestAnimationFrame(() => initScrollAnimations());
 }
 function renderHistoryPage() {
   const main = qs("#main");
@@ -3541,7 +5084,7 @@ function renderHistoryPage() {
       })}
     </section>
 
-    <section class="section">
+    <section class="section section-history-page tone-history">
       <div class="section-head">
         <h2>Live Matches History</h2>
         <p>Browse past matches, tournaments, and seasons from your saved history cache.</p>
@@ -3562,37 +5105,12 @@ function renderHistoryPage() {
           entries.length
             ? `<div class="grid">${entries
                 .slice(0, 200)
-                .map(
-                  (item) => `
-                    <a class="match-card auto-bg-surface" data-link href="/${item.sportGroup}/results/${item.slug}" ${buildAutoBackgroundAttrs({
-                      sportGroup: item.sportGroup,
-                      leagueKey: item.leagueKey || "",
-                      fit: "cover",
-                      position: "center",
-                      strength: 0.2
-                    })}>
-                      <div class="match-league"><span>${SPORT_GROUPS[item.sportGroup]?.icon || "SPT"} ${escapeHtml(item.leagueLabel)}</span><span class="badge-result">FINAL</span></div>
-                      <div class="match-teams">
-                        ${renderTeamScoreRow({
-                          sportGroup: item.sportGroup,
-                          teamId: item.homeTeamId || "",
-                          teamName: item.homeName,
-                          teamAbbr: item.homeAbbr || "",
-                          teamLogo: item.homeLogo || "",
-                          score: item.homeScore
-                        })}
-                        ${renderTeamScoreRow({
-                          sportGroup: item.sportGroup,
-                          teamId: item.awayTeamId || "",
-                          teamName: item.awayName,
-                          teamAbbr: item.awayAbbr || "",
-                          teamLogo: item.awayLogo || "",
-                          score: item.awayScore
-                        })}
-                      </div>
-                      <div class="match-meta"><span>${escapeHtml(formatDateTime(item.date))}</span><span>${escapeHtml(item.venue)}</span></div>
-                    </a>
-                  `
+                .map((item) =>
+                  renderMatchCardHero(item, {
+                    badgeHtml: '<span class="badge-result">FINAL</span>',
+                    routeOverride: `/${item.sportGroup}/results/${item.slug}`,
+                    timeLabel: formatDateTime(item.date)
+                  })
                 )
                 .join("")}</div>`
             : '<div class="message-box">No saved history found yet. It is generated automatically after matches are final.</div>'
@@ -3646,7 +5164,7 @@ function renderTopLeaguesPage() {
       })}
     </section>
 
-    <section class="section">
+    <section class="section section-top-leagues-page tone-league">
       <div class="section-head">
         <h2>Top Leagues Live Matches</h2>
         <p>Fast league overview built for crawlable route structure and quick indexing.</p>
@@ -3674,7 +5192,7 @@ function renderTopLeaguesPage() {
       </div>
     </section>
 
-    <section class="section">
+    <section class="section section-league-feed tone-live">
       <div class="section-head">
         <h2>League Match Feed</h2>
         <p>Includes live and results links for each match card.</p>
@@ -3703,6 +5221,8 @@ function renderTopLeaguesPage() {
       url: `${SEO_BASE.origin}/top-leagues`
     }
   });
+
+  requestAnimationFrame(() => initScrollAnimations());
 }
 
 function collectLeagueTeams(leagueKey, matches, historyEntries = []) {
@@ -4051,9 +5571,9 @@ function renderLeagueSectionLinks(leagueKey, activeSection) {
   ];
 
   return `
-    <div class="league-route-links">
+    <div class="match-tabs" style="margin-top: 24px; padding-bottom: 0;">
       ${items
-        .map((item) => `<a class="league-route-link ${activeSection === item.id ? "active" : ""}" data-link href="${escapeHtml(routeForLeague(leagueKey, item.id))}">${escapeHtml(item.label)}</a>`)
+        .map((item) => `<a class="match-tab-btn ${activeSection === item.id ? "active" : ""}" data-link href="${escapeHtml(routeForLeague(leagueKey, item.id))}">${escapeHtml(item.label)}</a>`)
         .join("")}
     </div>
   `;
@@ -4096,94 +5616,86 @@ async function renderLeaguePage(leagueKey, section = "overview") {
   const sectionLabel = safeSection === "overview" ? "Overview" : safeSection.charAt(0).toUpperCase() + safeSection.slice(1);
 
   main.innerHTML = `
-    <section class="hero auto-bg-surface" ${buildAutoBackgroundAttrs({
-      sportGroup,
-      leagueKey,
-      fit: "cover",
-      position: "center",
-      strength: 0.24
-    })}>
-      <div class="hero-top">
-        <div>
-          <h1>${escapeHtml(leagueLabel)} <span>${escapeHtml(sectionLabel)}</span></h1>
-          <p>${escapeHtml(sportLabel)} league coverage with live matches, upcoming fixtures, results, history, team and player info.</p>
-          <p class="subtle">Region: ${escapeHtml(region)} | Scope: ${escapeHtml(region === "International" ? "International" : "Regional")} | Route: /league/${escapeHtml(leagueKey)}</p>
+    <div class="detail-page pm-master tone-league">
+      <section class="pm-hero" ${buildAutoBackgroundAttrs({
+        sportGroup,
+        leagueKey,
+        fit: "cover",
+        position: "center",
+        strength: 0.24
+      })}>
+        <div class="pm-hero-glass">
+
+          <!-- Top Row -->
+          <div class="pm-header">
+            <div class="pm-league">
+               <img src="${escapeHtml(getSportImagePath(sportGroup))}" class="pm-league-icon" alt="${escapeHtml(sportGroup)}" />
+               <span>${escapeHtml(sportLabel.toUpperCase())} LEAGUE</span>
+            </div>
+            <div class="pm-venue-date">
+              <div class="pm-venue">${escapeHtml(region)}</div>
+              <div class="pm-date">${escapeHtml(region === "International" ? "Global Coverage" : "Regional League")}</div>
+            </div>
+            <div class="pm-empty-right"></div>
+          </div>
+
+          <!-- Mid Row: League Focus -->
+          <div class="pm-teams-row" style="justify-content: center; margin-top: 20px;">
+            <div class="pm-team" style="transform: scale(1.1);">
+               <div class="pm-team-name">${escapeHtml(leagueLabel)}</div>
+               <div class="pm-team-sub" style="margin-top: 10px;">
+                 <span style="display:inline-block; margin: 0 10px;">${live.length} LIVE</span>
+                 <span style="display:inline-block; margin: 0 10px;">${upcoming.length} Upcoming</span>
+                 <span style="display:inline-block; margin: 0 10px;">${teams.length} Teams</span>
+               </div>
+            </div>
+          </div>
+
         </div>
-      </div>
-      <div class="hero-stat-grid">
-        <div class="stat-box"><strong>${live.length}</strong><span>Live Matches</span></div>
-        <div class="stat-box"><strong>${upcoming.length}</strong><span>Upcoming</span></div>
-        <div class="stat-box"><strong>${results.length}</strong><span>Results</span></div>
-        <div class="stat-box"><strong>${teams.length}</strong><span>Teams</span></div>
-      </div>
+      </section>
+
       ${renderLeagueSectionLinks(leagueKey, safeSection)}
-    </section>
 
     ${shouldShow("live") ? `
-      <section class="section">
+      <section class="section section-league-live tone-live">
         <div class="section-head"><h2>Live Match Pages</h2><p>All live events auto-filled automatically.</p></div>
         ${renderMatchGrid(live, "No live matches in this league right now.")}
       </section>
     ` : ""}
 
     ${shouldShow("upcoming") ? `
-      <section class="section">
+      <section class="section section-league-upcoming tone-upcoming">
         <div class="section-head"><h2>Upcoming Matches</h2><p>Auto-updating fixtures for this league.</p></div>
         ${renderMatchGrid(upcoming, "No upcoming fixtures available right now.")}
       </section>
     ` : ""}
 
     ${shouldShow("schedule") ? `
-      <section class="section">
+      <section class="section section-league-schedule tone-league">
         <div class="section-head"><h2>Schedule & Venues</h2><p>Date, kickoff time, venue, and direct match page links.</p></div>
         ${renderLeagueScheduleTable(scheduleMatches)}
       </section>
     ` : ""}
 
     ${shouldShow("results") ? `
-      <section class="section">
+      <section class="section section-league-results tone-results">
         <div class="section-head"><h2>League Results</h2><p>Final score pages for completed league matches.</p></div>
         ${renderMatchGrid(results, "No final results available right now.")}
       </section>
     ` : ""}
 
     ${shouldShow("history") ? `
-      <section class="section">
+      <section class="section section-league-history tone-history">
         <div class="section-head"><h2>League Match History</h2><p>Historical matches stored from completed events.</p></div>
         ${
           historyEntries.length
             ? `<div class="grid">${historyEntries
-                .map(
-                  (item) => `
-                    <a class="match-card auto-bg-surface" data-link href="/${item.sportGroup}/results/${item.slug}" ${buildAutoBackgroundAttrs({
-                      sportGroup: item.sportGroup,
-                      leagueKey: item.leagueKey || leagueKey,
-                      fit: "cover",
-                      position: "center",
-                      strength: 0.2
-                    })}>
-                      <div class="match-league"><span>${SPORT_GROUPS[item.sportGroup]?.icon || "SPT"} ${escapeHtml(item.leagueLabel)}</span><span class="badge-result">FINAL</span></div>
-                    <div class="match-teams">
-                      ${renderTeamScoreRow({
-                        sportGroup: item.sportGroup,
-                        teamId: item.homeTeamId || "",
-                        teamName: item.homeName,
-                        teamAbbr: item.homeAbbr || "",
-                        teamLogo: item.homeLogo || "",
-                        score: item.homeScore
-                      })}
-                      ${renderTeamScoreRow({
-                        sportGroup: item.sportGroup,
-                        teamId: item.awayTeamId || "",
-                        teamName: item.awayName,
-                        teamAbbr: item.awayAbbr || "",
-                        teamLogo: item.awayLogo || "",
-                        score: item.awayScore
-                      })}
-                    </div>
-                      <div class="match-meta"><span>${escapeHtml(formatDateTime(item.date))}</span><span>${escapeHtml(item.venue)}</span></div>
-                    </a>
-                  `
+                .map((item) =>
+                  renderMatchCardHero(item, {
+                    badgeHtml: '<span class="badge-result">FINAL</span>',
+                    routeOverride: `/${item.sportGroup}/results/${item.slug}`,
+                    timeLabel: formatDateTime(item.date)
+                  })
                 )
                 .join("")}</div>`
             : '<div class="message-box">No stored league history found yet.</div>'
@@ -4192,14 +5704,14 @@ async function renderLeaguePage(leagueKey, section = "overview") {
     ` : ""}
 
     ${shouldShow("teams") ? `
-      <section class="section">
+      <section class="section section-league-teams tone-team">
         <div class="section-head"><h2>League Teams</h2><p>Team-level activity across live, upcoming, and completed matches.</p></div>
         ${renderLeagueTeamsGrid(teams, sportGroup)}
       </section>
     ` : ""}
 
     ${shouldShow("players") ? `
-      <section class="section">
+      <section class="section section-league-players tone-player">
         <div class="section-head"><h2>League Players</h2><p>Player list from available roster endpoints.</p></div>
         ${renderLeaguePlayersGrid(playerPreview, sportGroup)}
       </section>
@@ -4247,7 +5759,7 @@ function renderSportPage(sport) {
   const sportLeagues = Array.from(new Set(matches.map((match) => match.leagueLabel))).slice(0, 4);
 
   main.innerHTML = `
-    <section class="hero">
+    <section class="hero tone-sport">
       <div class="hero-top">
         <div>
           <h1>${sportMeta.icon} ${escapeHtml(sportMeta.label)} Live Scores</h1>
@@ -4291,7 +5803,7 @@ function renderSportPage(sport) {
       })}
     </section>
 
-    <section class="section">
+    <section class="section section-sport-insights tone-trust">
       <div class="section-head"><h2>Sport Insights</h2><p>Realtime info and image-based context for ${escapeHtml(sportMeta.label)}.</p></div>
       <div class="match-info-grid">
         <div class="info-card"><span>Live Feed Status</span><strong>${state.providerStatus.espn.ok || state.providerStatus.sportsdb.ok ? "Active" : "Retrying"}</strong></div>
@@ -4301,17 +5813,17 @@ function renderSportPage(sport) {
       </div>
     </section>
 
-    <section class="section">
+    <section class="section section-sport-live tone-live">
       <div class="section-head"><h2>Live Matches</h2><p>/${sport}/live/slug pages are generated automatically.</p></div>
       ${renderMatchGrid(live, `No ${sportMeta.label.toLowerCase()} matches are live right now.`)}
     </section>
 
-    <section class="section">
+    <section class="section section-sport-upcoming tone-upcoming">
       <div class="section-head"><h2>Upcoming Matches</h2><p>Auto-updating schedule.</p></div>
       ${renderMatchGrid(upcoming, "No upcoming matches available.")}
     </section>
 
-    <section class="section">
+    <section class="section section-sport-results tone-results">
       <div class="section-head"><h2>Results</h2><p>Finished matches move to /${sport}/results/slug.</p></div>
       ${renderMatchGrid(results, "No results posted yet.")}
     </section>
@@ -4334,6 +5846,8 @@ function renderSportPage(sport) {
       url: `${SEO_BASE.origin}/sport/${sport}`
     }
   });
+
+  requestAnimationFrame(() => initScrollAnimations());
 }
 
 function findMatch(sport, slug) {
@@ -4721,8 +6235,8 @@ async function fetchEspnTeamRealtimeBundle(sportGroup, teamId, leagueKeys = []) 
   const feeds = getCandidateFeedsForSport(sportGroup, leagueKeys);
   for (const feedPath of feeds) {
     const [teamRes, rosterRes] = await Promise.allSettled([
-      cachedJson(`${ESPN_BASE}/${feedPath}/teams/${encodeURIComponent(safeTeamId)}`, 90000),
-      cachedJson(`${ESPN_BASE}/${feedPath}/teams/${encodeURIComponent(safeTeamId)}/roster`, 90000)
+      cachedJson(`${ESPN_BASE}/${feedPath}/teams/${encodeURIComponent(safeTeamId)}`, 60000),
+      cachedJson(`${ESPN_BASE}/${feedPath}/teams/${encodeURIComponent(safeTeamId)}/roster`, 60000)
     ]);
 
     if (teamRes.status !== "fulfilled" && rosterRes.status !== "fulfilled") {
@@ -4753,7 +6267,7 @@ async function fetchSportsDbTeamRealtimeBundle(teamName = "", teamId = "") {
 
   if (safeTeamId) {
     try {
-      const byId = await cachedJson(`${SPORTSDB_BASE}/lookupteam.php?id=${encodeURIComponent(safeTeamId)}`, 120000);
+      const byId = await cachedJson(`${SPORTSDB_BASE}/lookupteam.php?id=${encodeURIComponent(safeTeamId)}`, 60000);
       team = Array.isArray(byId?.teams) ? byId.teams[0] : null;
     } catch (_error) {
       team = null;
@@ -4762,7 +6276,7 @@ async function fetchSportsDbTeamRealtimeBundle(teamName = "", teamId = "") {
 
   if (!team && safeName) {
     try {
-      const byName = await cachedJson(`${SPORTSDB_BASE}/searchteams.php?t=${encodeURIComponent(safeName)}`, 120000);
+      const byName = await cachedJson(`${SPORTSDB_BASE}/searchteams.php?t=${encodeURIComponent(safeName)}`, 60000);
       team = Array.isArray(byName?.teams) ? byName.teams[0] : null;
     } catch (_error) {
       team = null;
@@ -4775,7 +6289,7 @@ async function fetchSportsDbTeamRealtimeBundle(teamName = "", teamId = "") {
 
   let players = [];
   try {
-    const playersData = await cachedJson(`${SPORTSDB_BASE}/lookup_all_players.php?id=${encodeURIComponent(team.idTeam)}`, 120000);
+    const playersData = await cachedJson(`${SPORTSDB_BASE}/lookup_all_players.php?id=${encodeURIComponent(team.idTeam)}`, 60000);
     players = dedupePlayerRows(
       (Array.isArray(playersData?.player) ? playersData.player : []).map((player) => ({
         playerId: String(player.idPlayer || ""),
@@ -4936,82 +6450,103 @@ async function renderTeamPage(route) {
   const website = sdbTeam.strWebsite ? `https://${String(sdbTeam.strWebsite).replace(/^https?:\/\//i, "")}` : "";
   const description = sdbTeam.strDescriptionEN || espnTeam.description || "";
 
+  const activeTab = state.matchTabBySlug[`team:${sportGroup}:${teamId}`] || "info";
+
   main.innerHTML = `
-    <div class="detail-page">
-      <section class="detail-hero auto-bg-surface" ${buildAutoBackgroundAttrs({
+    <div class="detail-page pm-master tone-team">
+      <section class="pm-hero" ${buildAutoBackgroundAttrs({
         sportGroup,
         leagueKey: Array.from(snapshot.leagueKeys)[0] || "",
         fit: "cover",
         position: "center",
-        strength: 0.24
+        strength: 0.18
       })}>
-        <div class="detail-head">
-          <div>
-            <h1>${escapeHtml(teamName)}</h1>
-            <p class="subtle">${escapeHtml(SPORT_GROUPS[sportGroup]?.label || sportGroup)} team profile with full squad, staff, and realtime match context.</p>
+        <div class="pm-hero-glass">
+
+          <!-- Top Row -->
+          <div class="pm-header">
+            <div class="pm-league">
+               <img src="${escapeHtml(getSportImagePath(sportGroup))}" class="pm-league-icon" alt="${escapeHtml(sportGroup)}" />
+               <span>TEAM PROFILE</span>
+            </div>
+            <div class="pm-venue-date">
+              <div class="pm-venue">${escapeHtml(region)}</div>
+              <div class="pm-date">Since ${escapeHtml(String(founded))}</div>
+            </div>
+            <div class="pm-empty-right"></div>
           </div>
-          <div class="detail-head-actions">
-            ${teamLogo ? `<img class="team-head-logo" src="${escapeHtml(teamLogo)}" alt="${escapeHtml(teamName)}" loading="lazy" onerror="this.style.display='none'">` : ""}
-            <span class="badge-live">TEAM</span>
+
+          <!-- Mid Row: Single Team Focus -->
+          <div class="pm-teams-row" style="justify-content: center; margin-top: 20px;">
+            <div class="pm-team" style="transform: scale(1.1);">
+              <img src="${escapeHtml(teamLogo)}" class="pm-team-logo" alt="${escapeHtml(teamName)}" onerror="this.src='/tm.svg'" />
+              <div class="pm-team-name">${escapeHtml(teamName)}</div>
+              <div class="pm-team-sub" style="margin-top: 10px;">
+                <span class="badge-live" style="margin: 0 6px;">${snapshot.live} LIVE</span>
+                <span style="display:inline-block; margin: 0 6px;">${snapshot.upcoming} Upcoming</span>
+                <span style="display:inline-block; margin: 0 6px;">${players.length} Players</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="hero-stat-grid">
-          <div class="stat-box"><strong>${snapshot.live}</strong><span>Live Matches</span></div>
-          <div class="stat-box"><strong>${snapshot.upcoming}</strong><span>Upcoming</span></div>
-          <div class="stat-box"><strong>${snapshot.final}</strong><span>Final Results</span></div>
-          <div class="stat-box"><strong>${players.length}</strong><span>Players</span></div>
-        </div>
-        <p class="subtle">Next kickoff: ${escapeHtml(nextKickoff)}</p>
       </section>
 
-      <section class="panel">
-        <h2>Team Information</h2>
-        <div class="match-info-grid">
-          <article class="info-card"><span>Team</span><strong>${escapeHtml(teamName)}</strong></article>
-          <article class="info-card"><span>Abbreviation</span><strong>${escapeHtml(teamAbbr || "N/A")}</strong></article>
-          <article class="info-card"><span>Region</span><strong>${escapeHtml(region)}</strong></article>
-          <article class="info-card"><span>Founded</span><strong>${escapeHtml(String(founded))}</strong></article>
-          <article class="info-card"><span>Venue</span><strong>${escapeHtml(venue)}</strong></article>
-          <article class="info-card"><span>Team ID</span><strong>${escapeHtml(teamId || "N/A")}</strong></article>
-        </div>
-        ${
-          website
-            ? `<p style="margin-top:10px;"><a href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">Official website</a></p>`
-            : ""
-        }
-        ${
-          description
-            ? `<p class="subtle" style="margin-top:10px;">${escapeHtml(description.slice(0, 600))}</p>`
-            : ""
-        }
-      </section>
+      ${renderMatchTabButtons(activeTab, TEAM_TABS)}
 
-      <section class="section">
-        <div class="section-head"><h2>Live Matches</h2><p>Active matches involving ${escapeHtml(teamName)}.</p></div>
-        ${renderMatchGrid(liveMatches, "No live matches for this team right now.")}
-      </section>
+      ${renderTabPanel("info", `
+        <section class="panel tone-team">
+          <h2>Team Information</h2>
+          <div class="match-info-grid">
+            <article class="info-card"><span>Team</span><strong>${escapeHtml(teamName)}</strong></article>
+            <article class="info-card"><span>Abbreviation</span><strong>${escapeHtml(teamAbbr || "N/A")}</strong></article>
+            <article class="info-card"><span>Region</span><strong>${escapeHtml(region)}</strong></article>
+            <article class="info-card"><span>Founded</span><strong>${escapeHtml(String(founded))}</strong></article>
+            <article class="info-card"><span>Venue</span><strong>${escapeHtml(venue)}</strong></article>
+            <article class="info-card"><span>Team ID</span><strong>${escapeHtml(teamId || "N/A")}</strong></article>
+          </div>
+          ${website ? `<p style="margin-top:10px;"><a href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">Official website</a></p>` : ""}
+          ${description ? `<p class="subtle" style="margin-top:10px;">${escapeHtml(description.slice(0, 600))}</p>` : ""}
+        </section>
+      `, activeTab)}
 
-      <section class="section">
-        <div class="section-head"><h2>Upcoming Matches</h2><p>Scheduled fixtures for ${escapeHtml(teamName)}.</p></div>
-        ${renderMatchGrid(upcomingMatches, "No upcoming matches are scheduled for this team.")}
-      </section>
+      ${renderTabPanel("live", `
+        <section class="section section-team-live tone-live">
+          <div class="section-head"><h2>Live Matches</h2><p>Active matches involving ${escapeHtml(teamName)}.</p></div>
+          ${renderMatchGrid(liveMatches, "No live matches for this team right now.")}
+        </section>
+      `, activeTab)}
 
-      <section class="section">
-        <div class="section-head"><h2>Latest Results</h2><p>Recent final matches involving ${escapeHtml(teamName)}.</p></div>
-        ${renderMatchGrid(finalMatches.slice(0, 16), "No final results available yet for this team.")}
-      </section>
+      ${renderTabPanel("upcoming", `
+        <section class="section section-team-upcoming tone-upcoming">
+          <div class="section-head"><h2>Upcoming Matches</h2><p>Scheduled fixtures for ${escapeHtml(teamName)}.</p></div>
+          ${renderMatchGrid(upcomingMatches, "No upcoming matches are scheduled for this team.")}
+        </section>
+      `, activeTab)}
 
-      <section class="section">
-        <div class="section-head"><h2>Full Squad</h2><p>Player list with profile links.</p></div>
-        ${renderTeamPlayersGrid(players, sportGroup, { teamId, teamName })}
-      </section>
+      ${renderTabPanel("results", `
+        <section class="section section-team-results tone-results">
+          <div class="section-head"><h2>Latest Results</h2><p>Recent final matches involving ${escapeHtml(teamName)}.</p></div>
+          ${renderMatchGrid(finalMatches.slice(0, 16), "No final results available yet for this team.")}
+        </section>
+      `, activeTab)}
 
-      <section class="section">
-        <div class="section-head"><h2>Staff</h2><p>Coaching and team staff profiles.</p></div>
-        ${renderTeamStaffGrid(staffRows)}
-      </section>
+      ${renderTabPanel("squad", `
+        <section class="section section-team-squad tone-team">
+          <div class="section-head"><h2>Full Squad</h2><p>Player list with profile links.</p></div>
+          ${renderTeamPlayersGrid(players, sportGroup, { teamId, teamName })}
+        </section>
+      `, activeTab)}
+
+      ${renderTabPanel("staff", `
+        <section class="section section-team-staff tone-team">
+          <div class="section-head"><h2>Staff</h2><p>Coaching and team staff profiles.</p></div>
+          ${renderTeamStaffGrid(staffRows)}
+        </section>
+      `, activeTab)}
     </div>
   `;
+
+  wireEntityTabs(`team:${sportGroup}:${teamId}`, TEAM_TABS);
 
   setSeo({
     title: `${teamName} Team Profile | LiveScoreFree`,
@@ -5025,6 +6560,28 @@ async function renderTeamPage(route) {
       sport: SPORT_GROUPS[sportGroup]?.label || sportGroup,
       url: `${SEO_BASE.origin}${routeForTeam({ sportGroup, teamId, teamName })}`
     }
+  });
+}
+
+function wireEntityTabs(contextKey, availableTabs) {
+  const root = qs("#main");
+  if (!root) return;
+
+  const buttons = qsa(".match-tab-btn", root);
+  const panels = qsa(".match-tab-panel", root);
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tabId = btn.dataset.matchTab;
+      if (!tabId) return;
+
+      state.matchTabBySlug[contextKey] = tabId;
+      buttons.forEach((b) => b.classList.toggle("active", b === btn));
+      panels.forEach((p) => p.classList.toggle("active", p.dataset.tabPanel === tabId));
+      
+      // Optional: Smooth scroll top of panels if needed
+      window.scrollTo({ top: root.querySelector(".match-tabs")?.offsetTop - 80 || 0, behavior: "smooth" });
+    });
   });
 }
 
@@ -5046,7 +6603,7 @@ async function fetchEspnAthleteRealtimeProfile(sportGroup, athleteId, teamToken 
 
     for (const url of urls) {
       try {
-        const data = await cachedJson(url, 120000);
+        const data = await cachedJson(url, 60000);
         const athlete = data?.athlete || data;
         if (athlete && (athlete.displayName || athlete.fullName || athlete.id)) {
           return {
@@ -5069,7 +6626,7 @@ async function fetchSportsDbPlayerRealtimeProfile(playerToken, sportGroup) {
 
   if (token.id) {
     try {
-      const byId = await cachedJson(`${SPORTSDB_BASE}/lookupplayer.php?id=${encodeURIComponent(token.id)}`, 120000);
+      const byId = await cachedJson(`${SPORTSDB_BASE}/lookupplayer.php?id=${encodeURIComponent(token.id)}`, 60000);
       player = Array.isArray(byId?.players) ? byId.players[0] : null;
     } catch (_error) {
       player = null;
@@ -5079,7 +6636,7 @@ async function fetchSportsDbPlayerRealtimeProfile(playerToken, sportGroup) {
   if (!player && token.nameSlug) {
     const searchName = token.nameSlug.replace(/-/g, " ");
     try {
-      const byName = await cachedJson(`${SPORTSDB_BASE}/searchplayers.php?p=${encodeURIComponent(searchName)}`, 120000);
+      const byName = await cachedJson(`${SPORTSDB_BASE}/searchplayers.php?p=${encodeURIComponent(searchName)}`, 60000);
       const list = Array.isArray(byName?.player) ? byName.player : [];
       const wantedSport = SPORTSDB_SPORTS[sportGroup] || "";
       player = list.find((item) => !wantedSport || String(item.strSport || "").toLowerCase() === wantedSport.toLowerCase()) || list[0] || null;
@@ -5179,70 +6736,79 @@ async function renderPlayerPage(route) {
       ? state.matches.filter((match) => match.sportGroup === sportGroup && (match.homeName === teamName || match.awayName === teamName)).slice(0, 12)
       : [];
 
+  const activeTab = state.matchTabBySlug[`player:${playerDisplayId}`] || "bio";
+
   main.innerHTML = `
-    <div class="detail-page">
-      <section class="detail-hero auto-bg-surface" ${buildAutoBackgroundAttrs({
+    <div class="detail-page pm-master tone-player">
+      <section class="pm-hero" ${buildAutoBackgroundAttrs({
         sportGroup,
         leagueKey: "",
         fit: "cover",
         position: "center",
-        strength: 0.22
+        strength: 0.18
       })}>
-        <div class="detail-head">
-          <div>
-            <h1>${escapeHtml(playerName)}</h1>
-            <p class="subtle">${escapeHtml(SPORT_GROUPS[sportGroup]?.label || sportGroup)} player profile with realtime team context and auto-updating roster details.</p>
+        <div class="pm-hero-glass">
+
+          <!-- Top Row -->
+          <div class="pm-header">
+            <div class="pm-league">
+               <img src="${escapeHtml(getSportImagePath(sportGroup))}" class="pm-league-icon" alt="${escapeHtml(sportGroup)}" />
+               <span>PLAYER PROFILE</span>
+            </div>
+            <div class="pm-venue-date">
+              <div class="pm-venue">${escapeHtml(position || "N/A")}</div>
+              <div class="pm-date">${escapeHtml(teamName || "Free Agent")}</div>
+            </div>
+            <div class="pm-empty-right"></div>
           </div>
-          <div class="detail-head-actions">
-            ${
-              headshot
-                ? `<img class="player-profile-headshot" src="${escapeHtml(headshot)}" alt="${escapeHtml(playerName)}" loading="lazy" onerror="this.style.display='none'">`
-                : `<span class="player-profile-fallback">${escapeHtml((playerName || "PL").split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase())}</span>`
-            }
-            <span class="badge-live">PLAYER</span>
+
+          <!-- Mid Row: Single Player Focus -->
+          <div class="pm-teams-row" style="justify-content: center; margin-top: 20px;">
+            <div class="pm-team" style="transform: scale(1.1);">
+              ${
+                headshot
+                  ? `<img src="${escapeHtml(headshot)}" class="pm-team-logo" style="border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.15); filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));" alt="${escapeHtml(playerName)}" loading="lazy" onerror="this.style.display='none'">`
+                  : `<div class="pm-team-logo" style="display:flex; align-items:center; justify-content:center; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); font-size: 28px; font-weight: 700; border: 2px solid rgba(255,255,255,0.2);">${escapeHtml((playerName || "PL").split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase())}</div>`
+              }
+              <div class="pm-team-name">${escapeHtml(playerName)}</div>
+              <div class="pm-team-sub" style="margin-top: 10px;">
+                <span style="display:inline-block; margin: 0 10px;">Jersey ${escapeHtml(jersey ? `#${jersey}` : "N/A")}</span>
+                <span style="display:inline-block; margin: 0 10px;">Age ${escapeHtml(String(age || "N/A"))}</span>
+                <span style="display:inline-block; margin: 0 10px;">${escapeHtml(country || "N/A")}</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="hero-stat-grid">
-          <div class="stat-box"><strong>${escapeHtml(position || "N/A")}</strong><span>Position</span></div>
-          <div class="stat-box"><strong>${escapeHtml(jersey ? `#${jersey}` : "N/A")}</strong><span>Jersey</span></div>
-          <div class="stat-box"><strong>${escapeHtml(String(age || "N/A"))}</strong><span>Age</span></div>
-          <div class="stat-box"><strong>${escapeHtml(country || "N/A")}</strong><span>Country</span></div>
-        </div>
-        ${
-          profileMeta
-            ? `<p class="subtle" style="margin-top:10px;">${escapeHtml(profileMeta)}</p>`
-            : ""
-        }
       </section>
 
-      <section class="panel">
-        <h2>Player Information</h2>
-        <div class="match-info-grid">
-          <article class="info-card"><span>Name</span><strong>${escapeHtml(playerName)}</strong></article>
-          <article class="info-card"><span>Position</span><strong>${escapeHtml(position || "N/A")}</strong></article>
-          <article class="info-card"><span>Height</span><strong>${escapeHtml(height || "N/A")}</strong></article>
-          <article class="info-card"><span>Weight</span><strong>${escapeHtml(weight || "N/A")}</strong></article>
-          <article class="info-card"><span>Experience</span><strong>${escapeHtml(experience || "N/A")}</strong></article>
-          <article class="info-card"><span>Player ID</span><strong>${escapeHtml(playerDisplayId)}</strong></article>
-        </div>
-        ${
-          teamRoute
-            ? `<p style="margin-top:10px;">Team: <button class="inline-entity-link entity-link-btn" type="button" data-team-route="${escapeHtml(teamRoute)}">${escapeHtml(teamName)}</button></p>`
-            : ""
-        }
-        ${
-          bio
-            ? `<p class="subtle" style="margin-top:10px;">${escapeHtml(String(bio).slice(0, 700))}</p>`
-            : ""
-        }
-      </section>
+      ${renderMatchTabButtons(activeTab, PLAYER_TABS)}
 
-      <section class="section">
-        <div class="section-head"><h2>Team Match Context</h2><p>Recent team matches connected to this player context.</p></div>
-        ${renderMatchGrid(relatedMatches, "No current team match context available for this player.")}
-      </section>
+      ${renderTabPanel("bio", `
+        <section class="panel tone-player">
+          <h2>Player Information</h2>
+          <div class="match-info-grid">
+            <article class="info-card"><span>Name</span><strong>${escapeHtml(playerName)}</strong></article>
+            <article class="info-card"><span>Position</span><strong>${escapeHtml(position || "N/A")}</strong></article>
+            <article class="info-card"><span>Height</span><strong>${escapeHtml(height || "N/A")}</strong></article>
+            <article class="info-card"><span>Weight</span><strong>${escapeHtml(weight || "N/A")}</strong></article>
+            <article class="info-card"><span>Experience</span><strong>${escapeHtml(experience || "N/A")}</strong></article>
+            <article class="info-card"><span>Player ID</span><strong>${escapeHtml(playerDisplayId)}</strong></article>
+          </div>
+          ${teamRoute ? `<p style="margin-top:10px;">Team: <button class="inline-entity-link entity-link-btn" type="button" data-team-route="${escapeHtml(teamRoute)}">${escapeHtml(teamName)}</button></p>` : ""}
+          ${bio ? `<p class="subtle" style="margin-top:10px;">${escapeHtml(String(bio).slice(0, 700))}</p>` : ""}
+        </section>
+      `, activeTab)}
+
+      ${renderTabPanel("matches", `
+        <section class="section section-player-context tone-live">
+          <div class="section-head"><h2>Team Match Context</h2><p>Recent team matches connected to this player context.</p></div>
+          ${renderMatchGrid(relatedMatches, "No current team match context available for this player.")}
+        </section>
+      `, activeTab)}
     </div>
   `;
+
+  wireEntityTabs(`player:${playerDisplayId}`, PLAYER_TABS);
 
   setSeo({
     title: `${playerName} Player Profile | LiveScoreFree`,
@@ -5412,80 +6978,111 @@ function mapEspnRosterEntries(roster, rosterDetailsByTeam = {}) {
 }
 
 function renderLineupRows(summary, rosterDetailsByTeam = {}, match = null) {
-  const rosters = summary.rosters || [];
-  if (!rosters.length) {
-    return '<div class="message-box">Team lineups are not published for this match.</div>';
+  const rosters = Array.isArray(summary?.rosters) ? summary.rosters : [];
+  const rosterByTeamId = new Map();
+  for (const roster of rosters) {
+    const teamId = String(roster?.team?.id || "");
+    if (teamId) {
+      rosterByTeamId.set(teamId, roster);
+    }
   }
+
+  const teams = match
+    ? [
+        {
+          id: String(match.homeTeamId || ""),
+          name: match.homeName || "Home team",
+          abbr: match.homeAbbr || "",
+          logo: match.homeLogo || ""
+        },
+        {
+          id: String(match.awayTeamId || ""),
+          name: match.awayName || "Away team",
+          abbr: match.awayAbbr || "",
+          logo: match.awayLogo || ""
+        }
+      ]
+    : rosters.slice(0, 2).map((roster) => ({
+        id: String(roster?.team?.id || ""),
+        name: roster?.team?.displayName || roster?.team?.shortDisplayName || "Team lineup",
+        abbr: roster?.team?.abbreviation || "",
+        logo: roster?.team?.logo || roster?.team?.logos?.[0]?.href || ""
+      }));
 
   return `
     <div class="layout-split">
-      ${rosters
-        .slice(0, 2)
-        .map(
-          (roster) => `
+      ${teams
+        .map((team) => {
+          const roster = rosterByTeamId.get(team.id) || null;
+          const entries = roster ? mapEspnRosterEntries(roster, rosterDetailsByTeam) : [];
+          return `
             <div class="panel">
               <h2>
                 ${renderTeamNameControl({
                   sportGroup: match?.sportGroup || "",
-                  teamId: String(roster.team?.id || ""),
-                  teamName: roster.team?.displayName || roster.team?.shortDisplayName || "Team lineup",
-                  teamAbbr: roster.team?.abbreviation || "",
-                  teamLogo: roster.team?.logo || roster.team?.logos?.[0]?.href || "",
+                  teamId: team.id,
+                  teamName: team.name,
+                  teamAbbr: team.abbr,
+                  teamLogo: team.logo,
                   fallbackIcon: "TM",
                   className: "inline-entity-link team-heading-link"
                 })}
               </h2>
               <p class="subtle">Realtime player and lineup details.</p>
-              <div class="lineup-list">
-                ${mapEspnRosterEntries(roster, rosterDetailsByTeam)
-                  .map(
-                    (entry, index) => `
-                      <div class="lineup-item" style="animation-delay:${index * 10}ms">
-                        <div style="display:flex;align-items:center;gap:10px;">
-                          ${
-                            entry.headshot
-                              ? `<span class="entity-link-btn player-avatar-link" role="link" tabindex="0" data-player-route="${escapeHtml(routeForPlayer({
-                                  sportGroup: match?.sportGroup || "",
-                                  playerId: normalizeNumericEntityId(entry.id || ""),
-                                  playerName: entry.name || "Player",
-                                  teamId: String(roster.team?.id || ""),
-                                  teamName: roster.team?.displayName || roster.team?.shortDisplayName || ""
-                                }))}" title="${escapeHtml(`Open ${(entry.name || "Player")} player page`)}"><img src="${escapeHtml(entry.headshot)}" alt="${escapeHtml(entry.name)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--line)" loading="lazy" onerror="this.style.display='none'"></span>`
-                              : '<span style="width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-soft);font-size:11px;font-weight:700;">PLR</span>'
-                          }
-                          <div style="min-width:0;flex:1;">
-                            ${renderPlayerNameControl({
-                              sportGroup: match?.sportGroup || "",
-                              playerId: entry.id || "",
-                              playerName: entry.name || "Player",
-                              teamId: String(roster.team?.id || ""),
-                              teamName: roster.team?.displayName || roster.team?.shortDisplayName || ""
-                            })}
-                            ${
-                              entry.shortName
-                                ? `<div class="subtle" style="font-size:11px;">${escapeHtml(entry.shortName)}</div>`
-                                : ""
-                            }
-                          </div>
-                          ${
-                            entry.starter
-                              ? '<span class="badge-live" style="font-size:10px;">STARTER</span>'
-                              : ""
-                          }
-                        </div>
-                        ${
-                          buildPlayerMetaLine(entry)
-                            ? `<div class="subtle" style="margin-top:6px;font-size:12px;">${escapeHtml(buildPlayerMetaLine(entry))}</div>`
-                            : '<div class="subtle" style="margin-top:6px;font-size:12px;">Profile details unavailable for this player.</div>'
-                        }
-                      </div>
-                    `
-                  )
-                  .join("")}
-              </div>
+              ${
+                entries.length
+                  ? `<div class="lineup-list">
+                      ${entries
+                        .map(
+                          (entry, index) => `
+                            <div class="lineup-item" style="animation-delay:${index * 10}ms">
+                              <div style="display:flex;align-items:center;gap:10px;">
+                                ${
+                                  entry.headshot
+                                    ? `<span class="entity-link-btn player-avatar-link" role="link" tabindex="0" data-player-route="${escapeHtml(routeForPlayer({
+                                        sportGroup: match?.sportGroup || "",
+                                        playerId: normalizeNumericEntityId(entry.id || ""),
+                                        playerName: entry.name || "Player",
+                                        teamId: team.id,
+                                        teamName: team.name || ""
+                                      }))}" title="${escapeHtml(`Open ${(entry.name || "Player")} player page`)}"><img src="${escapeHtml(entry.headshot)}" alt="${escapeHtml(entry.name)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--line)" loading="lazy" onerror="this.style.display='none'"></span>`
+                                    : '<span style="width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-soft);font-size:11px;font-weight:700;">PLR</span>'
+                                }
+                                <div style="min-width:0;flex:1;">
+                                  ${renderPlayerNameControl({
+                                    sportGroup: match?.sportGroup || "",
+                                    playerId: entry.id || "",
+                                    playerName: entry.name || "Player",
+                                    teamId: team.id,
+                                    teamName: team.name || ""
+                                  })}
+                                  ${
+                                    entry.shortName
+                                      ? `<div class="subtle" style="font-size:11px;">${escapeHtml(entry.shortName)}</div>`
+                                      : ""
+                                  }
+                                </div>
+                                ${
+                                  entry.starter
+                                    ? '<span class="badge-live" style="font-size:10px;">STARTER</span>'
+                                    : ""
+                                }
+                              </div>
+                              ${
+                                buildPlayerMetaLine(entry)
+                                  ? `<div class="subtle" style="margin-top:6px;font-size:12px;">${escapeHtml(buildPlayerMetaLine(entry))}</div>`
+                                  : '<div class="subtle" style="margin-top:6px;font-size:12px;">Profile details unavailable for this player.</div>'
+                              }
+                            </div>
+                          `
+                        )
+                        .join("")}
+                    </div>`
+                  : '<div class="message-box">Lineup data is not available for this team yet.</div>'
+              }
             </div>
-          `
-        )
+          `;
+        })
         .join("")}
     </div>
   `;
@@ -5517,7 +7114,7 @@ async function fetchEspnTeamRosterDetails(match, summary) {
         return;
       }
       const url = `${ESPN_BASE}/${match.feedPath}/teams/${encodeURIComponent(teamId)}/roster`;
-      const data = await cachedJson(url, 120000);
+      const data = await cachedJson(url, 60000);
       teamDetails[teamId] = {
         teamName: competitor.team?.displayName || data?.team?.displayName || "Team",
         players: flattenEspnRosterAthletes(data)
@@ -5614,93 +7211,123 @@ function renderSportsDbCommentaryRows(timeline) {
 }
 
 function renderSportsDbLineupRows(lineup, match = null) {
-  if (!lineup.length) {
-    return '<div class="message-box">Team lineups are not published for this match.</div>';
-  }
-
   const grouped = new Map();
   for (const item of lineup) {
-    const key = item.strTeam || item.strSide || "Team";
-    if (!grouped.has(key)) {
-      grouped.set(key, []);
+    const label = item.strTeam || item.strSide || "Team";
+    const token = normalizeTeamToken(label);
+    if (!grouped.has(token)) {
+      grouped.set(token, { label, entries: [] });
     }
-    grouped.get(key).push(item);
+    grouped.get(token).entries.push(item);
   }
+
+  const teams = match
+    ? [
+        {
+          name: match.homeName || "Home team",
+          token: normalizeTeamToken(match.homeName || "home"),
+          abbr: (match.homeAbbr || match.homeName || "HOME").slice(0, 3).toUpperCase()
+        },
+        {
+          name: match.awayName || "Away team",
+          token: normalizeTeamToken(match.awayName || "away"),
+          abbr: (match.awayAbbr || match.awayName || "AWAY").slice(0, 3).toUpperCase()
+        }
+      ]
+    : Array.from(grouped.values())
+        .slice(0, 2)
+        .map((group) => ({
+          name: group.label,
+          token: normalizeTeamToken(group.label),
+          abbr: group.label.slice(0, 3).toUpperCase()
+        }));
 
   return `
     <div class="layout-split">
-      ${Array.from(grouped.entries())
-        .slice(0, 2)
-        .map(
-          ([team, entries]) => `
+      ${teams
+        .map((team) => {
+          const group = grouped.get(team.token);
+          const entries = group ? group.entries : [];
+          return `
             <div class="panel">
               <h2>
                 ${renderTeamNameControl({
                   sportGroup: match?.sportGroup || "",
                   teamId: "",
-                  teamName: team,
-                  teamAbbr: team.slice(0, 3).toUpperCase(),
+                  teamName: team.name,
+                  teamAbbr: team.abbr,
                   teamLogo: "",
                   fallbackIcon: "TM",
                   className: "inline-entity-link team-heading-link"
                 })}
               </h2>
               <p class="subtle">Realtime player and lineup details.</p>
-              <div class="lineup-list">
-                ${entries
-                  .slice(0, 28)
-                  .map(
-                    (entry, index) => `
-                      <div class="lineup-item" style="animation-delay:${index * 10}ms">
-                        <div style="display:flex;align-items:center;gap:10px;">
-                          ${
-                            entry.strCutout || entry.strRender || entry.strThumb
-                              ? `<span class="entity-link-btn player-avatar-link" role="link" tabindex="0" data-player-route="${escapeHtml(routeForPlayer({
-                                  sportGroup: match?.sportGroup || "",
-                                  playerId: normalizeNumericEntityId(String(entry.idPlayer || "")),
-                                  playerName: entry.strPlayer || "Player",
-                                  teamName: team
-                                }))}" title="${escapeHtml(`Open ${(entry.strPlayer || "Player")} player page`)}"><img src="${escapeHtml(entry.strCutout || entry.strRender || entry.strThumb)}" alt="${escapeHtml(entry.strPlayer || "Player")}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--line)" loading="lazy" onerror="this.style.display='none'"></span>`
-                              : '<span style="width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-soft);font-size:11px;font-weight:700;">PLR</span>'
-                          }
-                          <div style="min-width:0;flex:1;">
-                            ${renderPlayerNameControl({
-                              sportGroup: match?.sportGroup || "",
-                              playerId: String(entry.idPlayer || ""),
-                              playerName: entry.strPlayer || "Player",
-                              teamName: team
-                            })}
-                            ${
-                              entry.strCutout || entry.strThumb
-                                ? `<div class="subtle" style="font-size:11px;">Realtime profile available</div>`
-                                : ""
-                            }
-                          </div>
-                        </div>
-                        <div class="subtle" style="margin-top:6px;font-size:12px;">
-                          ${escapeHtml(
-                            [
-                              entry.strPosition || "",
-                              entry.strNumber ? `#${entry.strNumber}` : "",
-                              entry.strCountry || entry.strNationality || "",
-                              entry.strStatus || ""
-                            ]
-                              .filter(Boolean)
-                              .join(" | ") || "Profile details unavailable for this player."
-                          )}
-                        </div>
-                      </div>`
-                  )
-                  .join("")}
-              </div>
-            </div>`
-        )
+              ${
+                entries.length
+                  ? `<div class="lineup-list">
+                      ${entries
+                        .slice(0, 28)
+                        .map(
+                          (entry, index) => `
+                            <div class="lineup-item" style="animation-delay:${index * 10}ms">
+                              <div style="display:flex;align-items:center;gap:10px;">
+                                ${
+                                  entry.strCutout || entry.strRender || entry.strThumb
+                                    ? `<span class="entity-link-btn player-avatar-link" role="link" tabindex="0" data-player-route="${escapeHtml(routeForPlayer({
+                                        sportGroup: match?.sportGroup || "",
+                                        playerId: normalizeNumericEntityId(String(entry.idPlayer || "")),
+                                        playerName: entry.strPlayer || "Player",
+                                        teamName: team.name
+                                      }))}" title="${escapeHtml(`Open ${(entry.strPlayer || "Player")} player page`)}"><img src="${escapeHtml(entry.strCutout || entry.strRender || entry.strThumb)}" alt="${escapeHtml(entry.strPlayer || "Player")}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--line)" loading="lazy" onerror="this.style.display='none'"></span>`
+                                    : '<span style="width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-soft);font-size:11px;font-weight:700;">PLR</span>'
+                                }
+                                <div style="min-width:0;flex:1;">
+                                  ${renderPlayerNameControl({
+                                    sportGroup: match?.sportGroup || "",
+                                    playerId: String(entry.idPlayer || ""),
+                                    playerName: entry.strPlayer || "Player",
+                                    teamName: team.name
+                                  })}
+                                  ${
+                                    entry.strCutout || entry.strThumb
+                                      ? `<div class="subtle" style="font-size:11px;">Realtime profile available</div>`
+                                      : ""
+                                  }
+                                </div>
+                              </div>
+                              <div class="subtle" style="margin-top:6px;font-size:12px;">
+                                ${escapeHtml(
+                                  [
+                                    entry.strPosition || "",
+                                    entry.strNumber ? `#${entry.strNumber}` : "",
+                                    entry.strCountry || entry.strNationality || "",
+                                    entry.strStatus || ""
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" | ") || "Profile details unavailable for this player."
+                                )}
+                              </div>
+                            </div>`
+                        )
+                        .join("")}
+                    </div>`
+                  : '<div class="message-box">Lineup data is not available for this team yet.</div>'
+              }
+            </div>`;
+        })
         .join("")}
     </div>`;
 }
 
 function renderRealtimeSourceUpdates(match, summary, sportsDbBundle) {
-  const sourceLabel = match.source === "sportsdb" ? "TheSportsDB realtime" : "ESPN realtime";
+  let sourceLabel = "ESPN realtime";
+  if (match.source === "sportsdb") {
+    sourceLabel = "TheSportsDB realtime";
+  } else if (match.source === "nhl") {
+    sourceLabel = "NHL official feed";
+  } else if (match.source === "mlb") {
+    sourceLabel = "MLB StatsAPI feed";
+  }
   let rows = "";
 
   if (match.source === "sportsdb") {
@@ -6170,7 +7797,7 @@ async function fetchEspnStandings(match) {
   }
 
   try {
-    const data = await cachedJson(`${ESPN_BASE}/${match.feedPath}/standings`, 120000);
+    const data = await cachedJson(`${ESPN_BASE}/${match.feedPath}/standings`, 45000);
     const entries = [];
     collectEspnEntries(data, entries);
     const mapped = entries.map((entry, index) => mapEspnStandingEntry(entry, index));
@@ -6189,7 +7816,7 @@ async function fetchSportsDbStandings(sportsDbEvent) {
   const season = sportsDbEvent?.strSeason || String(new Date().getUTCFullYear());
 
   try {
-    const data = await cachedJson(`${SPORTSDB_BASE}/lookuptable.php?l=${encodeURIComponent(leagueId)}&s=${encodeURIComponent(season)}`, 120000);
+    const data = await cachedJson(`${SPORTSDB_BASE}/lookuptable.php?l=${encodeURIComponent(leagueId)}&s=${encodeURIComponent(season)}`, 45000);
     const table = Array.isArray(data?.table) ? data.table : Array.isArray(data?.tables) ? data.tables : [];
     return table
       .map((row, index) => ({
@@ -6702,11 +8329,17 @@ async function renderMatchPage(route) {
   }
 
   if (!match) {
-    main.innerHTML = '<div class="message-box">Match page not found yet. This URL is generated automatically from live feeds.</div>';
+    main.innerHTML = `
+      <div class="message-box feed-wait">
+        <div class="feed-wait-spinner" aria-hidden="true"></div>
+        <h2>Waiting for live feed...</h2>
+        <p>This match page will auto-update as soon as the latest feed arrives. Keep this page open.</p>
+      </div>
+    `;
     setSeo({
-      title: "Match Not Found | LiveScoreFree",
-      description: "The match URL is not available right now. Try Live Now or Results pages.",
-      keywords: ["match not found", "live scores"],
+      title: "Waiting for Live Feed | LiveScoreFree",
+      description: "This match page is waiting for the latest live feed data and will auto-update.",
+      keywords: ["live feed", "match updates"],
       path: state.activePath
     });
     return;
@@ -6723,15 +8356,20 @@ async function renderMatchPage(route) {
   main.innerHTML = '<div class="message-box">Loading live score, commentary, lineups, stats, and timeline...</div>';
 
   const isSportsDbMatch = match.source === "sportsdb";
+  const isEspnMatch = !match.source || match.source === "espn";
   let summary = null;
   let sportsDbBundle = null;
   let espnRosterDetailsByTeam = {};
   try {
     if (isSportsDbMatch) {
       sportsDbBundle = await fetchSportsDbMatchBundle(match);
-    } else {
-      summary = await cachedJson(`${ESPN_BASE}/${match.feedPath}/summary?event=${match.id}`, 15000);
+    } else if (isEspnMatch) {
+      summary = await cachedJson(`${ESPN_BASE}/${match.feedPath}/summary?event=${match.id}`, 12000);
       espnRosterDetailsByTeam = await fetchEspnTeamRosterDetails(match, summary);
+    } else {
+      summary = null;
+      sportsDbBundle = null;
+      espnRosterDetailsByTeam = {};
     }
   } catch (_error) {
     summary = null;
@@ -6882,6 +8520,9 @@ async function renderMatchPage(route) {
   const reminderKey = reminderMatchKey(match);
   const hasReminder = match.status === "upcoming" && isReminderActive(reminderKey);
   const similarScoreboards = buildSimilarScoreboardMatches(match, 8);
+  const detailToneClass = toneClassForMatchStatus(match.status);
+  const matchPageClass = match.status === "live" ? "page-match-live" : match.status === "final" ? "page-match-results" : "page-match-upcoming";
+  setMainPageClasses("page", "page-match", matchPageClass, detailToneClass);
   const detailLead =
     notes && notes !== "Live match update"
       ? notes
@@ -6898,63 +8539,55 @@ async function renderMatchPage(route) {
         : "Final summary stays synced with published match data.";
 
   main.innerHTML = `
-    <div class="detail-page">
-      <section class="detail-hero auto-bg-surface" ${buildAutoBackgroundAttrs({
+    <div class="detail-page pm-master ${detailToneClass}" data-match-key="${escapeHtml(match.sportGroup)}:${escapeHtml(match.slug)}">
+      <section class="pm-hero" ${buildAutoBackgroundAttrs({
         sportGroup: match.sportGroup,
         leagueKey: match.leagueKey,
-        fit: "contain",
-        position: "right center",
-        strength: 0.18
+        fit: "cover",
+        position: "center",
+        strength: 0.18 // Let the dark glass overlay do the work
       })}>
-        <div class="upper-score-strip ${match.status === "live" ? "is-live" : ""}">
-          <div class="upper-score-team">
-            ${renderTeamNameControl({
-              sportGroup: match.sportGroup,
-              teamId: match.homeTeamId,
-              teamName: match.homeName,
-              teamAbbr: match.homeAbbr,
-              teamLogo: homeLogo,
-              fallbackIcon: "TM",
-              className: "inline-entity-link hero-team-link"
-            })}
-            <span class="subtle upper-score-abbr">${escapeHtml(match.homeAbbr)}</span>
-          </div>
-          <div class="upper-score-center">
-            <span class="upper-score-status">${statusBadge(match)}</span>
-            <strong class="upper-score-main">${escapeHtml(homeScore)} - ${escapeHtml(awayScore)}</strong>
-            <span class="subtle upper-score-clock">${escapeHtml(getStatusText(match))}</span>
-          </div>
-          <div class="upper-score-team upper-score-team-away">
-            ${renderTeamNameControl({
-              sportGroup: match.sportGroup,
-              teamId: match.awayTeamId,
-              teamName: match.awayName,
-              teamAbbr: match.awayAbbr,
-              teamLogo: awayLogo,
-              fallbackIcon: "TM",
-              className: "inline-entity-link hero-team-link"
-            })}
-            <span class="subtle upper-score-abbr">${escapeHtml(match.awayAbbr)}</span>
-          </div>
-        </div>
-
-        <div class="match-hero-grid">
-          <div class="match-hero-copy">
-            <div class="detail-head">
-              <div>
-                <h1>${escapeHtml(headline)}</h1>
-                <p class="subtle">${escapeHtml(match.leagueLabel)} | ${escapeHtml(match.venue)} | ${escapeHtml(formatDateTime(match.date))}</p>
-                <div class="match-sport-media">
-                  <img src="${escapeHtml(getSportImagePath(match.sportGroup))}" alt="${escapeHtml(match.sportLabel)} image" loading="lazy">
-                  <span>${escapeHtml(match.sportLabel)} realtime match center</span>
-                </div>
-              </div>
+        <div class="pm-hero-glass">
+          
+          <!-- Top Row: League Left, Venue Center -->
+          <div class="pm-header">
+            <div class="pm-league">
+               <img src="${escapeHtml(getSportImagePath(match.sportGroup))}" class="pm-league-icon" alt="${escapeHtml(match.sportGroup)}" />
+               <span>${escapeHtml(match.leagueLabel)}</span>
             </div>
-            <p class="detail-lead">${escapeHtml(detailLead)}</p>
-            <p class="match-sync-note"><span class="match-sync-dot" aria-hidden="true"></span>${escapeHtml(syncMessage)}</p>
-            ${match.status === "upcoming" ? `<p class="subtle reminder-help">Turn on the bell in the match panel to get a browser reminder before kickoff.</p>` : ""}
-            ${renderHeroMetrics(heroMetrics)}
+            <div class="pm-venue-date">
+              <div class="pm-venue">${escapeHtml(match.venue)}</div>
+              <div class="pm-date">${escapeHtml(formatDateTime(match.date))}</div>
+            </div>
+            <div class="pm-empty-right"></div>
           </div>
+
+          <!-- Mid Row: Home Team -> Huge Score -> Away Team -->
+          <div class="pm-teams-row">
+            <div class="pm-team pm-home entity-link-btn" role="link" tabindex="0" data-team-route="${escapeHtml(routeForTeam({ sportGroup: match.sportGroup, teamId: match.homeTeamId, teamName: match.homeName }))}">
+              <img src="${escapeHtml(homeLogo)}" class="pm-team-logo" alt="${escapeHtml(match.homeName)}" onerror="this.src='/tm.svg'" />
+              <div class="pm-team-name">${escapeHtml(match.homeName)}</div>
+              <div class="pm-team-sub">Home</div>
+            </div>
+
+            <div class="pm-score-center" data-field="score">
+              <div class="pm-score-main">
+                ${escapeHtml(homeScore)} - ${escapeHtml(awayScore)}
+              </div>
+              ${match.status === 'live' 
+                ? `<div class="pm-live-pill"><span class="pm-red-dot"></span><span data-field="status-text">${escapeHtml(getStatusText(match))}</span></div>` 
+                : `<div class="pm-status-pill" data-field="status-text">${escapeHtml(getStatusText(match))}</div>`}
+            </div>
+
+            <div class="pm-team pm-away entity-link-btn" role="link" tabindex="0" data-team-route="${escapeHtml(routeForTeam({ sportGroup: match.sportGroup, teamId: match.awayTeamId, teamName: match.awayName }))}">
+              <img src="${escapeHtml(awayLogo)}" class="pm-team-logo" alt="${escapeHtml(match.awayName)}" onerror="this.src='/tm.svg'" />
+              <div class="pm-team-name">${escapeHtml(match.awayName)}</div>
+              <div class="pm-team-sub">Away</div>
+            </div>
+          </div>
+          
+        </div>
+      </section>
           ${renderMatchInsightPanel({
             match,
             statPairs,
@@ -6967,7 +8600,7 @@ async function renderMatchPage(route) {
         </div>
       </section>
 
-      <section class="section">
+      <section class="section section-related-scoreboards ${detailToneClass}">
         <div class="section-head">
           <h2>Similar Scoreboards</h2>
           <p>Related internal links for live scores, fixtures, and results in the same sport and league.</p>
@@ -7175,6 +8808,10 @@ async function renderMatchPage(route) {
   `;
 
   wireMatchTabs(match, availableTabs);
+  const similarSection = qs(".section-related-scoreboards", main);
+  if (similarSection) {
+    main.appendChild(similarSection);
+  }
 
   setSeo({
     title: `${headline} ${canonicalMode === "results" ? "Result" : "Live Score"} | LiveScoreFree`,
@@ -7333,7 +8970,7 @@ function renderFeedbackPage() {
         </div>
         <div>
           <label for="feedback-email">Your email (optional)</label>
-          <input id="feedback-email" type="email" placeholder="you@example.com">
+          <input id="feedback-email" type="email" placeholder="livescorefree.online@gmail.com">
         </div>
         <button class="btn btn-primary" type="submit">Save Note + Open Email Draft</button>
       </form>
@@ -7364,7 +9001,7 @@ function renderFeedbackPage() {
       const body = encodeURIComponent(
         `What to add:\n${add}\n\nWhat to improve:\n${improve}\n\nEmail:\n${email || "Not provided"}`
       );
-      window.location.href = `mailto:hello@livescorefree.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:livescorefree.online@gmail.com?subject=${subject}&body=${body}`;
 
       showToast("Feedback note saved locally.");
       renderFeedbackPage();
@@ -7431,8 +9068,8 @@ function renderAdvertisePage() {
       </ul>
 
       <h2>Advertising Contact</h2>
-      <p>Email: <a href="mailto:ads@livescorefree.com">ads@livescorefree.com</a></p>
-      <p>General inquiries: <a href="mailto:hello@livescorefree.com">hello@livescorefree.com</a></p>
+      <p>Email: <a href="mailto:livescorefree.online@gmail.com">livescorefree.online@gmail.com</a></p>
+      <p>General inquiries: <a href="mailto:livescorefree.online@gmail.com">livescorefree.online@gmail.com</a></p>
       <p>Response window: usually within 24-48 hours.</p>
 
       <h2>Trust & Compliance</h2>
@@ -7462,7 +9099,7 @@ function renderPrivacyPage() {
       <p>Score feeds are fetched from public sports APIs. Third-party providers may process request logs under their own privacy terms.</p>
 
       <h2>Contact</h2>
-      <p>Privacy requests: privacy@livescorefree.com</p>
+      <p>Privacy requests: livescorefree.online@gmail.com</p>
     `
   });
 }
@@ -7485,7 +9122,7 @@ function renderTermsPage() {
       <p>Do not abuse, scrape excessively, or attempt to disrupt service operation.</p>
 
       <h2>Contact</h2>
-      <p>Legal requests: legal@livescorefree.com</p>
+      <p>Legal requests: livescorefree.online@gmail.com</p>
     `
   });
 }
@@ -7495,7 +9132,7 @@ function renderDataSourcesPage() {
     lead: "Public data source references used by LiveScoreFree.",
     path: "/data-sources",
     description: "Data source policy for LiveScoreFree.",
-    keywords: ["sports data sources", "live score api", "espn scoreboard api"],
+    keywords: ["sports data sources", "live score api", "espn scoreboard api", "nhl api", "mlb statsapi", "cricket live api"],
     bodyHtml: `
       <div class="table-wrap">
         <table class="source-table">
@@ -7512,7 +9149,7 @@ function renderDataSourcesPage() {
               <td>ESPN Scoreboard API</td>
               <td>Live and upcoming match lists</td>
               <td>Public endpoint</td>
-              <td>Refreshed every 30 seconds</td>
+              <td>Refreshed every 15 seconds</td>
             </tr>
             <tr>
               <td>ESPN Summary API</td>
@@ -7532,6 +9169,30 @@ function renderDataSourcesPage() {
               <td>Public endpoint (free key 123)</td>
               <td>Endpoints: eventsday, lookupevent, lookupeventstats, lookuptimeline, lookuplineup</td>
             </tr>
+            <tr>
+              <td>Cricbuzz Live JSON</td>
+              <td>Cricket live match list</td>
+              <td>Public endpoint</td>
+              <td>Primary cricket live feed (no key required)</td>
+            </tr>
+            <tr>
+              <td>ESPNcricinfo Live RSS</td>
+              <td>Cricket live RSS fallback</td>
+              <td>Public RSS feed</td>
+              <td>Used when Cricbuzz JSON is unavailable</td>
+            </tr>
+            <tr>
+              <td>NHL Public API</td>
+              <td>Official NHL scoreboard fallback</td>
+              <td>Public endpoint</td>
+              <td>Used when ESPN NHL feed is unavailable</td>
+            </tr>
+            <tr>
+              <td>MLB StatsAPI</td>
+              <td>Official MLB scoreboard fallback</td>
+              <td>Public endpoint</td>
+              <td>Used when ESPN MLB feed is unavailable</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -7539,7 +9200,19 @@ function renderDataSourcesPage() {
       <p>This section is intentionally shown only on the Data Sources page.</p>
       <ul>
         <li>Primary feed: ESPN realtime endpoints (scoreboard, summary, standings).</li>
-        <li>Fallback feed: TheSportsDB realtime endpoints.</li>
+        <li>Cricket fallback: Cricbuzz JSON with ESPNcricinfo RSS backup.</li>
+        <li>Official league fallbacks: NHL Public API and MLB StatsAPI.</li>
+        <li>Metadata fallback: TheSportsDB realtime endpoints.</li>
+      </ul>
+      <h2>Additional Providers (Opt-In)</h2>
+      <p>These providers require API keys, paid access, or explicit opt-in. We can integrate them when keys are supplied.</p>
+      <ul>
+        <li>API-Sports (free tier with API key required)</li>
+        <li>SportMonks (free tier with API key required)</li>
+        <li>MySportsFeeds (developer key required)</li>
+        <li>NCAA data endpoints (rate-limited and may require registration)</li>
+        <li>OpenLigaDB (public community API, optional integration)</li>
+        <li>SportSRC (keyless cached API, optional integration)</li>
       </ul>
       <h2>Fair Use Disclaimer</h2>
       <p>
@@ -7559,7 +9232,7 @@ function renderDmcaPage() {
     keywords: ["dmca", "copyright policy", "takedown request"],
     bodyHtml: `
       <h2>Submitting a Notice</h2>
-      <p>Send DMCA notices to dmca@livescorefree.com with clear identification of copyrighted work and URL.</p>
+      <p>Send DMCA notices to livescorefree.online@gmail.com with clear identification of copyrighted work and URL.</p>
 
       <h2>Required Information</h2>
       <ul>
@@ -7621,10 +9294,10 @@ function renderContactPage() {
     description: "Contact details for LiveScoreFree.",
     keywords: ["contact livescorefree", "support"],
     bodyHtml: `
-      <p>Email: hello@livescorefree.com</p>
-      <p>Data corrections: support@livescorefree.com</p>
-      <p>Advertising: ads@livescorefree.com</p>
-      <p>Partnerships: partnerships@livescorefree.com</p>
+      <p>Email: livescorefree.online@gmail.com</p>
+      <p>Data corrections: livescorefree.online@gmail.com</p>
+      <p>Advertising: livescorefree.online@gmail.com</p>
+      <p>Partnerships: livescorefree.online@gmail.com</p>
     `
   });
 }
@@ -7634,6 +9307,7 @@ function renderNotFoundPage() {
   if (!main) {
     return;
   }
+  setMainPageClasses("page", "page-not-found", "tone-trust");
 
   main.innerHTML = `
     <div class="message-box">
@@ -7660,6 +9334,7 @@ async function renderRoute() {
   state.activePath = path;
 
   const route = parseRoute(path);
+  applyPageClassesForRoute(route);
   markActiveNav(path);
   updateHeaderQuickNav(route);
   configureMatchDetailRefresh(route);
@@ -7737,6 +9412,9 @@ async function renderRoute() {
   updateLastUpdatedLabel();
   wireNotificationControls();
   maybeShowSupportPopup(route);
+  // Activate native ad banners after page render
+  nativeAdCounter = 0;
+  activateNativeAds();
 }
 function updateProgressBar() {
   const bar = qs("#top-progress-bar");
@@ -7841,15 +9519,58 @@ function setupPwaPrompt() {
 
 function wireGlobalEvents() {
   const header = qs(".site-header");
+  const dock = qs(".app-dock");
   let headerCompact = false;
   let headerTicking = false;
+  let chromeHidden = false;
+  let lastScrollY = window.scrollY || 0;
+  let autoRefreshQueued = false;
 
   function setHeaderOffset() {
     if (!header) {
       return;
     }
-    const height = header.getBoundingClientRect().height || 0;
+    const height = header.classList.contains("site-header--hidden") ? 0 : header.getBoundingClientRect().height || 0;
     document.body.style.setProperty("--header-offset", `${Math.ceil(height)}px`);
+  }
+
+  function setChromeHidden(hidden) {
+    if (!header) {
+      return;
+    }
+    if (chromeHidden === hidden) {
+      return;
+    }
+    header.classList.toggle("site-header--hidden", hidden);
+    if (dock) {
+      dock.classList.toggle("app-dock--hidden", hidden);
+    }
+    chromeHidden = hidden;
+    setHeaderOffset();
+  }
+
+  function updateChromeVisibility(scrollY) {
+    if (!header) {
+      return;
+    }
+    const nav = qs("#main-nav");
+    const navOpen = nav && nav.classList.contains("open");
+    if (navOpen) {
+      setChromeHidden(false);
+      lastScrollY = scrollY;
+      return;
+    }
+    const delta = scrollY - lastScrollY;
+    const goingDown = delta > 8;
+    const goingUp = delta < -8;
+    if (scrollY < 40) {
+      setChromeHidden(false);
+    } else if (goingDown && scrollY > 120) {
+      setChromeHidden(true);
+    } else if (goingUp) {
+      setChromeHidden(false);
+    }
+    lastScrollY = scrollY;
   }
 
   function updateHeaderCompact() {
@@ -7857,18 +9578,50 @@ function wireGlobalEvents() {
     if (!header) {
       return;
     }
-    const shouldCompact = (window.scrollY || 0) > 120;
+    const scrollY = window.scrollY || 0;
+    const shouldCompact = scrollY > 120;
     if (shouldCompact !== headerCompact) {
       header.classList.toggle("site-header--compact", shouldCompact);
       headerCompact = shouldCompact;
     }
+    updateChromeVisibility(scrollY);
     setHeaderOffset();
+  }
+
+  function queueAutoRefresh() {
+    if (autoRefreshQueued) {
+      return;
+    }
+    autoRefreshQueued = true;
+    setTimeout(async () => {
+      autoRefreshQueued = false;
+      if (document.hidden) {
+        return;
+      }
+      await refreshData({ silent: true });
+      const route = parseRoute(state.activePath);
+      if (needsDataRoute(route.type)) {
+        await renderRoute();
+      }
+    }, 200);
   }
 
   document.addEventListener("click", async (event) => {
     if (event.target.id === "support-popup") {
       dismissSupportPopup();
       return;
+    }
+
+    const nav = qs("#main-nav");
+    const mobileToggle = qs("#mobile-nav-toggle");
+    if (nav && nav.classList.contains("open")) {
+      if (!event.target.closest("#main-nav") && !event.target.closest("#mobile-nav-toggle")) {
+        nav.classList.remove("open");
+        if (mobileToggle) {
+          mobileToggle.setAttribute("aria-expanded", "false");
+        }
+        document.body.classList.remove("nav-open");
+      }
     }
 
     if (event.target.closest("#search-trigger") || event.target.closest("#search-close") || event.target.closest("#nav-search-link")) {
@@ -8010,13 +9763,23 @@ function wireGlobalEvents() {
 
   window.addEventListener("popstate", () => {
     hideTouchMenuInfo();
+    revealChrome();
     renderRoute();
   });
 
   window.addEventListener("hashchange", () => {
     if (window.location.protocol === "file:" || window.location.hash.startsWith("#/")) {
       hideTouchMenuInfo();
+      revealChrome();
       renderRoute();
+    }
+  });
+
+  window.addEventListener("focus", queueAutoRefresh);
+  window.addEventListener("online", queueAutoRefresh);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      queueAutoRefresh();
     }
   });
 
@@ -8075,6 +9838,7 @@ function wireGlobalEvents() {
       }
       const open = nav.classList.toggle("open");
       mobileToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      document.body.classList.toggle("nav-open", open);
       setHeaderOffset();
     });
   }
@@ -8104,19 +9868,55 @@ function wireGlobalEvents() {
 
   const languageSelect = qs("#language-select");
   if (languageSelect) {
+    // Set initial custom select value based on existing google cookie if present
+    const googCookie = document.cookie.split('; ').find(row => row.startsWith('googtrans='));
+    if (googCookie) {
+      const lang = googCookie.split('/')[2];
+      if (lang) {
+        languageSelect.value = lang;
+        state.languagePreference = lang;
+      }
+    }
+
     languageSelect.addEventListener("change", (event) => {
-      const next = event.target.value === "auto" ? "auto" : normalizeLanguageCode(event.target.value);
-      state.languagePreference = next;
-      localStorage.setItem(LANGUAGE_KEY, next);
-      updateLanguageControls();
-      showToast(next === "auto" ? "Language set to auto detect." : `Language set to ${SUPPORTED_LANGUAGES[next] || next}.`);
+      const targetLang = event.target.value;
+      state.languagePreference = targetLang;
+      localStorage.setItem(LANGUAGE_KEY, targetLang);
+
+      // Proxy the selection to the hidden Google Translate combo box
+      const googleSelect = document.querySelector(".goog-te-combo");
+      
+      if (targetLang === "auto") {
+        // Cleartranslation cookies and reset to English (original)
+        document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=" + location.hostname + "; path=/;";
+        if (googleSelect) {
+          googleSelect.value = "en";
+          googleSelect.dispatchEvent(new Event("change"));
+        }
+        showToast("Language set to Auto (English)");
+        setTimeout(() => window.location.reload(), 300);
+      } else {
+        if (googleSelect) {
+          googleSelect.value = targetLang;
+          // Must trigger a full UI event for Google Translate to notice the change
+          googleSelect.dispatchEvent(new Event("change"));
+          showToast(`Translating page to ${targetLang.toUpperCase()}...`);
+        } else {
+          showToast("Translation engine loading, please try again.");
+        }
+      }
     });
   }
 
   const translateButton = qs("#translate-btn");
   if (translateButton) {
     translateButton.addEventListener("click", () => {
-      openGoogleTranslateForCurrentPage();
+      // Focus our custom language select dropdown when the translate icon is clicked
+      if (languageSelect) {
+        languageSelect.focus();
+        showToast("Select a language from the dropdown to translate.");
+      }
     });
   }
 
@@ -8419,10 +10219,8 @@ async function init() {
 
   setInterval(async () => {
     await refreshData({ silent: true });
-    const route = parseRoute(state.activePath);
-    if (needsDataRoute(route.type)) {
-      await renderRoute();
-    }
+    // Removed full renderRoute() call to prevent flicker. 
+    // refreshData now calls updateMatchUIInPlace() internally.
   }, REFRESH_INTERVAL_MS);
 }
 

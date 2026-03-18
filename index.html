@@ -14,13 +14,16 @@
   <meta name="google-site-verification" content="IWNRzZKEwiFv_1uYKpsyvGx0N9uMLb7k2Nw1x9ZdFa4" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#071322">
+  <meta name="theme-color" id="meta-theme-color" content="#071322">
+
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LiveScoreFree">
   <meta name="description" content="LiveScoreFree delivers fast, trusted live scores, fixtures, results, lineups, commentary, and stats across football, cricket, basketball, tennis, and top leagues.">
   <meta name="keywords" content="live score, live scores today, live now matches, upcoming matches, trending matches, football live score, cricket live score, basketball live score, tennis live score, top leagues, match commentary, team lineups, match stats, football scoreboard, cricket scoreboard, basketball scoreboard">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="googlebot" content="translate">
   <meta name="language" content="en-US">
   <meta name="revisit-after" content="1 days">
   <meta name="author" content="LiveScoreFree Community">
@@ -41,6 +44,7 @@
   <link rel="canonical" id="canonical-link" href="https://livescorefree.online">
   <link rel="alternate" hreflang="en" href="https://livescorefree.online">
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="logo-mark-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="logo-mark-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="logo-mark-180.png">
@@ -230,23 +234,27 @@
 
   <nav class="app-dock" aria-label="Mobile primary">
     <a href="/home" data-link data-nav="/home" aria-label="Home">
-      <span class="dock-icon" aria-hidden="true">&#8962;</span>
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
       <span class="dock-label">Home</span>
     </a>
     <a href="/live" data-link data-nav="/live" aria-label="Live scores">
-      <span class="dock-icon" aria-hidden="true">&#9679;</span>
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/></svg></span>
       <span class="dock-label">Live</span>
     </a>
+    <a href="/results" data-link data-nav="/results" aria-label="Sports Highlights">
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="2"/></svg></span>
+      <span class="dock-label">Highlight</span>
+    </a>
+    <a href="/trending" data-link data-nav="/trending" aria-label="Trending matches">
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+      <span class="dock-label">Trending</span>
+    </a>
     <a href="/upcoming" data-link data-nav="/upcoming" aria-label="Upcoming matches">
-      <span class="dock-icon" aria-hidden="true">&#128197;</span>
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V10.5a.5.5 0 0 0-1 0V22"/><path d="M14 22V10.5a.5.5 0 0 1 1 0V22"/><path d="M8 9h8l1 5H7l1-5z"/></svg></span>
       <span class="dock-label">Upcoming</span>
     </a>
-    <a href="/results" data-link data-nav="/results" aria-label="Results">
-      <span class="dock-icon" aria-hidden="true">&#127942;</span>
-      <span class="dock-label">Results</span>
-    </a>
     <a href="/top-leagues" data-link data-nav="/top-leagues" aria-label="Top leagues">
-      <span class="dock-icon" aria-hidden="true">&#9733;</span>
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/></svg></span>
       <span class="dock-label">Leagues</span>
     </a>
   </nav>
@@ -254,6 +262,7 @@
   <div id="pwa-prompt" class="pwa-prompt" hidden>
     <div class="pwa-prompt-content">
       <div class="pwa-prompt-text">
+        <img src="logo-mark-192.png" alt="" width="48" height="48" class="pwa-prompt-icon">
         <strong>Install LiveScoreFree</strong>
         <span>Get fast access, app-like experience, and offline essentials.</span>
         <span id="pwa-ios-tip" class="pwa-prompt-tip" hidden>On iPhone/iPad: tap Share and choose “Add to Home Screen”.</span>
@@ -268,6 +277,24 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="api-config.js" defer></script>
-  <script src="app.js" defer></script>
+  <script>
+    function hideLoader() { document.documentElement.className = document.documentElement.className.replace('loading',''); }
+    window.addEventListener('load', hideLoader);
+    setTimeout(hideLoader, 2000);
+  </script>
+
+  <!-- Hidden Google Translate Element -->
+  <div id="google_translate_element" style="display:none;"></div>
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script async src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <script src="app.js"></script>
 </body>
 </html>

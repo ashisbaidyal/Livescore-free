@@ -2,9 +2,11 @@
   "name": "LiveScoreFree | Live Scores, Trending Matches, Top Leagues",
   "short_name": "LiveScoreFree",
   "description": "Fast live scores, commentary, lineups, player stats, and results for football, cricket, basketball, tennis, and top leagues.",
-  "start_url": "/live",
+  "start_url": "/home",
   "scope": "/",
+  "id": "/home",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#071322",
   "theme_color": "#071322",
   "orientation": "any",
@@ -15,13 +17,25 @@
       "src": "logo-mark-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "logo-mark-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "logo-mark-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "logo-mark-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
