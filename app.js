@@ -3851,6 +3851,26 @@ function renderMatchLogo({
   return `<span class="match-logo-fallback">${escapeHtml(safeAbbr)}</span>`;
 }
 
+function renderPmTeamLogo({
+  teamLogo = "",
+  teamName = "",
+  teamAbbr = "",
+  fallbackIcon = "TM",
+  loading = "lazy"
+} = {}) {
+  const safeName = String(teamName || "Team");
+  const safeAbbr = String(teamAbbr || safeName.slice(0, 3) || fallbackIcon).toUpperCase().slice(0, 3);
+
+  if (!teamLogo) {
+    return `<span class="pm-team-logo pm-team-logo-fallback">${escapeHtml(safeAbbr)}</span>`;
+  }
+
+  return `
+    <img src="${escapeHtml(teamLogo)}" class="pm-team-logo" alt="${escapeHtml(safeName)}" loading="${escapeHtml(loading)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <span class="pm-team-logo pm-team-logo-fallback" style="display:none;">${escapeHtml(safeAbbr)}</span>
+  `;
+}
+
 function renderMatchCardHero(match, { badgeHtml = "", routeOverride = "", timeLabel = "", venueLabel = "" } = {}) {
   const sportIcon = SPORT_GROUPS[match.sportGroup]?.icon || "SPT";
   const sportAbbr = SPORT_GROUPS[match.sportGroup]?.abbr || match.sportGroup || "SPT";
@@ -6773,7 +6793,12 @@ async function renderTeamPage(route) {
           <!-- Mid Row: Single Team Focus -->
           <div class="pm-teams-row" style="justify-content: center; margin-top: 20px;">
             <div class="pm-team" style="transform: scale(1.1);">
-              <img src="${escapeHtml(teamLogo)}" class="pm-team-logo" alt="${escapeHtml(teamName)}" onerror="this.src='/tm.svg'" />
+              ${renderPmTeamLogo({
+                teamLogo,
+                teamName,
+                teamAbbr,
+                fallbackIcon: "TM"
+              })}
               <div class="pm-team-name">${escapeHtml(teamName)}</div>
               <div class="pm-team-sub" style="margin-top: 10px;">
                 <span class="badge-live" style="margin: 0 6px;">${snapshot.live} LIVE</span>
@@ -8859,7 +8884,13 @@ async function renderMatchPage(route) {
           <!-- Mid Row: Home Team -> Huge Score -> Away Team -->
           <div class="pm-teams-row">
             <div class="pm-team pm-home entity-link-btn" role="link" tabindex="0" data-team-route="${escapeHtml(routeForTeam({ sportGroup: match.sportGroup, teamId: match.homeTeamId, teamName: match.homeName }))}">
-              <img src="${escapeHtml(homeLogo)}" class="pm-team-logo" alt="${escapeHtml(match.homeName)}" onerror="this.src='/tm.svg'" />
+              ${renderPmTeamLogo({
+                teamLogo: homeLogo,
+                teamName: match.homeName,
+                teamAbbr: match.homeAbbr,
+                fallbackIcon: SPORT_GROUPS[match.sportGroup]?.icon || "TM",
+                loading: "eager"
+              })}
               <div class="pm-team-name">${escapeHtml(match.homeName)}</div>
               <div class="pm-team-sub">Home</div>
             </div>
@@ -8874,7 +8905,13 @@ async function renderMatchPage(route) {
             </div>
 
             <div class="pm-team pm-away entity-link-btn" role="link" tabindex="0" data-team-route="${escapeHtml(routeForTeam({ sportGroup: match.sportGroup, teamId: match.awayTeamId, teamName: match.awayName }))}">
-              <img src="${escapeHtml(awayLogo)}" class="pm-team-logo" alt="${escapeHtml(match.awayName)}" onerror="this.src='/tm.svg'" />
+              ${renderPmTeamLogo({
+                teamLogo: awayLogo,
+                teamName: match.awayName,
+                teamAbbr: match.awayAbbr,
+                fallbackIcon: SPORT_GROUPS[match.sportGroup]?.icon || "TM",
+                loading: "eager"
+              })}
               <div class="pm-team-name">${escapeHtml(match.awayName)}</div>
               <div class="pm-team-sub">Away</div>
             </div>
@@ -10473,6 +10510,21 @@ function renderFooterContent() {
   `;
 }
 
+async function rerenderActiveDataRoute() {
+  const currentPath = state.activePath || getCurrentPath();
+  const route = parseRoute(currentPath);
+  if (!needsDataRoute(route.type) || document.hidden) {
+    return;
+  }
+
+  const scrollY = window.scrollY;
+  await renderRoute();
+
+  if (getCurrentPath() === currentPath) {
+    window.scrollTo(0, scrollY);
+  }
+}
+
 async function init() {
   renderFooterContent();
   renderHeaderSearchControl();
@@ -10519,8 +10571,7 @@ async function init() {
 
   setInterval(async () => {
     await refreshData({ silent: true });
-    // Removed full renderRoute() call to prevent flicker. 
-    // refreshData now calls updateMatchUIInPlace() internally.
+    await rerenderActiveDataRoute();
   }, REFRESH_INTERVAL_MS);
 }
 
