@@ -608,8 +608,7 @@ function renderDonationProgress({ compact = false } = {}) {
   `;
 }
 
-const THIRD_PARTY_AD_EMBED_HTML = `<script async="async" data-cfasync="false" src="https://pl28913139.profitablecpmratenetwork.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js"></script>
-  <div id="container-01fac86ec9e3085bcb989e025d13aa86"></div>`;
+const THIRD_PARTY_AD_EMBED_HTML = `<div id="container-01fac86ec9e3085bcb989e025d13aa86"></div>`;
 
 let nativeAdCounter = 0;
 function renderAdSlot() {
