@@ -90,8 +90,32 @@ async function renderHomePage(container) {
   const trust = getTrustSignals();
   const topLeagues = topLeagueSummaries().slice(0, 12);
   const featuredMatches = [...state.liveMatches, ...state.upcomingMatches].slice(0, 3);
+  const sportCoverage = Object.entries(SPORT_GROUPS).map(([key, sport]) => ({
+    key,
+    label: sport.label,
+    description: sport.description,
+    live: state.liveMatches.filter((match) => match.sportGroup === key).length,
+    total: state.matches.filter((match) => match.sportGroup === key).length
+  })).filter((item) => item.total > 0 || item.live > 0).slice(0, 8);
+  const liveShowcase = state.liveMatches.slice(0, 4);
+  const upcomingShowcase = state.upcomingMatches.slice(0, 4);
+  const resultShowcase = state.finalMatches.slice(0, 4);
+  const trendingShowcase = trendingMatches(5);
   container.innerHTML = `
-    ${heroMatch ? renderHeroMatch(heroMatch) : renderHeroFallback()}
+    ${heroMatch ? renderClubHomeHero(heroMatch, trust) : renderHeroFallback()}
+    <section class="section tone-trust world-sports-overview">
+      <div class="section-head"><div><h2>World Sports Coverage</h2><p>Real-time coverage across football, cricket, basketball, tennis, baseball, hockey, racing, and more.</p></div></div>
+      <div class="world-sports-grid">
+        ${sportCoverage.map((sport) => `
+          <a class="world-sport-card" data-link href="/sport/${sport.key}">
+            <img src="${escapeHtml(getSportImagePath(sport.key))}" alt="${escapeHtml(sport.label)}">
+            <strong>${escapeHtml(sport.label)}</strong>
+            <span>${sport.live} live now</span>
+            <small>${sport.total} total matches loaded</small>
+          </a>
+        `).join("") || `<div class="message-box">Sports coverage will populate as data loads.</div>`}
+      </div>
+    </section>
     <section class="section tone-live">
       <div class="section-head"><div><h2>Live Match Overview</h2><p>${state.liveMatches.length} live, ${state.upcomingMatches.length} upcoming, ${state.finalMatches.length} finished.</p></div></div>
       <div class="trust-grid">
@@ -99,6 +123,14 @@ async function renderHomePage(container) {
         <div class="trust-card"><strong>${trust.countries}</strong><span>Active regions</span></div>
         <div class="trust-card"><strong>${trust.monthlyUsers.toLocaleString()}</strong><span>Projected monthly users</span></div>
         <div class="trust-card"><strong>${trust.indexedPages.toLocaleString()}</strong><span>Estimated pages</span></div>
+      </div>
+    </section>
+    <section class="section tone-live home-fixture-shell">
+      <div class="section-head"><div><h2>Matchday Panels</h2><p>Three-column fixture/result presentation inspired by a premium club homepage.</p></div></div>
+      <div class="fixture-rail-grid">
+        ${renderCompactMatchRail("Live Around The World", "In-progress matches across active sports.", liveShowcase, "/live")}
+        ${renderCompactMatchRail("Upcoming Kickoffs", "The next fixtures queued in the schedule.", upcomingShowcase, "/upcoming")}
+        ${renderCompactMatchRail("Latest Results", "Recent final scorelines from the feeds.", resultShowcase, "/results")}
       </div>
     </section>
     <section class="section tone-trust club-premium-grid">
@@ -122,6 +154,17 @@ async function renderHomePage(container) {
             </a>
           `).join("") || `<div class="message-box">Featured fixtures will appear here as soon as the feeds populate.</div>`}
         </div>
+      </div>
+    </section>
+    <section class="section tone-league sponsor-ribbon-shell">
+      <div class="section-head"><div><h2>Featured Competitions</h2><p>Top-flight leagues positioned like a sponsor or partner ribbon.</p></div></div>
+      <div class="sponsor-ribbon">
+        ${topLeagues.slice(0, 8).map((league) => `
+          <a class="sponsor-pill" data-link href="${routeForLeague(league.key)}">
+            <img src="${escapeHtml(getLeagueImagePath(league.key, league.sportGroup))}" alt="${escapeHtml(league.label)}">
+            <span>${escapeHtml(league.label)}</span>
+          </a>
+        `).join("")}
       </div>
     </section>
     ${renderSectionWithMatches("tone-live", "Live Now", "Real-time matches currently in progress.", "/live", state.liveMatches.slice(0, 8), "No matches are live right now.")}
@@ -149,7 +192,7 @@ async function renderHomePage(container) {
       </div>
     </section>
     ${renderSectionWithMatches("tone-upcoming", "Upcoming Fixtures", "Next kickoffs from active leagues.", "/upcoming", state.upcomingMatches.slice(0, 8), "No upcoming fixtures are available right now.")}
-    ${renderSectionWithMatches("tone-trending", "Trending Matches", "Top competitions and busiest scoreboards.", "/trending", trendingMatches(6), "Trending matches will appear here as data refreshes.")}
+    ${renderSectionWithMatches("tone-trending", "Trending Matches", "Top competitions and busiest scoreboards.", "/trending", trendingShowcase, "Trending matches will appear here as data refreshes.")}
     <section class="section tone-support">
       <div class="section-head"><div><h2>Featured Ad Slot</h2><p>Primary sponsor space on the homepage.</p></div><a class="section-view-all" data-link href="/advertise">Advertise</a></div>
       <div class="premium-ad-shell">
@@ -641,6 +684,39 @@ function renderHeroMatch(match) {
   return `<section class="hero" ${buildAutoBackgroundAttrs({ sportGroup: match.sportGroup, leagueKey: match.leagueKey, seedText: match.slug, strength: 0.32 })}><div class="hero-inner-content"><div class="hero-text"><span class="hero-eyebrow">Matchday Center</span><h1 class="hero-title">${escapeHtml(match.homeName)} vs ${escapeHtml(match.awayName)}</h1><p class="hero-lead">${escapeHtml(match.leagueLabel)} | ${escapeHtml(match.statusDetail || formatDateTime(match.date))}</p><div class="hero-actions"><a data-link href="${routeForMatch(match)}" class="btn btn-primary">Open Match Center</a><a data-link href="/live" class="btn">View Live Scores</a></div></div><div class="hero-side-card"><div class="hero-side-label">Current Score</div><div class="hero-side-score">${escapeHtml(match.homeScore)} - ${escapeHtml(match.awayScore)}</div><div class="hero-side-meta">${statusBadge(match)}</div></div></div></section>`;
 }
 
+function renderClubHomeHero(match, trust) {
+  return `
+    <section class="hero club-home-hero" ${buildAutoBackgroundAttrs({ sportGroup: match.sportGroup, leagueKey: match.leagueKey, seedText: match.slug, strength: 0.34 })}>
+      <div class="hero-inner-content club-home-hero-grid">
+        <div class="hero-text">
+          <span class="hero-eyebrow">Global Matchday Hub</span>
+          <h1 class="hero-title">Premium Live Sports For Every Major Competition</h1>
+          <p class="hero-lead">Track live scores, upcoming fixtures, results, standings, and news across world football and every supported sport from one dynamic homepage.</p>
+          <div class="hero-actions">
+            <a data-link href="/live" class="btn btn-primary">Open Live Scores</a>
+            <a data-link href="${routeForMatch(match)}" class="btn">Featured Match Center</a>
+          </div>
+          <div class="hero-stats-strip">
+            <div><strong>${state.liveMatches.length}</strong><span>Live Matches</span></div>
+            <div><strong>${trust.countries}</strong><span>Regions</span></div>
+            <div><strong>${trust.sportsCovered}</strong><span>Sports</span></div>
+          </div>
+        </div>
+        <div class="home-hero-match-card">
+          <span class="premium-kicker">Featured Match</span>
+          <div class="home-hero-match-teams">
+            <div class="hero-team-shell">${renderPmTeamLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, loading: "eager" })}<strong>${escapeHtml(match.homeName)}</strong></div>
+            <div class="home-hero-score">${escapeHtml(match.homeScore)}<span>:</span>${escapeHtml(match.awayScore)}</div>
+            <div class="hero-team-shell">${renderPmTeamLogo({ teamLogo: match.awayLogo, teamName: match.awayName, teamAbbr: match.awayAbbr, loading: "eager" })}<strong>${escapeHtml(match.awayName)}</strong></div>
+          </div>
+          <div class="home-hero-meta">${statusBadge(match)}<small>${escapeHtml(match.leagueLabel)} | ${escapeHtml(match.statusDetail || formatDateTime(match.date))}</small></div>
+          <a class="btn btn-primary" data-link href="${routeForMatch(match)}">Watch Match Center</a>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
 function renderHeroFallback() {
   return `<section class="hero" style="background-image:url('/hero-stadium.png')">${renderSeoHeroPanel({ eyebrow: "Matchday Center", title: "Live Scores Across Every Major Sport", lead: "Real match data, fast score updates, tables, fixtures, and full match pages.", actionsHtml: renderHeroShareActions() })}</section>`;
 }
@@ -651,6 +727,37 @@ function renderSectionWithMatches(toneClass, title, description, href, matches, 
 
 function renderInlineSponsorCard(title = "Feature your brand here", route = "/advertise") {
   return `<div class="inline-sponsor-card"><span class="premium-kicker">Ad Slot</span><h4>${escapeHtml(title)}</h4><p>Premium inventory for sportsbook, fantasy, streaming, merchandise, or fan engagement brands.</p><a class="btn btn-primary" data-link href="${route}">Book This Slot</a></div>`;
+}
+
+function renderCompactMatchRail(title, lead, matches, href) {
+  return `
+    <section class="fixture-rail-card">
+      <div class="fixture-rail-head">
+        <div>
+          <span class="premium-kicker">Matchday</span>
+          <h3>${escapeHtml(title)}</h3>
+          <p>${escapeHtml(lead)}</p>
+        </div>
+        <a class="section-view-all" data-link href="${href}">View All</a>
+      </div>
+      <div class="fixture-rail-list">
+        ${matches.map((match) => `
+          <a class="fixture-rail-item" data-link href="${routeForMatch(match)}">
+            <div class="fixture-rail-top">
+              <span>${escapeHtml(match.leagueLabel)}</span>
+              ${statusBadge(match)}
+            </div>
+            <div class="fixture-rail-teams">
+              <strong>${escapeHtml(match.homeName)}</strong>
+              <span>${escapeHtml(match.homeScore)} - ${escapeHtml(match.awayScore)}</span>
+              <strong>${escapeHtml(match.awayName)}</strong>
+            </div>
+            <div class="fixture-rail-meta">${escapeHtml(match.statusDetail || formatDateTime(match.date))}</div>
+          </a>
+        `).join("") || `<div class="message-box">No matches available yet.</div>`}
+      </div>
+    </section>
+  `;
 }
 
 function renderLeagueCard(item) {
