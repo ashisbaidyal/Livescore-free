@@ -7991,3 +7991,319 @@ body {
   color: #666;
   font-size: 0.8rem;
 }
+
+/* ================================================================
+   PREMIUM CLUB TEMPLATE LAYER
+   ================================================================ */
+
+.premium-kicker,
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Oswald", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #ffb347;
+}
+
+.hero-side-card,
+.club-story-card,
+.fixture-mini-card,
+.feature-panel-card,
+.support-kofi-card,
+.newsletter-premium-panel,
+.contact-premium-card,
+.search-page-panel,
+.premium-ad-shell {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+    rgba(6, 9, 14, 0.72);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.26);
+}
+
+.club-premium-layout,
+.club-premium-grid,
+.feature-panel-grid,
+.contact-premium-layout {
+  display: grid;
+  gap: 20px;
+}
+
+.club-premium-layout {
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+}
+
+.club-premium-grid {
+  gap: 16px;
+}
+
+.club-story-card,
+.contact-premium-card {
+  padding: 28px;
+  border-radius: 24px;
+}
+
+.club-story-card h3,
+.feature-panel-card h3,
+.premium-ad-copy h3,
+.support-kofi-card h3,
+.newsletter-premium-panel h3,
+.contact-premium-card h3 {
+  margin: 12px 0 10px;
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(1.4rem, 2vw, 2rem);
+  line-height: 1.08;
+  text-transform: uppercase;
+}
+
+.club-story-card p,
+.feature-panel-card p,
+.premium-ad-copy p,
+.newsletter-premium-panel p,
+.contact-premium-card p {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+
+.club-story-actions,
+.newsletter-premium-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.club-mini-fixtures {
+  display: grid;
+  gap: 14px;
+}
+
+.fixture-mini-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  transition: transform 0.22s ease, border-color 0.22s ease;
+}
+
+.fixture-mini-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 77, 77, 0.35);
+}
+
+.fixture-mini-top {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.feature-panel-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.feature-panel-card {
+  padding: 24px;
+  border-radius: 22px;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.premium-news-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.mhl-news-card-v2 {
+  display: grid;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 12, 18, 0.86);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.mhl-news-img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.mhl-news-body {
+  display: grid;
+  gap: 12px;
+  padding: 20px 20px 22px;
+}
+
+.mhl-news-title {
+  margin: 0;
+  font-family: "Oswald", sans-serif;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+.mhl-news-desc {
+  margin: 0;
+  color: var(--muted);
+}
+
+.mhl-news-link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-weight: 700;
+  color: #ffb347;
+}
+
+.premium-ad-shell,
+.support-kofi-card,
+.newsletter-premium-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 26px;
+  border-radius: 24px;
+}
+
+.premium-ad-copy {
+  display: grid;
+  gap: 10px;
+  max-width: 540px;
+}
+
+.premium-ad-shell .native-ad-banner {
+  min-width: 280px;
+  width: min(100%, 340px);
+}
+
+.inline-sponsor-card {
+  min-width: 280px;
+  width: min(100%, 340px);
+  padding: 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 77, 77, 0.12), rgba(255, 255, 255, 0.03));
+  display: grid;
+  gap: 12px;
+}
+
+.inline-sponsor-card h4 {
+  margin: 0;
+  font-family: "Oswald", sans-serif;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+}
+
+.inline-sponsor-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.search-page-panel {
+  padding: 22px;
+  border-radius: 24px;
+}
+
+.search-page-input {
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  margin-bottom: 18px;
+}
+
+.search-page-results .grid {
+  margin-top: 0;
+}
+
+.contact-premium-layout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.contact-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.hero-side-card {
+  min-width: 260px;
+  padding: 26px 24px;
+  border-radius: 26px;
+  text-align: left;
+}
+
+.hero-side-score {
+  margin-top: 10px;
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(2.1rem, 4vw, 3.5rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.hero-side-meta {
+  margin-top: 16px;
+}
+
+@media (max-width: 1100px) {
+  .club-premium-layout,
+  .feature-panel-grid,
+  .premium-news-grid,
+  .contact-premium-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-ad-shell,
+  .support-kofi-card,
+  .newsletter-premium-panel,
+  .hero-inner-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-side-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .club-story-card,
+  .contact-premium-card,
+  .feature-panel-card,
+  .premium-ad-shell,
+  .support-kofi-card,
+  .newsletter-premium-panel,
+  .search-page-panel,
+  .hero-side-card {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .club-story-actions,
+  .newsletter-premium-actions {
+    width: 100%;
+  }
+
+  .club-story-actions .btn,
+  .newsletter-premium-actions .btn,
+  .support-kofi-card .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

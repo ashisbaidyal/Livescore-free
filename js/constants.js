@@ -337,6 +337,7 @@ export const NAV_TOUCH_INFO = {
 
 export const DONATION_MONTHLY_GOAL_USD = 120;
 export const DONATION_BASE_SUPPORT_USD = 54;
+export const DONATION_KOFI_URL = "https://ko-fi.com/livescorefree";
 export const TRUST_SIGNAL_BASELINE = {
   monthlyUsers: 50000,
   countries: 120

@@ -6,7 +6,7 @@ import {
   getTrustSignals
 } from "./utils.js";
 import { state } from "./state.js";
-import { SPORT_GROUPS, LEAGUES, TOP_LEAGUE_KEYS } from "./constants.js";
+import { SPORT_GROUPS, LEAGUES, TOP_LEAGUE_KEYS, DONATION_KOFI_URL } from "./constants.js";
 import { parseRoute, getCurrentPath, routeForMatch, routeForLeague } from "./routing.js";
 import {
   renderMatchGrid,
@@ -33,6 +33,7 @@ import {
 import { renderStandingsTable } from "./ui-standings.js";
 import { refreshData } from "./api.js";
 import { toggleFavoriteKey, saveFeedbackNotes } from "./storage.js";
+import { fetchSportsNews, renderHighlightsNewsCard } from "./news.js";
 
 const MATCH_DETAILS_CACHE = new Map();
 
@@ -53,6 +54,8 @@ export async function renderRoute() {
     case "upcoming": await renderMatchListingPage(main, "Upcoming Matches", "Scheduled fixtures and pre-match pages.", "/upcoming", "tone-upcoming", state.upcomingMatches); break;
     case "history": renderHistoryPage(main); break;
     case "top-leagues": renderTopLeaguesPage(main); break;
+    case "news": await renderNewsPage(main); break;
+    case "search": renderSearchPage(main); break;
     case "league": await renderLeaguePage(main, route); break;
     case "match": await renderMatchPage(main, route); break;
     case "sport": renderSportPage(main, route); break;
@@ -63,8 +66,8 @@ export async function renderRoute() {
     case "privacy-policy": renderSimpleArticle(main, "Privacy Policy", "How browser storage and basic site data are handled.", "<p>Favorites, history, language, theme, and feedback are stored locally in the browser.</p>"); break;
     case "terms-of-service": renderSimpleArticle(main, "Terms of Service", "Terms for using the LiveScoreFree website and score feeds.", "<p>Replace this placeholder with your final legal text.</p>"); break;
     case "dmca-policy": renderSimpleArticle(main, "DMCA Policy", "How takedown requests are handled.", "<p>Replace this placeholder with your DMCA process and contact details.</p>"); break;
-    case "contact": renderSimpleArticle(main, "Contact", "Questions, support, and ad inquiries.", "<p>Email <a href=\"mailto:support@livescorefree.online\">support@livescorefree.online</a>.</p>"); break;
-    case "about": renderSimpleArticle(main, "About LiveScoreFree", "A live-score website built around real sports data feeds.", "<p>LiveScoreFree provides home, league, sport, and match pages powered by live APIs and local caching.</p>"); break;
+    case "contact": renderContactPage(main); break;
+    case "about": renderAboutPage(main); break;
     default: renderNotFoundPage(main); break;
   }
 
@@ -82,6 +85,8 @@ async function renderHomePage(container) {
   const heroMatch = state.liveMatches[0] || state.upcomingMatches[0] || trendingMatches(1)[0];
   const trust = getTrustSignals();
   const topLeagues = topLeagueSummaries().slice(0, 12);
+  const featuredMatches = [...state.liveMatches, ...state.upcomingMatches].slice(0, 3);
+  const spotlightNews = (await fetchSportsNews()).slice(0, 3);
 
   container.innerHTML = `
     ${heroMatch ? renderHeroMatch(heroMatch) : renderHeroFallback()}
@@ -94,13 +99,74 @@ async function renderHomePage(container) {
         <div class="trust-card"><strong>${trust.indexedPages.toLocaleString()}</strong><span>Estimated pages</span></div>
       </div>
     </section>
+    <section class="section tone-trust club-premium-grid">
+      <div class="section-head"><div><h2>Club Matchday Experience</h2><p>A premium sports front-end inspired by a soccer-club layout, powered by your live data feeds.</p></div></div>
+      <div class="club-premium-layout">
+        <div class="club-story-card">
+          <span class="premium-kicker">Inside The Club</span>
+          <h3>Built Around Matchdays, Fixtures, Results, News, Sponsors, and Support</h3>
+          <p>The homepage now acts like a real sports portal instead of just a scoreboard. It highlights live action, upcoming fixtures, editorial content, sponsor space, and supporter funding in one flow.</p>
+          <div class="club-story-actions">
+            <a class="btn btn-primary" data-link href="/news">Open News Center</a>
+            <a class="btn" data-link href="/about">About The Project</a>
+          </div>
+        </div>
+        <div class="club-mini-fixtures">
+          ${featuredMatches.map((match) => `
+            <a class="fixture-mini-card" data-link href="${routeForMatch(match)}">
+              <span class="fixture-mini-top">${escapeHtml(match.leagueLabel)}</span>
+              <strong>${escapeHtml(match.homeName)} vs ${escapeHtml(match.awayName)}</strong>
+              <span>${escapeHtml(match.statusDetail || formatDateTime(match.date))}</span>
+            </a>
+          `).join("") || `<div class="message-box">Featured fixtures will appear here as soon as the feeds populate.</div>`}
+        </div>
+      </div>
+    </section>
     ${renderSectionWithMatches("tone-live", "Live Now", "Real-time matches currently in progress.", "/live", state.liveMatches.slice(0, 8), "No matches are live right now.")}
+    <section class="section tone-league">
+      <div class="section-head"><div><h2>Featured Matchday Panels</h2><p>Three premium cards for match discovery and landing page depth.</p></div></div>
+      <div class="feature-panel-grid">
+        <article class="feature-panel-card">
+          <span class="premium-kicker">Score Center</span>
+          <h3>Every Live Score in One Place</h3>
+          <p>Open the live center for current games across football, cricket, basketball, tennis, hockey, and more.</p>
+          <a class="btn btn-primary" data-link href="/live">Watch The Live Board</a>
+        </article>
+        <article class="feature-panel-card">
+          <span class="premium-kicker">Club Fixtures</span>
+          <h3>Upcoming Matches With Standings Context</h3>
+          <p>Pre-match cards link into league hubs, standings tables, and detailed match center pages.</p>
+          <a class="btn" data-link href="/upcoming">See Upcoming</a>
+        </article>
+        <article class="feature-panel-card">
+          <span class="premium-kicker">Final Whistle</span>
+          <h3>Results Archive and Match History</h3>
+          <p>Track completed matches, revisit scorelines, and keep local history for quick return journeys.</p>
+          <a class="btn" data-link href="/results">See Results</a>
+        </article>
+      </div>
+    </section>
     ${renderSectionWithMatches("tone-upcoming", "Upcoming Fixtures", "Next kickoffs from active leagues.", "/upcoming", state.upcomingMatches.slice(0, 8), "No upcoming fixtures are available right now.")}
     ${renderSectionWithMatches("tone-trending", "Trending Matches", "Top competitions and busiest scoreboards.", "/trending", trendingMatches(6), "Trending matches will appear here as data refreshes.")}
+    <section class="section tone-support">
+      <div class="section-head"><div><h2>Featured Ad Slot</h2><p>Primary sponsor space on the homepage.</p></div><a class="section-view-all" data-link href="/advertise">Advertise</a></div>
+      <div class="premium-ad-shell">
+        <div class="premium-ad-copy">
+          <span class="premium-kicker">Sponsor Zone</span>
+          <h3>Premium placement for betting, streaming, fantasy, and fan brands</h3>
+          <p>Use this block for your most valuable homepage sponsor or ad creative. The global network ad container stays active below the main shell.</p>
+        </div>
+        ${renderInlineSponsorCard()}
+      </div>
+    </section>
     ${renderSectionWithMatches("tone-results", "Latest Results", "Recently completed matches.", "/results", state.finalMatches.slice(0, 8), "No final results have landed yet.")}
     <section class="section tone-league">
       <div class="section-head"><div><h2>Top Leagues</h2><p>Dedicated league hubs with fixtures and standings.</p></div><a class="section-view-all" data-link href="/top-leagues">Browse Leagues</a></div>
       <div class="league-grid">${topLeagues.map(renderLeagueCard).join("")}</div>
+    </section>
+    <section class="section tone-trust">
+      <div class="section-head"><div><h2>Latest Sports News</h2><p>Editorial content to make the site feel like a full club portal, not only a scoreboard.</p></div><a class="section-view-all" data-link href="/news">News Center</a></div>
+      <div class="premium-news-grid">${spotlightNews.map(renderHighlightsNewsCard).join("") || `<div class="message-box">News is unavailable right now.</div>`}</div>
     </section>
     <section class="section tone-sport">
       <div class="section-head"><div><h2>Sports Hubs</h2><p>Jump into a single sport and view all active competitions.</p></div></div>
@@ -109,6 +175,28 @@ async function renderHomePage(container) {
     <section class="section tone-support">
       <div class="section-head"><div><h2>Support LiveScoreFree</h2><p>Keep the real-time data view online and expanding.</p></div><a class="section-view-all" data-link href="/donate">Support</a></div>
       ${renderDonationProgress()}
+      <div class="support-kofi-card">
+        <div>
+          <span class="premium-kicker">Ko-fi Support</span>
+          <h3>Back the project directly</h3>
+          <p>Use Ko-fi to support hosting, feed maintenance, and future premium front-end work.</p>
+        </div>
+        <a class="btn btn-primary" href="${escapeHtml(DONATION_KOFI_URL)}" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a>
+      </div>
+    </section>
+    <section class="section tone-legal">
+      <div class="section-head"><div><h2>Newsletter & Contact</h2><p>Club-style closing section inspired by the template structure.</p></div></div>
+      <div class="newsletter-premium-panel">
+        <div>
+          <span class="premium-kicker">Stay Connected</span>
+          <h3>Get matchday updates and sponsor opportunities</h3>
+          <p>Use the contact page for support and partnerships, and use the news page for ongoing editorial coverage.</p>
+        </div>
+        <div class="newsletter-premium-actions">
+          <a class="btn btn-primary" data-link href="/contact">Contact Us</a>
+          <a class="btn" data-link href="/advertise">Sponsor The Site</a>
+        </div>
+      </div>
     </section>
     <div id="home-standings-card"></div>
   `;
@@ -266,7 +354,149 @@ async function renderMatchPage(container, route) {
 function renderDonatePage(container) {
   setSeo({ title: "Support LiveScoreFree", description: "Help fund server costs and real-time sports coverage.", path: "/donate" });
   const trust = getTrustSignals();
-  container.innerHTML = `<section class="section tone-support"><div class="section-head"><div><h1>Support LiveScoreFree</h1><p>Community support keeps the score feed, pages, and APIs online.</p></div></div>${renderDonationProgress()}<div class="trust-grid"><div class="trust-card"><strong>${trust.monthlyUsers.toLocaleString()}</strong><span>Monthly users reached</span></div><div class="trust-card"><strong>${trust.indexedPages.toLocaleString()}</strong><span>Pages supported</span></div><div class="trust-card"><strong>${state.matches.length}</strong><span>Match cards in memory</span></div><div class="trust-card"><strong>${state.favoriteMatches.length}</strong><span>Saved favorites</span></div></div></section>`;
+  container.innerHTML = `
+    <section class="section tone-support">
+      <div class="section-head"><div><h1>Support LiveScoreFree</h1><p>Community support keeps the score feed, pages, and APIs online.</p></div></div>
+      ${renderDonationProgress()}
+      <div class="trust-grid">
+        <div class="trust-card"><strong>${trust.monthlyUsers.toLocaleString()}</strong><span>Monthly users reached</span></div>
+        <div class="trust-card"><strong>${trust.indexedPages.toLocaleString()}</strong><span>Pages supported</span></div>
+        <div class="trust-card"><strong>${state.matches.length}</strong><span>Match cards in memory</span></div>
+        <div class="trust-card"><strong>${state.favoriteMatches.length}</strong><span>Saved favorites</span></div>
+      </div>
+      <div class="support-kofi-card">
+        <div>
+          <span class="premium-kicker">Ko-fi Funding</span>
+          <h3>Support hosting, API maintenance, and premium design work</h3>
+          <p>This page now has a direct Ko-fi CTA so the donation flow feels like a real supporter page instead of placeholder copy.</p>
+        </div>
+        <a class="btn btn-primary" href="${escapeHtml(DONATION_KOFI_URL)}" target="_blank" rel="noopener noreferrer">Open Ko-fi</a>
+      </div>
+      <div class="premium-ad-shell">
+        <div class="premium-ad-copy">
+          <span class="premium-kicker">Sponsor Support</span>
+          <h3>Brand placement can help fund the site as well</h3>
+          <p>Use this section for a premium sponsor unit or keep it tied to your current ad network inventory.</p>
+        </div>
+        ${renderInlineSponsorCard("Sponsor this supporter page", "/advertise")}
+      </div>
+    </section>
+  `;
+}
+
+async function renderNewsPage(container) {
+  setSeo({ title: "Sports News | LiveScoreFree", description: "Editorial sports coverage and premium news cards.", path: "/news" });
+  const articles = await fetchSportsNews();
+  container.innerHTML = `
+    <section class="hero" ${buildAutoBackgroundAttrs({ sportGroup: "football", seedText: "news", strength: 0.22 })}>
+      <div class="hero-inner-content">
+        <div class="hero-text">
+          <span class="hero-eyebrow">Club Newsroom</span>
+          <h1 class="hero-title">Latest Sports News</h1>
+          <p class="hero-lead">A premium editorial layer on top of the live score platform.</p>
+        </div>
+        <div class="hero-side-card">
+          <div class="hero-side-label">Stories</div>
+          <div class="hero-side-score">${articles.length}</div>
+          <div class="hero-side-meta">Pulled from the current sports news feed</div>
+        </div>
+      </div>
+    </section>
+    <section class="section tone-trust">
+      <div class="section-head"><div><h2>Latest News</h2><p>Editorial cards to give the website a full portal feel.</p></div></div>
+      <div class="premium-news-grid">${articles.slice(0, 12).map(renderHighlightsNewsCard).join("") || `<div class="message-box">News is unavailable right now.</div>`}</div>
+    </section>
+  `;
+}
+
+function renderSearchPage(container) {
+  setSeo({ title: "Search Matches | LiveScoreFree", description: "Find live, upcoming, and result match pages fast.", path: "/search" });
+  const popular = trendingMatches(8);
+  container.innerHTML = `
+    <section class="section tone-sport">
+      <div class="section-head"><div><h1>Search Matches</h1><p>Use quick match shortcuts or the browser search below.</p></div></div>
+      <div class="search-page-panel">
+        <input id="search-page-input" class="search-page-input" type="search" placeholder="Search teams, leagues, or matchups">
+        <div id="search-page-results" class="search-page-results"></div>
+      </div>
+    </section>
+    <section class="section tone-trending">
+      <div class="section-head"><div><h2>Popular Searches</h2><p>Quick entry points into active match centers.</p></div></div>
+      ${renderMatchGrid(popular, "No trending matches are available right now.")}
+    </section>
+  `;
+
+  const input = qs("#search-page-input", container);
+  const results = qs("#search-page-results", container);
+  if (input && results) {
+    const renderResults = (value) => {
+      const query = String(value || "").trim().toLowerCase();
+      if (!query) {
+        results.innerHTML = `<div class="message-box">Start typing a team name, league, or matchup.</div>`;
+        return;
+      }
+      const matches = state.matches.filter((match) => {
+        return match.homeName.toLowerCase().includes(query) ||
+          match.awayName.toLowerCase().includes(query) ||
+          match.leagueLabel.toLowerCase().includes(query);
+      }).slice(0, 20);
+      results.innerHTML = matches.length ? renderMatchGrid(matches, "") : `<div class="message-box">No matches matched "${escapeHtml(query)}".</div>`;
+    };
+    renderResults("");
+    input.addEventListener("input", () => renderResults(input.value));
+  }
+}
+
+function renderContactPage(container) {
+  setSeo({ title: "Contact LiveScoreFree", description: "Support, advertising, and matchday partnership contact page.", path: "/contact" });
+  container.innerHTML = `
+    <section class="section tone-legal">
+      <div class="section-head"><div><h1>Contact Us</h1><p>Support, partnerships, sponsor inquiries, and general feedback.</p></div></div>
+      <div class="contact-premium-layout">
+        <div class="contact-premium-card">
+          <span class="premium-kicker">Customer Support</span>
+          <h3>Reach the LiveScoreFree team</h3>
+          <p>Email: <a href="mailto:support@livescorefree.online">support@livescorefree.online</a></p>
+          <p>Use the feedback page if you want to save notes locally during development or QA.</p>
+          <div class="club-story-actions">
+            <a class="btn btn-primary" data-link href="/feedback">Open Feedback</a>
+            <a class="btn" data-link href="/advertise">Advertise</a>
+          </div>
+        </div>
+        <div class="contact-premium-card">
+          <span class="premium-kicker">How To Reach Us</span>
+          <h3>Business and sponsorship</h3>
+          <ul class="contact-list">
+            <li>Live score partnerships</li>
+            <li>Sponsor and ad slot inquiries</li>
+            <li>Brand collaborations and traffic deals</li>
+            <li>Bug reports and feed corrections</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderAboutPage(container) {
+  setSeo({ title: "About LiveScoreFree", description: "About the premium live-score platform and its club-style design direction.", path: "/about" });
+  container.innerHTML = `
+    <section class="section tone-trust">
+      <div class="section-head"><div><h1>About LiveScoreFree</h1><p>A live-score website rebuilt to feel closer to a premium soccer-club experience.</p></div></div>
+      <div class="club-premium-layout">
+        <div class="club-story-card">
+          <span class="premium-kicker">The Platform</span>
+          <h3>Real data, premium presentation</h3>
+          <p>LiveScoreFree aggregates match data, league standings, and sports news into a faster fan-facing product with dedicated sport hubs, league pages, match centers, and sponsor-ready content blocks.</p>
+        </div>
+        <div class="club-story-card">
+          <span class="premium-kicker">This Update</span>
+          <h3>Template-style sections across the full repo</h3>
+          <p>The site now includes a fuller homepage story, ad modules, editorial/news sections, search, sponsor surfaces, and a Ko-fi support page in addition to live, upcoming, and results data.</p>
+        </div>
+      </div>
+    </section>
+  `;
 }
 
 function renderFeedbackPage(container) {
@@ -386,6 +616,10 @@ function renderHeroFallback() {
 
 function renderSectionWithMatches(toneClass, title, description, href, matches, emptyText) {
   return `<section class="section ${toneClass}"><div class="section-head"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></div>${href ? `<a class="section-view-all" data-link href="${href}">View All</a>` : ""}</div>${renderMatchGrid(matches, emptyText)}</section>`;
+}
+
+function renderInlineSponsorCard(title = "Feature your brand here", route = "/advertise") {
+  return `<div class="inline-sponsor-card"><span class="premium-kicker">Ad Slot</span><h4>${escapeHtml(title)}</h4><p>Premium inventory for sportsbook, fantasy, streaming, merchandise, or fan engagement brands.</p><a class="btn btn-primary" data-link href="${route}">Book This Slot</a></div>`;
 }
 
 function renderLeagueCard(item) {

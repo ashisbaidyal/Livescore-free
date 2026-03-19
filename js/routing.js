@@ -27,6 +27,8 @@ export function parseRoute(path) {
   if (path === "/top-leagues") return { type: "top-leagues" };
   if (path === "/donate") return { type: "donate" };
   if (path === "/feedback") return { type: "feedback" };
+  if (path === "/news") return { type: "news" };
+  if (path === "/search") return { type: "search" };
   if (path === "/advertise") return { type: "advertise" };
   if (path === "/privacy-policy") return { type: "privacy-policy" };
   if (path === "/terms-of-service") return { type: "terms-of-service" };
