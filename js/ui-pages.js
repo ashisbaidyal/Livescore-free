@@ -94,11 +94,11 @@ async function renderHomePage(container) {
   const topLeagues = topLeagueSummaries();
 
   container.innerHTML = `
-    <section class="hero auto-bg-surface" ${buildAutoBackgroundAttrs({ seedText: "home", strength: 0.1 })}>
+    <section class="hero" style="background-image: url('/hero-stadium.png');">
       ${renderSeoHeroPanel({
-        eyebrow: "Live Score Excellence",
-        title: "LiveScoreFree Community Scoreboard",
-        lead: "Fast scores, deep stats, and upcoming fixtures for every fan.",
+        eyebrow: "Exclusive Live Coverage",
+        title: "The Ultimate Live Score Experience",
+        lead: "Fast, accurate, and premium match updates across all major soccer leagues and sports.",
         actionsHtml: renderHeroShareActions()
       })}
     </section>

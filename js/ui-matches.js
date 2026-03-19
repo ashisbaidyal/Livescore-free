@@ -88,23 +88,39 @@ export function buildAutoBackgroundAttrs({ sportGroup = "", leagueKey = "", seed
 export function renderMatchCard(match) {
   const toneClass = toneClassForMatchStatus(match.status);
   const route = routeForMatch(match);
+  
   return `
-    <article class="match-card-hero-v2 auto-bg-surface ${toneClass}" data-match-key="${match.sportGroup}:${match.slug}" ${buildAutoBackgroundAttrs({ sportGroup: match.sportGroup, leagueKey: match.leagueKey })}>
-      <a class="mcp-link" data-link href="${route}">
-        <div class="mcp-header">
-          <span class="mcp-league">${escapeHtml(match.leagueLabel)}</span>
-          ${statusBadge(match)}
+    <article class="match-ticket ${toneClass}" data-match-key="${match.sportGroup}:${match.slug}">
+      <a class="ticket-link" data-link href="${route}" style="display: block; text-decoration: none; color: inherit;">
+        <div class="ticket-body" style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+          <div class="ticket-team" style="flex: 1; text-align: center;">
+            ${renderPmTeamLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, fallbackIcon: "H" })}
+            <div class="ticket-team-name" style="font-family: var(--soccer-font-head); font-weight: 600; text-transform: uppercase; margin-top: 8px; font-size: 0.9rem;">${escapeHtml(match.homeName)}</div>
+          </div>
+          
+          <div class="ticket-center" style="text-align: center; min-width: 100px;">
+            <div class="ticket-status" style="margin-bottom: 8px;">
+               ${statusBadge(match)}
+            </div>
+            <div class="ticket-score" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span class="ticket-score-val">${escapeHtml(match.homeScore)}</span>
+              <span class="ticket-vs" style="font-family: var(--soccer-font-head); color: var(--soccer-muted); font-weight: 700;">:</span>
+              <span class="ticket-score-val">${escapeHtml(match.awayScore)}</span>
+            </div>
+            <div class="ticket-league" style="font-size: 0.75rem; text-transform: uppercase; color: var(--soccer-muted); margin-top: 4px; font-weight: 500;">
+              ${escapeHtml(match.leagueLabel)}
+            </div>
+          </div>
+          
+          <div class="ticket-team" style="flex: 1; text-align: center;">
+            ${renderPmTeamLogo({ teamLogo: match.awayLogo, teamName: match.awayName, teamAbbr: match.awayAbbr, fallbackIcon: "A" })}
+            <div class="ticket-team-name" style="font-family: var(--soccer-font-head); font-weight: 600; text-transform: uppercase; margin-top: 8px; font-size: 0.9rem;">${escapeHtml(match.awayName)}</div>
+          </div>
         </div>
-        <div class="mcp-teams">
-          <div class="mcp-team">
-             ${renderPmTeamLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, fallbackIcon: "H" })}
-             <span>${escapeHtml(match.homeName)}</span>
-          </div>
-          <div class="mcp-score">${escapeHtml(match.homeScore)} - ${escapeHtml(match.awayScore)}</div>
-          <div class="mcp-team">
-             ${renderPmTeamLogo({ teamLogo: match.awayLogo, teamName: match.awayName, teamAbbr: match.awayAbbr, fallbackIcon: "A" })}
-             <span>${escapeHtml(match.awayName)}</span>
-          </div>
+        
+        <div class="ticket-footer" style="background: var(--soccer-gray); padding: 8px 16px; display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--soccer-muted); border-top: 1px solid rgba(0,0,0,0.05);">
+          <span> <svg style="width:12px; height:12px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${escapeHtml(match.venue || "Stadium")}</span>
+          <span>${formatDate(match.startTime)} | ${formatTime(match.startTime)}</span>
         </div>
       </a>
     </article>

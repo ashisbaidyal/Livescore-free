@@ -235,11 +235,13 @@ export function renderHeroShareActions() {
 
 export function renderSeoHeroPanel(config) {
   return `
-    <div class="hero-content">
-      <span class="hero-eyebrow">${escapeHtml(config.eyebrow)}</span>
-      <h1 class="hero-title">${escapeHtml(config.title)}</h1>
-      <p class="hero-lead">${escapeHtml(config.lead)}</p>
-      <div class="hero-actions">${config.actionsHtml}</div>
+    <div class="hero-inner-content">
+      <div class="hero-text">
+        <span class="hero-eyebrow" style="color: var(--soccer-red); font-family: var(--soccer-font-head); text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 12px; display: block;">${escapeHtml(config.eyebrow)}</span>
+        <h1 class="hero-title">${escapeHtml(config.title)}</h1>
+        <p class="hero-lead">${escapeHtml(config.lead)}</p>
+        <div class="hero-actions">${config.actionsHtml}</div>
+      </div>
     </div>
   `;
 }
@@ -276,7 +278,7 @@ export function selectMatchInsightPairs(match, statPairs) {
   return result;
 }
 
-export function renderMatchInsightPanel({ match, statPairs, infoItems, favoriteKey, isFavorite, reminderKey, hasReminder }) {
+export function renderMatchInsightPanel({ match, statPairs, infoItems, favoriteKey, isFavorite }) {
   const sportLabel = match.sportLabel || SPORT_GROUPS[match.sportGroup]?.label || "Match";
   const insightPairs = selectMatchInsightPairs(match, statPairs);
   const homeLabel = match.homeAbbr || compactTeamLabel(match.homeName, match.homeAbbr);
@@ -284,11 +286,23 @@ export function renderMatchInsightPanel({ match, statPairs, infoItems, favoriteK
   
   const tableHtml = insightPairs.length 
     ? `
-      <div class="match-insight-table-wrap">
-        <table class="match-insight-table">
-          <thead><tr><th>${escapeHtml(homeLabel)}</th><th>Metric</th><th>${escapeHtml(awayLabel)}</th></tr></thead>
+      <div class="insight-table-wrap">
+        <table class="insight-table">
+          <thead>
+            <tr>
+              <th>${escapeHtml(homeLabel)}</th>
+              <th class="metric-head">Metric</th>
+              <th>${escapeHtml(awayLabel)}</th>
+            </tr>
+          </thead>
           <tbody>
-            ${insightPairs.map(p => `<tr><td>${escapeHtml(p.homeDisplay)}</td><th>${escapeHtml(p.label)}</th><td>${escapeHtml(p.awayDisplay)}</td></tr>`).join("")}
+            ${insightPairs.map(p => `
+              <tr>
+                <td class="val-home">${escapeHtml(p.homeDisplay)}</td>
+                <td class="val-metric">${escapeHtml(p.label)}</td>
+                <td class="val-away">${escapeHtml(p.awayDisplay)}</td>
+              </tr>
+            `).join("")}
           </tbody>
         </table>
       </div>
@@ -296,14 +310,18 @@ export function renderMatchInsightPanel({ match, statPairs, infoItems, favoriteK
     : `<div class="message-box">Live match data pending...</div>`;
 
   return `
-    <aside class="match-insight-panel">
-      <div class="match-insight-head">
-        <strong>${escapeHtml(sportLabel)}</strong>
+    <aside class="match-insight">
+      <div class="insight-head">
+        <span class="insight-badge">${escapeHtml(sportLabel)}</span>
         ${statusBadge(match)}
       </div>
-      ${tableHtml}
-      <div class="match-insight-actions">
-        <button class="btn ${isFavorite ? "active" : ""}" data-favorite-match="${escapeHtml(favoriteKey)}">${isFavorite ? "Saved" : "Favorite"}</button>
+      <div class="insight-body">
+        ${tableHtml}
+      </div>
+      <div class="insight-foot">
+        <button class="btn insight-btn ${isFavorite ? "active" : ""}" data-favorite-match="${escapeHtml(favoriteKey)}">
+          ${isFavorite ? "Saved to Favorites" : "Add to Favorites"}
+        </button>
       </div>
     </aside>
   `;
