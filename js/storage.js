@@ -4,9 +4,9 @@ import {
   FAVORITES_KEY, 
   NOTIFICATION_PREFS_KEY, 
   NOTIFICATION_LOG_KEY 
-} from "./constants.js?v=20260319c";
-import { state } from "./state.js?v=20260319c";
-import { slugify } from "./utils.js?v=20260319c";
+} from "./constants.js";
+import { state } from "./state.js";
+import { slugify } from "./utils.js";
 
 export function upsertHistory(match) {
   const key = `${match.leagueKey}:${match.id}`;

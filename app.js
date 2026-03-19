@@ -1,18 +1,19 @@
+
 import { 
   state, 
-} from "./js/state.js?v=20260319c";
+} from "./js/state.js";
 import { 
   qs, 
   qsa, 
   escapeHtml 
-} from "./js/utils.js?v=20260319c";
+} from "./js/utils.js";
 import { 
   REFRESH_INTERVAL_MS,
   THEME_KEY
-} from "./js/constants.js?v=20260319c";
+} from "./js/constants.js";
 import {
   refreshData
-} from "./js/api.js?v=20260319c";
+} from "./js/api.js";
 import {
   loadHistory,
   loadFeedbackNotes,
@@ -20,16 +21,16 @@ import {
   loadNotificationPrefs,
   loadLanguagePreference,
   loadBackgroundPreferences
-} from "./js/storage.js?v=20260319c";
+} from "./js/storage.js";
 import {
   navigate,
   handleRouteFromQueryFallback,
   migrateLegacyHashPath,
   parseRoute
-} from "./js/routing.js?v=20260319c";
+} from "./js/routing.js";
 import {
   renderRoute
-} from "./js/ui-pages.js?v=20260319c";
+} from "./js/ui-pages.js";
 import {
   applyTheme,
   detectThemeByTime,
@@ -39,7 +40,7 @@ import {
   renderFooterContent,
   maybeShowSupportPopup,
   initScrollAnimations
-} from "./js/ui-core.js?v=20260319c";
+} from "./js/ui-core.js";
 
 async function rerenderActiveDataRoute() {
   if (document.hidden) return;
@@ -98,7 +99,6 @@ async function init() {
     migrateLegacyHashPath();
 
     // Initial Render
-    console.log("Triggering initial renderRoute...");
     await renderRoute();
 
     // Data bootstrap
@@ -117,7 +117,6 @@ async function init() {
     }, 60000);
 
     state.loading = false;
-    console.log("App initialized successfully.");
   } catch (error) {
     console.error("App init failed:", error);
     const main = qs("#main");

@@ -2,24 +2,22 @@ import {
   qs, 
   qsa, 
   escapeHtml, 
-  formatTime 
-} from "./utils.js?v=20260319c";
+  formatTime,
+  formatDate
+} from "./utils.js";
 import { 
   SPORT_GROUPS, 
   SPORT_IMAGE_MAP, 
   TOP_LEAGUE_KEYS,
   LEAGUE_IMAGE_MAP,
   LEAGUES
-} from "./constants.js?v=20260319c";
-import { state } from "./state.js?v=20260319c";
+} from "./constants.js";
+import { state } from "./state.js";
 import { 
   routeForMatch, 
   routeForTeam,
   routeForPlayer
-} from "./routing.js?v=20260319c";
-import { 
-  getStatusText 
-} from "./api.js?v=20260319c";
+} from "./routing.js";
 
 export function toneClassForMatchStatus(status = "") {
   if (status === "live") return "tone-live";
@@ -120,7 +118,7 @@ export function renderMatchCard(match) {
         
         <div class="ticket-footer" style="background: var(--soccer-gray); padding: 8px 16px; display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--soccer-muted); border-top: 1px solid rgba(0,0,0,0.05);">
           <span> <svg style="width:12px; height:12px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${escapeHtml(match.venue || "Stadium")}</span>
-          <span>${formatDate(match.startTime)} | ${formatTime(match.startTime)}</span>
+          <span>${formatDate(match.date)} | ${formatTime(match.date)}</span>
         </div>
       </a>
     </article>

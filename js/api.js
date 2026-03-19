@@ -12,19 +12,19 @@ import {
   LEAGUE_REGIONS, 
   SPORTSDB_SPORTS, 
   PROXIED_DATA_HOSTS 
-} from "./constants.js?v=20260319c";
-import { state } from "./state.js?v=20260319c";
+} from "./constants.js";
+import { state } from "./state.js";
 import { 
   slugify, 
   formatDateTime 
-} from "./utils.js?v=20260319c";
+} from "./utils.js";
 import { 
   upsertHistory, 
   saveHistory 
-} from "./storage.js?v=20260319c";
+} from "./storage.js";
 import { 
   routeForMatch 
-} from "./routing.js?v=20260319c";
+} from "./routing.js";
 
 const requestCache = new Map();
 
@@ -88,13 +88,15 @@ export function buildBrowserDataUrl(url) {
   const raw = String(url || "");
   if (!raw) return raw;
 
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
   try {
     const parsed = new URL(raw, window.location.origin);
     if (parsed.origin === window.location.origin) {
       return `${parsed.pathname}${parsed.search}${parsed.hash}`;
     }
 
-    if (/^https?:$/i.test(parsed.protocol) && PROXIED_DATA_HOSTS.has(parsed.hostname)) {
+    if (!isLocal && /^https?:$/i.test(parsed.protocol) && PROXIED_DATA_HOSTS.has(parsed.hostname)) {
       return `/api/proxy?url=${encodeURIComponent(parsed.toString())}`;
     }
   } catch (_error) {

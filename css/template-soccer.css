@@ -171,3 +171,200 @@ body {
 .app-dock a.active {
   color: var(--soccer-red) !important;
 }
+
+/* Standings Table */
+.standings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #111;
+    border: 1px solid #333;
+    color: #fff;
+    font-family: var(--soccer-font-body);
+}
+
+.standings-table th {
+    background: #000;
+    color: var(--soccer-red);
+    text-transform: uppercase;
+    font-family: var(--soccer-font-head);
+    padding: 15px;
+    text-align: left;
+    border-bottom: 2px solid var(--soccer-red);
+}
+
+.standings-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #333;
+}
+
+.standings-table tr:hover {
+    background: #222;
+}
+
+.team-badge-sm {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.team-cell {
+    display: flex;
+    align-items: center;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* Hero Countdown */
+.hero-countdown-wrapper {
+    text-align: center;
+    padding: 40px 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid var(--soccer-red);
+    border-radius: 8px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-match-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.hmp-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hmp-team img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.hmp-team span {
+    font-family: var(--soccer-font-head);
+    font-size: 1.5rem;
+    text-transform: uppercase;
+}
+
+.hmp-vs {
+    font-family: var(--soccer-font-head);
+    font-size: 2rem;
+    color: var(--soccer-red);
+}
+
+.hero-countdown {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.timer-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.timer-val {
+    font-family: var(--soccer-font-head);
+    font-size: 3rem;
+    color: #fff;
+    line-height: 1;
+}
+
+.timer-label {
+    font-family: var(--soccer-font-body);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--soccer-red);
+    margin-top: 5px;
+}
+
+.hero-match-meta {
+    font-family: var(--soccer-font-body);
+    font-size: 1rem;
+    color: #ccc;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Video Highlights */
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.video-card {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.video-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--soccer-red);
+}
+
+.video-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.play-btn {
+    width: 50px;
+    height: 50px;
+    background: var(--soccer-red);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+    transition: transform 0.2s ease;
+}
+
+.video-card:hover .play-btn {
+    transform: scale(1.1);
+}
+
+.video-info {
+    padding: 15px;
+}
+
+.video-info strong {
+    display: block;
+    font-family: var(--soccer-font-head);
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.video-info span {
+    font-family: var(--soccer-font-body);
+    font-size: 0.8rem;
+    color: #999;
+}

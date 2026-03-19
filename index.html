@@ -189,18 +189,7 @@
 
   </header>
 
-  <div class="main-hero-wrap">
-    <div class="header-hero">
-      <h1 class="header-hero-title">LiveScoreFree: Fast, trusted live scores and match updates.</h1>
-      <p class="header-hero-subtitle">Real-time scores, fixtures, lineups, stats, commentary, and results across football, cricket, basketball, tennis, and more.</p>
-    </div>
-
-    <div class="ticker auto-bg-surface" id="ticker" aria-label="Live score ticker">
-      <div class="ticker-stream">
-        <div class="ticker-track" id="ticker-track"></div>
-      </div>
-    </div>
-  </div>
+  <div id="ticker-anchor"></div>
 
   <main class="main" id="main" aria-live="polite"></main>
 
@@ -286,7 +275,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script src="/api-config.js?v=20260319c" defer></script>
+  <script src="/api-config.js" defer></script>
   <script>
     function hideLoader() { document.documentElement.className = document.documentElement.className.replace('loading',''); }
     window.addEventListener('load', hideLoader);
@@ -305,6 +294,6 @@
   </script>
   <script async src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
-  <script src="/app.js?v=20260319c" type="module"></script>
+  <script src="/app.js" type="module"></script>
 </body>
 </html>

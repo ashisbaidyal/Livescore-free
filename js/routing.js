@@ -1,13 +1,13 @@
 import { 
   state 
-} from "./state.js?v=20260319c";
+} from "./state.js";
 import { 
   slugify 
-} from "./utils.js?v=20260319c";
+} from "./utils.js";
 import { 
   SPORT_GROUPS, 
   LEAGUES 
-} from "./constants.js?v=20260319c";
+} from "./constants.js";
 
 export function getCurrentPath() {
   if (window.location.protocol === "file:") {

@@ -1,3 +1,4 @@
+
 import { 
   SUPPORTED_LANGUAGES, 
   TRUST_SIGNAL_BASELINE, 
@@ -7,9 +8,9 @@ import {
   LEAGUES, 
   LEAGUE_REGIONS,
   SEO_BASE
-} from "./constants.js?v=20260319c";
+} from "./constants.js";
 
-import { state } from "./state.js?v=20260319c";
+import { state } from "./state.js";
 
 export const qs = (selector, parent = document) => parent.querySelector(selector);
 export const qsa = (selector, parent = document) => Array.from(parent.querySelectorAll(selector));
