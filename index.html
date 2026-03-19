@@ -202,27 +202,29 @@
 
   <footer class="site-footer" id="main-footer">
     <div class="footer-grid">
-      <div class="footer-brand">
-        <h3>LiveScoreFree</h3>
-        <p>Premium live sports coverage with real-time scores, fixtures, results, news, sponsor space, and club-style match centers.</p>
-      </div>
-      <div>
+      <section class="footer-column footer-brand" aria-label="LiveScoreFree">
+        <span class="footer-kicker">LiveScoreFree</span>
+        <h3 class="footer-heading">Matchday coverage built for live fans.</h3>
+        <p class="footer-lead">Real-time scores, fixtures, results, standings, news, and sponsor-ready match centers across every major sport on the site.</p>
+        <a href="/data-sources" data-link>View data sources</a>
+      </section>
+      <nav class="footer-column footer-link-list" aria-label="Quick navigation">
         <h4>Quick Navigation</h4>
         <a href="/home" data-link>Home</a>
         <a href="/live" data-link>Live Scores</a>
         <a href="/upcoming" data-link>Upcoming</a>
         <a href="/results" data-link>Results</a>
         <a href="/trending" data-link>Trending</a>
-      </div>
-      <div>
+      </nav>
+      <nav class="footer-column footer-link-list" aria-label="Match center links">
         <h4>Match Center</h4>
         <a href="/top-leagues" data-link>Top Leagues</a>
         <a href="/news" data-link>News</a>
         <a href="/history" data-link>Match History</a>
         <a href="/search" data-link>Search Matches</a>
         <a href="/donate" data-link>Support via Ko-fi</a>
-      </div>
-      <div>
+      </nav>
+      <nav class="footer-column footer-link-list" aria-label="Community and legal links">
         <h4>Community & Legal</h4>
         <a href="/about" data-link>About Us</a>
         <a href="/contact" data-link>Contact</a>
@@ -230,10 +232,14 @@
         <a href="/privacy-policy" data-link>Privacy Policy</a>
         <a href="/terms-of-service" data-link>Terms of Service</a>
         <a href="/dmca-policy" data-link>DMCA Policy</a>
-      </div>
+      </nav>
     </div>
-    <div class="copyright">
-      &copy; <span id="current-year"></span> LiveScoreFree. All Rights Reserved. Boldly tracking every goal.
+    <div class="footer-meta">
+      <p class="copyright">&copy; <span id="current-year"></span> LiveScoreFree. All Rights Reserved. Boldly tracking every goal.</p>
+      <div class="footer-meta-links">
+        <a href="/data-sources" data-link>Data Sources</a>
+        <a href="/feedback" data-link>Feedback</a>
+      </div>
     </div>
   </footer>
 
@@ -270,7 +276,7 @@
         <img src="/logo-mark-192.png" alt="" width="48" height="48" class="pwa-prompt-icon">
         <strong>Install LiveScoreFree</strong>
         <span>Get fast access, app-like experience, and offline essentials.</span>
-        <span id="pwa-ios-tip" class="pwa-prompt-tip" hidden>On iPhone/iPad: tap Share and choose “Add to Home Screen”.</span>
+        <span id="pwa-ios-tip" class="pwa-prompt-tip" hidden>On iPhone/iPad: tap Share and choose "Add to Home Screen".</span>
       </div>
       <div class="pwa-prompt-actions">
         <button id="pwa-install-btn" class="btn btn-primary" type="button">Install</button>

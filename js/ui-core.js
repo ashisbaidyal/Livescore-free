@@ -1,8 +1,8 @@
-import { 
-  qs, 
-  qsa, 
-  escapeHtml, 
-  formatTime, 
+import {
+  qs,
+  qsa,
+  escapeHtml,
+  formatTime,
   formatDate,
   formatDateTime,
   getAbsoluteUrlForPath,
@@ -10,13 +10,13 @@ import {
   slugify,
   compactTeamLabel
 } from "./utils.js";
-import { 
-  state 
+import {
+  state
 } from "./state.js";
-import { 
-  THEME_KEY, 
-  SUPPORT_POPUP_KEY, 
-  SUPPORT_POPUP_INTERVAL_MS, 
+import {
+  THEME_KEY,
+  SUPPORT_POPUP_KEY,
+  SUPPORT_POPUP_INTERVAL_MS,
   APP_BOOT_TS,
   SEO_BASE,
   GLOBAL_SEO_KEYWORDS,
@@ -24,7 +24,7 @@ import {
   LANGUAGE_KEY,
   SPORT_GROUPS
 } from "./constants.js";
-import { 
+import {
   normalizeLanguageCode
 } from "./utils.js";
 import {
@@ -53,18 +53,15 @@ export function showToast(text) {
 }
 
 export function renderProviderStatusBar() {
-  // Check if any provider has issues
   const espnOk = state.providerStatus?.espn?.ok !== false;
   const sportsdbOk = state.providerStatus?.sportsdb?.ok !== false;
-  
+
   if (espnOk && sportsdbOk) {
-    // All providers OK, remove status bar if it exists
-    const existing = qs('#provider-status-bar');
+    const existing = qs("#provider-status-bar");
     if (existing) existing.remove();
-    return '';
+    return "";
   }
-  
-  // Build warning message for failed providers
+
   const warnings = [];
   if (!espnOk && state.providerStatus?.espn?.lastError) {
     warnings.push(`ESPN: ${state.providerStatus.espn.lastError}`);
@@ -72,27 +69,26 @@ export function renderProviderStatusBar() {
   if (!sportsdbOk && state.providerStatus?.sportsdb?.lastError) {
     warnings.push(`SportsDB: ${state.providerStatus.sportsdb.lastError}`);
   }
-  
-  if (warnings.length === 0) return '';
-  
+
+  if (warnings.length === 0) return "";
+
   const statusHtml = `
     <div id="provider-status-bar" style="background: #ff6b35; color: white; padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #ff5522; text-align: center;">
-      <strong>⚠️  Data loading issues:</strong> ${escapeHtml(warnings.join(' | '))} 
+      <strong>Warning: Data loading issues:</strong> ${escapeHtml(warnings.join(" | "))}
       <small style="display: block; margin-top: 4px; opacity: 0.9;">Some live data may be unavailable. We're working on it.</small>
     </div>
   `;
-  
-  // Remove existing bar and insert new one
-  const existing = qs('#provider-status-bar');
+
+  const existing = qs("#provider-status-bar");
   if (existing) existing.remove();
-  
-  const header = qs('.site-header');
+
+  const header = qs(".site-header");
   if (header) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.innerHTML = statusHtml;
     header.parentNode.insertBefore(div.firstElementChild, header.nextSibling);
   }
-  
+
   return statusHtml;
 }
 
@@ -188,7 +184,10 @@ export function toggleSearch() {
   const isHidden = overlay.hasAttribute("hidden");
   if (isHidden) {
     overlay.removeAttribute("hidden");
-    if (input) { input.value = ""; input.focus(); }
+    if (input) {
+      input.value = "";
+      input.focus();
+    }
     document.body.style.overflow = "hidden";
   } else {
     overlay.setAttribute("hidden", "");
@@ -200,9 +199,12 @@ export function executeSearch(query) {
   const q = String(query || "").trim().toLowerCase();
   const results = qs("#search-results");
   if (!results) return;
-  if (!q) { results.innerHTML = ""; return; }
-  const matches = state.matches.filter(m => m.homeName.toLowerCase().includes(q) || m.awayName.toLowerCase().includes(q));
-  results.innerHTML = matches.map(m => `
+  if (!q) {
+    results.innerHTML = "";
+    return;
+  }
+  const matches = state.matches.filter((m) => m.homeName.toLowerCase().includes(q) || m.awayName.toLowerCase().includes(q));
+  results.innerHTML = matches.map((m) => `
     <a href="${routeForMatch(m)}" data-link class="search-result">
       <span>${escapeHtml(m.homeName)} vs ${escapeHtml(m.awayName)}</span>
       <small>${escapeHtml(m.leagueLabel)}</small>
@@ -272,7 +274,7 @@ export function renderHeroShareActions() {
   return `
     <div class="hero-actions-row">
       <button class="btn btn-primary" data-share-generic>Share Scores</button>
-      <button class="btn" data-theme-cycle>◑ Theme</button>
+      <button class="btn" data-theme-cycle>Cycle Theme</button>
     </div>
   `;
 }
@@ -293,7 +295,7 @@ export function renderSeoHeroPanel(config) {
 export function renderMatchInfoGrid(items) {
   return `
     <div class="match-info-grid">
-      ${items.map(item => `
+      ${items.map((item) => `
         <div class="info-card">
           <span>${escapeHtml(item.label)}</span>
           <strong>${escapeHtml(item.value || "Unknown")}</strong>
@@ -307,7 +309,7 @@ export function renderFormTrack(form) {
   if (!form.length) return '<span class="subtle">No recent final matches.</span>';
   return `
     <div class="form-track">
-      ${form.map(result => `<span class="form-chip form-${result.toLowerCase()}">${result}</span>`).join("")}
+      ${form.map((result) => `<span class="form-chip form-${result.toLowerCase()}">${result}</span>`).join("")}
     </div>
   `;
 }
@@ -316,7 +318,7 @@ export function selectMatchInsightPairs(match, statPairs) {
   const result = [];
   const labels = ["possession", "shots on target", "total shots", "corners", "yellow cards", "red cards"];
   for (const label of labels) {
-    const pair = (statPairs || []).find(p => p.label.toLowerCase().includes(label));
+    const pair = (statPairs || []).find((p) => p.label.toLowerCase().includes(label));
     if (pair) result.push({ label: pair.label, homeDisplay: pair.homeValue, awayDisplay: pair.awayValue });
   }
   return result;
@@ -327,8 +329,8 @@ export function renderMatchInsightPanel({ match, statPairs, infoItems, favoriteK
   const insightPairs = selectMatchInsightPairs(match, statPairs);
   const homeLabel = match.homeAbbr || compactTeamLabel(match.homeName, match.homeAbbr);
   const awayLabel = match.awayAbbr || compactTeamLabel(match.awayName, match.awayAbbr);
-  
-  const tableHtml = insightPairs.length 
+
+  const tableHtml = insightPairs.length
     ? `
       <div class="insight-table-wrap">
         <table class="insight-table">
@@ -340,7 +342,7 @@ export function renderMatchInsightPanel({ match, statPairs, infoItems, favoriteK
             </tr>
           </thead>
           <tbody>
-            ${insightPairs.map(p => `
+            ${insightPairs.map((p) => `
               <tr>
                 <td class="val-home">${escapeHtml(p.homeDisplay)}</td>
                 <td class="val-metric">${escapeHtml(p.label)}</td>
@@ -376,11 +378,11 @@ export function wireMatchTabs(match) {
   if (!root) return;
   const buttons = qsa(".match-tab-btn", root);
   const panels = qsa(".match-tab-panel", root);
-  buttons.forEach(btn => {
+  buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const tabId = btn.getAttribute("data-match-tab");
-      buttons.forEach(b => b.classList.toggle("active", b.getAttribute("data-match-tab") === tabId));
-      panels.forEach(p => p.classList.toggle("active", p.getAttribute("data-tab-panel") === tabId));
+      buttons.forEach((b) => b.classList.toggle("active", b.getAttribute("data-match-tab") === tabId));
+      panels.forEach((p) => p.classList.toggle("active", p.getAttribute("data-tab-panel") === tabId));
       state.matchTabBySlug[`${match.sportGroup}:${match.slug}`] = tabId;
     });
   });
