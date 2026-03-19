@@ -9,10 +9,10 @@ import {
   getResolvedTargetLanguage,
   slugify,
   compactTeamLabel
-} from "./utils.js";
+} from "./utils.js?v=20260319c";
 import { 
   state 
-} from "./state.js";
+} from "./state.js?v=20260319c";
 import { 
   THEME_KEY, 
   SUPPORT_POPUP_KEY, 
@@ -23,23 +23,23 @@ import {
   SUPPORTED_LANGUAGES,
   LANGUAGE_KEY,
   SPORT_GROUPS
-} from "./constants.js";
+} from "./constants.js?v=20260319c";
 import { 
   normalizeLanguageCode
-} from "./utils.js";
+} from "./utils.js?v=20260319c";
 import {
   routeForLeague,
   routeForTeam,
   routeForPlayer,
   routeForMatch,
   findMatch
-} from "./routing.js";
+} from "./routing.js?v=20260319c";
 import {
   getSportImagePath,
   statusBadge,
   renderPmTeamLogo,
   buildAutoBackgroundAttrs
-} from "./ui-matches.js";
+} from "./ui-matches.js?v=20260319c";
 
 export function showToast(text) {
   const toast = qs("#toast");

@@ -3,23 +3,23 @@ import {
   qsa, 
   escapeHtml, 
   formatTime 
-} from "./utils.js";
+} from "./utils.js?v=20260319c";
 import { 
   SPORT_GROUPS, 
   SPORT_IMAGE_MAP, 
   TOP_LEAGUE_KEYS,
   LEAGUE_IMAGE_MAP,
   LEAGUES
-} from "./constants.js";
-import { state } from "./state.js";
+} from "./constants.js?v=20260319c";
+import { state } from "./state.js?v=20260319c";
 import { 
   routeForMatch, 
   routeForTeam,
   routeForPlayer
-} from "./routing.js";
+} from "./routing.js?v=20260319c";
 import { 
   getStatusText 
-} from "./api.js";
+} from "./api.js?v=20260319c";
 
 export function toneClassForMatchStatus(status = "") {
   if (status === "live") return "tone-live";

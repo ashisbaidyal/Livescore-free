@@ -1,18 +1,18 @@
 import { 
   state, 
-} from "./js/state.js";
+} from "./js/state.js?v=20260319c";
 import { 
   qs, 
   qsa, 
   escapeHtml 
-} from "./js/utils.js";
+} from "./js/utils.js?v=20260319c";
 import { 
   REFRESH_INTERVAL_MS,
   THEME_KEY
-} from "./js/constants.js";
+} from "./js/constants.js?v=20260319c";
 import {
   refreshData
-} from "./js/api.js";
+} from "./js/api.js?v=20260319c";
 import {
   loadHistory,
   loadFeedbackNotes,
@@ -20,16 +20,16 @@ import {
   loadNotificationPrefs,
   loadLanguagePreference,
   loadBackgroundPreferences
-} from "./js/storage.js";
+} from "./js/storage.js?v=20260319c";
 import {
   navigate,
   handleRouteFromQueryFallback,
   migrateLegacyHashPath,
   parseRoute
-} from "./js/routing.js";
+} from "./js/routing.js?v=20260319c";
 import {
   renderRoute
-} from "./js/ui-pages.js";
+} from "./js/ui-pages.js?v=20260319c";
 import {
   applyTheme,
   detectThemeByTime,
@@ -39,7 +39,7 @@ import {
   renderFooterContent,
   maybeShowSupportPopup,
   initScrollAnimations
-} from "./js/ui-core.js";
+} from "./js/ui-core.js?v=20260319c";
 
 async function rerenderActiveDataRoute() {
   if (document.hidden) return;

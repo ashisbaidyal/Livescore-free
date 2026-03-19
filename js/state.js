@@ -1,4 +1,4 @@
-import { REFRESH_INTERVAL_MS } from "./constants.js";
+import { REFRESH_INTERVAL_MS } from "./constants.js?v=20260319c";
 
 export const state = {
   eventsByLeague: {},

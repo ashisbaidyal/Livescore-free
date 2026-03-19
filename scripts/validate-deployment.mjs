@@ -69,13 +69,15 @@ function validateIndexHtml() {
     fail("index.html is missing <base href=\"/\"> for SPA deep-link asset loading.");
   }
 
+  const refs = [...indexHtml.matchAll(/\b(?:src|href)="([^"]+)"/g)].map((match) => match[1]);
+
   for (const requiredRef of ["/styles.css", "/api-config.js", "/app.js", "/manifest.json"]) {
-    if (!indexHtml.includes(`"${requiredRef}"`) && !indexHtml.includes(`'${requiredRef}'`)) {
+    const hasRequiredRef = refs.some((ref) => ref === requiredRef || ref.startsWith(`${requiredRef}?`));
+    if (!hasRequiredRef) {
       fail(`index.html is missing required root-absolute reference: ${requiredRef}`);
     }
   }
 
-  const refs = [...indexHtml.matchAll(/\b(?:src|href)="([^"]+)"/g)].map((match) => match[1]);
   for (const ref of refs) {
     if (/^(?:[a-z]+:|\/\/|#)/i.test(ref)) {
       continue;

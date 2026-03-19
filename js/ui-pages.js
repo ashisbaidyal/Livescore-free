@@ -5,21 +5,21 @@ import {
   formatDate,
   formatTime,
   renderDonationProgress
-} from "./utils.js";
+} from "./utils.js?v=20260319c";
 import { 
   state 
-} from "./state.js";
+} from "./state.js?v=20260319c";
 import { 
   SPORT_GROUPS, 
   LEAGUES,
   TOP_LEAGUE_KEYS
-} from "./constants.js";
+} from "./constants.js?v=20260319c";
 import { 
   parseRoute,
   getCurrentPath,
   routeForMatch,
   routeForLeague
-} from "./routing.js";
+} from "./routing.js?v=20260319c";
 import { 
   renderMatchGrid,
   renderMatchCard,
@@ -30,7 +30,7 @@ import {
   buildAutoBackgroundAttrs,
   topLeagueSummaries,
   trendingMatches
-} from "./ui-matches.js";
+} from "./ui-matches.js?v=20260319c";
 import { 
   setSeo,
   applyPageClassesForRoute,
@@ -40,10 +40,10 @@ import {
   renderMatchInsightPanel,
   wireMatchTabs,
   showToast
-} from "./ui-core.js";
+} from "./ui-core.js?v=20260319c";
 import {
   refreshData
-} from "./api.js";
+} from "./api.js?v=20260319c";
 
 export async function renderRoute() {
   const path = getCurrentPath();

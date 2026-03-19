@@ -12,19 +12,19 @@ import {
   LEAGUE_REGIONS, 
   SPORTSDB_SPORTS, 
   PROXIED_DATA_HOSTS 
-} from "./constants.js";
-import { state } from "./state.js";
+} from "./constants.js?v=20260319c";
+import { state } from "./state.js?v=20260319c";
 import { 
   slugify, 
   formatDateTime 
-} from "./utils.js";
+} from "./utils.js?v=20260319c";
 import { 
   upsertHistory, 
   saveHistory 
-} from "./storage.js";
+} from "./storage.js?v=20260319c";
 import { 
   routeForMatch 
-} from "./routing.js";
+} from "./routing.js?v=20260319c";
 
 const requestCache = new Map();
 
@@ -784,5 +784,4 @@ export function flattenEspnRosterAthletes(data) {
   }
   return athletes;
 }
-
 
