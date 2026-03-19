@@ -33,7 +33,16 @@ export function parseStatus(typeName) {
   if (raw === "in" || raw === "live" || raw === "mid" || raw.includes("halftime") || raw.includes("quarter") || raw.includes("period")) {
     return "live";
   }
-  if (raw === "post" || raw === "final" || raw === "finished" || raw === "ft" || raw.includes("ft")) {
+  if (
+    raw === "post" || 
+    raw === "final" || 
+    raw === "finished" || 
+    raw === "ft" || 
+    raw.includes("ft") || 
+    raw.includes("final") || 
+    raw === "complete" || 
+    raw === "completed"
+  ) {
     return "final";
   }
   return "upcoming";
@@ -554,7 +563,7 @@ export function rebuildMatches() {
 
   state.matches = nextMatches;
   state.liveMatches = nextMatches.filter((match) => match.status === "live");
-  state.upcomingMatches = nextMatches.filter((match) => match.status === "upcoming");
+  state.upcomingMatches = nextMatches.filter((match) => match.status === "upcoming" && new Date(match.date).getTime() > Date.now() - 1000 * 60 * 60 * 2);
   state.finalMatches = nextMatches.filter((match) => match.status === "final");
   state.matchIndex = nextIndex;
 

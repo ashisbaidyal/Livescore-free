@@ -113,7 +113,7 @@ async function renderHomePage(container) {
       <div class="league-grid">
         ${topLeagues.map(l => `
           <a class="league-card" data-link href="${routeForLeague(l.key)}">
-            <img src="${getLeagueImagePath(l.key, l.sportGroup)}" alt="${l.label}">
+            <img src="${getLeagueImagePath(l.key, l.sportGroup)}" alt="${l.label}" onerror="this.onerror=null;this.src='/logo-mark.png';">
             <strong>${l.label}</strong>
             <span class="badge ${l.live > 0 ? "badge-live" : ""}">${l.live} Live</span>
           </a>
@@ -135,7 +135,7 @@ async function renderLivePage(container) {
 }
 
 async function renderTrendingPage(container) {
-  const matches = state.matches.slice(0, 20);
+  const matches = trendingMatches(20);
   setSeo({ title: "Trending Matches", description: "Most popular matches.", path: "/trending" });
   container.innerHTML = `
     <section class="section">
@@ -184,8 +184,14 @@ async function renderTopLeaguesPage(container) {
   container.innerHTML = `
     <section class="section">
       <div class="section-head"><h1>Top Leagues</h1></div>
-      <div class="grid">
-        ${topLeagues.map(l => `<a class="card" data-link href="${routeForLeague(l.key)}">${l.label}</a>`).join("")}
+      <div class="league-grid">
+        ${topLeagues.map(l => `
+          <a class="league-card" data-link href="${routeForLeague(l.key)}">
+            <img src="${getLeagueImagePath(l.key, l.sportGroup)}" alt="${l.label}" onerror="this.onerror=null;this.src='/logo-mark.png';">
+            <strong>${l.label}</strong>
+            <span class="badge ${l.live > 0 ? "badge-live" : ""}">${l.live} Live</span>
+          </a>
+        `).join("")}
       </div>
     </section>
   `;

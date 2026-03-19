@@ -141,8 +141,10 @@ export function topLeagueSummaries() {
   return items;
 }
 
-export function trendingMatches() {
-  return state.matches.slice(0, 10);
+export function trendingMatches(limit = 10) {
+  return [...state.matches]
+    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0))
+    .slice(0, limit);
 }
 
 export function renderSportFilterTabs(matches) {
