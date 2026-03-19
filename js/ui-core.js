@@ -7,7 +7,8 @@ import {
   formatDateTime,
   getAbsoluteUrlForPath,
   getResolvedTargetLanguage,
-  slugify
+  slugify,
+  compactTeamLabel
 } from "./utils.js";
 import { 
   state 
@@ -36,7 +37,6 @@ import {
 import {
   getSportImagePath,
   statusBadge,
-  compactTeamLabel,
   renderPmTeamLogo,
   buildAutoBackgroundAttrs
 } from "./ui-matches.js";
