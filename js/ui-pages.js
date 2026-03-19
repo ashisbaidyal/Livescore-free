@@ -90,8 +90,6 @@ async function renderHomePage(container) {
   const trust = getTrustSignals();
   const topLeagues = topLeagueSummaries().slice(0, 12);
   const featuredMatches = [...state.liveMatches, ...state.upcomingMatches].slice(0, 3);
-  const spotlightNews = (await fetchSportsNews()).slice(0, 3);
-
   container.innerHTML = `
     ${heroMatch ? renderHeroMatch(heroMatch) : renderHeroFallback()}
     <section class="section tone-live">
@@ -170,7 +168,7 @@ async function renderHomePage(container) {
     </section>
     <section class="section tone-trust">
       <div class="section-head"><div><h2>Latest Sports News</h2><p>Editorial content to make the site feel like a full club portal, not only a scoreboard.</p></div><a class="section-view-all" data-link href="/news">News Center</a></div>
-      <div class="premium-news-grid">${spotlightNews.map(renderHighlightsNewsCard).join("") || `<div class="message-box">News is unavailable right now.</div>`}</div>
+      <div class="premium-news-grid" id="home-news-grid"><div class="message-box">Loading sports news...</div></div>
     </section>
     <section class="section tone-sport">
       <div class="section-head"><div><h2>Sports Hubs</h2><p>Jump into a single sport and view all active competitions.</p></div></div>
@@ -207,7 +205,10 @@ async function renderHomePage(container) {
 
   const leagueKey = TOP_LEAGUE_KEYS.find((key) => state.matches.some((match) => match.leagueKey === key)) || "eng.1";
   const mount = qs("#home-standings-card", container);
-  if (mount) await renderLeagueStandingsCard(mount, leagueKey, "Featured Table");
+  if (mount) {
+    void renderLeagueStandingsCard(mount, leagueKey, "Featured Table");
+  }
+  void hydrateNewsGrid(container, "#home-news-grid", 3);
 }
 
 function renderHistoryPage(container) {
@@ -293,7 +294,9 @@ async function renderLeaguePage(container, route) {
   `;
 
   const mount = qs("#league-standings-card", container);
-  if (mount) await renderLeagueStandingsCard(mount, route.leagueKey, `${league.label} Standings`);
+  if (mount) {
+    void renderLeagueStandingsCard(mount, route.leagueKey, `${league.label} Standings`);
+  }
 }
 
 async function renderMatchPage(container, route) {
@@ -390,7 +393,6 @@ function renderDonatePage(container) {
 
 async function renderNewsPage(container) {
   setSeo({ title: "Sports News | LiveScoreFree", description: "Editorial sports coverage and premium news cards.", path: "/news" });
-  const articles = await fetchSportsNews();
   container.innerHTML = `
     <section class="hero" ${buildAutoBackgroundAttrs({ sportGroup: "football", seedText: "news", strength: 0.22 })}>
       <div class="hero-inner-content">
@@ -401,16 +403,17 @@ async function renderNewsPage(container) {
         </div>
         <div class="hero-side-card">
           <div class="hero-side-label">Stories</div>
-          <div class="hero-side-score">${articles.length}</div>
+          <div class="hero-side-score" id="news-count">...</div>
           <div class="hero-side-meta">Pulled from the current sports news feed</div>
         </div>
       </div>
     </section>
     <section class="section tone-trust">
       <div class="section-head"><div><h2>Latest News</h2><p>Editorial cards to give the website a full portal feel.</p></div></div>
-      <div class="premium-news-grid">${articles.slice(0, 12).map(renderHighlightsNewsCard).join("") || `<div class="message-box">News is unavailable right now.</div>`}</div>
+      <div class="premium-news-grid" id="news-page-grid"><div class="message-box">Loading sports news...</div></div>
     </section>
   `;
+  void hydrateNewsGrid(container, "#news-page-grid", 12, "#news-count");
 }
 
 function renderSearchPage(container) {
@@ -577,6 +580,30 @@ async function fetchJson(url) {
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
   return response.json();
+}
+
+async function hydrateNewsGrid(container, selector, limit = 3, countSelector = "") {
+  const mount = qs(selector, container);
+  if (!mount) return;
+  try {
+    const articles = (await Promise.race([
+      fetchSportsNews(),
+      new Promise((resolve) => setTimeout(() => resolve([]), 4500))
+    ])).slice(0, limit);
+    mount.innerHTML = articles.length
+      ? articles.map(renderHighlightsNewsCard).join("")
+      : `<div class="message-box">News is unavailable right now.</div>`;
+    if (countSelector) {
+      const countNode = qs(countSelector, container);
+      if (countNode) countNode.textContent = String(articles.length);
+    }
+  } catch (_error) {
+    mount.innerHTML = `<div class="message-box">News is unavailable right now.</div>`;
+    if (countSelector) {
+      const countNode = qs(countSelector, container);
+      if (countNode) countNode.textContent = "0";
+    }
+  }
 }
 
 async function renderLeagueStandingsCard(container, leagueKey, heading) {
