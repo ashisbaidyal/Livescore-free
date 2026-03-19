@@ -28,7 +28,8 @@ import {
   renderMatchInsightPanel,
   wireMatchTabs,
   renderMatchInfoGrid,
-  renderFormTrack
+  renderFormTrack,
+  renderProviderStatusBar
 } from "./ui-core.js";
 import { renderStandingsTable } from "./ui-standings.js";
 import { refreshData } from "./api.js";
@@ -42,6 +43,9 @@ export async function renderRoute() {
   const route = parseRoute(path);
   state.activePath = path;
   applyPageClassesForRoute(route);
+  
+  // Render provider status bar if there are issues
+  renderProviderStatusBar();
 
   const main = qs("#main");
   if (!main) return;

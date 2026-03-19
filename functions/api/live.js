@@ -105,7 +105,12 @@ async function fetchEspnMatches(espnBase, sportFeed, timeout) {
     return data.events || [];
   } catch (error) {
     console.error("[API/live] ESPN fetch error:", error.message);
-    return [];
+    return {
+      _error: true,
+      _errorType: 'ESPN_FETCH_FAILED',
+      _errorMessage: error.message,
+      _timestamp: Date.now()
+    };
   }
 }
 
@@ -125,7 +130,12 @@ async function fetchSportsDbMatches(sportsDbBase, timeout) {
     return data.results || [];
   } catch (error) {
     console.error("[API/live] SportsDB fetch error:", error.message);
-    return [];
+    return {
+      _error: true,
+      _errorType: 'SPORTSDB_FETCH_FAILED',
+      _errorMessage: error.message,
+      _timestamp: Date.now()
+    };
   }
 }
 
@@ -247,11 +257,15 @@ export async function onRequest(context) {
   try {
     const sportFeed = SPORT_FEEDS[sport] || SPORT_FEEDS.default;
     const espnMatches = await fetchEspnMatches(ESPN_BASE, sportFeed, REQUEST_TIMEOUT);
-    let normalizedMatches = espnMatches.map(normalizeMatch);
+    const espnError = espnMatches._error ? espnMatches : null;
+    const normalizedEspn = espnError ? [] : espnMatches.map(normalizeMatch);
 
+    let normalizedMatches = normalizedEspn;
+    let sportsDbError = null;
     if (!normalizedMatches.length) {
       const sportsDbMatches = await fetchSportsDbMatches(SPORTSDB_BASE, REQUEST_TIMEOUT);
-      normalizedMatches = sportsDbMatches.map(normalizeMatch);
+      sportsDbError = sportsDbMatches._error ? sportsDbMatches : null;
+      normalizedMatches = sportsDbError ? [] : sportsDbMatches.map(normalizeMatch);
     }
 
     normalizedMatches = normalizedMatches.slice(0, limit);
@@ -263,14 +277,36 @@ export async function onRequest(context) {
 
     pruneCache(MAX_CACHE_ENTRIES);
 
-    return jsonResponse({
+    const responseData = {
       success: true,
       data: normalizedMatches,
       cached: false,
       timestamp: Date.now(),
       count: normalizedMatches.length,
       version: API_VERSION
-    }, {
+    };
+
+    if (espnError || sportsDbError) {
+      responseData.warnings = [];
+      if (espnError) {
+        responseData.warnings.push({
+          source: 'espn',
+          errorType: espnError._errorType,
+          message: espnError._errorMessage,
+          timestamp: espnError._timestamp
+        });
+      }
+      if (sportsDbError) {
+        responseData.warnings.push({
+          source: 'sportsdb',
+          errorType: sportsDbError._errorType,
+          message: sportsDbError._errorMessage,
+          timestamp: sportsDbError._timestamp
+        });
+      }
+    }
+
+    return jsonResponse(responseData, {
       status: 200,
       headers: {
         ...baseHeaders,
@@ -281,12 +317,40 @@ export async function onRequest(context) {
     if (LOG_LEVEL !== "silent") {
       console.error("[API/live] Request error:", error);
     }
+    
+    // Return cached data if available, otherwise return empty success response
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return jsonResponse({
+        success: true,
+        data: cachedData.data,
+        cached: true,
+        cacheAge: Date.now() - cachedData.timestamp,
+        timestamp: cachedData.timestamp,
+        count: cachedData.data.length,
+        error: error.message,
+        errorType: 'FALLBACK_TO_CACHE',
+        version: API_VERSION
+      }, {
+        status: 200,
+        headers: {
+          ...baseHeaders,
+          "X-Response-Time": `${Date.now() - startTime}ms`
+        }
+      });
+    }
+    
     return jsonResponse({
-      success: false,
+      success: true,
+      data: [],
+      cached: false,
       error: error.message || "Failed to fetch live matches",
-      timestamp: Date.now()
+      errorType: 'UNKNOWN_ERROR',
+      timestamp: Date.now(),
+      count: 0,
+      version: API_VERSION
     }, {
-      status: 500,
+      status: 200,
       headers: {
         ...baseHeaders,
         "X-Response-Time": `${Date.now() - startTime}ms`

@@ -42,6 +42,19 @@ import {
   initScrollAnimations
 } from "./js/ui-core.js";
 
+// Enable API debugging for troubleshooting
+if (typeof localStorage !== 'undefined') {
+  if (localStorage.getItem('DEBUG_API') === 'true') {
+    window.__API_DEBUG__ = true;
+    console.log('%c[DEBUG MODE] API debugging enabled', 'color: #ff9900; font-weight: bold;');
+  }
+  // Check and report provider status
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('show-api-status') === 'true') {
+    console.log('%c[API Status Check]', 'color: #0066cc; font-weight: bold;', state.providerStatus);
+  }
+}
+
 async function rerenderActiveDataRoute() {
   if (document.hidden) return;
   const initialPath = state.activePath;

@@ -579,6 +579,7 @@ export async function refreshData({ silent = false } = {}) {
 
   state.refreshPromise = (async () => {
     let failed = 0;
+    let failedErrors = {};
     const leagueVisualsPromise = fetchLeagueVisualsSnapshot().catch(() => state.leagueVisuals || {});
 
     const nextEvents = {};
@@ -586,8 +587,12 @@ export async function refreshData({ silent = false } = {}) {
       try {
         const data = await cachedJson(`${ESPN_BASE}/${leagueConfig.feed}/scoreboard`, 12000);
         nextEvents[leagueKey] = data.events || [];
-      } catch (_error) {
+      } catch (error) {
         failed += 1;
+        failedErrors[leagueKey] = error.message;
+        if (!silent) {
+          console.error(`[API] ESPN fetch failed for ${leagueKey}:`, error.message);
+        }
         nextEvents[leagueKey] = state.eventsByLeague[leagueKey] || [];
       }
     });
@@ -600,8 +605,10 @@ export async function refreshData({ silent = false } = {}) {
       if (cricketEvents.length) {
         nextEvents.cricket = [...(nextEvents.cricket || []), ...cricketEvents];
       }
-    } catch (_error) {
-      // ignore
+    } catch (error) {
+      if (!silent) {
+        console.warn('[API] Cricbuzz fetch failed:', error.message);
+      }
     }
 
     await Promise.all([
@@ -613,8 +620,10 @@ export async function refreshData({ silent = false } = {}) {
             if (nhlEvents.length) {
               nextEvents.nhl = nhlEvents;
             }
-          } catch (_error) {
-            // ignore
+          } catch (error) {
+            if (!silent) {
+              console.warn('[API] NHL fetch failed:', error.message);
+            }
           }
         }
       })(),
@@ -626,8 +635,10 @@ export async function refreshData({ silent = false } = {}) {
             if (mlbEvents.length) {
               nextEvents.mlb = mlbEvents;
             }
-          } catch (_error) {
-            // ignore
+          } catch (error) {
+            if (!silent) {
+              console.warn('[API] MLB fetch failed:', error.message);
+            }
           }
         }
       })()
@@ -637,20 +648,34 @@ export async function refreshData({ silent = false } = {}) {
     const externalEvents = [];
     let sportsDbFailures = 0;
 
-    const sportsDbTasks = Object.entries(SPORTSDB_SPORTS).map(async ([sportGroup, sportName]) => {
-      try {
-        const url = `${SPORTSDB_BASE}/eventsday.php?d=${today}&s=${encodeURIComponent(sportName)}`;
-        const data = await cachedJson(url, 12000);
-        const events = Array.isArray(data?.events) ? data.events : Array.isArray(data?.event) ? data.event : [];
-        for (const event of events) {
-          externalEvents.push({ sportGroup, event });
+    // Optimized: Use backend /api/sportsdb endpoint that batches all sports
+    // This respects SportsDB free tier rate limits (30 req/min) better than individual calls
+    // Cache for 1 hour since this is less time-critical than live ESPN data
+    try {
+      const sportsdbUrl = `/api/sportsdb?action=events-by-sport&date=${today}`;
+      const sportsdbResult = await cachedJson(sportsdbUrl, 3600000); // 1 hour cache
+      
+      if (sportsdbResult?.success && sportsdbResult?.data) {
+        // Map SportsDB results back to our internal format
+        for (const [sportGroup, sportData] of Object.entries(sportsdbResult.data)) {
+          if (Array.isArray(sportData?.events)) {
+            for (const event of sportData.events) {
+              externalEvents.push({ sportGroup, event });
+            }
+          }
         }
-      } catch (_error) {
-        sportsDbFailures += 1;
       }
-    });
-
-    await Promise.all(sportsDbTasks);
+      
+      // Count partial failures (some sports failed but not all)
+      if (sportsdbResult?.errorCount > 0) {
+        sportsDbFailures = Math.min(sportsdbResult.errorCount, Object.keys(SPORTSDB_SPORTS).length);
+      }
+    } catch (error) {
+      sportsDbFailures = Object.keys(SPORTSDB_SPORTS).length;
+      if (!silent) {
+        console.warn(`[API] SportsDB batch fetch failed:`, error.message);
+      }
+    }
 
     const nextLeagueVisuals = await leagueVisualsPromise;
 
@@ -663,24 +688,39 @@ export async function refreshData({ silent = false } = {}) {
 
     const espnMatchCount = Object.values(nextEvents).reduce((sum, events) => sum + (Array.isArray(events) ? events.length : 0), 0);
     state.providerStatus.espn = {
-      ok: failed < Object.keys(LEAGUES).length,
+      ok: failed === 0,
       matches: espnMatchCount,
+      failedLeagues: failed,
+      totalLeagues: Object.keys(LEAGUES).length,
       lastFetch: Date.now(),
-      lastError: failed > 0 ? `${failed} ESPN feed(s) unavailable` : ""
+      lastError: failed > 0 ? `${failed} of ${Object.keys(LEAGUES).length} ESPN feed(s) unavailable` : "",
+      message: failed === 0 ? "✅ ESPN data loaded successfully" : `⚠️  ESPN partial failure: ${failed} league(s) unavailable`,
+      failureDetails: Object.keys(failedErrors).length > 0 ? failedErrors : null
     };
     state.providerStatus.sportsdb = {
-      ok: sportsDbFailures < Object.keys(SPORTSDB_SPORTS).length,
+      ok: sportsDbFailures === 0,
       matches: externalEvents.length,
+      failedSports: sportsDbFailures,
+      totalSports: Object.keys(SPORTSDB_SPORTS).length,
       lastFetch: Date.now(),
-      lastError: sportsDbFailures > 0 ? `${sportsDbFailures} TheSportsDB request(s) failed` : ""
+      lastError: sportsDbFailures > 0 ? `${sportsDbFailures} of ${Object.keys(SPORTSDB_SPORTS).length} SportsDB request(s) failed` : "",
+      message: sportsDbFailures === 0 ? "✅ SportsDB data loaded successfully" : `⚠️  SportsDB partial failure: ${sportsDbFailures} sport(s) unavailable`
     };
 
     state.lastUpdatedAt = Date.now();
     state.nextRefreshAt = Date.now() + REFRESH_INTERVAL_MS;
     rebuildMatches();
     
-    // UI updates and notifications will be called from the main loop or entry point
-    // but we can export hooks if needed.
+    if (!silent) {
+      console.log(
+        `[API] ✅ Data refresh complete: ${state.matches.length} total matches ` +
+        `(${state.liveMatches.length} live, ${state.upcomingMatches.length} upcoming, ${state.finalMatches.length} final)`
+      );
+      console.log('[API] Provider Status:', {
+        espn: state.providerStatus.espn.message,
+        sportsdb: state.providerStatus.sportsdb.message
+      });
+    }
   })()
     .finally(() => {
       state.refreshPromise = null;

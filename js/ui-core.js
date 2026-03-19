@@ -52,6 +52,50 @@ export function showToast(text) {
   }, 2600);
 }
 
+export function renderProviderStatusBar() {
+  // Check if any provider has issues
+  const espnOk = state.providerStatus?.espn?.ok !== false;
+  const sportsdbOk = state.providerStatus?.sportsdb?.ok !== false;
+  
+  if (espnOk && sportsdbOk) {
+    // All providers OK, remove status bar if it exists
+    const existing = qs('#provider-status-bar');
+    if (existing) existing.remove();
+    return '';
+  }
+  
+  // Build warning message for failed providers
+  const warnings = [];
+  if (!espnOk && state.providerStatus?.espn?.lastError) {
+    warnings.push(`ESPN: ${state.providerStatus.espn.lastError}`);
+  }
+  if (!sportsdbOk && state.providerStatus?.sportsdb?.lastError) {
+    warnings.push(`SportsDB: ${state.providerStatus.sportsdb.lastError}`);
+  }
+  
+  if (warnings.length === 0) return '';
+  
+  const statusHtml = `
+    <div id="provider-status-bar" style="background: #ff6b35; color: white; padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #ff5522; text-align: center;">
+      <strong>⚠️  Data loading issues:</strong> ${escapeHtml(warnings.join(' | '))} 
+      <small style="display: block; margin-top: 4px; opacity: 0.9;">Some live data may be unavailable. We're working on it.</small>
+    </div>
+  `;
+  
+  // Remove existing bar and insert new one
+  const existing = qs('#provider-status-bar');
+  if (existing) existing.remove();
+  
+  const header = qs('.site-header');
+  if (header) {
+    const div = document.createElement('div');
+    div.innerHTML = statusHtml;
+    header.parentNode.insertBefore(div.firstElementChild, header.nextSibling);
+  }
+  
+  return statusHtml;
+}
+
 export function detectThemeByTime() {
   if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) return "night";
   const hour = new Date().getHours();
