@@ -3,7 +3,8 @@ import {
   qsa, 
   escapeHtml, 
   formatDate,
-  formatTime
+  formatTime,
+  renderDonationProgress
 } from "./utils.js";
 import { 
   state 
@@ -36,7 +37,6 @@ import {
   initScrollAnimations,
   renderSeoHeroPanel,
   renderHeroShareActions,
-  renderDonationProgress,
   renderMatchInsightPanel,
   wireMatchTabs,
   showToast
@@ -248,7 +248,7 @@ async function renderMatchPage(container, route) {
           </div>
        </main>
        <aside class="match-side-area">
-          ${renderMatchInsightPanel({ match, statPairs: [], infoItems: [], isFavorite: state.favorites.includes(`${match.sportGroup}:${match.slug}`) })}
+          ${renderMatchInsightPanel({ match, statPairs: [], infoItems: [], isFavorite: state.favoriteMatches.includes(`${match.sportGroup}:${match.slug}`) })}
        </aside>
     </div>
   `;

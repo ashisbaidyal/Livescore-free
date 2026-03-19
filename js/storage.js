@@ -190,3 +190,32 @@ export function pruneNotificationLog() {
     }
   }
 }
+export function loadLanguagePreference() {
+  try {
+    const raw = localStorage.getItem("lsf_language_preference");
+    if (raw) state.languagePreference = raw;
+  } catch (_error) { /* ignore */ }
+}
+
+export function saveLanguagePreference(value) {
+  try {
+    localStorage.setItem("lsf_language_preference", value);
+    state.languagePreference = value;
+  } catch (_error) { /* ignore */ }
+}
+
+export function loadBackgroundPreferences() {
+  try {
+    const mode = localStorage.getItem("lsf_background_mode");
+    if (mode) state.backgroundMode = mode;
+    const custom = localStorage.getItem("lsf_custom_background");
+    if (custom) state.customBackground = custom;
+  } catch (_error) { /* ignore */ }
+}
+
+export function saveBackgroundPreferences({ mode, custom }) {
+  try {
+    if (mode) localStorage.setItem("lsf_background_mode", mode);
+    if (custom) localStorage.setItem("lsf_custom_background", custom);
+  } catch (_error) { /* ignore */ }
+}

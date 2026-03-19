@@ -125,10 +125,15 @@ export function getLeagueImagePath(leagueKey, sportGroup) {
 export function topLeagueSummaries() {
   const items = [];
   for (const key of TOP_LEAGUE_KEYS) {
-    const l = SPORT_GROUPS.football.leagues?.[key];
-    if (l) {
-      const liveCount = state.liveMatches.filter(m => m.leagueKey === key).length;
-      items.push({ key, label: l.label, sportGroup: "football", live: liveCount });
+    const league = LEAGUES[key];
+    if (league) {
+      const liveCount = (state.liveMatches || []).filter(m => m.leagueKey === key).length;
+      items.push({ 
+        key, 
+        label: league.label, 
+        sportGroup: league.sportGroup, 
+        live: liveCount 
+      });
     }
   }
   return items;

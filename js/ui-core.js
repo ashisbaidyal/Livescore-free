@@ -30,6 +30,7 @@ import {
   routeForLeague,
   routeForTeam,
   routeForPlayer,
+  routeForMatch,
   findMatch
 } from "./routing.js";
 import {
@@ -151,6 +152,25 @@ export function toggleSearch() {
   }
 }
 
+export function executeSearch(query) {
+  const q = String(query || "").trim().toLowerCase();
+  const results = qs("#search-results");
+  if (!results) return;
+  if (!q) { results.innerHTML = ""; return; }
+  const matches = state.matches.filter(m => m.homeName.toLowerCase().includes(q) || m.awayName.toLowerCase().includes(q));
+  results.innerHTML = matches.map(m => `
+    <a href="${routeForMatch(m)}" data-link class="search-result">
+      <span>${escapeHtml(m.homeName)} vs ${escapeHtml(m.awayName)}</span>
+      <small>${escapeHtml(m.leagueLabel)}</small>
+    </a>
+  `).join("") || '<div class="message-box">No matches found.</div>';
+}
+
+export function renderFooterContent() {
+  const year = qs("#current-year");
+  if (year) year.textContent = new Date().getFullYear();
+}
+
 export function maybeShowSupportPopup(route) {
   const lastShown = parseInt(localStorage.getItem(SUPPORT_POPUP_KEY) || "0");
   if (Date.now() - lastShown > SUPPORT_POPUP_INTERVAL_MS) {
@@ -202,6 +222,15 @@ export function renderTicker() {
 
 export function renderGlobalShareWidget() {
   // logic to render share UI
+}
+
+export function renderHeroShareActions() {
+  return `
+    <div class="hero-actions-row">
+      <button class="btn btn-primary" data-share-generic>Share Scores</button>
+      <button class="btn" data-theme-cycle>◑ Theme</button>
+    </div>
+  `;
 }
 
 export function renderSeoHeroPanel(config) {
