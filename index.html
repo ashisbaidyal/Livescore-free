@@ -14,7 +14,7 @@
   <meta charset="UTF-8">
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" id="meta-theme-color" content="#071322">
+  <meta name="theme-color" id="meta-theme-color" content="#0e0e0e">
 
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="mobile-web-app-capable" content="yes">
@@ -24,11 +24,6 @@
   <meta name="apple-mobile-web-app-title" content="livescoreFree.online">
   <meta name="description" content="livescoreFree.online delivers fast, brutalist live scores, headline reports, and arena tables across every major competition in the streaming universe.">
   <meta name="keywords" content="live soccer scores, livescoreFree.online, stadium spectacle, matchday center, sports results, brutalist sports portal">
-  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
-  <meta name="googlebot" content="translate">
-  <meta name="language" content="en-US">
-  <meta name="revisit-after" content="1 days">
-  <meta name="author" content="livescoreFree.online Kinetic">
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="livescoreFree.online">
@@ -51,13 +46,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
-  <title>livescoreFree.online | The Ultimate Live Scores Center</title>
+  <title>livescoreFree.online | KINETIC BROADCAST</title>
 
   <!-- GoalStream Design System -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-  
   <script id="tailwind-config">
     tailwind.config = {
       darkMode: "class",
@@ -143,6 +137,9 @@
     @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100px; } }
     @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(0%); } }
     
+    /* Ticker Scroll Animation */
+    @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    
     /* SPA Specific Styles */
     #main { min-height: 80vh; transition: opacity 0.3s ease-in-out; }
     .page-loading #main { opacity: 0.5; pointer-events: none; }
@@ -173,195 +170,144 @@
         "@type": "ImageObject",
         "url": "https://livescoreFree.online/logo-mark-512.png"
       }
-    },
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://livescoreFree.online/live",
-      "query-input": "required name=search_term_string"
-    }
-  }
-  </script>
-  <script type="application/ld+json" id="dynamic-schema"></script>
-  <!-- Breadcrumb Structured Data for Better SEO -->
-  <script type="application/ld+json" id="breadcrumb-schema">
-  {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://livescoreFree.online"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Live Scores",
-        "item": "https://livescoreFree.online/live"
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
-        "name": "Top Leagues",
-        "item": "https://livescoreFree.online/top-leagues"
-      }
-    ]
-  }
-  </script>
-  <!-- Organization Structured Data for Rich Results -->
-  <script type="application/ld+json" id="organization-schema">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "livescoreFree.online",
-    "url": "https://livescoreFree.online",
-    "logo": "https://livescoreFree.online/logo-mark-512.png",
-    "description": "Free community-powered sports scoreboard with live scores, commentary, lineups, and results",
-    "sameAs": [
-      "https://twitter.com/livescoreFree.online"
-    ],
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "contactType": "Customer Service",
-      "availableLanguage": ["en"]
     }
   }
   </script>
 </head>
 <body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
 
-<!-- TopNavBar -->
+<!-- TopNavBar Shell -->
 <nav class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl">
-  <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
-    <div class="flex items-center gap-4">
-      <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
-      <a href="/home" data-link class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</a>
-    </div>
-    <div class="hidden lg:flex gap-8 items-center font-bold uppercase tracking-tighter">
-      <a class="text-primary border-b-2 border-primary pb-1" href="/home" data-link>Home</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="/live" data-link>live score</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="/upcoming" data-link>upcoming</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="/trending" data-link>trending</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="/news" data-link>highlight</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="/top-leagues" data-link>top league</a>
-    </div>
-    <div class="flex items-center gap-6">
-      <div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
-        <span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
-        <span class="text-[10px] font-black tracking-widest uppercase">KINETIC FEED ACTIVE</span>
-      </div>
-
-      <button class="material-symbols-outlined text-on-surface hover:text-primary transition-all relative">
-        notifications
-        <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
-      </button>
-    </div>
-  </div>
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
+<a href="/home" data-link class="text-2xl font-black italic tracking-tighter text-primary">livescoreFree.online</a>
+</div>
+<div class="hidden lg:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter">
+<a class="text-primary border-b-2 border-primary pb-1 transition-all" href="/home" data-link>Home</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="/live" data-link>live score</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="/upcoming" data-link>upcoming</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="/trending" data-link>trending</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="/news" data-link>highlight</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="/top-leagues" data-link>top league</a>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+<span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
+<span class="text-[10px] font-black tracking-widest uppercase">KINETIC FEED ACTIVE</span>
+</div>
+<button class="material-symbols-outlined text-on-surface hover:text-primary transition-all relative">
+                    notifications
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+</div>
+</div>
 </nav>
 
 <div class="flex pt-16 min-h-screen">
-  <!-- SideNavBar -->
-  <aside class="hidden lg:flex flex-col pt-8 pb-10 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] sticky top-16 shrink-0">
-    <nav class="flex flex-col gap-1 font-medium text-sm">
-      <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3" href="/live" data-link>
-        <span class="material-symbols-outlined">sensors</span> Live Score Center
-      </a>
-      <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3" href="/upcoming" data-link>
-        <span class="material-symbols-outlined">calendar_today</span> Full Schedule
-      </a>
-      <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3" href="/history" data-link>
-        <span class="material-symbols-outlined">star</span> My Favorites
-      </a>
-      <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3" href="/news" data-link>
-        <span class="material-symbols-outlined">newspaper</span> Latest News
-      </a>
-      <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3" href="/top-leagues" data-link>
-        <span class="material-symbols-outlined">leaderboard</span> Advanced Stats
-      </a>
-      <div class="my-6 px-6">
-        <div class="text-[10px] font-black text-on-surface/40 uppercase tracking-[0.2em] mb-4">Trending Leagues</div>
-        <div class="space-y-3">
-          <a class="flex items-center gap-3 text-xs font-bold hover:text-primary transition-all" href="/league/eng.1" data-link>
-            <span class="w-2 h-2 rounded-full bg-secondary"></span> Premier League
-          </a>
-          <a class="flex items-center gap-3 text-xs font-bold hover:text-primary transition-all" href="/league/esp.1" data-link>
-            <span class="w-2 h-2 rounded-full bg-primary"></span> La Liga
-          </a>
-          <a class="flex items-center gap-3 text-xs font-bold hover:text-primary transition-all" href="/league/ita.1" data-link>
-            <span class="w-2 h-2 rounded-full bg-blue-500"></span> Serie A
-          </a>
-        </div>
-      </div>
-    </nav>
-  </aside>
+<!-- SideNavBar Shell -->
+<aside class="hidden lg:flex flex-col pt-8 pb-10 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] sticky top-16 shrink-0">
+<nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-sm">
+<a class="text-on-surface px-6 py-4 flex items-center gap-3 transition-colors hover:bg-white/5" href="/live" data-link>
+<span class="material-symbols-outlined">sensors</span> Live Score</a>
+<a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3" href="/upcoming" data-link>
+<span class="material-symbols-outlined">calendar_today</span> Full Schedule
+                </a>
+<a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3" href="/history" data-link>
+<span class="material-symbols-outlined">star</span> My Favorites
+                </a>
+<a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3" href="/news" data-link>
+<span class="material-symbols-outlined">newspaper</span> Latest News
+                </a>
+<a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3" href="/top-leagues" data-link>
+<span class="material-symbols-outlined">leaderboard</span> Advanced Stats
+                </a>
+<div class="my-6 px-6">
+<div class="text-[10px] font-black text-on-surface/40 uppercase tracking-[0.2em] mb-4">Trending Leagues</div>
+<div class="space-y-3">
+<a class="flex items-center gap-3 text-xs font-bold hover:text-primary transition-all" href="/league/eng.1" data-link>
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Premier League
+                        </a>
+<a class="flex items-center gap-3 text-xs font-bold hover:text-primary transition-all" href="/league/esp.1" data-link>
+<span class="w-2 h-2 rounded-full bg-primary"></span> La Liga
+                        </a>
+<a class="flex items-center gap-3 text-xs font-bold hover:text-primary transition-all" href="/league/ita.1" data-link>
+<span class="w-2 h-2 rounded-full bg-blue-500"></span> Serie A
+                        </a>
+</div>
+</div>
+</nav>
+</aside>
 
-  <!-- Main Content Area -->
-  <main class="flex-1 w-full bg-surface relative overflow-hidden" id="main" aria-live="polite">
-    <div class="scanline"></div>
-    <!-- SPA Initial State -->
-    <div class="flex items-center justify-center min-h-[60vh]">
-      <div class="flex flex-col items-center gap-4">
-        <span class="material-symbols-outlined text-6xl text-primary animate-spin">loading</span>
-        <span class="font-black uppercase tracking-widest text-xs opacity-50 tracking-tighter">Entering the Multiverse...</span>
-      </div>
-    </div>
-  </main>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full bg-surface relative overflow-hidden" id="main" aria-live="polite">
+<div class="scanline"></div>
+<!-- SPA Initial State -->
+<div class="flex items-center justify-center min-h-[60vh]">
+  <div class="flex flex-col items-center gap-4">
+    <span class="material-symbols-outlined text-6xl text-primary animate-spin">loading</span>
+    <span class="font-black uppercase tracking-widest text-xs opacity-50 tracking-tighter">Entering the Multiverse...</span>
+  </div>
+</div>
+</main>
 </div>
 
 <!-- Global Footer -->
-<footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 relative z-20">
-  <div class="max-w-7xl mx-auto px-6">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
-      <div class="flex flex-col gap-6">
-        <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Quick Links</h5>
-        <ul class="flex flex-col gap-4">
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport/football" data-link>Football</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport/basketball" data-link>Basketball</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport/tennis" data-link>Tennis</a></li>
-        </ul>
-      </div>
-      <div class="flex flex-col gap-6">
-        <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Legal</h5>
-        <ul class="flex flex-col gap-4">
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/privacy-policy" data-link>Privacy Policy</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/terms-of-service" data-link>Terms of Service</a></li>
-        </ul>
-      </div>
-      <div class="flex flex-col gap-6">
-        <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Resources</h5>
-        <ul class="flex flex-col gap-4">
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/data-sources" data-link>Data Sources</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/advertise" data-link>Advertise</a></li>
-        </ul>
-      </div>
-      <div class="flex flex-col gap-6">
-        <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Community</h5>
-        <ul class="flex flex-col gap-4">
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/donate" data-link>Support via Ko-fi</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/feedback" data-link>Feedback</a></li>
-        </ul>
-      </div>
-    </div>
-    
-    <div class="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-      <div class="flex flex-col items-center md:items-start gap-4">
-        <div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">LIVESCOREFREE.ONLINE</div>
-        <p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">
-          © <span id="current-year">2026</span> LIVESCOREFREE.ONLINE KINETIC BROADCAST. ALL RIGHTS RESERVED.
-        </p>
-      </div>
-      <div class="flex gap-6">
-        <button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">share</button>
-        <button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">rss_feed</button>
-      </div>
-    </div>
-  </div>
+<footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+<!-- Quick Links -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Quick Links</h5>
+<ul class="flex flex-col gap-4">
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport/soccer" data-link>Football</a></li>
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport/basketball" data-link>Basketball</a></li>
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport/baseball" data-link>Baseball</a></li>
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport/tennis" data-link>Tennis</a></li>
+</ul>
+</div>
+<!-- Legal -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Legal</h5>
+<ul class="flex flex-col gap-4">
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/privacy-policy" data-link>Privacy Policy</a></li>
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/terms-of-service" data-link>Terms of Service</a></li>
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/dmca" data-link>DMCA Policy</a></li>
+</ul>
+</div>
+<!-- Resources -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Resources</h5>
+<ul class="flex flex-col gap-4">
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/data-sources" data-link>Data Sources</a></li>
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/advertise" data-link>Advertise With Us</a></li>
+</ul>
+</div>
+<!-- Support -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Support</h5>
+<ul class="flex flex-col gap-4">
+<li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/donate" data-link>Support on Ko-fi</a></li>
+</ul>
+</div>
+</div>
+<!-- Bottom Branding & Copyright -->
+<div class="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col items-center md:items-start gap-4">
+<div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">livescoreFree.online</div>
+<p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">
+                    © 2026 livescoreFree.online KINETIC BROADCAST. ALL RIGHTS RESERVED.
+                </p>
+</div>
+<div class="flex gap-6">
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">share</button>
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">rss_feed</button>
+</div>
+</div>
+</div>
 </footer>
 
 <div id="toast" class="toast"></div>
-
-
 
 <script src="/api-config.js" defer></script>
 <script src="/app.js" type="module"></script>
