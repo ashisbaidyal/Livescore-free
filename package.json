@@ -9,7 +9,7 @@
     "check:syntax": "node scripts/validate-deployment.mjs --syntax-only"
   },
   "dependencies": {
-    "jsdom": "^29.0.0"
+    "jsdom": "^29.0.0",
+    "puppeteer": "^24.40.0"
   }
 }
-

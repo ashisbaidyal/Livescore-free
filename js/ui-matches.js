@@ -128,6 +128,22 @@ export function renderMatchGrid(matches, emptyMessage) {
   return `<div class="grid" style="display: flex; flex-direction: column; gap: 4px;">${matches.map(renderMatchCard).join("")}</div>`;
 }
 
+export function getSportIcon(sportGroup) {
+  const icons = {
+    football: "sports_soccer",
+    basketball: "sports_basketball",
+    nfl: "sports_football",
+    tennis: "sports_tennis",
+    mma: "sports_mma",
+    f1: "settings_input_antenna",
+    cricket: "sports_cricket",
+    hockey: "sports_hockey",
+    baseball: "sports_baseball",
+    rugby: "sports_rugby"
+  };
+  return icons[sportGroup] || "sports_soccer";
+}
+
 export function getSportImagePath(sport) {
   return SPORT_IMAGE_MAP[sport] || SPORT_IMAGE_MAP.default;
 }
