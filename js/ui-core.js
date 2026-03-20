@@ -177,41 +177,6 @@ export function revealChrome() {
   if (dock) dock.classList.remove("app-dock--hidden");
 }
 
-export function toggleSearch() {
-  const overlay = qs("#search-overlay");
-  const input = qs("#search-input");
-  if (!overlay) return;
-  const isHidden = overlay.hasAttribute("hidden");
-  if (isHidden) {
-    overlay.removeAttribute("hidden");
-    if (input) {
-      input.value = "";
-      input.focus();
-    }
-    document.body.style.overflow = "hidden";
-  } else {
-    overlay.setAttribute("hidden", "");
-    document.body.style.overflow = "";
-  }
-}
-
-export function executeSearch(query) {
-  const q = String(query || "").trim().toLowerCase();
-  const results = qs("#search-results");
-  if (!results) return;
-  if (!q) {
-    results.innerHTML = "";
-    return;
-  }
-  const matches = state.matches.filter((m) => m.homeName.toLowerCase().includes(q) || m.awayName.toLowerCase().includes(q));
-  results.innerHTML = matches.map((m) => `
-    <a href="${routeForMatch(m)}" data-link class="search-result">
-      <span>${escapeHtml(m.homeName)} vs ${escapeHtml(m.awayName)}</span>
-      <small>${escapeHtml(m.leagueLabel)}</small>
-    </a>
-  `).join("") || '<div class="message-box">No matches found.</div>';
-}
-
 export function renderFooterContent() {
   const year = qs("#current-year");
   if (year) year.textContent = new Date().getFullYear();

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GOALSTREAM | Manchester United vs Manchester City</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-surface": "#e5e2e1",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-container": "#63676f",
+                        "on-tertiary": "#2d3137",
+                        "secondary-fixed": "#80fc94",
+                        "surface-variant": "#353534",
+                        "surface-container-low": "#1c1b1b",
+                        "primary-fixed": "#ffdad5",
+                        "on-primary-fixed": "#410001",
+                        "tertiary": "#c3c6cf",
+                        "on-surface-variant": "#e6bdb7",
+                        "tertiary-fixed-dim": "#c3c6cf",
+                        "surface-container-highest": "#353534",
+                        "on-background": "#e5e2e1",
+                        "on-primary": "#690003",
+                        "secondary-fixed-dim": "#62df7b",
+                        "surface-dim": "#131313",
+                        "on-primary-container": "#ffdfda",
+                        "inverse-primary": "#bf050e",
+                        "tertiary-fixed": "#dfe2eb",
+                        "on-secondary-fixed-variant": "#00531f",
+                        "primary": "#ffb4aa",
+                        "primary-container": "#cc1616",
+                        "outline": "#ad8883",
+                        "surface-container": "#201f1f",
+                        "on-tertiary-container": "#e3e6ef",
+                        "secondary-container": "#1fa64a",
+                        "on-secondary": "#003913",
+                        "on-secondary-fixed": "#002108",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface": "#131313",
+                        "inverse-on-surface": "#313030",
+                        "error": "#ffb4ab",
+                        "inverse-surface": "#e5e2e1",
+                        "primary-fixed-dim": "#ffb4aa",
+                        "on-error": "#690005",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-bright": "#3a3939",
+                        "background": "#131313",
+                        "secondary": "#62df7b",
+                        "on-primary-fixed-variant": "#930006",
+                        "error-container": "#93000a",
+                        "surface-tint": "#ffb4aa",
+                        "outline-variant": "#5d3f3c",
+                        "on-tertiary-fixed": "#181c22",
+                        "on-tertiary-fixed-variant": "#43474e",
+                        "on-secondary-container": "#00320f"
+                    },
+                    fontFamily: {
+                        "headline": ["Lexend"],
+                        "body": ["Lexend"],
+                        "label": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            backdrop-filter: blur(16px);
+            background: rgba(32, 31, 31, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .stadium-gradient {
+            background: radial-gradient(circle at top, rgba(204, 22, 22, 0.15) 0%, rgba(14, 14, 14, 1) 70%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar -->
+<nav class="bg-[#131313] dark:bg-[#131313] backdrop-blur-xl bg-opacity-80 text-[#CC1616] dark:text-[#FFB4AA] font-['Lexend'] font-bold tracking-tight uppercase docked full-width top-0 z-50 border-b border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] grid grid-cols-3 items-center px-6 py-4 w-full max-w-none fixed">
+<div class="text-2xl font-black italic tracking-tighter text-[#CC1616] dark:text-[#FFB4AA]">GOALSTREAM</div>
+<div class="md:flex gap-8 items-center flex justify-center">
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] transition-colors duration-200" href="#">Leagues</a>
+<a class="text-[#FFB4AA] border-b-2 border-[#CC1616] pb-1 hover:text-[#FFB4AA] transition-colors duration-200" href="#">Live</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] transition-colors duration-200" href="#">Schedule</a>
+</div>
+<div class="hidden md:block"></div>
+</nav>
+<!-- SideNavBar -->
+<aside class="hidden md:flex bg-[#0E0E0E] dark:bg-[#0E0E0E] font-['Lexend'] font-medium text-sm h-screen w-64 fixed left-0 top-0 pt-20 flex-col gap-2 p-4 z-40">
+<div class="mb-4 px-2">
+<h3 class="text-[#E5E2E1] font-bold text-xs uppercase tracking-widest opacity-40">My Leagues</h3>
+<p class="text-[10px] text-primary uppercase font-bold tracking-tighter">Favorites</p>
+</div>
+<a class="text-[#FFB4AA] bg-[#2A2A2A] border-r-4 border-[#CC1616] flex items-center gap-3 p-3 transition-all ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+            Premier League
+        </a>
+<a class="text-[#E5E2E1] opacity-60 hover:bg-[#1C1B1B] hover:opacity-100 flex items-center gap-3 p-3 transition-all ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">sports_soccer</span>
+            La Liga
+        </a>
+<a class="text-[#E5E2E1] opacity-60 hover:bg-[#1C1B1B] hover:opacity-100 flex items-center gap-3 p-3 transition-all ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">sports_soccer</span>
+            Serie A
+        </a>
+<a class="text-[#E5E2E1] opacity-60 hover:bg-[#1C1B1B] hover:opacity-100 flex items-center gap-3 p-3 transition-all ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">sports_soccer</span>
+            Bundesliga
+        </a>
+</aside>
+<!-- Main Content -->
+<main class="md:ml-64 pt-24 pb-24 md:pb-12 px-4 md:px-8 stadium-gradient min-h-screen">
+<!-- Match Hero -->
+<section class="max-w-6xl mx-auto mb-12">
+<div class="glass-panel rounded-2xl p-8 md:p-12 relative overflow-hidden shadow-2xl">
+<!-- Decorative Blur -->
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 blur-[100px]"></div>
+<div class="absolute -bottom-24 -left-24 w-64 h-64 bg-secondary/5 blur-[100px]"></div>
+<div class="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+<!-- Home Team -->
+<div class="flex flex-col items-center md:items-end flex-1 text-center md:text-right">
+<div class="w-24 h-24 md:w-32 md:h-32 mb-4 bg-surface-container rounded-full p-4 shadow-inner">
+<img alt="Manchester United Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACsMcnXYwIomgKikSHIv-ec14Y-c1tHWPqw9nd2fnst-yVd_RcUeSYkitpWvHFp63ytT5Slc_xLdj3aD4z3ccL-YUQdYdx7TNA56Tr6btSIHFrU4vTsrswbUfGFy8JQg8J5LZ8qjmtmtbIjTccBwjT9dmsXAWWo4DzvAKpSe1z-GyBWF27lsDgkN7nuGO-5YvIUXOfJFKEllRZgYhZs8kCww86VGQwiNMBKFmVfugmq1kEeMREbX5o6xyZxpv6QtnW2xjkm6Dp1f0U"/>
+</div>
+<h2 class="text-2xl md:text-4xl font-black tracking-tighter uppercase">Manchester United</h2>
+<span class="text-xs font-bold text-on-surface/40 tracking-[0.3em] uppercase mt-1">Old Trafford</span>
+</div>
+<!-- Scoreboard -->
+<div class="flex flex-col items-center px-8">
+<div class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase mb-4 flex items-center gap-2">
+<span class="w-2 h-2 bg-on-secondary-container rounded-full animate-pulse"></span>
+                            78' LIVE
+                        </div>
+<div class="flex items-center gap-4 md:gap-8">
+<span class="text-6xl md:text-8xl font-black tracking-tighter text-on-surface">2</span>
+<span class="text-2xl md:text-4xl font-thin text-on-surface/20">:</span>
+<span class="text-6xl md:text-8xl font-black tracking-tighter text-on-surface/60">1</span>
+</div>
+<button class="mt-6 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-lg">videocam</span>
+                            Watch Live Broadcast
+                        </button>
+</div>
+<!-- Away Team -->
+<div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">
+<div class="w-24 h-24 md:w-32 md:h-32 mb-4 bg-surface-container rounded-full p-4 shadow-inner">
+<img alt="Manchester City Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVGIDLDDNBtAZpt2eaumGpKcY7idQ4h10dFFOoTYm4GcMeCgV93285OvU2baz8llquKoy7V4sAIO1fowJKvQKWo9KnmKrf5_P_1vUmVFylZxnnHothiUWHXv--N3Ii6S86Y--qLeetssoypgo6-wj5xqoZFDEOgMdrvA1KFMD7bZuF506kko9kj-9KxVD2dVEuJBhOhuNJ6bwXW85QKSLJfEIHsLiaRaD98hud3F_2Bvs56dTPYH7-JzAFUqfwGXxH7mb-ED8BNEgC"/>
+</div>
+<h2 class="text-2xl md:text-4xl font-black tracking-tighter uppercase text-on-surface/80">Manchester City</h2>
+<span class="text-xs font-bold text-on-surface/40 tracking-[0.3em] uppercase mt-1">Visitor</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid Layout -->
+<div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Commentary & Timeline -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="glass-panel rounded-2xl p-6 h-full border-l-4 border-primary">
+<h3 class="text-lg font-black uppercase tracking-tight mb-8 flex items-center justify-between">
+                        Live Timeline
+                        <span class="material-symbols-outlined text-primary">history</span>
+</h3>
+<div class="space-y-8 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-[1px] before:bg-white/10">
+<!-- Event 1 -->
+<div class="relative pl-10">
+<div class="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-secondary ring-4 ring-secondary/20"></div>
+<div class="flex flex-col">
+<span class="text-[10px] font-black text-secondary uppercase tracking-widest">72' Substitution</span>
+<p class="text-sm font-bold text-on-surface mt-1">Kevin De Bruyne <span class="text-on-surface/40">OFF</span></p>
+<p class="text-sm font-bold text-secondary">Phil Foden <span class="text-on-surface/40">ON</span></p>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="relative pl-10">
+<div class="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-primary/20"></div>
+<div class="flex flex-col">
+<span class="text-[10px] font-black text-primary uppercase tracking-widest">58' Goal</span>
+<p class="text-sm font-bold text-on-surface mt-1">Marcus Rashford</p>
+<p class="text-xs text-on-surface/40">Assist by Bruno Fernandes</p>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="relative pl-10">
+<div class="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-[#FFD700] ring-4 ring-[#FFD700]/20"></div>
+<div class="flex flex-col">
+<span class="text-[10px] font-black text-[#FFD700] uppercase tracking-widest">44' Yellow Card</span>
+<p class="text-sm font-bold text-on-surface mt-1">Rodri</p>
+</div>
+</div>
+<!-- Event 4 -->
+<div class="relative pl-10">
+<div class="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-primary/20"></div>
+<div class="flex flex-col">
+<span class="text-[10px] font-black text-primary uppercase tracking-widest">21' Goal</span>
+<p class="text-sm font-bold text-on-surface mt-1">Alejandro Garnacho</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Stats & Lineups -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- Match Statistics -->
+<div class="glass-panel rounded-2xl p-6">
+<h3 class="text-lg font-black uppercase tracking-tight mb-8">Match Statistics</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<span class="text-[10px] font-black uppercase tracking-widest opacity-40">Possession</span>
+<div class="flex gap-4">
+<span class="text-xl font-black">42%</span>
+<span class="text-xl font-black text-on-surface/40">58%</span>
+</div>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full flex overflow-hidden">
+<div class="h-full bg-primary" style="width: 42%"></div>
+<div class="h-full bg-white/10" style="width: 58%"></div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<span class="text-[10px] font-black uppercase tracking-widest opacity-40">Shots on Target</span>
+<div class="flex gap-4">
+<span class="text-xl font-black">6</span>
+<span class="text-xl font-black text-on-surface/40">4</span>
+</div>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full flex overflow-hidden">
+<div class="h-full bg-primary" style="width: 60%"></div>
+<div class="h-full bg-white/10" style="width: 40%"></div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<span class="text-[10px] font-black uppercase tracking-widest opacity-40">Pass Accuracy</span>
+<div class="flex gap-4">
+<span class="text-xl font-black">78%</span>
+<span class="text-xl font-black text-on-surface/40">89%</span>
+</div>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full flex overflow-hidden">
+<div class="h-full bg-primary" style="width: 78%"></div>
+<div class="h-full bg-white/10" style="width: 22%"></div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<span class="text-[10px] font-black uppercase tracking-widest opacity-40">Expected Goals (xG)</span>
+<div class="flex gap-4">
+<span class="text-xl font-black">1.84</span>
+<span class="text-xl font-black text-on-surface/40">1.12</span>
+</div>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full flex overflow-hidden">
+<div class="h-full bg-primary" style="width: 62%"></div>
+<div class="h-full bg-white/10" style="width: 38%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Team Lineups & Promo Card -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- United Lineup -->
+<div class="glass-panel rounded-2xl p-6">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-8 h-8 bg-surface-container rounded p-1">
+<img alt="MUN" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4srU2bhn8j3xX7BgA4745FxWcAoLABSmMeduRdmoDQBpFopr7ztPaSHsCn__lljv7yv0riMmble0ef0Gxx-0xM_fYz23RWDYFTZKUWVGow1HtxGdelXWEnFhP91gRsqjo5-RqNXfhnq-e1DEnBbQ_Q23xp5L0bQ1U2T-Ps9p44gydMiQ81SmGaQgtQUVa2nY2mrFSCIprxULBG4q4NEQrsx1g3capJns3buzqAOZ-ZYUuBbywJKkGiUFR9zA0C7CXJkHMr3Ue3X0s"/>
+</div>
+<h4 class="text-sm font-black uppercase tracking-widest">Starting XI</h4>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-2 rounded bg-white/5">
+<div class="flex items-center gap-4">
+<span class="text-xs font-black text-primary w-5">24</span>
+<span class="text-sm font-bold">Onana</span>
+</div>
+<span class="text-[10px] uppercase font-black opacity-30">GK</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<span class="text-xs font-black text-primary w-5">20</span>
+<span class="text-sm font-bold">Dalot</span>
+</div>
+<span class="text-[10px] uppercase font-black opacity-30">DF</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<span class="text-xs font-black text-primary w-5">8</span>
+<span class="text-sm font-bold">Fernandes</span>
+</div>
+<span class="text-[10px] uppercase font-black opacity-30">MF</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<span class="text-xs font-black text-primary w-5">10</span>
+<span class="text-sm font-bold">Rashford</span>
+</div>
+<span class="text-[10px] uppercase font-black opacity-30">FW</span>
+</div>
+</div>
+</div>
+<!-- Replace Support Card with Fuel The Broadcast / Advertise -->
+<div class="relative rounded-2xl overflow-hidden shadow-2xl group cursor-pointer h-full min-h-[300px]">
+<!-- Background Gradient following style of IMAGE_18 -->
+<div class="absolute inset-0 bg-gradient-to-br from-[#CC1616] via-[#690003] to-[#0E0E0E]"></div>
+<!-- Abstract Patterns -->
+<div class="absolute inset-0 opacity-20">
+<div class="absolute top-1/2 right-0 w-48 h-48 border-8 border-white rounded-full -mr-24 -mt-24"></div>
+<div class="absolute bottom-0 left-0 w-32 h-32 border-4 border-white rounded-full -ml-16 -mb-16"></div>
+</div>
+<div class="relative z-10 p-8 flex flex-col h-full justify-between">
+<div>
+<h3 class="text-3xl font-black italic uppercase tracking-tighter leading-none mb-2">FUEL THE<br/>BROADCAST</h3>
+<p class="text-[10px] font-medium text-white/70 uppercase tracking-widest max-w-[180px]">Keep the stream alive and ad-free. Support our independent crew or sponsor a segment.</p>
+</div>
+<div class="flex flex-col gap-2">
+<button class="w-full py-3 bg-white text-[#CC1616] font-black text-[10px] tracking-widest uppercase rounded shadow-lg hover:bg-on-surface-variant transition-colors">SUPPORT ON KO-FI</button>
+<button class="w-full py-3 bg-transparent border border-white/20 text-white font-black text-[10px] tracking-widest uppercase rounded hover:bg-white/10 transition-colors">ADVERTISE HERE</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Additional EA SPORTS FC 26 Promotion Section (based on IMAGE_18 style) -->
+<section class="max-w-6xl mx-auto mt-12 mb-20 px-4 md:px-0">
+<div class="relative w-full rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[3/1] group cursor-pointer">
+<img alt="Soccer pitch action" class="absolute inset-0 w-full h-full object-cover grayscale brightness-50 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByRIan5XWTEjPLl4jW3CPSEi9wM3Cvs9gqK-HHLdHclJjOcg0UcHoXR9KX81p63aJQ57ZGixRviVG-Uc78DPToY1Uoc4jfNicR1Dfkkn-D5IcnMrR75DJBG7APFTtmuVftIPqUcMiSmmGbCxBjQfEne07mMFHg3YqHetz__DEspRTn3vNrKqWili-TbAMJDT6LhKZp85q7PzXCo3Y8UvvEtkYNOLbXxR8x2hUqwFQGw6Zwb53c_8ccOP-tg-OGrZGLJ2RXD-clGMSL"/>
+<div class="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
+<div class="relative z-10 h-full flex flex-col justify-center p-8 md:p-12">
+<h2 class="text-4xl md:text-6xl font-black italic tracking-tighter text-white mb-2 uppercase">EA SPORTS<br/><span class="text-[#CC1616]">FC 26</span></h2>
+<p class="text-xs md:text-sm font-bold text-white/60 tracking-widest uppercase mb-8">THE WORLD'S GAME. PRE-ORDER NOW.</p>
+<button class="bg-[#CC1616] text-white px-8 py-3 rounded font-black text-xs tracking-widest uppercase w-max hover:bg-[#ff1a1a] transition-colors">PRE-ORDER</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-[#0E0E0E] dark:bg-[#0E0E0E] w-full py-12 border-t border-white/5 font-['Lexend'] font-light text-[10px] tracking-widest relative z-50">
+<div class="flex flex-col items-center justify-center space-y-6 w-full px-4">
+<div class="font-black text-lg text-white opacity-20">GOALSTREAM</div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-[#E5E2E1] opacity-40 hover:text-[#CC1616] hover:opacity-100 transition-all" href="#">PRIVACY POLICY</a>
+<a class="text-[#E5E2E1] opacity-40 hover:text-[#CC1616] hover:opacity-100 transition-all" href="#">TERMS OF SERVICE</a>
+<a class="text-[#E5E2E1] opacity-40 hover:text-[#CC1616] hover:opacity-100 transition-all" href="#">ADVERTISE</a>
+<a class="text-[#E5E2E1] opacity-40 hover:text-[#CC1616] hover:opacity-100 transition-all" href="#">CAREERS</a>
+<a class="text-[#E5E2E1] opacity-40 hover:text-[#CC1616] hover:opacity-100 transition-all" href="#">HELP CENTRE</a>
+</div>
+<div class="text-[#FFB4AA] dark:text-[#FFB4AA] text-center">
+                © 2024 GOALSTREAM KINETIC BROADCAST. ALL RIGHTS RESERVED.
+            </div>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-[#131313] dark:bg-[#131313] backdrop-blur-xl bg-opacity-80 text-[#CC1616] dark:text-[#FFB4AA] font-['Lexend'] font-bold tracking-tight uppercase fixed bottom-0 z-50 border-t border-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] grid grid-cols-4 items-center px-2 py-3 w-full">
+<a class="flex flex-col items-center justify-center text-[#E5E2E1] opacity-50 text-[9px]" href="#">
+<span class="material-symbols-outlined text-xl">home</span>
+            Home
+        </a>
+<a class="flex flex-col items-center justify-center text-[#FFB4AA] text-[9px]" href="#">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">sports_score</span>
+            Scores
+        </a>
+<a class="flex flex-col items-center justify-center text-[#E5E2E1] opacity-50 text-[9px]" href="#">
+<span class="material-symbols-outlined text-xl">newspaper</span>
+            News
+        </a>
+<a class="flex flex-col items-center justify-center text-[#E5E2E1] opacity-50 text-[9px]" href="#">
+<span class="material-symbols-outlined text-xl">star</span>
+            Favorites
+        </a>
+</nav>
+</body></html>

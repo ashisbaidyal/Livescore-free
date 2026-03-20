@@ -5,7 +5,7 @@ import { refreshData, syncMatchRealtimeState } from "./js/api.js";
 import { loadHistory, loadFeedbackNotes, loadFavoriteMatches, loadNotificationPrefs, loadLanguagePreference, loadBackgroundPreferences } from "./js/storage.js";
 import { navigate, handleRouteFromQueryFallback, migrateLegacyHashPath, parseRoute } from "./js/routing.js";
 import { renderRoute } from "./js/ui-pages.js";
-import { applyTheme, detectThemeByTime, cycleThemeMode, toggleSearch, executeSearch, renderFooterContent, maybeShowSupportPopup, initScrollAnimations } from "./js/ui-core.js";
+import { applyTheme, detectThemeByTime, cycleThemeMode, renderFooterContent, maybeShowSupportPopup, initScrollAnimations } from "./js/ui-core.js";
 
 // Enable API debugging for troubleshooting
 if (typeof localStorage !== 'undefined') {
@@ -43,17 +43,16 @@ function wireGlobalEvents() {
       cycleThemeMode();
     }
 
-    if (e.target.closest("[data-search-toggle]")) {
-      toggleSearch();
-    }
+
   });
 
-  const searchInput = qs("#search-input");
-  if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      executeSearch(e.target.value);
-    });
-  }
+  window.addEventListener("keydown", (e) => {
+    // Add other keys here if needed
+  });
+
+
+
+
 }
 
 async function init() {
