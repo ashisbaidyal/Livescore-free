@@ -303,13 +303,13 @@ export const SPORTSDB_SPORTS = {
 };
 
 export const SEO_BASE = {
-  site: "LiveScoreFree",
+  site: "livescorefree.online",
   origin: "https://livescorefree.online"
 };
 
 export const GLOBAL_SEO_KEYWORDS = [
   "live score",
-  "live scores free",
+  "livescorefree.online",
   "live sports scoreboard",
   "real-time match updates",
   "football live score",

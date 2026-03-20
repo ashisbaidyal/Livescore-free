@@ -106,7 +106,7 @@ export function buildBrowserDataUrl(url) {
   return raw;
 }
 
-export async function cachedJson(url, ttlMs = 25000) {
+export async function cachedJson(url, ttlMs = REFRESH_INTERVAL_MS) {
   const now = Date.now();
   const cached = requestCache.get(url);
   if (cached && now - cached.time < ttlMs) {
@@ -502,6 +502,7 @@ export function dedupeMatchKey(match) {
 
 export function syncMatchRealtimeState(match, updates = {}) {
   if (!match || !updates || typeof updates !== "object") return;
+  
   const apply = (target) => {
     if (!target) return;
     for (const [key, value] of Object.entries(updates)) {
@@ -509,13 +510,34 @@ export function syncMatchRealtimeState(match, updates = {}) {
       target[key] = value;
     }
   };
+
   apply(match);
+  
   const matchKeys = [`${match.sportGroup}:${match.slug}`, `${match.leagueKey}:${match.id}`, match.slug].filter(Boolean);
   for (const key of matchKeys) apply(state.matchIndex.get(key));
+
   const syncLists = [state.matches, state.liveMatches, state.finalMatches, state.upcomingMatches, state.history];
   for (const list of syncLists) {
     const target = Array.isArray(list) ? list.find((item) => item && item.slug === match.slug && item.sportGroup === match.sportGroup) : null;
     apply(target);
+  }
+
+  // --- Kinetic DOM Updates ---
+  if (typeof document !== "undefined") {
+    const matchId = `match-${match.sportGroup}-${match.slug}`;
+    const homeEl = document.getElementById(`${matchId}-home-score`);
+    const awayEl = document.getElementById(`${matchId}-away-score`);
+    const statusEl = document.getElementById(`${matchId}-status`);
+    const metaEl = document.getElementById(`${matchId}-meta`);
+
+    if (homeEl && updates.homeScore !== undefined) homeEl.textContent = updates.homeScore;
+    if (awayEl && updates.awayScore !== undefined) awayEl.textContent = updates.awayScore;
+    if (statusEl && (updates.status !== undefined || updates.statusDetail !== undefined)) {
+      // Re-render only the badge part if we have the full match object updated
+      import("./ui-matches.js").then(m => {
+        if (statusEl) statusEl.innerHTML = m.statusBadge(match);
+      });
+    }
   }
 }
 

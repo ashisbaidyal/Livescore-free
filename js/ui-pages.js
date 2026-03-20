@@ -81,169 +81,107 @@ export async function renderRoute() {
 
 async function renderHomePage(container) {
   setSeo({
-    title: "LiveScoreFree | Real-Time Sports Scores, Fixtures, Results & Tables",
-    description: "Live scores, fixtures, results, standings, and match pages across major sports.",
+    title: "livescorefree.online | The Stadium Spectacle | Live Scores & Arena Coverage",
+    description: "Track the global matchday universe with livescorefree.online. High-contrast scores, headline reports, and arena tables for every major competition.",
     path: "/home"
   });
 
   const heroMatch = state.liveMatches[0] || state.upcomingMatches[0] || trendingMatches(1)[0];
   const trust = getTrustSignals();
-  const topLeagues = topLeagueSummaries().slice(0, 12);
-  const featuredMatches = [...state.liveMatches, ...state.upcomingMatches].slice(0, 3);
-  const sportCoverage = Object.entries(SPORT_GROUPS).map(([key, sport]) => ({
-    key,
-    label: sport.label,
-    description: sport.description,
-    live: state.liveMatches.filter((match) => match.sportGroup === key).length,
-    total: state.matches.filter((match) => match.sportGroup === key).length
-  })).filter((item) => item.total > 0 || item.live > 0).slice(0, 8);
-  const liveShowcase = state.liveMatches.slice(0, 4);
-  const upcomingShowcase = state.upcomingMatches.slice(0, 4);
-  const resultShowcase = state.finalMatches.slice(0, 4);
-  const trendingShowcase = trendingMatches(5);
+  
+  // livescorefree.online Layout Construction
   container.innerHTML = `
-    ${heroMatch ? renderClubHomeHero(heroMatch, trust) : renderHeroFallback()}
-    <section class="section tone-trust world-sports-overview">
-      <div class="section-head"><div><h2>World Sports Coverage</h2><p>Real-time coverage across football, cricket, basketball, tennis, baseball, hockey, racing, and more.</p></div></div>
+    <!-- 1. The Hero: Stadium Spectacle -->
+    ${heroMatch ? renderLsfHero(heroMatch) : renderHeroFallback()}
+
+    <!-- 2. The Multiverse: Arena Navigation -->
+    <section class="section tone-trust">
+      <div class="section-head">
+        <div>
+          <span class="premium-kicker" style="color: var(--gs-primary);">The Multiverse</span>
+          <h2>Navigate the Arena</h2>
+          <p>Jump directly into the streaming universe for any major sport.</p>
+        </div>
+      </div>
       <div class="world-sports-grid">
-        ${sportCoverage.map((sport) => `
-          <a class="world-sport-card" data-link href="/sport/${sport.key}">
-            <img src="${escapeHtml(getSportImagePath(sport.key))}" alt="${escapeHtml(sport.label)}">
-            <strong>${escapeHtml(sport.label)}</strong>
-            <span>${sport.live} live now</span>
-            <small>${sport.total} total matches loaded</small>
-          </a>
-        `).join("") || `<div class="message-box">Sports coverage will populate as data loads.</div>`}
-      </div>
-    </section>
-    <section class="section tone-live">
-      <div class="section-head"><div><h2>Live Match Overview</h2><p>${state.liveMatches.length} live, ${state.upcomingMatches.length} upcoming, ${state.finalMatches.length} finished.</p></div></div>
-      <div class="trust-grid">
-        <div class="trust-card"><strong>${trust.sportsCovered}</strong><span>Sports covered</span></div>
-        <div class="trust-card"><strong>${trust.countries}</strong><span>Active regions</span></div>
-        <div class="trust-card"><strong>${trust.monthlyUsers.toLocaleString()}</strong><span>Projected monthly users</span></div>
-        <div class="trust-card"><strong>${trust.indexedPages.toLocaleString()}</strong><span>Estimated pages</span></div>
-      </div>
-    </section>
-    <section class="section tone-live home-fixture-shell">
-      <div class="section-head"><div><h2>Matchday Panels</h2><p>Three-column fixture/result presentation inspired by a premium club homepage.</p></div></div>
-      <div class="fixture-rail-grid">
-        ${renderCompactMatchRail("Live Around The World", "In-progress matches across active sports.", liveShowcase, "/live")}
-        ${renderCompactMatchRail("Upcoming Kickoffs", "The next fixtures queued in the schedule.", upcomingShowcase, "/upcoming")}
-        ${renderCompactMatchRail("Latest Results", "Recent final scorelines from the feeds.", resultShowcase, "/results")}
-      </div>
-    </section>
-    <section class="section tone-trust club-premium-grid">
-      <div class="section-head"><div><h2>Club Matchday Experience</h2><p>A premium sports front-end inspired by a soccer-club layout, powered by your live data feeds.</p></div></div>
-      <div class="club-premium-layout">
-        <div class="club-story-card">
-          <span class="premium-kicker">Inside The Club</span>
-          <h3>Built Around Matchdays, Fixtures, Results, News, Sponsors, and Support</h3>
-          <p>The homepage now acts like a real sports portal instead of just a scoreboard. It highlights live action, upcoming fixtures, editorial content, sponsor space, and supporter funding in one flow.</p>
-          <div class="club-story-actions">
-            <a class="btn btn-primary" data-link href="/news">Open News Center</a>
-            <a class="btn" data-link href="/about">About The Project</a>
-          </div>
-        </div>
-        <div class="club-mini-fixtures">
-          ${featuredMatches.map((match) => `
-            <a class="fixture-mini-card" data-link href="${routeForMatch(match)}">
-              <span class="fixture-mini-top">${escapeHtml(match.leagueLabel)}</span>
-              <strong>${escapeHtml(match.homeName)} vs ${escapeHtml(match.awayName)}</strong>
-              <span>${escapeHtml(match.statusDetail || formatDateTime(match.date))}</span>
-            </a>
-          `).join("") || `<div class="message-box">Featured fixtures will appear here as soon as the feeds populate.</div>`}
-        </div>
-      </div>
-    </section>
-    <section class="section tone-league sponsor-ribbon-shell">
-      <div class="section-head"><div><h2>Featured Competitions</h2><p>Top-flight leagues positioned like a sponsor or partner ribbon.</p></div></div>
-      <div class="sponsor-ribbon">
-        ${topLeagues.slice(0, 8).map((league) => `
-          <a class="sponsor-pill" data-link href="${routeForLeague(league.key)}">
-            <img src="${escapeHtml(getLeagueImagePath(league.key, league.sportGroup))}" alt="${escapeHtml(league.label)}">
-            <span>${escapeHtml(league.label)}</span>
+        ${Object.entries(SPORT_GROUPS).map(([key, sport]) => `
+          <a class="world-sport-card gs-depth-shadow" data-link href="/sport/${key}" style="background: var(--gs-surface-lowest); border: none;">
+            <img src="${escapeHtml(getSportImagePath(key))}" alt="${escapeHtml(sport.label)}" style="width: 48px; height: 48px; border-radius: 4px !important;">
+            <strong style="margin-top: 12px; font-size: 1.1rem;">${escapeHtml(sport.label)}</strong>
+            <span style="color: var(--gs-primary); font-weight: 600;">Explore Arena</span>
           </a>
         `).join("")}
       </div>
     </section>
-    ${renderSectionWithMatches("tone-live", "Live Now", "Real-time matches currently in progress.", "/live", state.liveMatches.slice(0, 8), "No matches are live right now.")}
-    <section class="section tone-league">
-      <div class="section-head"><div><h2>Featured Matchday Panels</h2><p>Three premium cards for match discovery and landing page depth.</p></div></div>
-      <div class="feature-panel-grid">
-        <article class="feature-panel-card">
-          <span class="premium-kicker">Score Center</span>
-          <h3>Every Live Score in One Place</h3>
-          <p>Open the live center for current games across football, cricket, basketball, tennis, hockey, and more.</p>
-          <a class="btn btn-primary" data-link href="/live">Watch The Live Board</a>
-        </article>
-        <article class="feature-panel-card">
-          <span class="premium-kicker">Club Fixtures</span>
-          <h3>Upcoming Matches With Standings Context</h3>
-          <p>Pre-match cards link into league hubs, standings tables, and detailed match center pages.</p>
-          <a class="btn" data-link href="/upcoming">See Upcoming</a>
-        </article>
-        <article class="feature-panel-card">
-          <span class="premium-kicker">Final Whistle</span>
-          <h3>Results Archive and Match History</h3>
-          <p>Track completed matches, revisit scorelines, and keep local history for quick return journeys.</p>
-          <a class="btn" data-link href="/results">See Results</a>
-        </article>
-      </div>
-    </section>
-    ${renderSectionWithMatches("tone-upcoming", "Upcoming Fixtures", "Next kickoffs from active leagues.", "/upcoming", state.upcomingMatches.slice(0, 8), "No upcoming fixtures are available right now.")}
-    ${renderSectionWithMatches("tone-trending", "Trending Matches", "Top competitions and busiest scoreboards.", "/trending", trendingShowcase, "Trending matches will appear here as data refreshes.")}
-    <section class="section tone-support">
-      <div class="section-head"><div><h2>Featured Ad Slot</h2><p>Primary sponsor space on the homepage.</p></div><a class="section-view-all" data-link href="/advertise">Advertise</a></div>
-      <div class="premium-ad-shell">
-        <div class="premium-ad-copy">
-          <span class="premium-kicker">Sponsor Zone</span>
-          <h3>Premium placement for betting, streaming, fantasy, and fan brands</h3>
-          <p>Use this block for your most valuable homepage sponsor or ad creative. The global network ad container stays active below the main shell.</p>
-        </div>
-        ${renderInlineSponsorCard()}
-      </div>
-    </section>
-    ${renderSectionWithMatches("tone-results", "Latest Results", "Recently completed matches.", "/results", state.finalMatches.slice(0, 8), "No final results have landed yet.")}
-    <section class="section tone-league">
-      <div class="section-head"><div><h2>Top Leagues</h2><p>Dedicated league hubs with fixtures and standings.</p></div><a class="section-view-all" data-link href="/top-leagues">Browse Leagues</a></div>
-      <div class="league-grid">${topLeagues.map(renderLeagueCard).join("")}</div>
-    </section>
-    <section class="section tone-trust">
-      <div class="section-head"><div><h2>Latest Sports News</h2><p>Editorial content to make the site feel like a full club portal, not only a scoreboard.</p></div><a class="section-view-all" data-link href="/news">News Center</a></div>
-      <div class="premium-news-grid" id="home-news-grid"><div class="message-box">Loading sports news...</div></div>
-    </section>
-    <section class="section tone-sport">
-      <div class="section-head"><div><h2>Sports Hubs</h2><p>Jump into a single sport and view all active competitions.</p></div></div>
-      <div class="league-grid">${Object.entries(SPORT_GROUPS).map(([key, sport]) => `<a class="league-card" data-link href="/sport/${key}"><img src="${escapeHtml(getSportImagePath(key))}" alt="${escapeHtml(sport.label)}"><strong>${escapeHtml(sport.label)}</strong><span>${escapeHtml(sport.description)}</span></a>`).join("")}</div>
-    </section>
-    <section class="section tone-support">
-      <div class="section-head"><div><h2>Support LiveScoreFree</h2><p>Keep the real-time data view online and expanding.</p></div><a class="section-view-all" data-link href="/donate">Support</a></div>
-      ${renderDonationProgress()}
-      <div class="support-kofi-card">
+
+    <!-- 3. Live Scores Center -->
+    <section class="section tone-live">
+      <div class="section-head">
         <div>
-          <span class="premium-kicker">Ko-fi Support</span>
-          <h3>Back the project directly</h3>
-          <p>Use Ko-fi to support hosting, feed maintenance, and future premium front-end work.</p>
+          <span class="premium-kicker" style="color: var(--gs-primary);">Center Circle</span>
+          <h2>Live Scores Center</h2>
+          <p>${state.liveMatches.length} matches currently active in the arena.</p>
         </div>
-        <a class="btn btn-primary" href="${escapeHtml(DONATION_KOFI_URL)}" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a>
+        <a class="section-view-all" data-link href="/live">Open Live Board</a>
       </div>
+      ${renderMatchGrid(state.liveMatches.slice(0, 8), "The arena is currently quiet. Check back soon for live kickoffs.")}
     </section>
-    <section class="section tone-legal">
-      <div class="section-head"><div><h2>Newsletter & Contact</h2><p>Club-style closing section inspired by the template structure.</p></div></div>
-      <div class="newsletter-premium-panel">
+
+    <!-- 4. Headline Reports: Editorial Hub -->
+    <section class="section tone-league">
+      <div class="section-head">
         <div>
-          <span class="premium-kicker">Stay Connected</span>
-          <h3>Get matchday updates and sponsor opportunities</h3>
-          <p>Use the contact page for support and partnerships, and use the news page for ongoing editorial coverage.</p>
+          <span class="premium-kicker" style="color: var(--gs-primary);">Press Box</span>
+          <h2>Headline Reports</h2>
+          <p>Tactical breakdowns and insider reports from across the global network.</p>
         </div>
-        <div class="newsletter-premium-actions">
-          <a class="btn btn-primary" data-link href="/contact">Contact Us</a>
-          <a class="btn" data-link href="/advertise">Sponsor The Site</a>
+        <a class="section-view-all" data-link href="/news">Full Newsroom</a>
+      </div>
+      <div class="news-editorial-grid" id="home-news-grid">
+         <div class="message-box">Loading reports from the wire...</div>
+      </div>
+    </section>
+
+    <!-- 5. Arena Table: Featured Partnership -->
+    <section class="section tone-trust" style="background: var(--gs-inverse-surface); color: var(--gs-surface-lowest);">
+      <div class="section-head">
+        <div style="color: inherit;">
+          <span class="premium-kicker" style="color: var(--gs-primary);">Arena Table</span>
+          <h2 style="color: white;">Featured Partnership</h2>
+        </div>
+      </div>
+      <div class="arena-partnership-block" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: center;">
+        <div class="partnership-copy">
+          <h3 style="font-size: 2rem; margin-bottom: 20px;">Fuel Your Performance</h3>
+          <p style="opacity: 0.8; font-size: 1.1rem; margin-bottom: 30px;">livescorefree.online partners with the world's most iconic brands to keep the kinetic broadcast alive. Connect with us for premium sponsorship inventory across our sports hubs.</p>
+          <a class="btn btn-primary" data-link href="/advertise">Inquire for Sponsorship</a>
+        </div>
+        <div class="partnership-image" style="background: var(--gs-surface-low); padding: 40px; text-align: center; color: var(--gs-on-surface);">
+          <div style="font-size: 3rem; font-weight: 800; color: var(--gs-primary);">GATORADE</div>
+          <p style="margin-top: 20px; font-weight: 600;">The World's #1 Sports Drink</p>
         </div>
       </div>
     </section>
-    <div id="home-standings-card"></div>
+
+    <!-- 6. Fuel The Broadcast: Support -->
+    <section class="section tone-support">
+       <div class="section-head">
+        <div>
+          <span class="premium-kicker" style="color: var(--gs-primary);">Backstage</span>
+          <h2>Fuel The Broadcast</h2>
+          <p>Keep the stream alive and ad-free. Support our independent broadcast crew.</p>
+        </div>
+      </div>
+      <div class="support-premium-banner gs-depth-shadow" style="background: var(--gs-surface-lowest); padding: 40px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 30px;">
+        <div style="max-width: 600px;">
+          <h3>Join the Foundation Circle</h3>
+          <p>livescorefree.online is built for fans, by fans. Your support helps us scale our real-time data feeds and expand our coverage of niche leagues worldwide.</p>
+        </div>
+        <div class="support-actions">
+           <a class="btn btn-primary" href="https://ko-fi.com" target="_blank" style="padding: 20px 40px; font-size: 1.2rem;">Support via Ko-fi</a>
+        </div>
+      </div>
+    </section>
   `;
 
   const leagueKey = TOP_LEAGUE_KEYS.find((key) => state.matches.some((match) => match.leagueKey === key)) || "eng.1";
@@ -251,16 +189,52 @@ async function renderHomePage(container) {
   if (mount) {
     void renderLeagueStandingsCard(mount, leagueKey, "Featured Table");
   }
-  void hydrateNewsGrid(container, "#home-news-grid", 3);
+}
+
+function renderLsfHero(match) {
+  return `
+    <section class="hero lsf-hero" style="background: var(--gs-inverse-surface); color: white; padding: 100px 20px; position: relative; overflow: hidden;">
+      <div class="hero-inner-content" style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;">
+        <div class="hero-text">
+          <span class="premium-kicker" style="color: var(--gs-primary); display: block; margin-bottom: 20px; font-size: 1.2rem;">Stadium Spectacle</span>
+          <h1 style="font-size: 4rem; line-height: 0.9; margin-bottom: 30px; font-weight: 800;">Real Matchday Intensity</h1>
+          <p style="font-size: 1.25rem; opacity: 0.8; margin-bottom: 40px; font-family: var(--soccer-font-body);">Track the pulse of the arena with livescorefree.online's brutalist match centers and real-time kinetic scoreboards.</p>
+          <div class="hero-actions" style="display: flex; gap: 20px;">
+             <a data-link href="/live" class="btn btn-primary" style="padding: 16px 32px; font-size: 1.1rem;">Open Live Board</a>
+             <a data-link href="${routeForMatch(match)}" class="btn" style="background: transparent; color: white; border: 2px solid white; padding: 14px 30px;">Match Center</a>
+          </div>
+        </div>
+        <div id="hero-spotlight" class="hero-match-spotlight glass-panel" style="padding: 60px 40px; text-align: center; border: 4px solid var(--gs-primary);" data-match-key="${match.sportGroup}:${match.slug}">
+           <span class="premium-kicker" style="color: var(--gs-primary); margin-bottom: 30px; display: block;">Live From Arena</span>
+           <div class="hero-match-teams" style="display: flex; align-items: center; justify-content: center; gap: 40px; margin-bottom: 40px;">
+              <div class="hero-team">
+                <div style="font-size: 1.2rem; font-weight: 800;">${escapeHtml(match.homeName)}</div>
+              </div>
+              <div class="hero-massive-score" style="font-size: 6rem; font-weight: 800; line-height: 1; color: var(--gs-primary); font-family: var(--soccer-font-head);">
+                <span id="hero-home-score">${escapeHtml(match.homeScore)}</span><span style="color: white; font-size: 4rem; margin: 0 10px;">:</span><span id="hero-away-score">${escapeHtml(match.awayScore)}</span>
+              </div>
+              <div class="hero-team">
+                <div style="font-size: 1.2rem; font-weight: 800;">${escapeHtml(match.awayName)}</div>
+              </div>
+           </div>
+           <div class="hero-match-meta">
+              <div id="hero-status" class="badge badge-live pulsate-live" style="background: var(--gs-primary); color: white; padding: 8px 16px; display: inline-block;">${statusBadge(match)}</div>
+              <div id="hero-meta" style="margin-top: 16px; font-weight: 600; opacity: 0.7;">${escapeHtml(match.leagueLabel)} | ${formatDateTime(match.date)}</div>
+           </div>
+        </div>
+      </div>
+      <div class="hero-ambient-texture" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, var(--gs-primary) 0%, transparent 100%); opacity: 0.05; pointer-events: none;"></div>
+    </section>
+  `;
 }
 
 function renderHistoryPage(container) {
-  setSeo({ title: "Match History | LiveScoreFree", description: "Your recently opened match pages.", path: "/history" });
+  setSeo({ title: "Match History | livescorefree.online", description: "Your recently opened match pages.", path: "/history" });
   container.innerHTML = `<section class="section tone-history"><div class="section-head"><div><h1>Match History</h1><p>Recent matches opened from the live score center.</p></div></div>${renderMatchGrid(state.history.slice(0, 30), "No browsing history yet.")}</section>`;
 }
 
 function renderTopLeaguesPage(container) {
-  setSeo({ title: "Top Leagues | LiveScoreFree", description: "Browse major leagues with dedicated overview pages.", path: "/top-leagues" });
+  setSeo({ title: "Top Leagues | livescorefree.online", description: "Browse major leagues with dedicated overview pages.", path: "/top-leagues" });
   const grouped = Object.entries(LEAGUES).reduce((acc, [key, league]) => {
     if (!acc[league.sportGroup]) acc[league.sportGroup] = [];
     acc[league.sportGroup].push({ key, ...league, live: state.liveMatches.filter((match) => match.leagueKey === key).length });
@@ -298,7 +272,7 @@ async function renderLeaguePage(container, route) {
   const finalMatches = matches.filter((match) => match.status === "final");
 
   setSeo({
-    title: `${league.label} Live Scores, Fixtures & Results | LiveScoreFree`,
+    title: `${league.label} Live Scores, Fixtures & Results | livescorefree.online`,
     description: `${league.label} live scores, fixtures, results, and standings in one league hub.`,
     path: routeForLeague(route.leagueKey)
   });
@@ -370,9 +344,15 @@ async function renderMatchPage(container, route) {
 
   container.innerHTML = `
     <section class="match-hero auto-bg-surface" ${buildAutoBackgroundAttrs({ sportGroup: match.sportGroup, leagueKey: match.leagueKey, seedText: match.slug, strength: 0.3 })}>
-      <div class="match-hero-main">
+      <div class="match-hero-main" data-match-key="${match.sportGroup}:${match.slug}">
         <div class="mh-team">${renderPmTeamLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, loading: "eager" })}<span>${escapeHtml(match.homeName)}</span><small>${escapeHtml(match.homeAbbr || "")}</small></div>
-        <div class="mh-score-block"><div class="mh-score">${escapeHtml(match.homeScore)} - ${escapeHtml(match.awayScore)}</div><div class="mh-meta">${statusBadge(match)}</div><div class="mh-submeta">${escapeHtml(match.leagueLabel)} | ${escapeHtml(formatDateTime(match.date))}</div></div>
+        <div class="mh-score-block">
+          <div class="mh-score">
+            <span id="detail-home-score">${escapeHtml(match.homeScore)}</span> - <span id="detail-away-score">${escapeHtml(match.awayScore)}</span>
+          </div>
+          <div id="detail-status" class="mh-meta">${statusBadge(match)}</div>
+          <div id="detail-meta" class="mh-submeta">${escapeHtml(match.leagueLabel)} | ${escapeHtml(formatDateTime(match.date))}</div>
+        </div>
         <div class="mh-team">${renderPmTeamLogo({ teamLogo: match.awayLogo, teamName: match.awayName, teamAbbr: match.awayAbbr, loading: "eager" })}<span>${escapeHtml(match.awayName)}</span><small>${escapeHtml(match.awayAbbr || "")}</small></div>
       </div>
     </section>
@@ -435,7 +415,7 @@ function renderDonatePage(container) {
 }
 
 async function renderNewsPage(container) {
-  setSeo({ title: "Sports News | LiveScoreFree", description: "Editorial sports coverage and premium news cards.", path: "/news" });
+  setSeo({ title: "Sports News | livescorefree.online", description: "Editorial sports coverage and premium news cards.", path: "/news" });
   container.innerHTML = `
     <section class="hero" ${buildAutoBackgroundAttrs({ sportGroup: "football", seedText: "news", strength: 0.22 })}>
       <div class="hero-inner-content">
@@ -460,7 +440,7 @@ async function renderNewsPage(container) {
 }
 
 function renderSearchPage(container) {
-  setSeo({ title: "Search Matches | LiveScoreFree", description: "Find live, upcoming, and result match pages fast.", path: "/search" });
+  setSeo({ title: "Search Matches | livescorefree.online", description: "Find live, upcoming, and result match pages fast.", path: "/search" });
   const popular = trendingMatches(8);
   container.innerHTML = `
     <section class="section tone-sport">
@@ -498,14 +478,14 @@ function renderSearchPage(container) {
 }
 
 function renderContactPage(container) {
-  setSeo({ title: "Contact LiveScoreFree", description: "Support, advertising, and matchday partnership contact page.", path: "/contact" });
+  setSeo({ title: "Contact livescorefree.online", description: "Support, advertising, and matchday partnership contact page.", path: "/contact" });
   container.innerHTML = `
     <section class="section tone-legal">
       <div class="section-head"><div><h1>Contact Us</h1><p>Support, partnerships, sponsor inquiries, and general feedback.</p></div></div>
       <div class="contact-premium-layout">
         <div class="contact-premium-card">
           <span class="premium-kicker">Customer Support</span>
-          <h3>Reach the LiveScoreFree team</h3>
+          <h3>Reach the livescorefree.online team</h3>
           <p>Email: <a href="mailto:support@livescorefree.online">support@livescorefree.online</a></p>
           <p>Use the feedback page if you want to save notes locally during development or QA.</p>
           <div class="club-story-actions">
@@ -529,10 +509,10 @@ function renderContactPage(container) {
 }
 
 function renderAboutPage(container) {
-  setSeo({ title: "About LiveScoreFree", description: "About the premium live-score platform and its club-style design direction.", path: "/about" });
+  setSeo({ title: "About livescorefree.online", description: "About the premium live-score platform and its club-style design direction.", path: "/about" });
   container.innerHTML = `
     <section class="section tone-trust">
-      <div class="section-head"><div><h1>About LiveScoreFree</h1><p>A live-score website rebuilt to feel closer to a premium soccer-club experience.</p></div></div>
+      <div class="section-head"><div><h1>About livescorefree.online</h1><p>A live-score website rebuilt to feel closer to a premium soccer-club experience.</p></div></div>
       <div class="club-premium-layout">
         <div class="club-story-card">
           <span class="premium-kicker">The Platform</span>
@@ -550,7 +530,7 @@ function renderAboutPage(container) {
 }
 
 function renderFeedbackPage(container) {
-  setSeo({ title: "Feedback | LiveScoreFree", description: "Send feedback about the live score website and API experience.", path: "/feedback" });
+  setSeo({ title: "Feedback | livescorefree.online", description: "Send feedback about the live score website and API experience.", path: "/feedback" });
   container.innerHTML = `<section class="section tone-support"><div class="section-head"><div><h1>Feedback</h1><p>Store local feedback notes directly in the browser for review.</p></div></div><div class="article-body"><textarea id="feedback-notes" style="width:100%;min-height:220px;">${escapeHtml(state.feedbackNotes.join("\n\n"))}</textarea><div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;"><button class="btn btn-primary" id="save-feedback" type="button">Save Feedback</button><button class="btn" id="refresh-feedback-data" type="button">Refresh Match Data</button></div></div></section>`;
   const saveBtn = qs("#save-feedback", container);
   const refreshBtn = qs("#refresh-feedback-data", container);
@@ -591,7 +571,7 @@ function renderNotFoundPage(container) {
 }
 
 async function renderMatchListingPage(container, title, description, path, toneClass, matches) {
-  setSeo({ title: `${title} | LiveScoreFree`, description, path });
+  setSeo({ title: `${title} | livescorefree.online`, description, path });
   const groupedBySport = matches.reduce((acc, match) => {
     acc[match.sportGroup] = (acc[match.sportGroup] || 0) + 1;
     return acc;
@@ -668,12 +648,12 @@ async function renderLeagueStandingsCard(container, leagueKey, heading) {
 
 function renderStandingsMarkup(rows) {
   if (!rows.length) return `<div class="message-box">Standings are not available for this competition yet.</div>`;
-  return `<div class="table-responsive"><table class="standings-table"><thead><tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${escapeHtml(row.rank || row.intRank || "-")}</td><td class="team-cell">${row.teamLogo || row.strTeamBadge ? `<img src="${escapeHtml(row.teamLogo || row.strTeamBadge)}" alt="" class="team-badge-sm">` : ""}<span>${escapeHtml(row.teamName || row.strTeam || "Unknown")}</span></td><td>${escapeHtml(row.played || row.intPlayed || "-")}</td><td>${escapeHtml(row.won || row.intWin || "-")}</td><td>${escapeHtml(row.drawn || row.intDraw || "-")}</td><td>${escapeHtml(row.lost || row.intLoss || "-")}</td><td>${escapeHtml(row.goalDifference || row.intGoalDifference || "-")}</td><td><strong>${escapeHtml(row.points || row.intPoints || "-")}</strong></td></tr>`).join("")}</tbody></table></div>`;
+  return `<div class="table-responsive"><table class="standings-table"><thead><tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead><tbody id="standings-markup-body">${rows.map((row) => `<tr><td>${escapeHtml(row.rank || row.intRank || "-")}</td><td class="team-cell">${row.teamLogo || row.strTeamBadge ? `<img src="${escapeHtml(row.teamLogo || row.strTeamBadge)}" alt="" class="team-badge-sm">` : ""}<span>${escapeHtml(row.teamName || row.strTeam || "Unknown")}</span></td><td>${escapeHtml(row.played || row.intPlayed || "-")}</td><td>${escapeHtml(row.won || row.intWin || "-")}</td><td>${escapeHtml(row.drawn || row.intDraw || "-")}</td><td>${escapeHtml(row.lost || row.intLoss || "-")}</td><td>${escapeHtml(row.goalDifference || row.intGoalDifference || "-")}</td><td><strong>${escapeHtml(row.points || row.intPoints || "-")}</strong></td></tr>`).join("")}</tbody></table></div>`;
 }
 
 function renderTimeline(events) {
   if (!events.length) return `<div class="message-box">Timeline data is not available yet for this match.</div>`;
-  return `<div class="timeline-list">${events.map((event) => `<article class="timeline-item"><strong>${escapeHtml(event.minute || event.clock || "-")}</strong><div><div>${escapeHtml(event.description || event.type || "Event")}</div><span>${escapeHtml(event.team || event.player || "")}</span></div></article>`).join("")}</div>`;
+  return `<div id="timeline-list-container" class="timeline-list">${events.map((event) => `<article class="timeline-item"><strong>${escapeHtml(event.minute || event.clock || "-")}</strong><div><div>${escapeHtml(event.description || event.type || "Event")}</div><span>${escapeHtml(event.team || event.player || "")}</span></div></article>`).join("")}</div>`;
 }
 
 function renderTabButton(id, label, activeTab) {

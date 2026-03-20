@@ -1,14 +1,14 @@
 {
-  "name": "LiveScoreFree | Live Scores, Trending Matches, Top Leagues",
-  "short_name": "LiveScoreFree",
-  "description": "Fast live scores, commentary, lineups, player stats, and results for football, cricket, basketball, tennis, and top leagues.",
+  "name": "livescorefree.online | The Stadium Spectacle | Live Scores",
+  "short_name": "livescorefree.online",
+  "description": "livescorefree.online delivers fast, brutalist live scores, headline reports, and arena tables for every major competition.",
   "start_url": "/home",
   "scope": "/",
   "id": "/home",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "background_color": "#000000",
-  "theme_color": "#000000",
+  "theme_color": "#ae131a",
   "orientation": "any",
   "lang": "en",
   "categories": ["sports", "news"],
@@ -40,23 +40,23 @@
   ],
   "shortcuts": [
     {
-      "name": "Live Now",
-      "description": "Open live scoreboard",
+      "name": "Live Center",
+      "description": "Open livescorefree.online live board",
       "url": "/live"
     },
     {
-      "name": "Trending Matches",
-      "description": "Open trending matches",
-      "url": "/trending"
+      "name": "Headline Reports",
+      "description": "Open livescorefree.online newsroom",
+      "url": "/news"
     },
     {
-      "name": "Top Leagues",
-      "description": "Open top leagues page",
+      "name": "Arena Multiverse",
+      "description": "Navigate sports hubs",
       "url": "/top-leagues"
     },
     {
-      "name": "Results",
-      "description": "Open today's results",
+      "name": "Final Results",
+      "description": "Open recent results",
       "url": "/results"
     }
   ]

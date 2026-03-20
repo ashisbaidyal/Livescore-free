@@ -231,13 +231,14 @@ export function showSupportPopup() {
   popup.id = "support-popup";
   popup.className = "support-popup-overlay";
   popup.innerHTML = `
-    <div class="support-popup-card">
-      <button class="popup-close" type="button" data-popup-close>&times;</button>
-      <h3>Keep LiveScoreFree Running for Everyone</h3>
-      <p>Support from <strong>$1</strong> helps keep scores fast and funds new features.</p>
-      <div class="popup-actions">
-        <a class="btn btn-primary" data-link href="/donate">Support from $1</a>
-        <a class="btn" data-link href="/feedback">Send Feedback</a>
+    <div class="support-popup-card gs-depth-shadow" style="background: white; border: 4px solid var(--gs-primary); padding: 40px; position: relative;">
+      <button class="popup-close" type="button" data-popup-close style="position: absolute; top: 10px; right: 10px; border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <span class="premium-kicker" style="color: var(--gs-primary);">Fuel The Broadcast</span>
+      <h3 style="margin: 10px 0 20px; font-size: 1.8rem;">Keep livescorefree.online Kinetic</h3>
+      <p style="margin-bottom: 30px; font-size: 1.1rem; opacity: 0.8;">Your support helps us scale our real-time sports data feeds across the global streaming universe.</p>
+      <div class="popup-actions" style="display: flex; gap: 16px;">
+        <a class="btn btn-primary" data-link href="/donate" style="flex: 1; padding: 14px; text-align: center;">Support via Ko-fi</a>
+        <button class="btn" data-popup-close style="flex: 1; border: 2px solid var(--gs-on-surface); background: transparent; padding: 14px;">Dismiss</button>
       </div>
     </div>
   `;
@@ -272,20 +273,20 @@ export function renderGlobalShareWidget() {
 
 export function renderHeroShareActions() {
   return `
-    <div class="hero-actions-row">
-      <button class="btn btn-primary" data-share-generic>Share Scores</button>
-      <button class="btn" data-theme-cycle>Cycle Theme</button>
+    <div class="hero-actions-row" style="display: flex; gap: 12px; margin-top: 24px;">
+      <button class="btn btn-primary" data-share-generic style="padding: 10px 20px;">Share Arena</button>
+      <button class="btn" data-theme-cycle style="padding: 10px 20px; border: 2px solid white; background: transparent; color: white;">Toggle Night</button>
     </div>
   `;
 }
 
 export function renderSeoHeroPanel(config) {
   return `
-    <div class="hero-inner-content">
+    <div class="hero-inner-content" style="padding: 60px 0;">
       <div class="hero-text">
-        <span class="hero-eyebrow" style="color: var(--soccer-red); font-family: var(--soccer-font-head); text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 12px; display: block;">${escapeHtml(config.eyebrow)}</span>
-        <h1 class="hero-title">${escapeHtml(config.title)}</h1>
-        <p class="hero-lead">${escapeHtml(config.lead)}</p>
+        <span class="hero-eyebrow" style="color: var(--gs-primary); font-family: var(--soccer-font-head); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 16px; display: block;">${escapeHtml(config.eyebrow)}</span>
+        <h1 class="hero-title" style="font-size: 3.5rem; line-height: 0.95; margin-bottom: 24px;">${escapeHtml(config.title)}</h1>
+        <p class="hero-lead" style="font-size: 1.2rem; opacity: 0.8; max-width: 700px; margin-bottom: 32px;">${escapeHtml(config.lead)}</p>
         <div class="hero-actions">${config.actionsHtml}</div>
       </div>
     </div>

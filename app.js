@@ -12,7 +12,8 @@ import {
   THEME_KEY
 } from "./js/constants.js";
 import {
-  refreshData
+  refreshData,
+  syncMatchRealtimeState
 } from "./js/api.js";
 import {
   loadHistory,
@@ -119,15 +120,107 @@ async function init() {
     await renderRoute();
 
     // Loops
+    // 15-second Kinetic Match Refresh
     setInterval(async () => {
+      const prevCount = state.liveMatches.length;
+      const prevMatches = JSON.parse(JSON.stringify(state.liveMatches));
+      
       await refreshData({ silent: true });
-      await rerenderActiveDataRoute();
+      
+      // Patch updates to the DOM instead of full re-render
+      state.liveMatches.forEach(match => {
+        const old = prevMatches.find(m => m.slug === match.slug && m.sportGroup === match.sportGroup);
+        if (old) {
+          const hasUpdate = old.homeScore !== match.homeScore || 
+                           old.awayScore !== match.awayScore || 
+                           old.statusDetail !== match.statusDetail;
+          if (hasUpdate) {
+            // Update match card
+            syncMatchRealtimeState(match, {
+              homeScore: match.homeScore,
+              awayScore: match.awayScore,
+              status: match.status,
+              statusDetail: match.statusDetail
+            });
+
+            // Patch Home Hero if it matches this match
+            const heroSpot = document.getElementById("hero-spotlight");
+            if (heroSpot && heroSpot.getAttribute("data-match-key") === `${match.sportGroup}:${match.slug}`) {
+               const heroHomeScore = document.getElementById("hero-home-score");
+               const heroAwayScore = document.getElementById("hero-away-score");
+               const heroStatus = document.getElementById("hero-status");
+               
+               if (heroHomeScore) heroHomeScore.textContent = match.homeScore;
+               if (heroAwayScore) heroAwayScore.textContent = match.awayScore;
+               if (heroStatus) {
+                 import("./js/ui-matches.js").then(m => {
+                   if (heroStatus) heroStatus.innerHTML = m.statusBadge(match);
+                 });
+               }
+            }
+
+            // Patch Match Detail page if open
+            const detailMain = document.querySelector(".match-hero-main");
+            if (detailMain && detailMain.getAttribute("data-match-key") === `${match.sportGroup}:${match.slug}`) {
+               const dh = document.getElementById("detail-home-score");
+               const da = document.getElementById("detail-away-score");
+               const ds = document.getElementById("detail-status");
+               if (dh) dh.textContent = match.homeScore;
+               if (da) da.textContent = match.awayScore;
+               if (ds) {
+                 import("./js/ui-matches.js").then(m => {
+                   if (ds) ds.innerHTML = m.statusBadge(match);
+                 });
+               }
+            }
+          }
+        }
+      });
+
+      // Only perform full re-render if structural changes occurred (new matches)
+      if (state.liveMatches.length !== prevCount) {
+        await rerenderActiveDataRoute();
+      }
     }, REFRESH_INTERVAL_MS);
+
+    // 5-minute Newsroom Refresh
+    setInterval(async () => {
+      if (document.hidden) return;
+      const newsGrid = document.getElementById("home-news-grid") || document.getElementById("news-page-grid");
+      if (newsGrid) {
+        import("./js/ui-pages.js").then(p => {
+           // This will re-fetch if cache is expired (TTL is 5m now)
+           p.hydrateNewsGrid(document, newsGrid.id === "home-news-grid" ? "#home-news-grid" : "#news-page-grid", 12);
+        });
+      }
+    }, 1000 * 60 * 5);
+
+    // 15-minute League Standings Refresh
+    setInterval(async () => {
+      if (document.hidden) return;
+      const standingsMount = document.getElementById("standings-table-mount") || document.getElementById("league-standings-card");
+      if (standingsMount) {
+        // Find the active league key if on league page, or use featured for home
+        const route = parseRoute(state.activePath);
+        const leagueKey = route.type === "league" ? route.leagueKey : null;
+        if (leagueKey || route.type === "home") {
+          import("./js/ui-pages.js").then(p => {
+            // For home, it uses featured. For league, it uses the route key.
+            // We can simplify by just calling renderRoute if it's been a while,
+            // but for "kinetic" we just want to update this specific component.
+            const featuredKey = "eng.1"; // Default featured
+            p.renderLeagueStandingsCard(standingsMount, leagueKey || featuredKey, "Updated Standings");
+          });
+        }
+      }
+    }, 1000 * 60 * 15);
 
     setInterval(() => {
       const route = parseRoute(state.activePath);
       maybeShowSupportPopup(route);
     }, 60000);
+
+    startKineticTicker();
 
     state.loading = false;
   } catch (error) {
@@ -135,6 +228,46 @@ async function init() {
     const main = qs("#main");
     if (main) main.innerHTML = `<div class="message-box">App failed to start: ${escapeHtml(error.message)}</div>`;
   }
+}
+
+function startKineticTicker() {
+  // Kinetic Ticker: Increments live match clocks locally every second
+  // for a "Stadium Spectacle" real-time feel.
+  setInterval(() => {
+    if (document.hidden || !state.lastUpdatedAt) return;
+    
+    state.liveMatches.forEach(match => {
+      if (match.sportGroup !== "football") return;
+      
+      const matchId = `match-${match.sportGroup}-${match.slug}`;
+      const statusEl = document.getElementById(`${matchId}-status`);
+      if (!statusEl) return;
+
+      const badge = statusEl.querySelector(".badge-live");
+      if (!badge) return;
+
+      // Extract numeric minute and check if it's currently incrementing
+      const raw = match.statusDetail || "";
+      const currentMin = parseInt(raw);
+      if (isNaN(currentMin)) return;
+
+      // Calculate how many minutes have passed since the last sync
+      const elapsedMs = Date.now() - state.lastUpdatedAt;
+      const elapsedMins = Math.floor(elapsedMs / 60000);
+      
+      const displayedMin = currentMin + elapsedMins;
+      const suffix = raw.includes("'") ? "'" : "";
+      const nextText = `${displayedMin}${suffix}`;
+
+      // Update if changed
+      if (badge.textContent.trim() !== nextText && nextText !== raw) {
+        // Find the text node after the dot and update it
+        const nodes = Array.from(badge.childNodes);
+        const textNode = nodes.find(n => n.nodeType === Node.TEXT_NODE);
+        if (textNode) textNode.textContent = nextText;
+      }
+    });
+  }, 1000);
 }
 
 if (typeof window !== "undefined") {

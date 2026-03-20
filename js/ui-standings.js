@@ -22,7 +22,7 @@ export async function renderStandingsTable(container, leagueId) {
     }
 
     container.innerHTML = `
-      <section class="section standings-section">
+      <section id="standings-wrapper-${leagueId}" class="section standings-section">
         <div class="section-head">
           <h2>League Standings</h2>
         </div>
@@ -40,7 +40,7 @@ export async function renderStandingsTable(container, leagueId) {
                 <th>PTS</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="standings-body-${leagueId}">
               ${table.map(row => `
                 <tr>
                   <td>${row.intRank}</td>

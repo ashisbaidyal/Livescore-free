@@ -3,6 +3,8 @@
   "private": true,
   "version": "2.0.0",
   "scripts": {
+    "start": "npx serve ./",
+    "dev": "npx serve ./",
     "validate": "node scripts/validate-deployment.mjs",
     "check:syntax": "node scripts/validate-deployment.mjs --syntax-only"
   },

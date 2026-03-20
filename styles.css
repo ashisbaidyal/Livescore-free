@@ -3706,6 +3706,131 @@ select {
   gap: 12px;
 }
 
+.detail:root {
+  /* GoalStream: The Stadium Spectacle Design Tokens */
+  --gs-primary: #ae131a;
+  --gs-primary-variant: #d2312f;
+  --gs-surface: #f9f9f9;
+  --gs-surface-low: #f3f3f3;
+  --gs-surface-high: #e8e8e8;
+  --gs-surface-highest: #e2e2e2;
+  --gs-surface-lowest: #ffffff;
+  --gs-on-surface: #1a1c1c;
+  --gs-inverse-surface: #2f3131;
+  --gs-outline: #8f6f6c;
+  
+  --soccer-font-head: 'Lexend', sans-serif;
+  --soccer-font-body: 'Work Sans', sans-serif;
+  
+  /* Reset and Overrides */
+  --soccer-red: var(--gs-primary);
+  --soccer-red-hover: var(--gs-primary-variant);
+  --soccer-border-radius: 0px;
+  --border-radius-sm: 0px;
+  --border-radius-md: 0px;
+  --border-radius-lg: 0px;
+}
+
+* {
+  border-radius: 0 !important;
+}
+
+body {
+  font-family: var(--soccer-font-body);
+  background-color: var(--gs-surface);
+  color: var(--gs-on-surface);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, .hero-title, .section-head h2, .premium-kicker, .badge, .btn {
+  font-family: var(--soccer-font-head);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+/* GoalStream Grid & Layout Components */
+.world-sports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+.world-sport-card {
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+  border: 4px solid transparent;
+}
+
+.world-sport-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--gs-primary);
+}
+
+.news-editorial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 30px;
+}
+
+/* Arena & Sponsorship blocks */
+.arena-partnership-block, .support-premium-banner {
+  border: 4px solid var(--gs-primary);
+}
+
+.premium-kicker {
+  font-family: var(--soccer-font-head);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
+  display: block;
+}
+
+/* Navigation Overrides for Brutalism */
+.main-nav a {
+  font-family: var(--soccer-font-head);
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 12px 20px;
+}
+
+.main-nav a.active {
+  background-color: var(--gs-primary);
+  color: white;
+}
+
+/* Hero Adjustments */
+.hero-match-spotlight {
+  transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.hero-match-spotlight:hover {
+  transform: scale(1.02);
+}
+
+@media (max-width: 768px) {
+  .hero-inner-content {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+    gap: 40px !important;
+  }
+  
+  .hero-text h1 {
+    font-size: 2.5rem !important;
+  }
+  
+  .hero-massive-score {
+    font-size: 4rem !important;
+  }
+}
+
 .detail-head {
   display: flex;
   justify-content: space-between;
