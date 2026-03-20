@@ -54,12 +54,25 @@ export function renderPlayerNameControl({ sportGroup, playerId, playerName, play
 
 export function statusBadge(match) {
   if (match.status === "live") {
-    return `<span class="badge badge-live" style="background: var(--gs-primary); color: white; border-radius: 0 !important; font-weight: 800; padding: 6px 12px; font-size: 0.75rem;"><span class="badge-dot pulsate-live" style="width: 6px; height: 6px; background: white; border-radius: 50% !important; display: inline-block; margin-right: 6px;"></span>${escapeHtml(match.statusDetail || "LIVE")}</span>`;
+    return `
+      <span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-[10px] font-black tracking-widest flex items-center gap-1.5 uppercase">
+        <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+        ${escapeHtml(match.statusDetail || "LIVE")}
+      </span>
+    `;
   }
   if (match.status === "final") {
-    return `<span class="badge badge-final" style="background: var(--gs-inverse-surface); color: white; border-radius: 0 !important; font-weight: 800; padding: 6px 12px; font-size: 0.75rem;">FINAL</span>`;
+    return `
+      <span class="bg-surface-container-highest text-on-surface/40 px-2 py-0.5 rounded text-[10px] font-black tracking-widest uppercase">
+        FINAL
+      </span>
+    `;
   }
-  return `<span class="badge badge-upcoming" style="background: var(--gs-surface-high); color: var(--gs-on-surface); border-radius: 0 !important; font-weight: 800; padding: 6px 12px; font-size: 0.75rem;">${escapeHtml(match.statusDetail || "UPCOMING")}</span>`;
+  return `
+    <span class="bg-surface-container-highest text-on-surface/40 px-2 py-0.5 rounded text-[10px] font-black tracking-widest uppercase">
+      ${escapeHtml(match.statusDetail || "UPCOMING")}
+    </span>
+  `;
 }
 
 export function generatePremiumSportSVG(sportGroup, seedString) {
@@ -84,48 +97,58 @@ export function buildAutoBackgroundAttrs({ sportGroup = "", leagueKey = "", seed
 }
 
 export function renderMatchCard(match) {
-  const toneClass = toneClassForMatchStatus(match.status);
   const route = routeForMatch(match);
   const matchId = `match-${match.sportGroup}-${match.slug}`;
-  
+  const isLive = match.status === "live";
+
   return `
-    <article id="${matchId}" class="match-ticket gs-depth-shadow ${toneClass}" data-match-key="${match.sportGroup}:${match.slug}" style="background: var(--gs-surface-lowest); border: none; margin-bottom: 2px;">
-      <a class="ticket-link" data-link href="${route}" style="display: block; text-decoration: none; color: inherit; padding: 24px;">
-        <div class="ticket-body" style="display: flex; align-items: center; justify-content: space-between; gap: 24px;">
-          <div class="ticket-team" style="flex: 1; text-align: left; display: flex; align-items: center; gap: 16px;">
-            ${renderPmTeamLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, fallbackIcon: "H" })}
-            <div class="ticket-team-name" style="font-family: var(--soccer-font-head); font-weight: 700; text-transform: uppercase; font-size: 1.1rem; letter-spacing: -0.01em;">${escapeHtml(match.homeName)}</div>
-          </div>
-          
-          <div class="ticket-center" style="text-align: center; min-width: 120px; border-left: 2px solid var(--gs-surface-low); border-right: 2px solid var(--gs-surface-low); padding: 0 20px;">
-            <div class="ticket-score" style="display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 2rem; font-weight: 800; font-family: var(--soccer-font-head); line-height: 1;">
-              <span id="${matchId}-home-score" class="${match.status === 'live' ? 'pulsate-live' : ''}" style="${match.status === 'live' ? 'color: var(--gs-primary);' : ''}">${escapeHtml(match.homeScore)}</span>
-              <span style="opacity: 0.3; font-size: 1.2rem;">:</span>
-              <span id="${matchId}-away-score" class="${match.status === 'live' ? 'pulsate-live' : ''}" style="${match.status === 'live' ? 'color: var(--gs-primary);' : ''}">${escapeHtml(match.awayScore)}</span>
-            </div>
-            <div id="${matchId}-status" class="ticket-status" style="margin-top: 10px;">
-               ${statusBadge(match)}
-            </div>
-          </div>
-          
-          <div class="ticket-team" style="flex: 1; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 16px;">
-            <div class="ticket-team-name" style="font-family: var(--soccer-font-head); font-weight: 700; text-transform: uppercase; font-size: 1.1rem; letter-spacing: -0.01em;">${escapeHtml(match.awayName)}</div>
-            ${renderPmTeamLogo({ teamLogo: match.awayLogo, teamName: match.awayName, teamAbbr: match.awayAbbr, fallbackIcon: "A" })}
+    <div id="${matchId}" class="bg-surface-container-high rounded-xl overflow-hidden group border border-white/5 hover:border-primary/30 transition-all" data-match-key="${match.sportGroup}:${match.slug}">
+      <a href="${route}" data-link class="p-5 flex flex-col gap-4 no-underline text-inherit block">
+        <div class="flex justify-between items-center">
+          <span class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest font-headline">${escapeHtml(match.leagueLabel)}</span>
+          <div id="${matchId}-status">
+            ${statusBadge(match)}
           </div>
         </div>
         
-        <div class="ticket-footer" style="margin-top: 20px; padding-top: 16px; border-top: 2px solid var(--gs-surface-low); display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--gs-on-surface); opacity: 0.6;">
-          <span>${escapeHtml(match.leagueLabel)} ${match.venue ? `| ${escapeHtml(match.venue)}` : ''}</span>
-          <span id="${matchId}-meta">${formatDate(match.date)} @ ${formatTime(match.date)}</span>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center border border-white/5 font-black text-[10px] uppercase">
+                ${renderPmTeamLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, fallbackIcon: (match.homeName || "H")[0] })}
+              </div>
+              <span class="font-bold text-lg font-headline tracking-tighter truncate max-w-[140px]">${escapeHtml(match.homeName)}</span>
+            </div>
+            <span id="${matchId}-home-score" class="text-3xl font-black italic font-headline ${isLive ? 'text-primary' : 'text-on-surface'}">${escapeHtml(match.homeScore || 0)}</span>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center border border-white/5 font-black text-[10px] uppercase">
+                ${renderPmTeamLogo({ teamLogo: match.awayLogo, teamName: match.awayName, teamAbbr: match.awayAbbr, fallbackIcon: (match.awayName || "A")[0] })}
+              </div>
+              <span class="font-bold text-lg font-headline tracking-tighter truncate max-w-[140px] ${isLive ? 'text-on-surface' : 'text-on-surface/60'}">${escapeHtml(match.awayName)}</span>
+            </div>
+            <span id="${matchId}-away-score" class="text-3xl font-black italic font-headline ${isLive ? 'text-primary' : 'text-on-surface/60'}">${escapeHtml(match.awayScore || 0)}</span>
+          </div>
+        </div>
+        
+        <div class="pt-4 border-t border-white/5 flex items-center gap-3">
+          <div class="bg-surface-container-lowest px-3 py-1 rounded text-[10px] font-bold text-primary italic uppercase tracking-tighter">
+             ${formatTime(match.date)}
+          </div>
+          <span id="${matchId}-meta" class="text-[11px] font-medium text-on-surface/70 truncate uppercase tracking-tighter">
+            ${match.venue ? escapeHtml(match.venue) : formatDate(match.date)}
+          </span>
         </div>
       </a>
-    </article>
+    </div>
   `;
 }
 
 export function renderMatchGrid(matches, emptyMessage) {
   if (!matches.length) return `<div class="message-box">${escapeHtml(emptyMessage)}</div>`;
-  return `<div class="grid" style="display: flex; flex-direction: column; gap: 4px;">${matches.map(renderMatchCard).join("")}</div>`;
+  return `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">${matches.map(renderMatchCard).join("")}</div>`;
 }
 
 export function getSportIcon(sportGroup) {
