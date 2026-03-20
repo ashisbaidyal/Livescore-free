@@ -98,7 +98,7 @@
 
 ### Post-Deployment Verification (5 minutes)
 1. **Check Website Live**
-   - Navigate to https://livescoreFree.online.online
+   - Navigate to https://livescoreFree.online
    - Load `/home` page
    - Verify modern styling appears (hero section with gradients)
 
@@ -250,7 +250,7 @@ git push origin main
 - Check deployment status in Cloudflare dashboard
 
 ### Step 4: Verify (5 minutes)
-1. Visit https://livescoreFree.online.online
+1. Visit https://livescoreFree.online
 2. Check browser console (F12)
 3. Look for `[API] ✅ Data refresh complete` message
 4. Verify modern styling appears
@@ -277,7 +277,7 @@ location.reload();
 
 ### Check API Health Endpoint
 ```bash
-curl https://livescoreFree.online.online/api/health
+curl https://livescoreFree.online/api/health
 ```
 
 Response:
@@ -351,7 +351,7 @@ fetch('/api/sportsdb?action=cache-stats').then(r => r.json()).then(console.log)
    - Cloudflare Pages auto-deploys
 
 3. **Verify Live** (5 minutes)
-   - Visit https://livescoreFree.online.online
+   - Visit https://livescoreFree.online
    - Check console logs
    - Test all pages
 

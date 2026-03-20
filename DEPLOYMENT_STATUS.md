@@ -12,9 +12,9 @@ Status: ACTIVE AND READY
 ## Deployment Platform
 - Cloudflare Pages (static site + Pages Functions)
 - Primary origin:
-  - https://livescoreFree.online.online
+  - https://livescoreFree.online
 - Optional secondary API/domain:
-  - https://api.livescoreFree.online.online
+  - https://api.livescoreFree.online
 
 ## Key Configuration Files
 - wrangler.toml
@@ -42,17 +42,17 @@ SPORTSDB_API_BASE=https://www.thesportsdb.com/api/v1/json/123
 ENABLE_CORS=true
 LOG_LEVEL=info
 ENABLE_ANALYTICS=true
-ALLOWED_ORIGINS=https://livescoreFree.online.online,https://www.livescoreFree.online.online,https://api.livescoreFree.online.online,https://*.pages.dev
+ALLOWED_ORIGINS=https://livescoreFree.online,https://www.livescoreFree.online,https://api.livescoreFree.online,https://*.pages.dev
 
 ## Verification
 - Frontend:
-  - curl -I https://livescoreFree.online.online/
+  - curl -I https://livescoreFree.online/
 - API:
-  - curl https://livescoreFree.online.online/api/health
-  - curl https://livescoreFree.online.online/api/live?limit=1
+  - curl https://livescoreFree.online/api/health
+  - curl https://livescoreFree.online/api/live?limit=1
 - Crawl files:
-  - curl -I https://livescoreFree.online.online/robots.txt
-  - curl -I https://livescoreFree.online.online/sitemap.xml
+  - curl -I https://livescoreFree.online/robots.txt
+  - curl -I https://livescoreFree.online/sitemap.xml
 
 ## Monitoring
 - Cloudflare Dashboard: https://dash.cloudflare.com

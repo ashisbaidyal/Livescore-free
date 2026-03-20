@@ -10,7 +10,7 @@
 - [ ] Updated `wrangler.toml` with SportsDB API key?
 - [ ] Pushed changes to git?
 - [ ] Waited 5 minutes for Cloudflare deployment?
-- [ ] Opened https://livescoreFree.online.online in fresh browser tab?
+- [ ] Opened https://livescoreFree.online in fresh browser tab?
 
 ---
 

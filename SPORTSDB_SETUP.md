@@ -137,7 +137,7 @@ const sportsdbResult = await cachedJson(
 
 ```bash
 # In browser console or PowerShell:
-curl https://livescoreFree.online.online/api/sportsdb?action=events-by-sport&date=2026-03-20
+curl https://livescoreFree.online/api/sportsdb?action=events-by-sport&date=2026-03-20
 ```
 
 **Expected Response**:
@@ -157,7 +157,7 @@ curl https://livescoreFree.online.online/api/sportsdb?action=events-by-sport&dat
 ### Test 2: Check Cache Stats
 
 ```bash
-curl https://livescoreFree.online.online/api/sportsdb?action=cache-stats
+curl https://livescoreFree.online/api/sportsdb?action=cache-stats
 ```
 
 **Shows**:

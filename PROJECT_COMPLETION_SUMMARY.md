@@ -186,10 +186,10 @@
 1. Detects your git push
 2. Builds your site
 3. Deploys to edge network
-4. Site goes live at https://livescoreFree.online.online
+4. Site goes live at https://livescoreFree.online
 
 ### You Verify (5 minutes)
-1. Visit https://livescoreFree.online.online
+1. Visit https://livescoreFree.online
 2. Check console: Should see `[API] ✅ Data refresh complete`
 3. Verify modern styling appears
 4. Run testing checklist (provided)

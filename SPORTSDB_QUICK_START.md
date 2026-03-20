@@ -72,7 +72,7 @@ git push origin main
 
 Check that data is flowing:
 
-1. **Visit your website**: https://livescoreFree.online.online/
+1. **Visit your website**: https://livescoreFree.online/
 2. **Open browser console**: F12 → Console tab
 3. **Enable debug mode** and paste this:
 ```javascript
@@ -88,7 +88,7 @@ location.reload();
 
 5. **Check API endpoint**:
 ```
-https://livescoreFree.online.online/api/health
+https://livescoreFree.online/api/health
 ```
 Should show: `"sportsdb": { "ok": true, ... }`
 
@@ -144,18 +144,18 @@ Frontend makes 1 batched call to backend
 
 **Test 1: Check SportsDB endpoint**
 ```bash
-curl "https://livescoreFree.online.online/api/sportsdb?action=events-by-sport"
+curl "https://livescoreFree.online/api/sportsdb?action=events-by-sport"
 ```
 Should show: Sports data for cricket, baseball, rugby, etc.
 
 **Test 2: Check cache stats**
 ```bash
-curl "https://livescoreFree.online.online/api/sportsdb?action=cache-stats"
+curl "https://livescoreFree.online/api/sportsdb?action=cache-stats"
 ```
 Shows: Cache hit rates, size, monitoring data
 
 **Test 3: Monitor provider status**
-Visit https://livescoreFree.online.online/live
+Visit https://livescoreFree.online/live
 - Status bar should be GREEN (all providers OK)
 - Or ORANGE with explanation if any provider is rate-limited
 
@@ -192,7 +192,7 @@ Upgrade to Premium: https://www.thesportsdb.com/pricing ($9/month)
 ## Complete Architecture Now
 
 ```
-User visits livescoreFree.online.online
+User visits livescoreFree.online
     ↓
 app.js loads
     ↓

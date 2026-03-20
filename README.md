@@ -2,8 +2,8 @@
 
 Version: 2.0 Production (v50) - Modern Template + SportsDB Optimization
 Status: ✅ READY FOR DEPLOYMENT
-URL: https://livescoreFree.online.online
-API: https://livescoreFree.online.online/api
+URL: https://livescoreFree.online
+API: https://livescoreFree.online/api
 Repository: https://github.com/ashisbaidyal/Livescore-free
 Last Updated: March 20, 2026
 
@@ -39,7 +39,7 @@ npm run validate
 3. Configure environment variables in Cloudflare (see `wrangler.toml`)
 4. Push to `main`: `git add -A && git commit -m "Deploy" && git push origin main`
 5. Cloudflare auto-deploys in 2-5 minutes
-6. Verify: Visit https://livescoreFree.online.online and check console for `[API] ✅ Data refresh complete`
+6. Verify: Visit https://livescoreFree.online and check console for `[API] ✅ Data refresh complete`
 
 **Full guide**: See `DEPLOYMENT_READY.md`  
 **Testing**: See `TESTING_CHECKLIST.md`
@@ -50,22 +50,22 @@ npm run validate
 
 ### GET /api/live
 ```bash
-curl https://livescoreFree.online.online/api/live
+curl https://livescoreFree.online/api/live
 ```
 
 ### GET /api/timeline
 ```bash
-curl https://livescoreFree.online.online/api/timeline?match=123456
+curl https://livescoreFree.online/api/timeline?match=123456
 ```
 
 ### GET /api/standings
 ```bash
-curl https://livescoreFree.online.online/api/standings?league=eng.1
+curl https://livescoreFree.online/api/standings?league=eng.1
 ```
 
 ### GET /api/health
 ```bash
-curl https://livescoreFree.online.online/api/health
+curl https://livescoreFree.online/api/health
 ```
 
 ---
@@ -92,7 +92,7 @@ SPORTSDB_API_BASE=https://www.thesportsdb.com/api/v1/json/123
 ENABLE_CORS=true
 LOG_LEVEL=info
 ENABLE_ANALYTICS=true
-ALLOWED_ORIGINS=https://livescoreFree.online.online,https://www.livescoreFree.online.online,https://api.livescoreFree.online.online,https://*.pages.dev
+ALLOWED_ORIGINS=https://livescoreFree.online,https://www.livescoreFree.online,https://api.livescoreFree.online,https://*.pages.dev
 
 ---
 
@@ -165,8 +165,8 @@ lsf/
 ---
 
 ## Support & Links
-- Live Site: https://livescoreFree.online.online
-- API Base: https://livescoreFree.online.online/api
+- Live Site: https://livescoreFree.online
+- API Base: https://livescoreFree.online/api
 - GitHub: https://github.com/ashisbaidyal/Livescore-free
 - Cloudflare Dashboard: https://dash.cloudflare.com
 - Google Search Console: https://search.google.com/search-console

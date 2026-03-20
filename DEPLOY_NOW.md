@@ -34,7 +34,7 @@ git push origin main
 
 ## ✅ After Deployment (Verify)
 
-1. Open: https://livescoreFree.online.online
+1. Open: https://livescoreFree.online
 2. Press F12 → Console tab
 3. Should see: `[API] ✅ Data refresh complete: X matches`
 4. See modern styling? ✅ You're done!
