@@ -53,14 +53,13 @@ export async function renderRoute() {
 
   switch (route.type) {
     case "home": await renderHomePage(main); break;
-    case "live": await renderMatchListingPage(main, "Live Score Now", "Every live match currently in progress.", "/live", "tone-live", state.liveMatches); break;
-    case "trending": await renderMatchListingPage(main, "Trending Matches", "High-interest matches ranked by live activity.", "/trending", "tone-trending", trendingMatches(24)); break;
-    case "results": await renderMatchListingPage(main, "Today's Results", "Completed matches and latest final scorelines.", "/results", "tone-results", state.finalMatches); break;
-    case "upcoming": await renderMatchListingPage(main, "Upcoming Matches", "Scheduled fixtures and pre-match pages.", "/upcoming", "tone-upcoming", state.upcomingMatches); break;
+    case "live": await renderLivePage(main); break;
+    case "trending": await renderTrendingPage(main); break;
+    case "results": await renderResultsPage(main); break;
+    case "upcoming": await renderUpcomingPage(main); break;
     case "history": renderHistoryPage(main); break;
     case "top-leagues": renderTopLeaguesPage(main); break;
     case "news": await renderNewsPage(main); break;
-    case "search": renderSearchPage(main); break;
     case "league": await renderLeaguePage(main, route); break;
     case "match": await renderMatchPage(main, route); break;
     case "sport": renderSportPage(main, route); break;
@@ -917,19 +916,6 @@ async function renderNewsPage(container) {
   void hydrateNewsGrid(container, "#news-page-grid", 12, "#news-count");
 }
 
-function renderSearchPage(container) {
-  setSeo({ title: "Search Removed | livescoreFree.online", description: "Search feature has been removed.", path: "/search" });
-  container.innerHTML = `
-    <section class="section">
-      <div class="p-20 text-center space-y-6">
-        <h1 class="text-4xl font-black uppercase italic tracking-tighter">Search Removed</h1>
-        <p class="text-on-surface/40 uppercase tracking-widest font-bold">The search feature is no longer supported in this version of the arena.</p>
-        <a data-link href="/" class="btn btn-primary inline-block">Back to Arena Home</a>
-      </div>
-    </section>
-  `;
-}
-
 function renderContactPage(container) {
   setSeo({ title: "Contact livescoreFree.online", description: "Support, advertising, and matchday partnership contact page.", path: "/contact" });
   container.innerHTML = `
@@ -975,7 +961,7 @@ function renderAboutPage(container) {
         <div class="club-story-card">
           <span class="premium-kicker">This Update</span>
           <h3>Template-style sections across the full repo</h3>
-          <p>The site now includes a fuller homepage story, ad modules, editorial/news sections, search, sponsor surfaces, and a Ko-fi support page in addition to live, upcoming, and results data.</p>
+          <p>The site now includes a fuller homepage story, ad modules, editorial/news sections, sponsor surfaces, and a Ko-fi support page in addition to live, upcoming, and results data.</p>
         </div>
       </div>
     </section>
@@ -1037,6 +1023,387 @@ async function renderMatchListingPage(container, title, description, path, toneC
     <section class="section ${toneClass}"><div class="section-head"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></div></div><div class="trust-grid">${Object.entries(groupedBySport).map(([sportKey, count]) => `<div class="trust-card"><strong>${count}</strong><span>${escapeHtml(SPORT_GROUPS[sportKey]?.label || sportKey)}</span></div>`).join("") || `<div class="trust-card"><strong>0</strong><span>No matches</span></div>`}</div></section>
     <section class="section ${toneClass}">${renderMatchGrid(matches, `No matches found for ${title.toLowerCase()}.`)}</section>
   `;
+}
+
+async function renderLivePage(container) {
+  setSeo({ 
+    title: "Live Centre | livescoreFree.online", 
+    description: "Immersive live coverage of global sports competitions.", 
+    path: "/live" 
+  });
+
+  const liveMatches = state.liveMatches;
+  const featured = liveMatches[0];
+
+  const groupedBySport = liveMatches.reduce((acc, match) => {
+    acc[match.sportGroup] = (acc[match.sportGroup] || 0) + 1;
+    return acc;
+  }, {});
+
+  let heroHTML = "";
+  if (featured) {
+    heroHTML = `
+      <section class="relative h-[450px] overflow-hidden flex flex-col justify-end p-8 lg:p-12">
+        <div class="absolute inset-0">
+          <img class="w-full h-full object-cover opacity-60" src="${getSportImagePath(featured.sportGroup)}" alt="Stadium" />
+          <div class="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent"></div>
+        </div>
+        <div class="relative z-10 max-w-4xl">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-black tracking-widest flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+              LIVE NOW
+            </span>
+            <span class="text-on-surface/60 text-xs font-bold tracking-widest uppercase">${escapeHtml(featured.leagueLabel)}</span>
+          </div>
+          <h1 class="text-5xl lg:text-7xl font-black italic tracking-tighter mb-6 leading-[0.9]">
+            ${escapeHtml(featured.homeName)} <span class="text-primary">${escapeHtml(featured.homeScore)} - ${escapeHtml(featured.awayScore)}</span> ${escapeHtml(featured.awayName)}
+          </h1>
+          <div class="flex flex-wrap gap-4 items-center">
+            <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+              <span class="material-symbols-outlined text-primary text-sm">timer</span>
+              <span class="text-sm font-bold uppercase">${escapeHtml(featured.statusDetail || 'In Progress')}</span>
+            </div>
+            <a href="${routeForMatch(featured)}" data-link class="bg-[#CC1616] hover:bg-[#CC1616]/80 text-white px-6 py-2 rounded-full font-black text-xs tracking-tighter flex items-center gap-2 shadow-[0_0_20px_rgba(204,22,22,0.6)] transition-all">
+              <span class="material-symbols-outlined text-base">sensors</span>
+              MATCH CENTER
+            </a>
+          </div>
+        </div>
+      </section>
+    `;
+  } else {
+    heroHTML = renderHeroFallback();
+  }
+
+  container.innerHTML = `
+    ${heroHTML}
+    <div class="p-6 lg:p-8 space-y-12">
+      <section>
+        <div class="flex justify-between items-end mb-6 border-l-4 border-primary pl-4">
+          <div>
+            <h2 class="text-2xl font-black tracking-tighter uppercase italic">Arena Live</h2>
+            <p class="text-xs text-on-surface/40 font-bold uppercase tracking-widest">Global Matchday Feed</p>
+          </div>
+          <div class="flex gap-4">
+             ${Object.entries(groupedBySport).map(([sportKey, count]) => `
+               <div class="text-[10px] font-black text-primary uppercase italic">${count} ${escapeHtml(SPORT_GROUPS[sportKey]?.label || sportKey)}</div>
+             `).join("")}
+          </div>
+        </div>
+        ${renderMatchGrid(liveMatches, "No matches are currently live.")}
+      </section>
+      
+      ${renderInlineSponsorCard("Stream Premium Sports Ad-Free")}
+    </div>
+  `;
+}
+
+async function renderTrendingPage(container) {
+  setSeo({ 
+    title: "Trending Hub | livescoreFree.online", 
+    description: "Real-time engagement spikes and peak trends across the global matchday.", 
+    path: "/trending" 
+  });
+
+  const matches = trendingMatches(24);
+  const featured = matches[0];
+
+  let heroHTML = "";
+  if (featured) {
+    heroHTML = `
+      <section class="relative w-full h-[550px] bg-surface-container-lowest overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay" style="background-image: url('${getSportImagePath(featured.sportGroup)}')"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+        <div class="relative h-full flex flex-col justify-end p-8 lg:p-16 max-w-7xl">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="bg-secondary-container text-on-secondary-container text-[10px] font-black px-2 py-1 rounded tracking-widest flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">bolt</span> PEAK TREND
+            </span>
+            <span class="text-primary font-bold text-xs tracking-[0.2em] uppercase">${escapeHtml(featured.leagueLabel)}</span>
+          </div>
+          <h1 class="text-6xl lg:text-8xl font-black italic uppercase tracking-tighter leading-[0.85] mb-6">
+            ${escapeHtml(featured.homeName)} <br/> <span class="text-primary-container">REIGNITED</span>
+          </h1>
+          <div class="flex flex-wrap items-center gap-8">
+            <div class="flex items-center gap-4 bg-white/5 backdrop-blur-md p-4 rounded-xl border border-white/10">
+              <div class="text-center">
+                <p class="text-[10px] uppercase opacity-50 mb-1">Status</p>
+                <div class="flex gap-2 font-mono text-xl font-bold uppercase">
+                  ${escapeHtml(featured.statusDetail || 'UPCOMING')}
+                </div>
+              </div>
+              <div class="h-10 w-px bg-white/10"></div>
+              <div class="text-center">
+                <p class="text-[10px] uppercase opacity-50 mb-1">Social Heat</p>
+                <div class="flex items-center gap-1 text-secondary">
+                  <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                  <span class="font-bold text-xl uppercase tracking-tighter">Extreme</span>
+                </div>
+              </div>
+            </div>
+            <a href="${routeForMatch(featured)}" data-link class="bg-primary px-8 py-5 rounded-lg text-on-primary font-black uppercase tracking-widest flex items-center gap-3 active:scale-95 transition-all shadow-[0_0_40px_rgba(204,22,22,0.4)]">
+              DETAILS <span class="material-symbols-outlined">analytics</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    `;
+  } else {
+    heroHTML = renderHeroFallback();
+  }
+
+  container.innerHTML = `
+    ${heroHTML}
+    <div class="p-8 grid grid-cols-1 xl:grid-cols-4 gap-8">
+      <div class="xl:col-span-3 space-y-8">
+        <div class="flex items-end justify-between">
+          <div>
+            <h2 class="text-4xl font-black italic tracking-tighter uppercase leading-none">Live & Rising</h2>
+            <p class="text-on-surface/50 text-xs uppercase tracking-widest mt-2">Real-time global engagement spikes</p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          ${matches.slice(0, 5).map(m => `
+            <div class="glass-card p-6 rounded-xl border-l-4 border-secondary transition-all hover:scale-[1.02]">
+              <div class="flex justify-between items-start mb-6">
+                <span class="bg-secondary-container/20 text-secondary text-[10px] font-black px-2 py-1 rounded flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></span> ${escapeHtml(m.statusDetail || 'TRENDING')}
+                </span>
+                <div class="flex gap-1 text-orange-500">
+                  <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                  <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                </div>
+              </div>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center font-bold text-[10px]">${m.homeAbbr || 'HM'}</div>
+                    <span class="font-bold text-sm tracking-tight">${escapeHtml(m.homeName)}</span>
+                  </div>
+                  <span class="text-2xl font-black">${escapeHtml(m.homeScore)}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center font-bold text-[10px]">${m.awayAbbr || 'AW'}</div>
+                    <span class="font-bold text-sm tracking-tight">${escapeHtml(m.awayName)}</span>
+                  </div>
+                  <span class="text-2xl font-black">${escapeHtml(m.awayScore)}</span>
+                </div>
+              </div>
+              <div class="mt-6 pt-6 border-t border-white/5 flex justify-between items-center">
+                <p class="text-[10px] text-on-surface/40 uppercase font-bold tracking-widest">${escapeHtml(m.leagueLabel)}</p>
+                <a href="${routeForMatch(m)}" data-link class="material-symbols-outlined text-primary">analytics</a>
+              </div>
+            </div>
+          `).join("")}
+          
+          <div class="relative overflow-hidden rounded-xl bg-[#050505] border border-secondary/20 p-6 flex flex-col justify-between">
+            <span class="text-[9px] font-black text-secondary tracking-widest uppercase mb-2 block">Premium Sponsor</span>
+            <h3 class="text-xl font-black italic uppercase tracking-tighter text-white">EARN 2X POINTS ON MATCHDAY</h3>
+            <button class="w-full py-3 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded mt-4">Book Slot</button>
+          </div>
+        </div>
+
+        <!-- Viral Moments -->
+        <div class="space-y-6 pt-12">
+          <h3 class="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+            Viral Moments <span class="bg-primary-container px-2 text-[10px] not-italic rounded tracking-normal">SOCIAL CLIP CLOUD</span>
+          </h3>
+          <div id="viral-moments-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+             <!-- Populated by news or defaults -->
+             <div class="message-box col-span-full">Loading viral match spikes...</div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="space-y-8">
+        <section class="glass-card p-6 rounded-xl">
+          <h3 class="font-black italic uppercase tracking-tighter text-lg mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">news</span> Why Trending?
+          </h3>
+          <div class="space-y-6" id="trending-reasons">
+            <div class="group cursor-pointer">
+              <p class="text-secondary font-black text-[10px] tracking-widest uppercase mb-1">Engagement</p>
+              <h4 class="font-bold text-sm group-hover:text-primary transition-colors">Global matchday volume is 42% higher than average today.</h4>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  `;
+
+  await hydrateNewsGrid(container, "#viral-moments-grid", 4);
+}
+
+async function renderUpcomingPage(container) {
+  setSeo({ 
+    title: "Schedule Centre | livescoreFree.online", 
+    description: "The full matchday universe upcoming fixtures and global schedules.", 
+    path: "/upcoming" 
+  });
+
+  const matches = state.upcomingMatches;
+  const featured = matches[0];
+
+  let heroHTML = "";
+  if (featured) {
+    heroHTML = `
+      <section class="relative h-[450px] overflow-hidden group">
+        <div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-transparent to-transparent z-10"></div>
+        <img class="absolute inset-0 w-full h-full object-cover opacity-60" src="${getSportImagePath(featured.sportGroup)}" alt="Stadium" />
+        <div class="relative z-20 h-full flex flex-col justify-end p-12 max-w-6xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 bg-primary-container text-on-primary-container rounded-full text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
+            <span class="w-2 h-2 rounded-full bg-on-primary-container animate-pulse"></span>
+            NEXT GLOBAL EVENT
+          </div>
+          <h1 class="text-6xl md:text-8xl font-black font-headline tracking-tighter leading-none mb-4 uppercase italic">
+            UPCOMING <span class="text-primary">SCHEDULE</span>
+          </h1>
+          <div class="flex flex-col md:flex-row items-start md:items-center gap-8 bg-surface-container/60 backdrop-blur-md p-6 border-l-4 border-primary max-w-3xl">
+            <div class="flex items-center gap-6">
+              <div class="text-center">
+                <p class="text-[10px] uppercase opacity-40">STARTS</p>
+                <p class="text-2xl font-bold font-headline">${formatDateTime(featured.date).split(',')[1]}</p>
+              </div>
+              <div class="h-10 w-[1px] bg-white/10 hidden md:block"></div>
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-surface-container-highest rounded-lg flex items-center justify-center font-bold text-sm italic">${featured.homeAbbr || featured.homeName.slice(0,2).toUpperCase()}</div>
+                <span class="text-xs font-bold italic">VS</span>
+                <div class="w-10 h-10 bg-surface-container-highest rounded-lg flex items-center justify-center font-bold text-sm italic">${featured.awayAbbr || featured.awayName.slice(0,2).toUpperCase()}</div>
+              </div>
+            </div>
+            <div>
+              <p class="text-primary font-bold uppercase text-xs tracking-widest">${escapeHtml(featured.leagueLabel)}</p>
+              <p class="text-on-surface/80 text-sm">${escapeHtml(featured.homeName)} vs ${escapeHtml(featured.awayName)}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  } else {
+    heroHTML = renderHeroFallback();
+  }
+
+  container.innerHTML = `
+    ${heroHTML}
+    <div class="sticky top-16 z-30 bg-surface-dim/95 backdrop-blur-lg border-b border-outline-variant/10 px-8 py-4">
+      <div class="flex items-center gap-4 overflow-x-auto no-scrollbar">
+        <button class="px-6 py-2 rounded-full bg-primary text-on-primary font-bold text-sm whitespace-nowrap">TODAY</button>
+        <button class="px-6 py-2 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface/60 hover:text-on-surface font-bold text-sm whitespace-nowrap">TOMORROW</button>
+        <button class="px-6 py-2 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface/60 hover:text-on-surface font-bold text-sm whitespace-nowrap">LIVE FEED</button>
+      </div>
+    </div>
+    
+    <div class="p-8 space-y-12">
+      <section>
+        <div class="flex items-center gap-4 mb-6">
+          <span class="material-symbols-outlined text-primary text-2xl">calendar_month</span>
+          <h2 class="text-2xl font-black uppercase tracking-tighter">Scheduled Fixtures <span class="text-xs opacity-40 ml-2">${matches.length} MATCHES</span></h2>
+          <div class="h-[1px] flex-1 bg-gradient-to-r from-outline-variant/30 to-transparent"></div>
+        </div>
+        ${renderMatchGrid(matches, "No upcoming matches scheduled currently.")}
+      </section>
+      
+      ${renderInlineSponsorCard("Pre-Match Analysis & Betting Insights")}
+    </div>
+  `;
+}
+
+async function renderResultsPage(container) {
+  setSeo({ 
+    title: "Archive Hub | livescoreFree.online", 
+    description: "Completed match finality and deep tactical analysis from the global archive.", 
+    path: "/results" 
+  });
+
+  const matches = state.finalMatches;
+  const featured = matches[0];
+
+  let heroHTML = "";
+  if (featured) {
+    heroHTML = `
+      <section class="relative h-[500px] overflow-hidden bg-black flex items-center">
+        <div class="absolute inset-0 bg-cover bg-center opacity-30 grayscale" style="background-image: url('${getSportImagePath(featured.sportGroup)}')"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
+        <div class="relative z-10 px-12 lg:px-24 w-full">
+          <div class="flex items-center gap-4 mb-6">
+            <span class="bg-white/10 backdrop-blur-md px-3 py-1 border border-white/20 text-[10px] font-black tracking-widest uppercase">MATCH FINALITY</span>
+            <div class="h-px w-24 bg-primary/40"></div>
+          </div>
+          <div class="flex flex-col md:flex-row items-baseline gap-4 mb-12">
+            <h1 class="text-7xl lg:text-[120px] font-black italic tracking-tighter uppercase leading-[0.8] text-white">ARENA</h1>
+            <h1 class="text-7xl lg:text-[120px] font-black italic tracking-tighter uppercase leading-[0.8] text-primary">ARCHIVE</h1>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-5xl">
+            <div class="flex items-center gap-8 group cursor-pointer">
+              <div class="flex flex-col items-center">
+                <div class="text-6xl font-black italic tracking-tighter text-white">${escapeHtml(featured.homeScore)}</div>
+                <div class="text-[10px] font-bold uppercase opacity-50 tracking-widest">${escapeHtml(featured.homeAbbr || 'HOME')}</div>
+              </div>
+              <div class="text-2xl font-thin italic text-primary/40">VS</div>
+              <div class="flex flex-col items-center">
+                <div class="text-6xl font-black italic tracking-tighter text-white">${escapeHtml(featured.awayScore)}</div>
+                <div class="text-[10px] font-bold uppercase opacity-50 tracking-widest">${escapeHtml(featured.awayAbbr || 'AWAY')}</div>
+              </div>
+              <div class="ml-4 pl-8 border-l border-white/10">
+                <p class="text-primary font-black text-xs tracking-widest uppercase mb-1">${escapeHtml(featured.leagueLabel)}</p>
+                <p class="text-white/60 text-sm font-medium">${escapeHtml(featured.homeName)} vs ${escapeHtml(featured.awayName)}</p>
+              </div>
+            </div>
+            <div class="hidden lg:block">
+              <a href="${routeForMatch(featured)}" data-link class="inline-flex items-center gap-4 group">
+                <span class="text-xs font-black uppercase tracking-widest group-hover:text-primary transition-colors">Tactical Deep Dive</span>
+                <div class="p-4 rounded-full border border-white/20 group-hover:border-primary transition-colors">
+                  <span class="material-symbols-outlined text-sm">arrow_outward</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  } else {
+    heroHTML = renderHeroFallback();
+  }
+
+  container.innerHTML = `
+    ${heroHTML}
+    <div class="p-8 lg:p-12 space-y-16">
+      <section>
+        <div class="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
+          <div>
+            <h2 class="text-4xl font-black italic tracking-tighter uppercase">Finality Grid</h2>
+            <p class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest mt-1">Confirmed results across all sectors</p>
+          </div>
+        </div>
+        ${renderMatchGrid(matches, "No recent results available in the archive yet.")}
+      </section>
+
+      <!-- Deep Dive Analysis -->
+      <section class="bg-surface-container-low p-12 rounded-2xl border border-white/5 relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-8 opacity-5">
+          <span class="material-symbols-outlined text-[200px]">analytics</span>
+        </div>
+        <div class="max-w-3xl">
+          <span class="text-primary font-black uppercase tracking-[0.3em] text-[10px]">Strategic Metric</span>
+          <h3 class="text-4xl font-black italic uppercase tracking-tighter text-white mt-4 mb-6 font-headline">MATCHDAY XG EFFICIENCY</h3>
+          <p class="text-on-surface/60 text-lg leading-relaxed mb-8">
+            The global conversion rate for the current matchday is trending at 1.12x expected goals, signaling a high-efficiency period for strikers across the top five European leagues.
+          </p>
+          <div id="results-analysis-news" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Populated by news -->
+            <div class="message-box">Scanning tactical feeds...</div>
+          </div>
+        </div>
+      </section>
+      
+      ${renderInlineSponsorCard("Historic Betting Data & Trend Analysis")}
+    </div>
+  `;
+
+  await hydrateNewsGrid(container, "#results-analysis-news", 2);
 }
 
 async function fetchMatchDetails(match) {
