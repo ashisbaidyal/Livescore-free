@@ -6,3 +6,7 @@ desktop.ini
 *.bak
 .vscode/
 node_modules/
+.wrangler/
+dist/
+build/
+*.mjs.map

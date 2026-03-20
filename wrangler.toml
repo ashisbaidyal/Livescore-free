@@ -1,9 +1,9 @@
-name = "livescorefree"
+name = "livescorefree-online"
 compatibility_date = "2026-03-13"
 pages_build_output_dir = "."
 
 [vars]
-ALLOWED_ORIGINS = "https://livescorefree.online,https://www.livescorefree.online,https://api.livescorefree.online,https://*.pages.dev"
+ALLOWED_ORIGINS = "https://livescoreFree.online,https://www.livescoreFree.online,https://api.livescoreFree.online,https://*.pages.dev"
 NODE_ENV = "production"
 API_VERSION = "2.0"
 API_TIMEOUT = "8000"
