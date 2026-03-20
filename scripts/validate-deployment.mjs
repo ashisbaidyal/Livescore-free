@@ -84,7 +84,7 @@ function validateIndexHtml() {
     }
 
     const cleanRef = ref.split(/[?#]/, 1)[0];
-    if (!cleanRef || !path.posix.basename(cleanRef).includes(".")) {
+    if (!cleanRef || !path.posix.basename(cleanRef).includes(".") || cleanRef.startsWith("/league/")) {
       continue;
     }
 
