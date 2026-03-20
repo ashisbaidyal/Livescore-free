@@ -51,7 +51,7 @@ function runSyntaxCheck(filePath) {
   try {
     const source = readFileSync(path.join(rootDir, filePath), "utf8");
     const normalizedSource = source
-      .replace(/^\s*import[\s\S]*?;\s*$/gm, "")
+      .replace(/^import\s+[\s\S]+?from\s+['"][^'"]+['"];?\s*$/gm, "")
       .replace(/\bexport\s+(?=async function|function|const|let|var|class)/g, "");
 
     // Parse the file body without executing it.

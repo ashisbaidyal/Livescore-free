@@ -1,47 +1,11 @@
-
-import { 
-  state, 
-} from "./js/state.js";
-import { 
-  qs, 
-  qsa, 
-  escapeHtml 
-} from "./js/utils.js";
-import { 
-  REFRESH_INTERVAL_MS,
-  THEME_KEY
-} from "./js/constants.js";
-import {
-  refreshData,
-  syncMatchRealtimeState
-} from "./js/api.js";
-import {
-  loadHistory,
-  loadFeedbackNotes,
-  loadFavoriteMatches,
-  loadNotificationPrefs,
-  loadLanguagePreference,
-  loadBackgroundPreferences
-} from "./js/storage.js";
-import {
-  navigate,
-  handleRouteFromQueryFallback,
-  migrateLegacyHashPath,
-  parseRoute
-} from "./js/routing.js";
-import {
-  renderRoute
-} from "./js/ui-pages.js";
-import {
-  applyTheme,
-  detectThemeByTime,
-  cycleThemeMode,
-  toggleSearch,
-  executeSearch,
-  renderFooterContent,
-  maybeShowSupportPopup,
-  initScrollAnimations
-} from "./js/ui-core.js";
+import { state } from "./js/state.js";
+import { qs, qsa, escapeHtml } from "./js/utils.js";
+import { REFRESH_INTERVAL_MS, THEME_KEY } from "./js/constants.js";
+import { refreshData, syncMatchRealtimeState } from "./js/api.js";
+import { loadHistory, loadFeedbackNotes, loadFavoriteMatches, loadNotificationPrefs, loadLanguagePreference, loadBackgroundPreferences } from "./js/storage.js";
+import { navigate, handleRouteFromQueryFallback, migrateLegacyHashPath, parseRoute } from "./js/routing.js";
+import { renderRoute } from "./js/ui-pages.js";
+import { applyTheme, detectThemeByTime, cycleThemeMode, toggleSearch, executeSearch, renderFooterContent, maybeShowSupportPopup, initScrollAnimations } from "./js/ui-core.js";
 
 // Enable API debugging for troubleshooting
 if (typeof localStorage !== 'undefined') {
