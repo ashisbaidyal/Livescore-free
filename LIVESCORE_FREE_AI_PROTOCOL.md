@@ -1,6 +1,6 @@
-# livescorefree.online AI Governance Protocol
+# livescoreFree.online AI Governance Protocol
 
-This document defines the architectural and stylistic guardrails for **livescorefree.online** to ensure consistency when being managed by multiple AI agents.
+This document defines the architectural and stylistic guardrails for **livescoreFree.online** to ensure consistency when being managed by multiple AI agents.
 
 ## 1. The Kinetic Mission
 All agents must prioritize **"The Stadium Spectacle"** — a visceral, high-energy sports experience.
@@ -38,4 +38,7 @@ npm run validate
 ```
 
 ---
-*Created by Antigravity AI Agent for livescorefree.online.*
+*Created by Antigravity AI Agent for livescoreFree.online.*
+
+
+

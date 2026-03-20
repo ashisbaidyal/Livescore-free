@@ -4,7 +4,7 @@
  * Returns: Live MLB events from official MLB StatsAPI.
  * Caching: 10-15 seconds
  *
- * @author LiveScoreFree Team
+ * @author livescoreFree.online Team
  * @version 1.0
  * @updated 2026-03-15
  */
@@ -251,7 +251,7 @@ export async function onRequest(context) {
     const url = `${MLB_BASE_URL}&date=${encodeURIComponent(dateKey)}`;
     const response = await fetchWithTimeout(url, {
       headers: {
-        "User-Agent": "LiveScoreFree-Bot/2.0",
+        "User-Agent": "livescoreFree.online-Bot/2.0",
         "Accept": "application/json"
       }
     }, REQUEST_TIMEOUT);
@@ -301,3 +301,8 @@ export async function onRequest(context) {
     });
   }
 }
+
+
+
+
+

@@ -50,7 +50,7 @@ export async function sportsdbFetchWithRateLimit(url, timeout = 8000) {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "User-Agent": "LiveScoreFree-Bot/2.0"
+        "User-Agent": "livescoreFree.online-Bot/2.0"
       }
     });
     
@@ -216,3 +216,8 @@ export function getSportsDbStatusMessage(apiKey = "123") {
   
   return "✅ Using SportsDB account API key. Higher limits available. Premium: https://www.thesportsdb.com/pricing";
 }
+
+
+
+
+

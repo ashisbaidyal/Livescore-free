@@ -67,7 +67,7 @@
 ### For Logo Images
 ```html
 <!-- SVG logos automatically optimized -->
-<img src="logo-day.svg" alt="LiveScoreFree logo" class="brand-logo">
+<img src="logo-day.svg" alt="livescoreFree.online logo" class="brand-logo">
 ```
 
 ### For Sport Icons
@@ -479,3 +479,4 @@ Before deploying any new SVG:
 **User Experience:** Smooth animations, no jank  
 **Mobile Ready:** Optimized for all devices  
 **Accessibility:** Enhanced with proper labels
+

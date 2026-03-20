@@ -22,7 +22,7 @@ SPORTSDB_API_BASE = "https://www.thesportsdb.com/api/v1/json/YOUR_KEY_HERE"
 
 ### 3️⃣ Deploy (2 min)
 ```bash
-cd d:\YTB\livescorefree-v2-production\lsf
+cd d:\YTB\livescoreFree.online-v2-production\lsf
 git add -A
 git commit -m "Deploy: Modern template + SportsDB optimization"
 git push origin main
@@ -34,7 +34,7 @@ git push origin main
 
 ## ✅ After Deployment (Verify)
 
-1. Open: https://livescorefree.online
+1. Open: https://livescoreFree.online.online
 2. Press F12 → Console tab
 3. Should see: `[API] ✅ Data refresh complete: X matches`
 4. See modern styling? ✅ You're done!
@@ -64,3 +64,4 @@ Then check console logs. If you see SportsDB errors, API key wasn't updated corr
 ---
 
 **Questions?** See `DEPLOYMENT_READY.md` for full details.
+

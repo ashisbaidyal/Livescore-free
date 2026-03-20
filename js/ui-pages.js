@@ -65,10 +65,10 @@ export async function renderRoute() {
     case "sport": renderSportPage(main, route); break;
     case "donate": renderDonatePage(main); break;
     case "feedback": renderFeedbackPage(main); break;
-    case "advertise": renderSimpleArticle(main, "Advertise on LiveScoreFree", "Use homepage, sport, league, and match inventory for sports traffic.", "<p>This route is now live in the site router and can be used as your media kit landing page.</p>"); break;
+    case "advertise": renderSimpleArticle(main, "Advertise on livescoreFree.online", "Use homepage, sport, league, and match inventory for sports traffic.", "<p>This route is now live in the site router and can be used as your media kit landing page.</p>"); break;
     case "data-sources": renderDataSourcesPage(main); break;
     case "privacy-policy": renderSimpleArticle(main, "Privacy Policy", "How browser storage and basic site data are handled.", "<p>Favorites, history, language, theme, and feedback are stored locally in the browser.</p>"); break;
-    case "terms-of-service": renderSimpleArticle(main, "Terms of Service", "Terms for using the LiveScoreFree website and score feeds.", "<p>Replace this placeholder with your final legal text.</p>"); break;
+    case "terms-of-service": renderSimpleArticle(main, "Terms of Service", "Terms for using the livescoreFree.online website and score feeds.", "<p>Replace this placeholder with your final legal text.</p>"); break;
     case "dmca-policy": renderSimpleArticle(main, "DMCA Policy", "How takedown requests are handled.", "<p>Replace this placeholder with your DMCA process and contact details.</p>"); break;
     case "contact": renderContactPage(main); break;
     case "about": renderAboutPage(main); break;
@@ -81,15 +81,15 @@ export async function renderRoute() {
 
 async function renderHomePage(container) {
   setSeo({
-    title: "livescorefree.online | The Stadium Spectacle | Live Scores & Arena Coverage",
-    description: "Track the global matchday universe with livescorefree.online. High-contrast scores, headline reports, and arena tables for every major competition.",
+    title: "livescoreFree.online | The Stadium Spectacle | Live Scores & Arena Coverage",
+    description: "Track the global matchday universe with livescoreFree.online. High-contrast scores, headline reports, and arena tables for every major competition.",
     path: "/home"
   });
 
   const heroMatch = state.liveMatches[0] || state.upcomingMatches[0] || trendingMatches(1)[0];
   const trust = getTrustSignals();
   
-  // livescorefree.online Layout Construction
+  // livescoreFree.online Layout Construction
   container.innerHTML = `
     <!-- 1. The Hero: Stadium Spectacle -->
     ${heroMatch ? renderLsfHero(heroMatch) : renderHeroFallback()}
@@ -153,7 +153,7 @@ async function renderHomePage(container) {
       <div class="arena-partnership-block" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: center;">
         <div class="partnership-copy">
           <h3 style="font-size: 2rem; margin-bottom: 20px;">Fuel Your Performance</h3>
-          <p style="opacity: 0.8; font-size: 1.1rem; margin-bottom: 30px;">livescorefree.online partners with the world's most iconic brands to keep the kinetic broadcast alive. Connect with us for premium sponsorship inventory across our sports hubs.</p>
+          <p style="opacity: 0.8; font-size: 1.1rem; margin-bottom: 30px;">livescoreFree.online partners with the world's most iconic brands to keep the kinetic broadcast alive. Connect with us for premium sponsorship inventory across our sports hubs.</p>
           <a class="btn btn-primary" data-link href="/advertise">Inquire for Sponsorship</a>
         </div>
         <div class="partnership-image" style="background: var(--gs-surface-low); padding: 40px; text-align: center; color: var(--gs-on-surface);">
@@ -175,7 +175,7 @@ async function renderHomePage(container) {
       <div class="support-premium-banner gs-depth-shadow" style="background: var(--gs-surface-lowest); padding: 40px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 30px;">
         <div style="max-width: 600px;">
           <h3>Join the Foundation Circle</h3>
-          <p>livescorefree.online is built for fans, by fans. Your support helps us scale our real-time data feeds and expand our coverage of niche leagues worldwide.</p>
+          <p>livescoreFree.online is built for fans, by fans. Your support helps us scale our real-time data feeds and expand our coverage of niche leagues worldwide.</p>
         </div>
         <div class="support-actions">
            <a class="btn btn-primary" href="https://ko-fi.com" target="_blank" style="padding: 20px 40px; font-size: 1.2rem;">Support via Ko-fi</a>
@@ -198,7 +198,7 @@ function renderLsfHero(match) {
         <div class="hero-text">
           <span class="premium-kicker" style="color: var(--gs-primary); display: block; margin-bottom: 20px; font-size: 1.2rem;">Stadium Spectacle</span>
           <h1 style="font-size: 4rem; line-height: 0.9; margin-bottom: 30px; font-weight: 800;">Real Matchday Intensity</h1>
-          <p style="font-size: 1.25rem; opacity: 0.8; margin-bottom: 40px; font-family: var(--soccer-font-body);">Track the pulse of the arena with livescorefree.online's brutalist match centers and real-time kinetic scoreboards.</p>
+          <p style="font-size: 1.25rem; opacity: 0.8; margin-bottom: 40px; font-family: var(--soccer-font-body);">Track the pulse of the arena with livescoreFree.online's brutalist match centers and real-time kinetic scoreboards.</p>
           <div class="hero-actions" style="display: flex; gap: 20px;">
              <a data-link href="/live" class="btn btn-primary" style="padding: 16px 32px; font-size: 1.1rem;">Open Live Board</a>
              <a data-link href="${routeForMatch(match)}" class="btn" style="background: transparent; color: white; border: 2px solid white; padding: 14px 30px;">Match Center</a>
@@ -229,12 +229,12 @@ function renderLsfHero(match) {
 }
 
 function renderHistoryPage(container) {
-  setSeo({ title: "Match History | livescorefree.online", description: "Your recently opened match pages.", path: "/history" });
+  setSeo({ title: "Match History | livescoreFree.online", description: "Your recently opened match pages.", path: "/history" });
   container.innerHTML = `<section class="section tone-history"><div class="section-head"><div><h1>Match History</h1><p>Recent matches opened from the live score center.</p></div></div>${renderMatchGrid(state.history.slice(0, 30), "No browsing history yet.")}</section>`;
 }
 
 function renderTopLeaguesPage(container) {
-  setSeo({ title: "Top Leagues | livescorefree.online", description: "Browse major leagues with dedicated overview pages.", path: "/top-leagues" });
+  setSeo({ title: "Top Leagues | livescoreFree.online", description: "Browse major leagues with dedicated overview pages.", path: "/top-leagues" });
   const grouped = Object.entries(LEAGUES).reduce((acc, [key, league]) => {
     if (!acc[league.sportGroup]) acc[league.sportGroup] = [];
     acc[league.sportGroup].push({ key, ...league, live: state.liveMatches.filter((match) => match.leagueKey === key).length });
@@ -251,7 +251,7 @@ function renderSportPage(container, route) {
   const liveMatches = matches.filter((match) => match.status === "live");
   const leagues = Object.entries(LEAGUES).filter(([, league]) => league.sportGroup === route.sport).map(([key, league]) => ({ key, ...league, live: state.liveMatches.filter((match) => match.leagueKey === key).length }));
 
-  setSeo({ title: `${sport.label} Live Scores | LiveScoreFree`, description: sport.description, path: `/sport/${route.sport}` });
+  setSeo({ title: `${sport.label} Live Scores | livescoreFree.online`, description: sport.description, path: `/sport/${route.sport}` });
   container.innerHTML = `
     <section class="hero" ${buildAutoBackgroundAttrs({ sportGroup: route.sport, seedText: route.sport, strength: 0.28 })}>
       <div class="hero-inner-content"><div class="hero-text"><span class="hero-eyebrow">Sport Hub</span><h1 class="hero-title">${escapeHtml(sport.label)}</h1><p class="hero-lead">${escapeHtml(sport.description)}</p><div class="hero-actions"><a data-link href="/live" class="btn btn-primary">Open Live Scores</a><a data-link href="/top-leagues" class="btn">Top Leagues</a></div></div><div class="hero-side-card"><div class="hero-side-label">Live Matches</div><div class="hero-side-score">${liveMatches.length}</div><div class="hero-side-meta">${matches.length} total match cards loaded</div></div></div>
@@ -272,7 +272,7 @@ async function renderLeaguePage(container, route) {
   const finalMatches = matches.filter((match) => match.status === "final");
 
   setSeo({
-    title: `${league.label} Live Scores, Fixtures & Results | livescorefree.online`,
+    title: `${league.label} Live Scores, Fixtures & Results | livescoreFree.online`,
     description: `${league.label} live scores, fixtures, results, and standings in one league hub.`,
     path: routeForLeague(route.leagueKey)
   });
@@ -337,7 +337,7 @@ async function renderMatchPage(container, route) {
   ];
 
   setSeo({
-    title: `${match.homeName} vs ${match.awayName} | LiveScoreFree Match Center`,
+    title: `${match.homeName} vs ${match.awayName} | livescoreFree.online Match Center`,
     description: `${match.homeName} vs ${match.awayName} live score, timeline, and match center.`,
     path: routeForMatch(match)
   });
@@ -382,11 +382,11 @@ async function renderMatchPage(container, route) {
 }
 
 function renderDonatePage(container) {
-  setSeo({ title: "Support LiveScoreFree", description: "Help fund server costs and real-time sports coverage.", path: "/donate" });
+  setSeo({ title: "Support livescoreFree.online", description: "Help fund server costs and real-time sports coverage.", path: "/donate" });
   const trust = getTrustSignals();
   container.innerHTML = `
     <section class="section tone-support">
-      <div class="section-head"><div><h1>Support LiveScoreFree</h1><p>Community support keeps the score feed, pages, and APIs online.</p></div></div>
+      <div class="section-head"><div><h1>Support livescoreFree.online</h1><p>Community support keeps the score feed, pages, and APIs online.</p></div></div>
       ${renderDonationProgress()}
       <div class="trust-grid">
         <div class="trust-card"><strong>${trust.monthlyUsers.toLocaleString()}</strong><span>Monthly users reached</span></div>
@@ -415,7 +415,7 @@ function renderDonatePage(container) {
 }
 
 async function renderNewsPage(container) {
-  setSeo({ title: "Sports News | livescorefree.online", description: "Editorial sports coverage and premium news cards.", path: "/news" });
+  setSeo({ title: "Sports News | livescoreFree.online", description: "Editorial sports coverage and premium news cards.", path: "/news" });
   container.innerHTML = `
     <section class="hero" ${buildAutoBackgroundAttrs({ sportGroup: "football", seedText: "news", strength: 0.22 })}>
       <div class="hero-inner-content">
@@ -440,7 +440,7 @@ async function renderNewsPage(container) {
 }
 
 function renderSearchPage(container) {
-  setSeo({ title: "Search Matches | livescorefree.online", description: "Find live, upcoming, and result match pages fast.", path: "/search" });
+  setSeo({ title: "Search Matches | livescoreFree.online", description: "Find live, upcoming, and result match pages fast.", path: "/search" });
   const popular = trendingMatches(8);
   container.innerHTML = `
     <section class="section tone-sport">
@@ -478,15 +478,15 @@ function renderSearchPage(container) {
 }
 
 function renderContactPage(container) {
-  setSeo({ title: "Contact livescorefree.online", description: "Support, advertising, and matchday partnership contact page.", path: "/contact" });
+  setSeo({ title: "Contact livescoreFree.online", description: "Support, advertising, and matchday partnership contact page.", path: "/contact" });
   container.innerHTML = `
     <section class="section tone-legal">
       <div class="section-head"><div><h1>Contact Us</h1><p>Support, partnerships, sponsor inquiries, and general feedback.</p></div></div>
       <div class="contact-premium-layout">
         <div class="contact-premium-card">
           <span class="premium-kicker">Customer Support</span>
-          <h3>Reach the livescorefree.online team</h3>
-          <p>Email: <a href="mailto:support@livescorefree.online">support@livescorefree.online</a></p>
+          <h3>Reach the livescoreFree.online team</h3>
+          <p>Email: <a href="mailto:support@livescoreFree.online">support@livescoreFree.online</a></p>
           <p>Use the feedback page if you want to save notes locally during development or QA.</p>
           <div class="club-story-actions">
             <a class="btn btn-primary" data-link href="/feedback">Open Feedback</a>
@@ -509,15 +509,15 @@ function renderContactPage(container) {
 }
 
 function renderAboutPage(container) {
-  setSeo({ title: "About livescorefree.online", description: "About the premium live-score platform and its club-style design direction.", path: "/about" });
+  setSeo({ title: "About livescoreFree.online", description: "About the premium live-score platform and its club-style design direction.", path: "/about" });
   container.innerHTML = `
     <section class="section tone-trust">
-      <div class="section-head"><div><h1>About livescorefree.online</h1><p>A live-score website rebuilt to feel closer to a premium soccer-club experience.</p></div></div>
+      <div class="section-head"><div><h1>About livescoreFree.online</h1><p>A live-score website rebuilt to feel closer to a premium soccer-club experience.</p></div></div>
       <div class="club-premium-layout">
         <div class="club-story-card">
           <span class="premium-kicker">The Platform</span>
           <h3>Real data, premium presentation</h3>
-          <p>LiveScoreFree aggregates match data, league standings, and sports news into a faster fan-facing product with dedicated sport hubs, league pages, match centers, and sponsor-ready content blocks.</p>
+          <p>livescoreFree.online aggregates match data, league standings, and sports news into a faster fan-facing product with dedicated sport hubs, league pages, match centers, and sponsor-ready content blocks.</p>
         </div>
         <div class="club-story-card">
           <span class="premium-kicker">This Update</span>
@@ -530,7 +530,7 @@ function renderAboutPage(container) {
 }
 
 function renderFeedbackPage(container) {
-  setSeo({ title: "Feedback | livescorefree.online", description: "Send feedback about the live score website and API experience.", path: "/feedback" });
+  setSeo({ title: "Feedback | livescoreFree.online", description: "Send feedback about the live score website and API experience.", path: "/feedback" });
   container.innerHTML = `<section class="section tone-support"><div class="section-head"><div><h1>Feedback</h1><p>Store local feedback notes directly in the browser for review.</p></div></div><div class="article-body"><textarea id="feedback-notes" style="width:100%;min-height:220px;">${escapeHtml(state.feedbackNotes.join("\n\n"))}</textarea><div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;"><button class="btn btn-primary" id="save-feedback" type="button">Save Feedback</button><button class="btn" id="refresh-feedback-data" type="button">Refresh Match Data</button></div></div></section>`;
   const saveBtn = qs("#save-feedback", container);
   const refreshBtn = qs("#refresh-feedback-data", container);
@@ -571,7 +571,7 @@ function renderNotFoundPage(container) {
 }
 
 async function renderMatchListingPage(container, title, description, path, toneClass, matches) {
-  setSeo({ title: `${title} | livescorefree.online`, description, path });
+  setSeo({ title: `${title} | livescoreFree.online`, description, path });
   const groupedBySport = matches.reduce((acc, match) => {
     acc[match.sportGroup] = (acc[match.sportGroup] || 0) + 1;
     return acc;
@@ -784,3 +784,8 @@ function wireFavoriteButton() {
     showToast(isFavorite ? "Match added to favorites." : "Match removed from favorites.");
   });
 }
+
+
+
+
+

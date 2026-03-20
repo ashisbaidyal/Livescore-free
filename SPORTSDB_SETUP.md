@@ -2,7 +2,7 @@
 
 ## Overview
 
-LiveScoreFree uses TheSportsDB API as a secondary data source for sports data when ESPN doesn't have coverage. This guide explains the setup, limitations, and optimization strategy.
+livescoreFree.online uses TheSportsDB API as a secondary data source for sports data when ESPN doesn't have coverage. This guide explains the setup, limitations, and optimization strategy.
 
 **Last Updated**: March 20, 2026
 
@@ -42,7 +42,7 @@ LiveScoreFree uses TheSportsDB API as a secondary data source for sports data wh
 
 ```
 API URL: https://www.thesportsdb.com/api/v1/json/123/
-Requests per minute: 30 (shared across all LiveScoreFree users)
+Requests per minute: 30 (shared across all livescoreFree.online users)
 Database: Limited, community-contributed data
 State: Being phased out (heavily abused historically)
 ```
@@ -137,7 +137,7 @@ const sportsdbResult = await cachedJson(
 
 ```bash
 # In browser console or PowerShell:
-curl https://livescorefree.online/api/sportsdb?action=events-by-sport&date=2026-03-20
+curl https://livescoreFree.online.online/api/sportsdb?action=events-by-sport&date=2026-03-20
 ```
 
 **Expected Response**:
@@ -157,7 +157,7 @@ curl https://livescorefree.online/api/sportsdb?action=events-by-sport&date=2026-
 ### Test 2: Check Cache Stats
 
 ```bash
-curl https://livescorefree.online/api/sportsdb?action=cache-stats
+curl https://livescoreFree.online.online/api/sportsdb?action=cache-stats
 ```
 
 **Shows**:
@@ -303,3 +303,4 @@ This is what was automatically done:
 ---
 
 **Questions?** Review the official SportsDB API docs or check the implementation in `functions/api/sportsdb.js`.
+

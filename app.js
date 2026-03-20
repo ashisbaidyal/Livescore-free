@@ -237,3 +237,5 @@ function startKineticTicker() {
 if (typeof window !== "undefined") {
   init();
 }
+
+

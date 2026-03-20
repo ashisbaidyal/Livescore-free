@@ -64,7 +64,7 @@ export function statusBadge(match) {
 
 export function generatePremiumSportSVG(sportGroup, seedString) {
   let hash = 0;
-  const safeSeed = String(seedString || sportGroup || "livescorefree.online");
+  const safeSeed = String(seedString || sportGroup || "livescoreFree.online");
   for (let i = 0; i < safeSeed.length; i++) {
     hash = safeSeed.charCodeAt(i) + ((hash << 5) - hash);
   }
@@ -185,3 +185,8 @@ export function bindSportFilterTabs() {
     });
   });
 }
+
+
+
+
+

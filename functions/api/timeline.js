@@ -25,7 +25,7 @@ async function fetchEspnTimeline(espnBase, matchId, timeout) {
   try {
     const url = `${espnBase}/soccer/eng.1/events/${matchId}`;
     const response = await fetchWithTimeout(url, {
-      headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
+      headers: { "User-Agent": "livescoreFree.online-Bot/1.0" }
     }, timeout);
 
     if (!response.ok) throw new Error(`ESPN API error: ${response.status}`);
@@ -42,7 +42,7 @@ async function fetchSportsDbTimeline(sportsDbBase, eventId, timeout) {
   try {
     const url = `${sportsDbBase}/eventslast.php?id=${eventId}`;
     const response = await fetchWithTimeout(url, {
-      headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
+      headers: { "User-Agent": "livescoreFree.online-Bot/1.0" }
     }, timeout);
 
     if (!response.ok) throw new Error(`SportsDB API error: ${response.status}`);
@@ -255,3 +255,8 @@ export async function onRequest(context) {
     });
   }
 }
+
+
+
+
+

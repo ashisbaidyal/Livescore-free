@@ -104,7 +104,7 @@ export async function onRequest(context) {
       signal: controller.signal,
       headers: {
         "Accept": "application/json, text/plain, */*",
-        "User-Agent": "LiveScoreFree-Proxy/2.0"
+        "User-Agent": "livescoreFree.online-Proxy/2.0"
       }
     });
 
@@ -142,3 +142,8 @@ export async function onRequest(context) {
     clearTimeout(timer);
   }
 }
+
+
+
+
+

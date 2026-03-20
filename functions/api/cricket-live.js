@@ -4,7 +4,7 @@
  * Returns: Live cricket events from Cricbuzz (no-key) with RSS fallback.
  * Caching: 10-15 seconds
  *
- * @author LiveScoreFree Team
+ * @author livescoreFree.online Team
  * @version 1.0
  * @updated 2026-03-14
  */
@@ -287,7 +287,7 @@ export async function onRequest(context) {
     try {
       const response = await fetchWithTimeout(CRICBUZZ_LIVE_URL, {
         headers: {
-          "User-Agent": "LiveScoreFree-Bot/2.0",
+          "User-Agent": "livescoreFree.online-Bot/2.0",
           "Accept": "application/json"
         }
       }, REQUEST_TIMEOUT);
@@ -326,7 +326,7 @@ export async function onRequest(context) {
     try {
       const response = await fetchWithTimeout(CRICINFO_RSS_URL, {
         headers: {
-          "User-Agent": "LiveScoreFree-Bot/2.0",
+          "User-Agent": "livescoreFree.online-Bot/2.0",
           "Accept": "application/rss+xml, application/xml"
         }
       }, REQUEST_TIMEOUT);
@@ -377,3 +377,8 @@ export async function onRequest(context) {
     });
   }
 }
+
+
+
+
+

@@ -4,7 +4,7 @@
  * Returns: Live and upcoming match data from ESPN and TheSportsDB
  * Caching: 15 seconds
  *
- * @author LiveScoreFree Team
+ * @author livescoreFree.online Team
  * @version 2.0
  * @updated 2026-03-13
  */
@@ -94,7 +94,7 @@ async function fetchEspnMatches(espnBase, sportFeed, timeout) {
     const url = `${espnBase}/${sportFeed}/events?limit=50&status=in,upcoming`;
     const response = await fetchWithTimeout(url, {
       headers: {
-        "User-Agent": "LiveScoreFree-Bot/2.0",
+        "User-Agent": "livescoreFree.online-Bot/2.0",
         "Accept": "application/json"
       }
     }, timeout);
@@ -119,7 +119,7 @@ async function fetchSportsDbMatches(sportsDbBase, timeout) {
     const url = `${sportsDbBase}/eventslast.php?id=133602`;
     const response = await fetchWithTimeout(url, {
       headers: {
-        "User-Agent": "LiveScoreFree-Bot/2.0",
+        "User-Agent": "livescoreFree.online-Bot/2.0",
         "Accept": "application/json"
       }
     }, timeout);
@@ -358,3 +358,8 @@ export async function onRequest(context) {
     });
   }
 }
+
+
+
+
+

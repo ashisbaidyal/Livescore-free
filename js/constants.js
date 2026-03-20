@@ -303,13 +303,13 @@ export const SPORTSDB_SPORTS = {
 };
 
 export const SEO_BASE = {
-  site: "livescorefree.online",
-  origin: "https://livescorefree.online"
+  site: "livescoreFree.online",
+  origin: "https://livescoreFree.online"
 };
 
 export const GLOBAL_SEO_KEYWORDS = [
   "live score",
-  "livescorefree.online",
+  "livescoreFree.online",
   "live sports scoreboard",
   "real-time match updates",
   "football live score",
@@ -337,7 +337,7 @@ export const NAV_TOUCH_INFO = {
 
 export const DONATION_MONTHLY_GOAL_USD = 120;
 export const DONATION_BASE_SUPPORT_USD = 54;
-export const DONATION_KOFI_URL = "https://ko-fi.com/livescorefree";
+export const DONATION_KOFI_URL = "https://ko-fi.com/livescoreFree.online";
 export const TRUST_SIGNAL_BASELINE = {
   monthlyUsers: 50000,
   countries: 120
@@ -359,3 +359,8 @@ export const SUPPORTED_LANGUAGES = {
   "zh-CN": "Chinese (Simplified)",
   ru: "Russian"
 };
+
+
+
+
+

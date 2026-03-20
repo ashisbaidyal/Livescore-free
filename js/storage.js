@@ -219,3 +219,6 @@ export function saveBackgroundPreferences({ mode, custom }) {
     if (custom) localStorage.setItem("lsf_custom_background", custom);
   } catch (_error) { /* ignore */ }
 }
+
+
+

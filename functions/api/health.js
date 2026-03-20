@@ -3,7 +3,7 @@
  * Healthcheck Endpoint
  * Returns: System status, API health, cache status
  *
- * @author LiveScoreFree Team
+ * @author livescoreFree.online Team
  * @version 2.0
  * @updated 2026-03-13
  */
@@ -29,7 +29,7 @@ async function checkEspnHealth(espnBase, timeout) {
 
     const response = await fetch(`${espnBase}/soccer/eng.1/events?limit=1`, {
       signal: controller.signal,
-      headers: { "User-Agent": "LiveScoreFree-Health-Check/2.0" }
+      headers: { "User-Agent": "livescoreFree.online-Health-Check/2.0" }
     });
 
     clearTimeout(timer);
@@ -57,7 +57,7 @@ async function checkSportsDbHealth(sportsDbBase, timeout) {
 
     const response = await fetch(`${sportsDbBase}/leaguestable.php?l=133602&s=2025`, {
       signal: controller.signal,
-      headers: { "User-Agent": "LiveScoreFree-Health-Check/2.0" }
+      headers: { "User-Agent": "livescoreFree.online-Health-Check/2.0" }
     });
 
     clearTimeout(timer);
@@ -140,3 +140,8 @@ export async function onRequest(context) {
     headers: baseHeaders
   });
 }
+
+
+
+
+

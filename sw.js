@@ -50,7 +50,7 @@ const APP_SHELL = [
 ];
 
 // Log service worker activation
-console.debug(`[SW] LiveScoreFree Service Worker ${CACHE_VERSION} loading`);
+console.debug(`[SW] livescoreFree.online Service Worker ${CACHE_VERSION} loading`);
 
 self.addEventListener("install", (event) => {
   console.debug(`[SW] Installing ${CACHE_NAME}...`);
@@ -151,3 +151,7 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
+
+
+

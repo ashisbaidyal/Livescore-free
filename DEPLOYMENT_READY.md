@@ -1,4 +1,4 @@
-# 🚀 LiveScoreFree v2 - DEPLOYMENT READY
+# 🚀 livescoreFree.online v2 - DEPLOYMENT READY
 
 **Status**: ✅ **READY FOR PRODUCTION** | Date: March 20, 2026
 
@@ -98,7 +98,7 @@
 
 ### Post-Deployment Verification (5 minutes)
 1. **Check Website Live**
-   - Navigate to https://livescorefree.online
+   - Navigate to https://livescoreFree.online.online
    - Load `/home` page
    - Verify modern styling appears (hero section with gradients)
 
@@ -238,7 +238,7 @@ SPORTSDB_API_BASE = "https://www.thesportsdb.com/api/v1/json/YOUR_KEY_HERE"
 
 ### Step 2: Deploy to Production
 ```bash
-cd d:\YTB\livescorefree-v2-production\lsf
+cd d:\YTB\livescoreFree.online-v2-production\lsf
 git add -A
 git commit -m "Phase 3: Modern template styling + SportsDB optimization"
 git push origin main
@@ -250,7 +250,7 @@ git push origin main
 - Check deployment status in Cloudflare dashboard
 
 ### Step 4: Verify (5 minutes)
-1. Visit https://livescorefree.online
+1. Visit https://livescoreFree.online.online
 2. Check browser console (F12)
 3. Look for `[API] ✅ Data refresh complete` message
 4. Verify modern styling appears
@@ -277,7 +277,7 @@ location.reload();
 
 ### Check API Health Endpoint
 ```bash
-curl https://livescorefree.online/api/health
+curl https://livescoreFree.online.online/api/health
 ```
 
 Response:
@@ -351,7 +351,7 @@ fetch('/api/sportsdb?action=cache-stats').then(r => r.json()).then(console.log)
    - Cloudflare Pages auto-deploys
 
 3. **Verify Live** (5 minutes)
-   - Visit https://livescorefree.online
+   - Visit https://livescoreFree.online.online
    - Check console logs
    - Test all pages
 
@@ -364,3 +364,4 @@ fetch('/api/sportsdb?action=cache-stats').then(r => r.json()).then(console.log)
 ---
 
 **Deployment is ready! 🚀 You have all the code, just need to update your SportsDB API key and push!**
+

@@ -34,7 +34,7 @@ async function fetchEspnStandings(espnBase, leagueId, timeout) {
     const espnLeague = LEAGUE_MAPPING[leagueId] || `soccer/${leagueId}`;
     const url = `${espnBase}/${espnLeague}/standings`;
     const response = await fetchWithTimeout(url, {
-      headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
+      headers: { "User-Agent": "livescoreFree.online-Bot/1.0" }
     }, timeout);
 
     if (!response.ok) throw new Error(`ESPN API error: ${response.status}`);
@@ -196,3 +196,8 @@ export async function onRequest(context) {
     });
   }
 }
+
+
+
+
+

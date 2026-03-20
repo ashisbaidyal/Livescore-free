@@ -10,7 +10,7 @@
 - [ ] Updated `wrangler.toml` with SportsDB API key?
 - [ ] Pushed changes to git?
 - [ ] Waited 5 minutes for Cloudflare deployment?
-- [ ] Opened https://livescorefree.online in fresh browser tab?
+- [ ] Opened https://livescoreFree.online.online in fresh browser tab?
 
 ---
 
@@ -280,3 +280,4 @@ ___________________________________________
 
 **Total estimated time: 10-15 minutes**
 **Expected outcome: All tests pass ✅**
+

@@ -54,3 +54,6 @@ export function preloadCriticalVisualAssets() {
     preloadVisualAsset(img.currentSrc || img.getAttribute("src") || "");
   });
 }
+
+
+

@@ -1,12 +1,12 @@
 /**
- * API Configuration for LiveScoreFree v2.0
+ * API Configuration for livescoreFree.online v2.0
  * 
  * Defines API endpoints and base URLs based on environment
  * Can use either direct external APIs or proxied Cloudflare endpoints
  * 
  * @version 2.0
- * @updated 2026-03-13
- * @domain livescorefree.online
+ * @updated 2026-03-20
+ * @domain livescoreFree.online
  */
 
 // ===== CONFIGURATION =====
@@ -16,7 +16,7 @@
 const USE_CLOUDFLARE_PROXY = true;
 
 // Supported hosts for production and preview environments.
-const PRODUCTION_DOMAINS = ["livescorefree.online", "www.livescorefree.online", "api.livescorefree.online"];
+const PRODUCTION_DOMAINS = ["livescoreFree.online", "www.livescoreFree.online", "api.livescoreFree.online"];
 
 function isProductionHost(hostname) {
   return PRODUCTION_DOMAINS.includes(hostname) || hostname.endsWith(".pages.dev");
@@ -234,3 +234,7 @@ window.LiveScoreAPI = LiveScoreAPI;
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = LiveScoreAPI;
 }
+
+
+
+

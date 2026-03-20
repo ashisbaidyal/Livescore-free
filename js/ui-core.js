@@ -234,7 +234,7 @@ export function showSupportPopup() {
     <div class="support-popup-card gs-depth-shadow" style="background: white; border: 4px solid var(--gs-primary); padding: 40px; position: relative;">
       <button class="popup-close" type="button" data-popup-close style="position: absolute; top: 10px; right: 10px; border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
       <span class="premium-kicker" style="color: var(--gs-primary);">Fuel The Broadcast</span>
-      <h3 style="margin: 10px 0 20px; font-size: 1.8rem;">Keep livescorefree.online Kinetic</h3>
+      <h3 style="margin: 10px 0 20px; font-size: 1.8rem;">Keep livescoreFree.online Kinetic</h3>
       <p style="margin-bottom: 30px; font-size: 1.1rem; opacity: 0.8;">Your support helps us scale our real-time sports data feeds across the global streaming universe.</p>
       <div class="popup-actions" style="display: flex; gap: 16px;">
         <a class="btn btn-primary" data-link href="/donate" style="flex: 1; padding: 14px; text-align: center;">Support via Ko-fi</a>
@@ -388,3 +388,8 @@ export function wireMatchTabs(match) {
     });
   });
 }
+
+
+
+
+

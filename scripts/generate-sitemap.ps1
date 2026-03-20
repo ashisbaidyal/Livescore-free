@@ -1,5 +1,5 @@
 param(
-  [string]$BaseUrl = "https://livescorefree.online",
+  [string]$BaseUrl = "https://livescoreFree.online",
   [string]$OutputPath = "sitemap.xml"
 )
 
@@ -111,3 +111,7 @@ $($xmlEntries -join "`n")
 
 Set-Content -Path $OutputPath -Value $sitemap -Encoding UTF8
 Write-Host "Sitemap written to $OutputPath"
+
+
+
+

@@ -1,7 +1,7 @@
 {
-  "name": "livescorefree.online | The Stadium Spectacle | Live Scores",
-  "short_name": "livescorefree.online",
-  "description": "livescorefree.online delivers fast, brutalist live scores, headline reports, and arena tables for every major competition.",
+  "name": "livescoreFree.online | The Stadium Spectacle | Live Scores",
+  "short_name": "livescoreFree.online",
+  "description": "livescoreFree.online delivers fast, brutalist live scores, headline reports, and arena tables for every major competition.",
   "start_url": "/home",
   "scope": "/",
   "id": "/home",
@@ -41,12 +41,12 @@
   "shortcuts": [
     {
       "name": "Live Center",
-      "description": "Open livescorefree.online live board",
+      "description": "Open livescoreFree.online live board",
       "url": "/live"
     },
     {
       "name": "Headline Reports",
-      "description": "Open livescorefree.online newsroom",
+      "description": "Open livescoreFree.online newsroom",
       "url": "/news"
     },
     {
@@ -61,3 +61,4 @@
     }
   ]
 }
+

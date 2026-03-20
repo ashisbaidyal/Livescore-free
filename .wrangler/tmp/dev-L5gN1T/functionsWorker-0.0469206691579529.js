@@ -335,7 +335,7 @@ async function onRequest(context) {
     try {
       const response = await fetchWithTimeout(CRICBUZZ_LIVE_URL, {
         headers: {
-          "User-Agent": "LiveScoreFree-Bot/2.0",
+          "User-Agent": "livescoreFree.online.online-Bot/2.0",
           "Accept": "application/json"
         }
       }, REQUEST_TIMEOUT);
@@ -372,7 +372,7 @@ async function onRequest(context) {
     try {
       const response = await fetchWithTimeout(CRICINFO_RSS_URL, {
         headers: {
-          "User-Agent": "LiveScoreFree-Bot/2.0",
+          "User-Agent": "livescoreFree.online.online-Bot/2.0",
           "Accept": "application/rss+xml, application/xml"
         }
       }, REQUEST_TIMEOUT);
@@ -439,7 +439,7 @@ async function checkEspnHealth(espnBase, timeout) {
     const timer = setTimeout(() => controller.abort(), timeout);
     const response = await fetch(`${espnBase}/soccer/eng.1/events?limit=1`, {
       signal: controller.signal,
-      headers: { "User-Agent": "LiveScoreFree-Health-Check/2.0" }
+      headers: { "User-Agent": "livescoreFree.online.online-Health-Check/2.0" }
     });
     clearTimeout(timer);
     const latency = Date.now() - startTime;
@@ -465,7 +465,7 @@ async function checkSportsDbHealth(sportsDbBase, timeout) {
     const timer = setTimeout(() => controller.abort(), timeout);
     const response = await fetch(`${sportsDbBase}/leaguestable.php?l=133602&s=2025`, {
       signal: controller.signal,
-      headers: { "User-Agent": "LiveScoreFree-Health-Check/2.0" }
+      headers: { "User-Agent": "livescoreFree.online.online-Health-Check/2.0" }
     });
     clearTimeout(timer);
     const latency = Date.now() - startTime;
@@ -614,7 +614,7 @@ async function fetchEspnMatches(espnBase, sportFeed, timeout) {
     const url = `${espnBase}/${sportFeed}/events?limit=50&status=in,upcoming`;
     const response = await fetchWithTimeout2(url, {
       headers: {
-        "User-Agent": "LiveScoreFree-Bot/2.0",
+        "User-Agent": "livescoreFree.online.online-Bot/2.0",
         "Accept": "application/json"
       }
     }, timeout);
@@ -633,7 +633,7 @@ async function fetchSportsDbMatches(sportsDbBase, timeout) {
     const url = `${sportsDbBase}/eventslast.php?id=133602`;
     const response = await fetchWithTimeout2(url, {
       headers: {
-        "User-Agent": "LiveScoreFree-Bot/2.0",
+        "User-Agent": "livescoreFree.online.online-Bot/2.0",
         "Accept": "application/json"
       }
     }, timeout);
@@ -1025,7 +1025,7 @@ async function onRequest4(context) {
     const url = `${MLB_BASE_URL}&date=${encodeURIComponent(dateKey)}`;
     const response = await fetchWithTimeout3(url, {
       headers: {
-        "User-Agent": "LiveScoreFree-Bot/2.0",
+        "User-Agent": "livescoreFree.online.online-Bot/2.0",
         "Accept": "application/json"
       }
     }, REQUEST_TIMEOUT);
@@ -1286,7 +1286,7 @@ async function onRequest5(context) {
   try {
     const response = await fetchWithTimeout4(NHL_SCORE_URL, {
       headers: {
-        "User-Agent": "LiveScoreFree-Bot/2.0",
+        "User-Agent": "livescoreFree.online.online-Bot/2.0",
         "Accept": "application/json"
       }
     }, REQUEST_TIMEOUT);
@@ -1424,7 +1424,7 @@ async function onRequest6(context) {
       signal: controller.signal,
       headers: {
         "Accept": "application/json, text/plain, */*",
-        "User-Agent": "LiveScoreFree-Proxy/2.0"
+        "User-Agent": "livescoreFree.online.online-Proxy/2.0"
       }
     });
     const responseHeaders = new Headers(baseHeaders);
@@ -1485,7 +1485,7 @@ async function fetchEspnStandings(espnBase, leagueId, timeout) {
     const espnLeague = LEAGUE_MAPPING[leagueId] || `soccer/${leagueId}`;
     const url = `${espnBase}/${espnLeague}/standings`;
     const response = await fetchWithTimeout5(url, {
-      headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
+      headers: { "User-Agent": "livescoreFree.online.online-Bot/1.0" }
     }, timeout);
     if (!response.ok) throw new Error(`ESPN API error: ${response.status}`);
     const data = await response.json();
@@ -1651,7 +1651,7 @@ async function fetchEspnTimeline(espnBase, matchId, timeout) {
   try {
     const url = `${espnBase}/soccer/eng.1/events/${matchId}`;
     const response = await fetchWithTimeout6(url, {
-      headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
+      headers: { "User-Agent": "livescoreFree.online.online-Bot/1.0" }
     }, timeout);
     if (!response.ok) throw new Error(`ESPN API error: ${response.status}`);
     const data = await response.json();
@@ -1667,7 +1667,7 @@ async function fetchSportsDbTimeline(sportsDbBase, eventId, timeout) {
   try {
     const url = `${sportsDbBase}/eventslast.php?id=${eventId}`;
     const response = await fetchWithTimeout6(url, {
-      headers: { "User-Agent": "LiveScoreFree-Bot/1.0" }
+      headers: { "User-Agent": "livescoreFree.online.online-Bot/1.0" }
     }, timeout);
     if (!response.ok) throw new Error(`SportsDB API error: ${response.status}`);
     const data = await response.json();
@@ -2744,3 +2744,5 @@ export {
   middleware_loader_entry_default2 as default
 };
 //# sourceMappingURL=functionsWorker-0.0469206691579529.js.map
+
+

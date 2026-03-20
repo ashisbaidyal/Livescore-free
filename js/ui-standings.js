@@ -66,3 +66,6 @@ export async function renderStandingsTable(container, leagueId) {
     container.innerHTML = "";
   }
 }
+
+
+

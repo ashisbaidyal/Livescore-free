@@ -4,7 +4,7 @@
  * 
  * Free Tier Limits (30 req/min): We cache aggressively to stay within limits
  * 
- * @author LiveScoreFree Team
+ * @author livescoreFree.online Team
  * @version 1.0
  * @updated 2026-03-20
  */
@@ -264,3 +264,8 @@ function handleCacheStats(startTime, baseHeaders, apiVersion) {
     headers: { ...baseHeaders, "X-Response-Time": `${Date.now() - startTime}ms` }
   });
 }
+
+
+
+
+

@@ -1,7 +1,7 @@
-# livescorefree.online Stadium Broadcast Automation
+# livescoreFree.online Stadium Broadcast Automation
 # One-click launch for the kinetic sports platform
 
-Write-Host "--- livescorefree.online Broadcast System ---" -ForegroundColor Red
+Write-Host "--- livescoreFree.online Broadcast System ---" -ForegroundColor Red
 Write-Host "Initializing Kinetic Sync Engines..." -ForegroundColor Gray
 
 # 1. Check for Node.js
@@ -17,3 +17,6 @@ npm install --no-save serve
 # 3. Launch the Stadium Spectacle
 Write-Host "Launching The Stadium Spectacle at http://localhost:3000..." -ForegroundColor Green
 npm start
+
+
+

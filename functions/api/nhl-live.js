@@ -4,7 +4,7 @@
  * Returns: Live NHL events from official NHL public API.
  * Caching: 10-15 seconds
  *
- * @author LiveScoreFree Team
+ * @author livescoreFree.online Team
  * @version 1.0
  * @updated 2026-03-15
  */
@@ -239,7 +239,7 @@ export async function onRequest(context) {
   try {
     const response = await fetchWithTimeout(NHL_SCORE_URL, {
       headers: {
-        "User-Agent": "LiveScoreFree-Bot/2.0",
+        "User-Agent": "livescoreFree.online-Bot/2.0",
         "Accept": "application/json"
       }
     }, REQUEST_TIMEOUT);
@@ -288,3 +288,8 @@ export async function onRequest(context) {
     });
   }
 }
+
+
+
+
+

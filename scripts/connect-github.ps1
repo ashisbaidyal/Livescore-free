@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 
 git rev-parse --is-inside-work-tree *> $null
 if ($LASTEXITCODE -ne 0) {
-  throw "Run this script inside the LiveScoreFree git repository."
+  throw "Run this script inside the livescoreFree.online git repository."
 }
 
 $originExists = $false
@@ -34,3 +34,7 @@ Write-Host "Next step:"
 Write-Host "  git push -u origin main"
 Write-Host ""
 Write-Host "Git Credential Manager will open the GitHub sign-in flow on the first HTTPS push."
+
+
+
+

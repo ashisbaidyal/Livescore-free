@@ -59,3 +59,6 @@ export function ensureMinimumNativeBanners(route) {
 export function activateNativeAds(route) {
   return;
 }
+
+
+

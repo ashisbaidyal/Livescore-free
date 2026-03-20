@@ -1,12 +1,12 @@
 param(
-  [string]$Message = "Update LiveScoreFree"
+  [string]$Message = "Update livescoreFree.online"
 )
 
 $ErrorActionPreference = "Stop"
 
 git rev-parse --is-inside-work-tree *> $null
 if ($LASTEXITCODE -ne 0) {
-  throw "Run this script inside the LiveScoreFree git repository."
+  throw "Run this script inside the livescoreFree.online git repository."
 }
 
 git add -A
@@ -18,3 +18,7 @@ if ($LASTEXITCODE -eq 0) {
 
 git commit -m $Message
 git push
+
+
+
+

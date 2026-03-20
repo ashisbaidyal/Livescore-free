@@ -8,7 +8,7 @@ import {
 
 export async function fetchSportsNews() {
   try {
-    // Reduced TTL from 30m to 5m for Kinetic livescorefree.online updates
+    // Reduced TTL from 30m to 5m for Kinetic livescoreFree.online updates
     const data = await cachedJson("https://site.api.espn.com/apis/site/v2/sports/news", 1000 * 60 * 5);
     return data?.articles || [];
   } catch (_error) {
@@ -29,3 +29,8 @@ export function renderHighlightsNewsCard(article) {
     </div>
   `;
 }
+
+
+
+
+

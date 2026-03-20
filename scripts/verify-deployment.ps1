@@ -1,11 +1,11 @@
 #!/usr/bin/env pwsh
 
-# Deployment Verification Script for LiveScoreFree
+# Deployment Verification Script for livescoreFree.online
 # Run this before or after deploying to verify the repo and deployment targets.
 
 Write-Host ""
 Write-Host "============================================================"
-Write-Host "LiveScoreFree Deployment Verification"
+Write-Host "livescoreFree.online Deployment Verification"
 Write-Host "============================================================"
 Write-Host ""
 
@@ -101,7 +101,11 @@ Write-Host ""
 Write-Host "Next Steps:"
 Write-Host "  1. Push changes: git push origin main"
 Write-Host "  2. Check Cloudflare Pages dashboard for deployment status"
-Write-Host "  3. Verify: https://livescorefree.online"
-Write-Host "  4. Test API: https://livescorefree.online/api/live"
+Write-Host "  3. Verify: https://livescoreFree.online"
+Write-Host "  4. Test API: https://livescoreFree.online/api/live"
 Write-Host "  5. Verify service worker updates in browser DevTools"
 Write-Host ""
+
+
+
+
