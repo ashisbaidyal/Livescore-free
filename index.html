@@ -131,93 +131,177 @@
     }
   }
   </script>
+
+<!-- Tailwind & Fonts from Design System -->
+
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LIVESCOREFREE.ONLINE | KINETIC BROADCAST</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary": "#690003",
+                        "tertiary-fixed-dim": "#c3c6cf",
+                        "on-primary-fixed-variant": "#930006",
+                        "secondary-container": "#1fa64a",
+                        "on-secondary-fixed-variant": "#00531f",
+                        "surface-container-low": "#1c1b1b",
+                        "tertiary": "#c3c6cf",
+                        "on-tertiary-container": "#e3e6ef",
+                        "inverse-primary": "#bf050e",
+                        "secondary": "#62df7b",
+                        "inverse-surface": "#e5e2e1",
+                        "surface": "#131313",
+                        "on-secondary-fixed": "#002108",
+                        "tertiary-container": "#63676f",
+                        "on-background": "#e5e2e1",
+                        "on-primary-container": "#ffdfda",
+                        "background": "#131313",
+                        "outline-variant": "#5d3f3c",
+                        "tertiary-fixed": "#dfe2eb",
+                        "on-tertiary": "#2d3137",
+                        "secondary-fixed-dim": "#62df7b",
+                        "secondary-fixed": "#80fc94",
+                        "surface-dim": "#131313",
+                        "surface-bright": "#3a3939",
+                        "on-surface-variant": "#e6bdb7",
+                        "error": "#ffb4ab",
+                        "surface-container-highest": "#353534",
+                        "primary": "#ffb4aa",
+                        "on-tertiary-fixed-variant": "#43474e",
+                        "inverse-on-surface": "#313030",
+                        "primary-fixed-dim": "#ffb4aa",
+                        "primary-container": "#cc1616",
+                        "on-secondary": "#003913",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#ffdad5",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-high": "#2a2a2a",
+                        "error-container": "#93000a",
+                        "surface-tint": "#ffb4aa",
+                        "on-error": "#690005",
+                        "outline": "#ad8883",
+                        "on-tertiary-fixed": "#181c22",
+                        "on-secondary-container": "#00320f",
+                        "surface-variant": "#353534",
+                        "surface-container": "#201f1f",
+                        "on-primary-fixed": "#410001"
+                    },
+                    fontFamily: {
+                        "headline": ["Lexend"],
+                        "body": ["Lexend"],
+                        "label": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(42, 42, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tonal-transition {
+            background: linear-gradient(to bottom, #131313, #1C1B1B);
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0E0E0E; }
+        ::-webkit-scrollbar-thumb { background: #CC1616; }
+    </style>
+
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="/home" class="brand" data-link aria-label="livescoreFree.online home">
-        <div class="brand-text" style="font-family: var(--soccer-font-head); font-weight: 800; font-size: 1.5rem; color: var(--gs-primary); text-transform: uppercase;">livescoreFree.online</div>
-      </a>
+  <nav class="fixed top-0 w-full z-50 border-b border-white/10 bg-[#131313]/80 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
+<div class="text-2xl font-black italic tracking-tighter text-[#FFB4AA]">LIVESCOREFREE.ONLINE</div>
+<div class="hidden md:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter">
+<a class="text-[#FFB4AA] border-b-2 border-[#CC1616] pb-1 hover:opacity-100 transition-all duration-300" href="#">NBA</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">NFL</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">EPL</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">UCL</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">MLB</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">LALIGA</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] transition-all">notifications</button>
+<button class="material-symbols-outlined text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] transition-all">settings</button>
+</div>
+</div>
+</nav>
+<div class="flex pt-16 min-h-screen">
+<aside class="hidden lg:flex flex-col pt-4 pb-10 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] sticky top-16">
+<div class="px-6 mb-8">
+<div class="text-xl font-extrabold text-[#FFB4AA] tracking-tight">LIVESCOREFREE.ONLINE</div>
+<div class="text-[10px] tracking-[0.2em] text-[#E5E2E1]/40 uppercase">LIVE BROADCAST</div>
+</div>
+<nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-sm">
+<a class="bg-gradient-to-r from-[#CC1616] to-[#FFB4AA] text-white rounded-md px-4 py-3 mx-2 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">sensors</span> Live Scores
+            </a>
+<a class="text-[#E5E2E1] hover:bg-white/5 px-4 py-3 mx-2 rounded-md transition-colors flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">calendar_today</span> Schedule
+            </a>
+<a class="text-[#E5E2E1] hover:bg-white/5 px-4 py-3 mx-2 rounded-md transition-colors flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">format_list_numbered</span> Standings
+            </a>
+<a class="text-[#E5E2E1] hover:bg-white/5 px-4 py-3 mx-2 rounded-md transition-colors flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">newspaper</span> News
+            </a>
+<a class="text-[#E5E2E1] hover:bg-white/5 px-4 py-3 mx-2 rounded-md transition-colors flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">leaderboard</span> Stats
+            </a>
+</nav>
+</aside>
+<main class="flex-1 w-full bg-surface" id="main" aria-live="polite"></main>
 
-      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-expanded="false" aria-controls="main-nav">Menu</button>
 
-      <div class="header-tools">
-        <div id="header-quick-nav" class="header-quick-nav" aria-label="Quick navigation">
-          <button id="nav-back-btn" class="tool-btn tool-btn-icon" type="button" title="Back" aria-label="Go back">
-            <span class="tool-icon" aria-hidden="true">&#8592;</span>
-          </button>
-          <button id="nav-home-btn" class="tool-btn tool-btn-icon" type="button" title="Home" aria-label="Go to home">
-            <span class="tool-icon" aria-hidden="true">&#8962;</span>
-          </button>
-        </div>
-        <select id="language-select" class="tool-select tool-select-compact" aria-label="Translate language">
-          <option value="auto">Auto</option>
-          <option value="en">EN</option>
-          <option value="es">ES</option>
-          <option value="fr">FR</option>
-          <option value="de">DE</option>
-          <option value="pt">PT</option>
-          <option value="hi">HI</option>
-          <option value="id">ID</option>
-        </select>
-        <button id="theme-toggle" class="tool-btn tool-btn-icon" type="button" title="Toggle Theme" aria-label="Theme mode">
-          <span class="tool-icon" aria-hidden="true">&#9681;</span>
-        </button>
-      </div>
-    </div>
-
-    <nav class="main-nav" id="main-nav" aria-label="Primary">
-      <a href="/home" data-link data-nav="/home">Home</a>
-      <a href="/live" data-link data-nav="/live">Live Center</a>
-      <a href="/upcoming" data-link data-nav="/upcoming">Full Schedule</a>
-      <a href="/results" data-link data-nav="/results">Results</a>
-      <a href="/top-leagues" data-link data-nav="/top-leagues">Leagues</a>
-      <a href="/news" data-link data-nav="/news">News</a>
-      <a href="/donate" data-link data-nav="/donate">Fuel The Broadcast</a>
-    </nav>
-  </header>
-
-  <div id="ticker-anchor"></div>
-
-  <main class="main" id="main" aria-live="polite"></main>
-
-  <footer class="site-footer" id="main-footer">
-    <div class="footer-grid">
-      <section class="footer-column footer-brand" aria-label="livescoreFree.online">
-        <span class="footer-kicker" style="color: var(--gs-primary); font-weight: 800;">livescoreFree.online</span>
-        <h3 class="footer-heading">Kinetic matchday coverage built for live fans.</h3>
-        <p class="footer-lead">Real-time scores, fixtures, results, standings, and primary editorial reports across the global streaming universe.</p>
-        <a href="/data-sources" data-link>View data sources</a>
-      </section>
-      <nav class="footer-column footer-link-list" aria-label="Quick navigation">
-        <h4>Navigation</h4>
-        <a href="/home" data-link>Home</a>
-        <a href="/live" data-link>Live Scores</a>
-        <a href="/upcoming" data-link>Schedule</a>
-        <a href="/results" data-link>Recent Results</a>
-        <a href="/news" data-link>Headline Reports</a>
-      </nav>
-      <nav class="footer-column footer-link-list" aria-label="Resources">
-        <h4>Resources</h4>
-        <a href="/top-leagues" data-link>Top Leagues</a>
-        <a href="/search" data-link>Search Arena</a>
-        <a href="/history" data-link>My History</a>
-        <a href="/donate" data-link>Fuel the Broadcast</a>
-      </nav>
-      <nav class="footer-column footer-link-list" aria-label="Legal">
-        <h4>Legal</h4>
-        <a href="/about" data-link>About</a>
-        <a href="/contact" data-link>Contact</a>
-        <a href="/privacy-policy" data-link>Privacy Policy</a>
-        <a href="/terms-of-service" data-link>Terms</a>
-      </nav>
-    </div>
-    <div class="footer-meta">
-      <p class="copyright">&copy; <span id="current-year"></span> livescoreFree.online Kinetic Broadcast. All Rights Reserved.</p>
-    </div>
-  </footer>
-
-  <nav class="app-dock" aria-label="Mobile primary">
+  
+</div><!-- End layout flex -->
+<footer class="w-full border-t border-white/10 pt-12 pb-8 bg-[#0E0E0E]">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 px-10 max-w-7xl mx-auto">
+<div class="col-span-2 md:col-span-1">
+<div class="text-lg font-black text-[#E5E2E1] mb-4">LIVESCOREFREE.ONLINE</div>
+<p class="font-['Lexend'] text-[10px] tracking-widest uppercase text-[#E5E2E1]/40 leading-relaxed">
+                © 2024 LIVESCOREFREE.ONLINE KINETIC BROADCAST. ALL RIGHTS RESERVED.
+            </p>
+</div>
+<div>
+<h6 class="text-[#CC1616] font-['Lexend'] text-[10px] tracking-widest uppercase mb-6 font-bold">Quick Links</h6>
+<ul class="space-y-3">
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Football</a></li>
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Basketball</a></li>
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Baseball</a></li>
+</ul>
+</div>
+<div>
+<h6 class="text-[#CC1616] font-['Lexend'] text-[10px] tracking-widest uppercase mb-6 font-bold">Legal</h6>
+<ul class="space-y-3">
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Terms of Service</a></li>
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Cookie Settings</a></li>
+</ul>
+</div>
+<div class="flex items-end justify-end">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-[#E5E2E1]/20 hover:text-primary cursor-pointer transition-colors">share</span>
+<span class="material-symbols-outlined text-[#E5E2E1]/20 hover:text-primary cursor-pointer transition-colors">rss_feed</span>
+</div>
+</div>
+</div>
+</footer>
+<nav class="app-dock" aria-label="Mobile primary">
     <a href="/home" data-link data-nav="/home" aria-label="Home">
       <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
       <span class="dock-label">Home</span>

@@ -91,98 +91,444 @@ async function renderHomePage(container) {
   
   // livescoreFree.online Layout Construction
   container.innerHTML = `
-    <!-- 1. The Hero: Stadium Spectacle -->
-    ${heroMatch ? renderLsfHero(heroMatch) : renderHeroFallback()}
 
-    <!-- 2. The Multiverse: Arena Navigation -->
-    <section class="section tone-trust">
-      <div class="section-head">
-        <div>
-          <span class="premium-kicker" style="color: var(--gs-primary);">The Multiverse</span>
-          <h2>Navigate the Arena</h2>
-          <p>Jump directly into the streaming universe for any major sport.</p>
-        </div>
-      </div>
-      <div class="world-sports-grid">
-        ${Object.entries(SPORT_GROUPS).map(([key, sport]) => `
-          <a class="world-sport-card gs-depth-shadow" data-link href="/sport/${key}" style="background: var(--gs-surface-lowest); border: none;">
-            <img src="${escapeHtml(getSportImagePath(key))}" alt="${escapeHtml(sport.label)}" style="width: 48px; height: 48px; border-radius: 4px !important;">
-            <strong style="margin-top: 12px; font-size: 1.1rem;">${escapeHtml(sport.label)}</strong>
-            <span style="color: var(--gs-primary); font-weight: 600;">Explore Arena</span>
-          </a>
-        `).join("")}
-      </div>
-    </section>
+<!-- Hero Slider Section -->
+<section class="relative w-full h-[716px] min-h-[500px] overflow-hidden group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" data-alt="Wide shot of a professional soccer match under stadium lights" style="background-image: linear-gradient(to right, rgba(14,14,14,0.9), rgba(14,14,14,0.2)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuB2IvR-jmcJ0VGKTrBYh0phyyK-_fqQIU1lTkuSjtZkOMD0XZfu3NeXxF6ux9nvQOSMuKpnbFLyLS0MAMZ1LDBoWi55Ia3TNddkCs4xgHED83fU2eVbHkDKlxwmSDJvsTJRimIsPn6X8SEd6NuMwuRjxPLLghAJUKke3oinSA_WqlO0XqXLqKtBnZxZGlSymnrH2TVJ6qelV400MPhTFSQQxvanR9UNX0lDUZG8raTqs2qj8v_em1VMY6BIOwuIi3crBeDvm2Qv6lpB')"></div>
+<div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
+<div class="flex items-center gap-3 mb-6">
+<span class="flex items-center gap-2 bg-[#CC1616] text-white px-3 py-1 rounded-sm text-xs font-black tracking-widest uppercase">
+<span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE
+                    </span>
+<span class="text-on-surface-variant font-bold text-sm tracking-tighter uppercase">Premier League • Matchday 24</span>
+</div>
+<h1 class="font-headline font-black text-6xl md:text-8xl tracking-tighter leading-[0.9] mb-8 uppercase italic text-on-surface">
+                    LIV <span class="text-primary">2 - 1</span> ARS
+                </h1>
+<div class="flex flex-wrap gap-4 mb-12">
+<button class="bg-gradient-to-r from-primary to-primary-container px-8 py-4 rounded-md text-on-primary font-black uppercase text-sm tracking-widest flex items-center gap-2 transition-transform active:scale-95">
+<span class="material-symbols-outlined">play_circle</span> Watch Stream
+                    </button>
+<button class="bg-transparent border border-outline-variant/30 px-8 py-4 rounded-md text-on-surface font-black uppercase text-sm tracking-widest hover:bg-white/5 transition-colors">
+                        Match Details
+                    </button>
+</div>
+<!-- Slider Nav -->
+<div class="flex gap-4 items-center">
+<div class="w-12 h-1 bg-primary"></div>
+<div class="w-12 h-1 bg-white/20 hover:bg-white/40 cursor-pointer"></div>
+<div class="w-12 h-1 bg-white/20 hover:bg-white/40 cursor-pointer"></div>
+<div class="w-12 h-1 bg-white/20 hover:bg-white/40 cursor-pointer"></div>
+<div class="ml-4 text-xs font-bold tracking-widest text-on-surface-variant">01 / 04</div>
+</div>
+</div>
+<!-- Sport Indicators Thumbnails Overlay -->
+<div class="absolute bottom-10 right-10 hidden md:flex flex-col gap-3">
+<div class="glass-card p-3 flex items-center gap-4 rounded-lg opacity-100 border-l-4 border-primary">
+<div class="w-12 h-12 bg-surface-container rounded bg-cover bg-center" data-alt="Soccer match thumbnail" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBxPp4di5g7RZZs5cPVJaCd0DtBr7_J9I6LPCEKUEUB5PmDYnN-WgDZcC0kwiIndbzwJUrsszn8GTFKsQ2dp7Gxqm7nqxISXiRSZJql49FQ7vB2IFL_IJ0LABWRaNeSvgrHbBZ7lu8p939gAKHsxf872Dq5J5bPE07BVH2i-0EV93EeYU-gWVjNHEKaN8ETsc89MJOwxDtjfnPk-SFU9JfUxChr_LBbKgeTJ0qf5sbwtlxTeJT2savWygZv9SUeE3IfaTeJ1oZuM-J8')"></div>
+<div>
+<div class="text-[10px] text-primary font-bold tracking-widest uppercase">Soccer</div>
+<div class="text-xs font-bold text-on-surface">LIV v ARS</div>
+</div>
+</div>
+<div class="glass-card p-3 flex items-center gap-4 rounded-lg opacity-40 hover:opacity-100 transition-opacity cursor-pointer">
+<div class="w-12 h-12 bg-surface-container rounded bg-cover bg-center" data-alt="NBA match thumbnail" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBBexGNpjcnz0ykFN9dOU02yHjhTY-wbE69O7UAl4hgdht1cCGo_zXKxNNhGAbgCF9w6pGlyRRDAsAO9v5ANMNMBroSimVk38YBkcfpJTB4Kn_XxICagKMgNvPXODTB1C-tKRvjkAcpybcA7ZaTE6hZadNHuFojFYPIs5-M_FoxI5fpwuQikpd6j7S1WLHnoIPhYgJzIVfAudQ9DEMqkGlws3e8ztqnwiSwnffo75O8z2esNyG4MfvxVmP9DISvPYSLCmeLQIJ5G_39')"></div>
+<div>
+<div class="text-[10px] text-on-surface-variant font-bold tracking-widest uppercase">NBA</div>
+<div class="text-xs font-bold text-on-surface">LAL v GSW</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Multiverse (All Sports) Grid -->
+<section class="py-16 px-6 max-w-7xl mx-auto">
+<div class="flex justify-between items-end mb-10">
+<div>
+<h2 class="text-4xl font-black italic tracking-tighter uppercase mb-2">The Multiverse</h2>
+<p class="text-on-surface-variant text-sm tracking-wide">EXPLORE EVERY ARENA IN THE STREAM</p>
+</div>
+<div class="w-24 h-[1px] bg-primary"></div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<a class="group glass-card p-6 rounded-xl flex flex-col items-center gap-4 hover:bg-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">sports_soccer</span>
+<span class="font-bold text-xs tracking-widest uppercase">Soccer</span>
+</a>
+<a class="group glass-card p-6 rounded-xl flex flex-col items-center gap-4 hover:bg-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">sports_basketball</span>
+<span class="font-bold text-xs tracking-widest uppercase">NBA</span>
+</a>
+<a class="group glass-card p-6 rounded-xl flex flex-col items-center gap-4 hover:bg-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">sports_football</span>
+<span class="font-bold text-xs tracking-widest uppercase">NFL</span>
+</a>
+<a class="group glass-card p-6 rounded-xl flex flex-col items-center gap-4 hover:bg-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">sports_tennis</span>
+<span class="font-bold text-xs tracking-widest uppercase">Tennis</span>
+</a>
+<a class="group glass-card p-6 rounded-xl flex flex-col items-center gap-4 hover:bg-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">sports_mma</span>
+<span class="font-bold text-xs tracking-widest uppercase">UFC</span>
+</a>
+<a class="group glass-card p-6 rounded-xl flex flex-col items-center gap-4 hover:bg-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">settings_input_antenna</span>
+<span class="font-bold text-xs tracking-widest uppercase">F1</span>
+</a>
+</div>
+</section>
+<!-- Live Score All Matches Section -->
+<section class="py-16 px-6 max-w-7xl mx-auto">
+<div class="flex items-center gap-4 mb-10">
+<h2 class="text-3xl font-black italic tracking-tighter uppercase">Live Score All Matches</h2>
+<div class="flex-1 h-[1px] bg-white/10"></div>
+<div class="flex gap-2">
+<button class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<!-- Live Card 1 -->
+<div class="bg-surface-container border-l-4 border-primary p-5 flex flex-col gap-4 group hover:bg-surface-container-high transition-all">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">sports_soccer</span>
+<span class="text-[10px] font-black uppercase tracking-widest opacity-60">Premier League</span>
+</div>
+<span class="flex items-center gap-1.5 bg-[#CC1616] text-white px-2 py-0.5 rounded-sm text-[9px] font-black">
+<span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE
+                        </span>
+</div>
+<div class="flex justify-between items-center px-2">
+<div class="flex flex-col items-center gap-1">
+<span class="font-black italic text-lg tracking-tighter">MUN</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-2xl font-black italic text-primary">3 - 2</span>
+<span class="text-[9px] font-bold opacity-40 uppercase">72'</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="font-black italic text-lg tracking-tighter">AVL</span>
+</div>
+</div>
+</div>
+<!-- Live Card 2 -->
+<div class="bg-surface-container border-l-4 border-primary p-5 flex flex-col gap-4 group hover:bg-surface-container-high transition-all">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">sports_basketball</span>
+<span class="text-[10px] font-black uppercase tracking-widest opacity-60">NBA</span>
+</div>
+<span class="flex items-center gap-1.5 bg-[#CC1616] text-white px-2 py-0.5 rounded-sm text-[9px] font-black">
+<span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE
+                        </span>
+</div>
+<div class="flex justify-between items-center px-2">
+<div class="flex flex-col items-center gap-1">
+<span class="font-black italic text-lg tracking-tighter">PHX</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-2xl font-black italic text-primary">102 - 98</span>
+<span class="text-[9px] font-bold opacity-40 uppercase">Q4 4:12</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="font-black italic text-lg tracking-tighter">DEN</span>
+</div>
+</div>
+</div>
+<!-- Live Card 3 -->
+<div class="bg-surface-container border-l-4 border-primary p-5 flex flex-col gap-4 group hover:bg-surface-container-high transition-all">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">sports_football</span>
+<span class="text-[10px] font-black uppercase tracking-widest opacity-60">NFL</span>
+</div>
+<span class="flex items-center gap-1.5 bg-[#CC1616] text-white px-2 py-0.5 rounded-sm text-[9px] font-black">
+<span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE
+                        </span>
+</div>
+<div class="flex justify-between items-center px-2">
+<div class="flex flex-col items-center gap-1">
+<span class="font-black italic text-lg tracking-tighter">DAL</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-2xl font-black italic text-primary">24 - 17</span>
+<span class="text-[9px] font-bold opacity-40 uppercase">Q3 12:05</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="font-black italic text-lg tracking-tighter">SF</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Ad 1 (Leaderboard Style) -->
+<section class="px-6 max-w-7xl mx-auto mb-16">
+<div class="w-full h-32 bg-gradient-to-r from-[#1a1a1a] to-[#0a0a0a] border border-white/5 flex items-center justify-between px-10 relative overflow-hidden rounded-md">
+<div class="absolute left-0 top-0 w-1 h-full bg-[#CC1616]"></div>
+<div class="flex items-center gap-8 z-10">
+<div class="bg-white p-3 rounded-sm">
+<span class="text-black font-black italic text-xl">DRAFTKINGS</span>
+</div>
+<div>
+<h4 class="text-xl font-black italic uppercase tracking-tighter leading-none mb-1">Bet $5, Get $200 Instantly</h4>
+<p class="text-[10px] font-bold uppercase tracking-widest text-primary">New Customers Only • Limited Time Offer</p>
+</div>
+</div>
+<button class="bg-[#CC1616] text-white px-8 py-3 rounded font-black uppercase text-[10px] tracking-widest hover:brightness-110 transition-all z-10">Bet Now</button>
+<div class="absolute right-0 top-0 h-full w-1/2 opacity-10 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBxPp4di5g7RZZs5cPVJaCd0DtBr7_J9I6LPCEKUEUB5PmDYnN-WgDZcC0kwiIndbzwJUrsszn8GTFKsQ2dp7Gxqm7nqxISXiRSZJql49FQ7vB2IFL_IJ0LABWRaNeSvgrHbBZ7lu8p939gAKHsxf872Dq5J5bPE07BVH2i-0EV93EeYU-gWVjNHEKaN8ETsc89MJOwxDtjfnPk-SFU9JfUxChr_LBbKgeTJ0qf5sbwtlxTeJT2savWygZv9SUeE3IfaTeJ1oZuM-J8')"></div>
+</div>
+</section>
+<!-- Upcoming Matches Grid -->
+<section class="py-16 px-6 bg-surface-container-low">
+<div class="max-w-7xl mx-auto">
+<h3 class="text-2xl font-black tracking-tighter uppercase mb-8 flex items-center gap-3">
+<span class="w-8 h-[2px] bg-primary"></span> Upcoming Matches Scheduled
+                </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Match Card -->
+<div class="bg-surface-container p-6 rounded-lg border border-white/5 hover:border-primary/50 transition-colors cursor-pointer">
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant mb-6 uppercase tracking-widest">
+<span>La Liga</span>
+<span>21:00 Today</span>
+</div>
+<div class="flex items-center justify-between mb-8">
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center text-xs font-black">RMA</div>
+<span class="text-xs font-bold uppercase tracking-tight">Real Madrid</span>
+</div>
+<span class="text-xl font-black text-primary italic">VS</span>
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center text-xs font-black">BAR</div>
+<span class="text-xs font-bold uppercase tracking-tight">Barcelona</span>
+</div>
+</div>
+<button class="w-full bg-surface-container-highest py-3 rounded text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-colors">Set Reminder</button>
+</div>
+<!-- Repeat Match Card -->
+<div class="bg-surface-container p-6 rounded-lg border border-white/5">
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant mb-6 uppercase tracking-widest">
+<span>NBA</span>
+<span>02:30 AM</span>
+</div>
+<div class="flex items-center justify-between mb-8">
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center text-xs font-black">BOS</div>
+<span class="text-xs font-bold uppercase tracking-tight">Celtics</span>
+</div>
+<span class="text-xl font-black text-primary italic">VS</span>
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center text-xs font-black">MIA</div>
+<span class="text-xs font-bold uppercase tracking-tight">Heat</span>
+</div>
+</div>
+<button class="w-full bg-surface-container-highest py-3 rounded text-[10px] font-black uppercase tracking-widest">Set Reminder</button>
+</div>
+<div class="bg-surface-container p-6 rounded-lg border border-white/5">
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant mb-6 uppercase tracking-widest">
+<span>EPL</span>
+<span>15:00 Tomorrow</span>
+</div>
+<div class="flex items-center justify-between mb-8">
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center text-xs font-black">MCI</div>
+<span class="text-xs font-bold uppercase tracking-tight">Man City</span>
+</div>
+<span class="text-xl font-black text-primary italic">VS</span>
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center text-xs font-black">CHE</div>
+<span class="text-xs font-bold uppercase tracking-tight">Chelsea</span>
+</div>
+</div>
+<button class="w-full bg-surface-container-highest py-3 rounded text-[10px] font-black uppercase tracking-widest">Set Reminder</button>
+</div>
+<div class="bg-surface-container p-6 rounded-lg border border-white/5">
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant mb-6 uppercase tracking-widest">
+<span>NFL</span>
+<span>19:00 Tomorrow</span>
+</div>
+<div class="flex items-center justify-between mb-8">
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center text-xs font-black">KC</div>
+<span class="text-xs font-bold uppercase tracking-tight">Chiefs</span>
+</div>
+<span class="text-xl font-black text-primary italic">VS</span>
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center text-xs font-black">PHI</div>
+<span class="text-xs font-bold uppercase tracking-tight">Eagles</span>
+</div>
+</div>
+<button class="w-full bg-surface-container-highest py-3 rounded text-[10px] font-black uppercase tracking-widest">Set Reminder</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Section (Player & Standings) -->
+<section class="py-16 px-6 max-w-7xl mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Featured Player -->
+<div class="lg:col-span-2 relative h-[500px] rounded-2xl overflow-hidden group">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Erling Haaland in Manchester City kit celebrating" style="background-image: linear-gradient(to top, #0E0E0E, transparent), url('https://lh3.googleusercontent.com/aida-public/AB6AXuCbd33Tw5OIpBIYnIgyko5dPTUgdbWRiR1u_uW2EX1XUffYntyAFVUOdJbBhhdAlnEwer4n4tldTDqM07QqGgDAV1NcjSs68GSKwVc0q-nAoOZE79hAd3AiTfRpB8F4jCUCFjGyIlX3APpqWS4FlCEnH3gG2DapaACepElFXKofTdbp-5jp0XmAWWQqI-9XhrIJgOXfjz6kZmGCRVAMpDrbohFVnJ1Ul5KlurZzBtFtrN1st9zwQl-peQh-1xYnUgZ0dToswcZ_MpnH')"></div>
+<div class="absolute bottom-0 left-0 p-10 w-full">
+<div class="bg-primary text-on-primary inline-block px-3 py-1 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Player of the Month</div>
+<h3 class="text-5xl font-black italic uppercase leading-none mb-2 tracking-tighter">Erling <br/><span class="text-primary">Haaland</span></h3>
+<div class="flex gap-8 mt-6">
+<div>
+<div class="text-xs text-on-surface-variant font-bold uppercase">Goals</div>
+<div class="text-2xl font-black">21</div>
+</div>
+<div>
+<div class="text-xs text-on-surface-variant font-bold uppercase">Assists</div>
+<div class="text-2xl font-black">5</div>
+</div>
+<div>
+<div class="text-xs text-on-surface-variant font-bold uppercase">Matches</div>
+<div class="text-2xl font-black">18</div>
+</div>
+</div>
+</div>
+</div>
+<!-- League Standings + Sidebar Ad -->
+<div class="flex flex-col gap-6">
+<div class="bg-surface-container-low p-8 rounded-2xl flex-1">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-black italic text-xl uppercase tracking-tighter">Point Table</h4>
+<select class="bg-surface-container-high border-none text-[10px] font-black uppercase tracking-widest rounded px-4">
+<option>EPL</option>
+<option>La Liga</option>
+<option>Bundesliga</option>
+</select>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between text-xs py-2 border-b border-white/5">
+<div class="flex items-center gap-3">
+<span class="font-bold text-primary">1</span>
+<span class="font-black uppercase">Liverpool</span>
+</div>
+<span class="font-black">54</span>
+</div>
+<div class="flex items-center justify-between text-xs py-2 border-b border-white/5">
+<div class="flex items-center gap-3">
+<span class="font-bold">2</span>
+<span class="font-black uppercase">Man City</span>
+</div>
+<span class="font-black">52</span>
+</div>
+<div class="flex items-center justify-between text-xs py-2 border-b border-white/5">
+<div class="flex items-center gap-3">
+<span class="font-bold">3</span>
+<span class="font-black uppercase">Arsenal</span>
+</div>
+<span class="font-black">52</span>
+</div>
+</div>
+<button class="w-full mt-6 py-3 text-[10px] font-black uppercase tracking-widest text-primary hover:underline transition-all">View Full Standings</button>
+</div>
+<!-- Ad 2 (Contextual Sidebar) -->
+<div class="bg-[#CC1616] rounded-2xl p-6 relative overflow-hidden group">
+<div class="relative z-10">
+<h5 class="text-white font-black italic text-2xl leading-none mb-2">GATORADE</h5>
+<p class="text-white/80 font-bold uppercase text-[10px] tracking-widest mb-4">Fuel Your Game</p>
+<button class="bg-white text-black px-4 py-2 rounded text-[9px] font-black uppercase tracking-widest">Shop Now</button>
+</div>
+<div class="absolute right-[-20%] bottom-[-20%] opacity-20 transform group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-[8rem]">bolt</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- News & Trending -->
+<section class="py-16 px-6 max-w-7xl mx-auto bg-surface-container-lowest">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+<div class="lg:col-span-3">
+<h4 class="text-3xl font-black italic uppercase tracking-tighter mb-8">Headline Reports</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<article class="group cursor-pointer">
+<div class="relative aspect-video rounded-xl overflow-hidden mb-4">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Close up of a soccer ball hitting the net" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5SQkOxZ45Zgf_5mO-NggsCaG-uUbb7c73D1U0WahWWlSvgspmWQAorx-fJ51xHPX3si_zpElo0xo0QhoD8OInGt9Z5uJVtgiHY5vuTU3sYVy27SGVILNVDHtO51Tw7wRauxMU8url4WVyv7HxPwxg0hef9dXmPW8PyqAKbQ33HFWQBEj6pV8SyOZmYFJYsq3nFEeIjmjXl2z9zRT5ldqqFNxXJ0YdTcOq7zarvkWdh8Xc-gl9WLQpOFMSxYoj5-gmJiVScAQS4ECl"/>
+<div class="absolute top-4 left-4 bg-primary text-on-primary px-2 py-1 text-[10px] font-black uppercase tracking-widest">Football</div>
+</div>
+<h5 class="text-xl font-black uppercase tracking-tight leading-tight group-hover:text-primary transition-colors">Tactical breakdown: How Emery neutralized Guardiola's system</h5>
+<p class="text-on-surface-variant text-sm mt-2 line-clamp-2">A deep dive into the high-pressing mechanism that led to a historic upset at Villa Park.</p>
+</article>
+<article class="group cursor-pointer">
+<div class="relative aspect-video rounded-xl overflow-hidden mb-4">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="NBA basketball court with players in motion blurred" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB87KD953n7dAS1N0LMRUB5yMb3dsql74C2F4yZ_pl2JNlJC4Hgh9dIAr6DnmWGl_luhjR2NijGSXPyV1ckJujw1JDRVAGRHktkn4XPcyVlA28XG2N9udFCkoAOrEYReEKUbP17tnQz1WTL39LUqBeY_pJKzXIug7RUsaIbYKf_vYWKatZxFZYodKChpizfrMtVVcyzkKrtJTRcuDOmkpqEGPMsybDS0zs04n6O3OAVQYDghwg58kXZK-qul5Ir6xAOIWOKHDpqDBBE"/>
+<div class="absolute top-4 left-4 bg-primary text-on-primary px-2 py-1 text-[10px] font-black uppercase tracking-widest">NBA</div>
+</div>
+<h5 class="text-xl font-black uppercase tracking-tight leading-tight group-hover:text-primary transition-colors">Trade Rumors: Lakers eye veteran point guard before deadline</h5>
+<p class="text-on-surface-variant text-sm mt-2 line-clamp-2">The latest insider reports on the Western Conference's shifting power dynamics.</p>
+</article>
+</div>
+</div>
+<div>
+<h4 class="text-xl font-black italic uppercase tracking-tighter mb-8 text-primary">Trending Now</h4>
+<div class="space-y-6">
+<div class="flex gap-4 items-start border-b border-white/5 pb-4 group cursor-pointer">
+<span class="text-2xl font-black text-on-surface-variant/20 italic">01</span>
+<div>
+<div class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Transfer News</div>
+<h6 class="text-sm font-black uppercase group-hover:underline">Mbappe reaches agreement with Madrid</h6>
+</div>
+</div>
+<div class="flex gap-4 items-start border-b border-white/5 pb-4 group cursor-pointer">
+<span class="text-2xl font-black text-on-surface-variant/20 italic">02</span>
+<div>
+<div class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Formula 1</div>
+<h6 class="text-sm font-black uppercase group-hover:underline">Hamilton confirms Ferrari move for 2025</h6>
+</div>
+</div>
+<div class="flex gap-4 items-start border-b border-white/5 pb-4 group cursor-pointer">
+<span class="text-2xl font-black text-on-surface-variant/20 italic">03</span>
+<div>
+<div class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Tennis</div>
+<h6 class="text-sm font-black uppercase group-hover:underline">Djokovic injury update ahead of Wimbledon</h6>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Niche Leagues -->
+<section class="py-16 px-6 max-w-7xl mx-auto">
+<h4 class="text-xl font-black italic uppercase tracking-tighter mb-8 opacity-60">Niche Leagues Coverage</h4>
+<div class="flex flex-wrap gap-4">
+<span class="bg-surface-container-high px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest border border-white/5 hover:border-primary cursor-pointer transition-colors">MLS</span>
+<span class="bg-surface-container-high px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest border border-white/5 hover:border-primary cursor-pointer transition-colors">Saudi Pro League</span>
+<span class="bg-surface-container-high px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest border border-white/5 hover:border-primary cursor-pointer transition-colors">Eredivisie</span>
+<span class="bg-surface-container-high px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest border border-white/5 hover:border-primary cursor-pointer transition-colors">Liga MX</span>
+<span class="bg-surface-container-high px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest border border-white/5 hover:border-primary cursor-pointer transition-colors">J-League</span>
+</div>
+</section>
+<!-- Fuel the Broadcast (Ad/Support) -->
+<section class="p-6 max-w-7xl mx-auto mb-8">
+<div class="bg-gradient-to-r from-primary-container to-[#0E0E0E] rounded-2xl p-8 md:p-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 border border-white/10">
+<div class="relative z-10">
+<h4 class="text-4xl font-black italic uppercase tracking-tighter leading-none mb-4">Fuel the <br/><span class="text-primary">Broadcast</span></h4>
+<p class="text-on-surface-variant max-w-md text-sm font-medium">Keep the stream alive and ad-free. Support our independent broadcast crew via Ko-fi or sponsor a segment.</p>
+</div>
+<div class="flex gap-4 relative z-10">
+<button class="bg-white text-black px-8 py-4 rounded-md font-black uppercase text-xs tracking-widest hover:bg-primary transition-colors">Support on Ko-Fi</button>
+<button class="bg-transparent border border-white/20 px-8 py-4 rounded-md font-black uppercase text-xs tracking-widest hover:bg-white/10 transition-colors">Advertise Here</button>
+</div>
+<div class="absolute -right-20 -top-20 opacity-10">
+<span class="material-symbols-outlined text-[20rem]">broadcast_on_personal</span>
+</div>
+</div>
+</section>
+<!-- Ad 3 (Premium Footer Banner) -->
+<section class="p-6 max-w-7xl mx-auto mb-16">
+<div class="h-64 rounded-2xl relative overflow-hidden bg-cover bg-center flex items-center px-12" style="background-image: linear-gradient(to right, rgba(0,0,0,0.9), transparent), url('https://lh3.googleusercontent.com/aida-public/AB6AXuB87KD953n7dAS1N0LMRUB5yMb3dsql74C2F4yZ_pl2JNlJC4Hgh9dIAr6DnmWGl_luhjR2NijGSXPyV1ckJujw1JDRVAGRHktkn4XPcyVlA28XG2N9udFCkoAOrEYReEKUbP17tnQz1WTL39LUqBeY_pJKzXIug7RUsaIbYKf_vYWKatZxFZYodKChpizfrMtVVcyzkKrtJTRcuDOmkpqEGPMsybDS0zs04n6O3OAVQYDghwg58kXZK-qul5Ir6xAOIWOKHDpqDBBE')">
+<div class="relative z-10">
+<h4 class="text-5xl font-black italic uppercase tracking-tighter leading-none mb-4">EA SPORTS <br/><span class="text-[#CC1616]">FC 26</span></h4>
+<p class="text-white/60 font-bold uppercase tracking-widest text-xs mb-8">The World's Game. Pre-Order Now.</p>
+<button class="bg-[#CC1616] text-white px-10 py-4 rounded font-black uppercase text-sm tracking-widest hover:brightness-110">Pre-Order</button>
+</div>
+<div class="absolute right-0 top-0 h-full w-full bg-gradient-to-l from-transparent via-transparent to-black/80"></div>
+</div>
+</section>
 
-    <!-- 3. Live Scores Center -->
-    <section class="section tone-live">
-      <div class="section-head">
-        <div>
-          <span class="premium-kicker" style="color: var(--gs-primary);">Center Circle</span>
-          <h2>Live Scores Center</h2>
-          <p>${state.liveMatches.length} matches currently active in the arena.</p>
-        </div>
-        <a class="section-view-all" data-link href="/live">Open Live Board</a>
-      </div>
-      ${renderMatchGrid(state.liveMatches.slice(0, 8), "The arena is currently quiet. Check back soon for live kickoffs.")}
-    </section>
-
-    <!-- 4. Headline Reports: Editorial Hub -->
-    <section class="section tone-league">
-      <div class="section-head">
-        <div>
-          <span class="premium-kicker" style="color: var(--gs-primary);">Press Box</span>
-          <h2>Headline Reports</h2>
-          <p>Tactical breakdowns and insider reports from across the global network.</p>
-        </div>
-        <a class="section-view-all" data-link href="/news">Full Newsroom</a>
-      </div>
-      <div class="news-editorial-grid" id="home-news-grid">
-         <div class="message-box">Loading reports from the wire...</div>
-      </div>
-    </section>
-
-    <!-- 5. Arena Table: Featured Partnership -->
-    <section class="section tone-trust" style="background: var(--gs-inverse-surface); color: var(--gs-surface-lowest);">
-      <div class="section-head">
-        <div style="color: inherit;">
-          <span class="premium-kicker" style="color: var(--gs-primary);">Arena Table</span>
-          <h2 style="color: white;">Featured Partnership</h2>
-        </div>
-      </div>
-      <div class="arena-partnership-block" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: center;">
-        <div class="partnership-copy">
-          <h3 style="font-size: 2rem; margin-bottom: 20px;">Fuel Your Performance</h3>
-          <p style="opacity: 0.8; font-size: 1.1rem; margin-bottom: 30px;">livescoreFree.online partners with the world's most iconic brands to keep the kinetic broadcast alive. Connect with us for premium sponsorship inventory across our sports hubs.</p>
-          <a class="btn btn-primary" data-link href="/advertise">Inquire for Sponsorship</a>
-        </div>
-        <div class="partnership-image" style="background: var(--gs-surface-low); padding: 40px; text-align: center; color: var(--gs-on-surface);">
-          <div style="font-size: 3rem; font-weight: 800; color: var(--gs-primary);">GATORADE</div>
-          <p style="margin-top: 20px; font-weight: 600;">The World's #1 Sports Drink</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 6. Fuel The Broadcast: Support -->
-    <section class="section tone-support">
-       <div class="section-head">
-        <div>
-          <span class="premium-kicker" style="color: var(--gs-primary);">Backstage</span>
-          <h2>Fuel The Broadcast</h2>
-          <p>Keep the stream alive and ad-free. Support our independent broadcast crew.</p>
-        </div>
-      </div>
-      <div class="support-premium-banner gs-depth-shadow" style="background: var(--gs-surface-lowest); padding: 40px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 30px;">
-        <div style="max-width: 600px;">
-          <h3>Join the Foundation Circle</h3>
-          <p>livescoreFree.online is built for fans, by fans. Your support helps us scale our real-time data feeds and expand our coverage of niche leagues worldwide.</p>
-        </div>
-        <div class="support-actions">
-           <a class="btn btn-primary" href="https://ko-fi.com" target="_blank" style="padding: 20px 40px; font-size: 1.2rem;">Support via Ko-fi</a>
-        </div>
-      </div>
-    </section>
-  `;
+`;
 
   const leagueKey = TOP_LEAGUE_KEYS.find((key) => state.matches.some((match) => match.leagueKey === key)) || "eng.1";
   const mount = qs("#home-standings-card", container);

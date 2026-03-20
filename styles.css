@@ -3707,7 +3707,7 @@ select {
 }
 
 .detail:root {
-  /* GoalStream: The Stadium Spectacle Design Tokens */
+  /* LivescoreFree.Online: The Stadium Spectacle Design Tokens */
   --gs-primary: #ae131a;
   --gs-primary-variant: #d2312f;
   --gs-surface: #f9f9f9;
@@ -3748,7 +3748,7 @@ h1, h2, h3, h4, .hero-title, .section-head h2, .premium-kicker, .badge, .btn {
   letter-spacing: -0.02em;
 }
 
-/* GoalStream Grid & Layout Components */
+/* LivescoreFree.Online Grid & Layout Components */
 .world-sports-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
