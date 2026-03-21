@@ -1,5 +1,5 @@
-const CACHE_NAME = "lsf-v49";
-const CACHE_VERSION = "v49";
+const CACHE_NAME = "lsf-v50";
+const CACHE_VERSION = "v50";
 const APP_SHELL = [
   "/",
   "/index.html",

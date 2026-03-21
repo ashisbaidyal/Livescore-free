@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LivescoreFree.online | Ultimate Global Results Hub & Live Scores</title>
+<meta name="description" content="Ultimate global results hub on LivescoreFree.online. Real-time scores, final results, and deep tactical analysis across football, NBA, NFL, and more.">
+<meta property="og:title" content="Global Results Hub | LivescoreFree.online">
+<meta property="og:description" content="Stay updated with live and final sports results from around the world.">
+<meta property="og:image" content="https://livescorefree.online/results-hub-og.png">
+<meta property="og:url" content="https://livescorefree.online/results">
+<meta property="og:type" content="website">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-lowest": "#0e0e0e",
+              "surface-bright": "#3a3939",
+              "on-secondary-container": "#00320f",
+              "on-primary-fixed": "#410001",
+              "surface-container-high": "#2a2a2a",
+              "tertiary-fixed-dim": "#c3c6cf",
+              "on-tertiary-fixed-variant": "#43474e",
+              "tertiary-container": "#63676f",
+              "secondary-fixed-dim": "#62df7b",
+              "on-surface": "#e5e2e1",
+              "secondary-container": "#1fa64a",
+              "primary-fixed": "#ffdad5",
+              "outline-variant": "#5d3f3c",
+              "on-background": "#e5e2e1",
+              "secondary-fixed": "#80fc94",
+              "on-primary": "#690003",
+              "surface": "#131313",
+              "primary-fixed-dim": "#ffb4aa",
+              "surface-tint": "#ffb4aa",
+              "on-secondary-fixed-variant": "#00531f",
+              "error": "#ffb4ab",
+              "tertiary-fixed": "#dfe2eb",
+              "surface-container-low": "#1c1b1b",
+              "inverse-on-surface": "#313030",
+              "surface-dim": "#131313",
+              "on-surface-variant": "#e6bdb7",
+              "tertiary": "#c3c6cf",
+              "inverse-primary": "#bf050e",
+              "surface-container": "#201f1f",
+              "secondary": "#62df7b",
+              "on-tertiary-fixed": "#181c22",
+              "error-container": "#93000a",
+              "on-primary-fixed-variant": "#930006",
+              "on-tertiary": "#2d3137",
+              "on-primary-container": "#ffdfda",
+              "inverse-surface": "#e5e2e1",
+              "outline": "#ad8883",
+              "primary": "#ffb4aa",
+              "on-secondary": "#003913",
+              "on-error-container": "#ffdad6",
+              "surface-variant": "#353534",
+              "primary-container": "#cc1616",
+              "on-error": "#690005",
+              "on-tertiary-container": "#e3e6ef",
+              "on-secondary-fixed": "#002108",
+              "surface-container-highest": "#353534",
+              "background": "#131313"
+            },
+            fontFamily: {
+              "headline": ["Lexend"],
+              "body": ["Lexend"],
+              "label": ["Lexend"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-card {
+        background: rgba(32, 31, 31, 0.6);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .soul-gradient {
+        background: linear-gradient(45deg, #ffb4aa, #cc1616);
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-neutral-900/80 backdrop-blur-xl border-b border-white/10 shadow-2xl flex justify-between items-center px-6 h-16">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black italic tracking-tighter text-red-600 dark:text-red-500">LivescoreFree</span>
+<div class="hidden md:flex items-center gap-6">
+<a class="font-lexend uppercase tracking-tight font-bold text-neutral-400 hover:text-white transition-colors" href="#">Scores</a>
+<a class="font-lexend uppercase tracking-tight font-bold text-neutral-400 hover:text-white transition-colors" href="#">News</a>
+<a class="font-lexend uppercase tracking-tight font-bold text-neutral-400 hover:text-white transition-colors" href="#">Leagues</a>
+<a class="font-lexend uppercase tracking-tight font-bold text-neutral-400 hover:text-white transition-colors" href="#">TV Schedule</a>
+<a class="font-lexend uppercase tracking-tight font-bold text-neutral-400 hover:text-white transition-colors" href="#">Betting</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button aria-label="Search" class="material-symbols-outlined p-2 hover:bg-white/5 transition-all active:scale-95 duration-200">search</button>
+<button aria-label="Notifications" class="material-symbols-outlined p-2 hover:bg-white/5 transition-all active:scale-95 duration-200">notifications</button>
+<button class="bg-primary-container text-white px-5 py-1.5 font-lexend uppercase tracking-tight font-bold text-sm active:scale-95 duration-200">Sign In</button>
+</div>
+</nav>
+<!-- SideNavBar (Hidden on small screens) -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-neutral-950 flex flex-col py-4 hidden lg:flex border-r border-white/5">
+<div class="px-6 mb-6">
+<h3 class="font-lexend font-bold text-xs uppercase tracking-widest text-neutral-500">Pro Leagues</h3>
+<p class="text-[10px] text-red-600 font-bold uppercase tracking-tighter">Live Coverage</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-4 bg-red-600/10 text-red-500 border-r-4 border-red-600 px-4 py-3 font-lexend font-medium text-sm transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">sports_soccer</span> Soccer
+            </a>
+<a class="flex items-center gap-4 text-neutral-500 px-4 py-3 hover:text-neutral-200 hover:bg-neutral-800/50 font-lexend font-medium text-sm transition-all duration-300" href="#">
+<span class="material-symbols-outlined">sports_basketball</span> NBA
+            </a>
+<a class="flex items-center gap-4 text-neutral-500 px-4 py-3 hover:text-neutral-200 hover:bg-neutral-800/50 font-lexend font-medium text-sm transition-all duration-300" href="#">
+<span class="material-symbols-outlined">sports_football</span> NFL
+            </a>
+<a class="flex items-center gap-4 text-neutral-500 px-4 py-3 hover:text-neutral-200 hover:bg-neutral-800/50 font-lexend font-medium text-sm transition-all duration-300" href="#">
+<span class="material-symbols-outlined">sports_baseball</span> MLB
+            </a>
+<a class="flex items-center gap-4 text-neutral-500 px-4 py-3 hover:text-neutral-200 hover:bg-neutral-800/50 font-lexend font-medium text-sm transition-all duration-300" href="#">
+<span class="material-symbols-outlined">sports_hockey</span> NHL
+            </a>
+<a class="flex items-center gap-4 text-neutral-500 px-4 py-3 hover:text-neutral-200 hover:bg-neutral-800/50 font-lexend font-medium text-sm transition-all duration-300" href="#">
+<span class="material-symbols-outlined">sports_mma</span> UFC
+            </a>
+</nav>
+<div class="p-4 mt-auto">
+<button class="w-full soul-gradient text-white font-bold py-3 uppercase tracking-widest text-xs flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">stars</span> Premium Pass
+            </button>
+</div>
+<div class="border-t border-white/5 pt-4 space-y-1">
+<a class="flex items-center gap-4 text-neutral-500 px-4 py-2 hover:text-neutral-200 text-xs font-lexend" href="#"><span class="material-symbols-outlined text-base">settings</span> Settings</a>
+<a class="flex items-center gap-4 text-neutral-500 px-4 py-2 hover:text-neutral-200 text-xs font-lexend" href="#"><span class="material-symbols-outlined text-base">help_outline</span> Support</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="lg:ml-64 mt-16 flex-1 flex flex-col">
+<!-- Hero Results Slider -->
+<section class="relative h-[614px] w-full overflow-hidden bg-black group">
+<div aria-label="High energy soccer match celebration in a packed stadium" class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-60" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCGfDWcQ-49Ef4ktxHIFn9Q6c-Lw_iygz1-s21n762G5bzjIjw1OMtOmwbhgtso0J65PNSJRce0ZWt2JPvdsUb8f5bH_5YRHaSbGUeXBZdgw9j1S1b4cADnRfj-kJ9BZvlL3oVohvyAPdEfeEhM8qPBV1VgtaEgnl0h9PG10cl9-0aLW4Wle3KD0CTvbY7_6Ji94_KeUD7I96OwS59bvl8lNp2iroeRryL9a9RL0lHHHiHMjF4reG9agWwFZO7wqr7P9RHfvkixeSFr')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<div class="relative h-full flex flex-col justify-end px-12 pb-16 max-w-7xl mx-auto w-full">
+<div class="flex items-center gap-3 mb-4">
+<span class="bg-primary-container text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">FINAL</span>
+<span class="text-on-surface-variant font-bold text-xs uppercase tracking-tighter">UEFA Champions League</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+<div class="flex flex-col items-start gap-2">
+<span class="display-lg text-6xl md:text-8xl font-black italic tracking-tighter text-white">RMA</span>
+<span class="text-on-surface font-bold text-xl uppercase tracking-widest">Real Madrid</span>
+</div>
+<div class="flex flex-col items-center gap-4">
+<div class="flex items-center gap-6">
+<span class="text-7xl md:text-9xl font-black text-primary">2</span>
+<span class="text-4xl text-neutral-600 font-thin italic">VS</span>
+<span class="text-7xl md:text-9xl font-black text-white">0</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-secondary font-bold uppercase tracking-[0.2em] text-xs">Goal: Vinícius Jr. 83'</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-2 text-right">
+<span class="display-lg text-6xl md:text-8xl font-black italic tracking-tighter text-neutral-500">BVB</span>
+<span class="text-neutral-400 font-bold text-xl uppercase tracking-widest">Dortmund</span>
+</div>
+</div>
+</div>
+<!-- Slider Indicators -->
+<div class="absolute bottom-8 right-12 flex gap-2">
+<div class="w-12 h-1 bg-primary-container"></div>
+<div class="w-12 h-1 bg-white/20 hover:bg-white/40 cursor-pointer"></div>
+<div class="w-12 h-1 bg-white/20 hover:bg-white/40 cursor-pointer"></div>
+</div>
+</section>
+<!-- League Filter Bar -->
+<section class="bg-surface sticky top-16 z-40 py-6 px-12 flex items-center gap-4 overflow-x-auto no-scrollbar border-b border-white/5">
+<button class="px-6 py-2 rounded-full soul-gradient text-white font-black uppercase tracking-widest text-[10px] whitespace-nowrap">All Results</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-bold uppercase tracking-widest text-[10px] whitespace-nowrap transition-colors">Premier League</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-bold uppercase tracking-widest text-[10px] whitespace-nowrap transition-colors">NBA</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-bold uppercase tracking-widest text-[10px] whitespace-nowrap transition-colors">NFL</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-bold uppercase tracking-widest text-[10px] whitespace-nowrap transition-colors">La Liga</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-bold uppercase tracking-widest text-[10px] whitespace-nowrap transition-colors">Serie A</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-bold uppercase tracking-widest text-[10px] whitespace-nowrap transition-colors">UCL</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-bold uppercase tracking-widest text-[10px] whitespace-nowrap transition-colors">MLB</button>
+</section>
+<div class="max-w-7xl mx-auto w-full px-12 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- All Matches Result Grid -->
+<div class="lg:col-span-8 space-y-8">
+<div class="flex justify-between items-end">
+<div>
+<h2 class="text-4xl font-black italic uppercase tracking-tighter text-white">Live &amp; Final</h2>
+<p class="text-neutral-500 font-bold uppercase tracking-widest text-xs">Latest results across all divisions</p>
+</div>
+<button class="text-primary font-bold uppercase tracking-widest text-xs flex items-center gap-2 hover:underline">View All Schedule <span class="material-symbols-outlined text-sm">arrow_forward</span></button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Match Card 1 -->
+<div class="bg-surface-container p-6 rounded-lg border-l-4 border-secondary flex flex-col justify-between group cursor-pointer transition-transform hover:translate-y-[-4px]">
+<div class="flex justify-between items-center mb-6">
+<span class="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-fixed-dim">LIVE 88'</span>
+<span class="text-[10px] font-bold text-neutral-500 uppercase">Anfield, Liverpool</span>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">LIV</div>
+<span class="font-bold text-on-surface">Liverpool</span>
+</div>
+<span class="text-3xl font-black text-white">3</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">ARS</div>
+<span class="font-bold text-on-surface">Arsenal</span>
+</div>
+<span class="text-3xl font-black text-white">2</span>
+</div>
+</div>
+<button class="w-full py-2 bg-white/5 hover:bg-white/10 text-neutral-300 font-bold uppercase tracking-widest text-[10px] transition-colors">Match Center</button>
+</div>
+<!-- Match Card 2 -->
+<div class="bg-surface-container p-6 rounded-lg border-l-4 border-neutral-700 flex flex-col justify-between group cursor-pointer transition-transform hover:translate-y-[-4px]">
+<div class="flex justify-between items-center mb-6">
+<span class="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">FINAL / NBA</span>
+<span class="text-[10px] font-bold text-neutral-500 uppercase">TD Garden, Boston</span>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">CEL</div>
+<span class="font-bold text-on-surface">Celtics</span>
+</div>
+<span class="text-3xl font-black text-white">116</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">DAL</div>
+<span class="font-bold text-neutral-500">Mavericks</span>
+</div>
+<span class="text-3xl font-black text-neutral-500">98</span>
+</div>
+</div>
+<button class="w-full py-2 bg-white/5 hover:bg-white/10 text-neutral-300 font-bold uppercase tracking-widest text-[10px] transition-colors">Match Center</button>
+</div>
+<!-- Match Card 3 -->
+<div class="bg-surface-container p-6 rounded-lg border-l-4 border-neutral-700 flex flex-col justify-between group cursor-pointer transition-transform hover:translate-y-[-4px]">
+<div class="flex justify-between items-center mb-6">
+<span class="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">FINAL / La Liga</span>
+<span class="text-[10px] font-bold text-neutral-500 uppercase">Camp Nou</span>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">BAR</div>
+<span class="font-bold text-on-surface">Barcelona</span>
+</div>
+<span class="text-3xl font-black text-white">4</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">ATM</div>
+<span class="font-bold text-on-surface">Atletico</span>
+</div>
+<span class="text-3xl font-black text-white">1</span>
+</div>
+</div>
+<button class="w-full py-2 bg-white/5 hover:bg-white/10 text-neutral-300 font-bold uppercase tracking-widest text-[10px] transition-colors">Match Center</button>
+</div>
+<!-- Match Card 4 -->
+<div class="bg-surface-container p-6 rounded-lg border-l-4 border-neutral-700 flex flex-col justify-between group cursor-pointer transition-transform hover:translate-y-[-4px]">
+<div class="flex justify-between items-center mb-6">
+<span class="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">FINAL / NFL</span>
+<span class="text-[10px] font-bold text-neutral-500 uppercase">Arrowhead Stadium</span>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">KC</div>
+<span class="font-bold text-on-surface">Chiefs</span>
+</div>
+<span class="text-3xl font-black text-white">28</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">BUF</div>
+<span class="font-bold text-on-surface">Bills</span>
+</div>
+<span class="text-3xl font-black text-white">24</span>
+</div>
+</div>
+<button class="w-full py-2 bg-white/5 hover:bg-white/10 text-neutral-300 font-bold uppercase tracking-widest text-[10px] transition-colors">Match Center</button>
+</div>
+</div>
+<!-- Ad Placement: EA Sports -->
+<div class="relative w-full h-32 rounded-lg overflow-hidden flex items-center px-12 group cursor-pointer">
+<div aria-label="Dynamic video game action background for EA SPORTS FC 26" class="absolute inset-0 bg-cover bg-center opacity-80 transition-transform duration-500 group-hover:scale-105" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC58Pc_iqpwCQBJsPIY4t6-aESLXPHinLrmbCQREZn9xoEsaoBRz5XJxsO2l2hgn3rKUafLA-FHz9fegwH3ztFcQkFQRmWH_lhC1GnIKKM_wayE9btSOlX7HTJ1L3fpFeMz_z3aebEwVwUqTuExyXAWvIac2tTW5s6u3S7R8BCuWj2gfSfHOBzZ5fa5va-gtxFPtS69t1NR4FJpKFqzoe6PfI9SZPM86nCFRklkTApsVs0BrEUBVRcjW0QrdYPv1GgM31PAGFz_ByAn')"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent"></div>
+<div class="relative flex flex-col">
+<span class="text-[10px] font-black text-primary uppercase tracking-[0.4em]">OUT NOW</span>
+<h3 class="text-2xl font-black italic uppercase text-white leading-none">EA SPORTS FC 26</h3>
+<p class="text-[10px] text-neutral-300 font-bold uppercase tracking-widest mt-1">Pre-order for Early Access</p>
+</div>
+<button class="relative ml-auto bg-white text-black font-black uppercase text-[10px] px-6 py-2 tracking-widest">Buy Now</button>
+</div>
+</div>
+<!-- Side Rail / Ad Placements -->
+<div class="lg:col-span-4 space-y-8">
+<!-- Gatorade Ad -->
+<div class="bg-secondary-container/20 border border-secondary/20 p-8 flex flex-col items-center text-center rounded-lg group cursor-pointer relative overflow-hidden">
+<div class="absolute -top-12 -right-12 w-32 h-32 bg-secondary blur-3xl opacity-20"></div>
+<span class="text-[10px] font-black text-secondary uppercase tracking-[0.3em] mb-4">Official Partner</span>
+<h4 class="text-3xl font-black italic text-white uppercase tracking-tighter leading-none mb-2">FUELS THE FINISH</h4>
+<p class="text-neutral-400 text-xs font-bold uppercase tracking-widest mb-6">Refuel with Gatorade G-Zero</p>
+<button class="bg-secondary text-on-secondary-container font-black uppercase text-[10px] px-8 py-3 tracking-widest rounded-full transition-transform active:scale-95">Shop Now</button>
+</div>
+<!-- DraftKings Ad -->
+<div class="bg-neutral-900 border border-white/5 p-8 rounded-lg">
+<div class="flex justify-between items-center mb-6">
+<span class="font-black italic text-white text-xl">DRAFTKINGS</span>
+<span class="text-[8px] bg-white/10 px-2 py-0.5 rounded text-neutral-400">SPONSORED</span>
+</div>
+<p class="text-on-surface font-bold text-lg leading-snug mb-4">Bet $5, Get $200 Instantly in Bonus Bets.</p>
+<ul class="space-y-2 mb-6">
+<li class="text-[10px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary">check_circle</span> New Users Only</li>
+<li class="text-[10px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary">check_circle</span> Multi-Game Parlay Boost</li>
+</ul>
+<button class="w-full soul-gradient text-white font-black uppercase text-xs py-4 tracking-widest rounded transition-transform active:scale-95">Bet Now</button>
+</div>
+</div>
+</div>
+<!-- Featured Match Analysis -->
+<section class="bg-surface-container-low py-24 px-12">
+<div class="max-w-7xl mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div>
+<span class="text-primary font-black uppercase tracking-[0.3em] text-[10px]">DEEP DIVE ANALYSIS</span>
+<h2 class="text-6xl font-black italic uppercase tracking-tighter text-white mt-4 mb-6 leading-none">THE MANCHESTER DERBY: TACTICAL MASTERCLASS</h2>
+<p class="text-neutral-400 font-medium text-lg mb-8 leading-relaxed">Guardiola's high-line transition paralyzed United's counter-attacking threats early. The pivot play from Rodri remains the most critical metric in City's 3-1 comeback victory.</p>
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<span class="text-[10px] font-black uppercase tracking-widest text-neutral-500">Possession</span>
+<div class="flex items-center gap-4">
+<div class="h-2 flex-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[72%]"></div>
+</div>
+<span class="font-black text-xl text-white">72%</span>
+</div>
+</div>
+<div class="space-y-4">
+<span class="text-[10px] font-black uppercase tracking-widest text-neutral-500">Expected Goals (xG)</span>
+<div class="flex items-center gap-4">
+<div class="h-2 flex-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[88%]"></div>
+</div>
+<span class="font-black text-xl text-white">3.14</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative aspect-video rounded-lg overflow-hidden group cursor-pointer shadow-2xl">
+<div aria-label="Bird eye view of tactical soccer field positioning analysis" class="absolute inset-0 bg-cover bg-center" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDT59A-kzhkyBrVo3YsvUvAWvlSFJ1Zu6w-EsyPFuCT0it9bzM_aayPjF8xszyNa1lLDC4J4pDkVSkZaLVi2j99_zrc3KNZLHa_IKJebNWVctZZpgYHfdkaAYFdAQl5pT28cdvWgVAgDpj4_ugDm-5oTkadQqpFRr7VtJeaLfokXU2g-Fq0mmJCZ-pD-25NMJq_IYYMilMf6T2Jr-ghbPa-69ZA_OFfR-VSK-ylEwnNnHva9jzYIEm_1rYGuWQnGv8QhAeJ-hc4Pae7')"></div>
+<div class="absolute inset-0 bg-primary/20 mix-blend-overlay"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-20 h-20 rounded-full glass-card flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl text-white" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+<span class="glass-card px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white">Watch Full Breakdwon</span>
+<span class="text-white font-bold text-xs">12:45 MIN</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-black w-full mt-auto border-t border-white/5">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-12 py-16 max-w-7xl mx-auto">
+<div class="space-y-6">
+<span class="text-lg font-black text-white">LivescoreFree</span>
+<p class="text-neutral-500 font-lexend text-xs uppercase tracking-widest leading-loose max-w-sm">
+                    The world's leading sports broadcast hub. Premium data, real-time results, and deep tactical analysis for the modern fan.
+                </p>
+<div class="flex gap-4">
+<a class="w-10 h-10 bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors" href="#"><span class="material-symbols-outlined text-lg">public</span></a>
+<a class="w-10 h-10 bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors" href="#"><span class="material-symbols-outlined text-lg">videocam</span></a>
+<a class="w-10 h-10 bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors" href="#"><span class="material-symbols-outlined text-lg">rss_feed</span></a>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<h5 class="text-white font-black text-[10px] uppercase tracking-[0.3em]">Network</h5>
+<ul class="space-y-2">
+<li><a class="font-lexend text-xs uppercase tracking-widest text-neutral-600 hover:text-red-500 transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="font-lexend text-xs uppercase tracking-widest text-neutral-600 hover:text-red-500 transition-colors" href="#">Terms of Service</a></li>
+<li><a class="font-lexend text-xs uppercase tracking-widest text-neutral-600 hover:text-red-500 transition-colors" href="#">Ad Choices</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<h5 class="text-white font-black text-[10px] uppercase tracking-[0.3em]">Support</h5>
+<ul class="space-y-2">
+<li><a class="font-lexend text-xs uppercase tracking-widest text-neutral-600 hover:text-red-500 transition-colors" href="#">Help Center</a></li>
+<li><a class="font-lexend text-xs uppercase tracking-widest text-neutral-600 hover:text-red-500 transition-colors" href="#">Contact Us</a></li>
+<li><a class="font-lexend text-xs uppercase tracking-widest text-neutral-600 hover:text-red-500 transition-colors" href="#">Cookie Settings</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="px-12 py-8 border-t border-white/5 text-center">
+<span class="font-lexend text-xs uppercase tracking-widest text-neutral-700">© 2024 LivescoreFree Media. All Rights Reserved.</span>
+</div>
+</footer>
+</body></html>

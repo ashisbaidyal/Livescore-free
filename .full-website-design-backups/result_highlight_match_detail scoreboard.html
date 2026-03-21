@@ -1,0 +1,348 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>LivescoreFree.online | Match Highlights & Scoreboard</title>
+<meta name="description" content="Watch high-quality match highlights and view detailed scoreboards on LivescoreFree.online. Professional sports coverage and tactical analysis.">
+<meta property="og:title" content="Match Highlights & Scoreboard | LivescoreFree.online">
+<meta property="og:description" content="Full match highlights, tactical heatmaps, and key performer stats.">
+<meta property="og:image" content="https://livescorefree.online/highlights-og.png">
+<meta property="og:url" content="https://livescorefree.online/highlights">
+<meta property="og:type" content="article">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed": "#dfe2eb",
+              "outline": "#ad8883",
+              "on-error": "#690005",
+              "primary-fixed-dim": "#ffb4aa",
+              "tertiary-container": "#63676f",
+              "error-container": "#93000a",
+              "secondary-container": "#1fa64a",
+              "on-tertiary": "#2d3137",
+              "on-secondary": "#003913",
+              "surface": "#131313",
+              "surface-container-highest": "#353534",
+              "on-secondary-fixed-variant": "#00531f",
+              "surface-container-low": "#1c1b1b",
+              "on-surface-variant": "#e6bdb7",
+              "secondary-fixed-dim": "#62df7b",
+              "surface-variant": "#353534",
+              "outline-variant": "#5d3f3c",
+              "secondary-fixed": "#80fc94",
+              "on-primary-container": "#ffdfda",
+              "inverse-surface": "#e5e2e1",
+              "inverse-primary": "#bf050e",
+              "primary-fixed": "#ffdad5",
+              "surface-bright": "#3a3939",
+              "secondary": "#62df7b",
+              "surface-container-lowest": "#0e0e0e",
+              "on-primary-fixed-variant": "#930006",
+              "on-primary": "#690003",
+              "inverse-on-surface": "#313030",
+              "on-surface": "#e5e2e1",
+              "surface-tint": "#ffb4aa",
+              "on-tertiary-container": "#e3e6ef",
+              "on-primary-fixed": "#410001",
+              "primary": "#ffb4aa",
+              "surface-container-high": "#2a2a2a",
+              "on-background": "#e5e2e1",
+              "tertiary-fixed-dim": "#c3c6cf",
+              "on-secondary-fixed": "#002108",
+              "background": "#131313",
+              "on-error-container": "#ffdad6",
+              "primary-container": "#cc1616",
+              "surface-container": "#201f1f",
+              "tertiary": "#c3c6cf",
+              "on-tertiary-fixed": "#181c22",
+              "on-secondary-container": "#00320f",
+              "on-tertiary-fixed-variant": "#43474e",
+              "error": "#ffb4ab",
+              "surface-dim": "#131313"
+            },
+            fontFamily: {
+              "headline": ["Lexend"],
+              "body": ["Lexend"],
+              "label": ["Lexend"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .tonal-transition {
+        background: linear-gradient(to bottom, var(--tw-gradient-from), var(--tw-gradient-to));
+      }
+      .glass-card {
+        background: rgba(42, 42, 42, 0.6);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+    </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 border-b border-white/10 bg-[#131313]/80 backdrop-blur-xl flex justify-between items-center px-8 h-16 w-full shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black italic tracking-tighter text-[#FFB4AA]">LivescoreFree</span>
+<div class="hidden md:flex items-center gap-6">
+<a class="font-['Lexend'] font-bold tracking-tight text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-white/5 transition-all duration-300 px-2 py-1" href="#">Live</a>
+<a class="font-['Lexend'] font-bold tracking-tight text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-white/5 transition-all duration-300 px-2 py-1" href="#">Schedule</a>
+<a class="font-['Lexend'] font-bold tracking-tight text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-white/5 transition-all duration-300 px-2 py-1" href="#">Leagues</a>
+<a class="font-['Lexend'] font-bold tracking-tight text-[#FFB4AA] border-b-2 border-[#CC1616] pb-1" href="#">Archive</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button aria-label="Go Pro" class="bg-primary-container text-on-primary-container px-4 py-2 font-bold uppercase tracking-widest text-xs rounded-lg active:scale-95 duration-200">Go Pro</button>
+<div class="flex gap-2">
+<span aria-label="Notifications" class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-white/5 rounded-full cursor-pointer" role="button">notifications</span>
+<span aria-label="Account" class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-white/5 rounded-full cursor-pointer" role="button">account_circle</span>
+</div>
+</div>
+</nav>
+<!-- SideNavBar (Pro Leagues) -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] flex flex-col py-6 space-y-2 hidden lg:flex">
+<div class="px-6 mb-6">
+<h3 class="font-['Lexend'] text-sm font-medium uppercase tracking-widest text-[#FFB4AA]">Pro Leagues</h3>
+<p class="text-[10px] text-on-surface-variant/40 uppercase tracking-[0.2em]">Live Tracking</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-4 bg-gradient-to-r from-[#CC1616]/20 to-transparent text-[#FFB4AA] border-l-4 border-[#CC1616] py-3 px-6 hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">sports_soccer</span>
+<span class="font-['Lexend'] text-sm font-medium uppercase tracking-widest">Premier League</span>
+</a>
+<a class="flex items-center gap-4 text-[#E5E2E1]/40 py-3 px-6 hover:text-[#E5E2E1] hover:bg-white/5 hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">emoji_events</span>
+<span class="font-['Lexend'] text-sm font-medium uppercase tracking-widest">Champions League</span>
+</a>
+<a class="flex items-center gap-4 text-[#E5E2E1]/40 py-3 px-6 hover:text-[#E5E2E1] hover:bg-white/5 hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">military_tech</span>
+<span class="font-['Lexend'] text-sm font-medium uppercase tracking-widest">La Liga</span>
+</a>
+<a class="flex items-center gap-4 text-[#E5E2E1]/40 py-3 px-6 hover:text-[#E5E2E1] hover:bg-white/5 hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">star</span>
+<span class="font-['Lexend'] text-sm font-medium uppercase tracking-widest">Serie A</span>
+</a>
+<a class="flex items-center gap-4 text-[#E5E2E1]/40 py-3 px-6 hover:text-[#E5E2E1] hover:bg-white/5 hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">workspace_premium</span>
+<span class="font-['Lexend'] text-sm font-medium uppercase tracking-widest">Bundesliga</span>
+</a>
+</nav>
+<div class="px-6 py-4">
+<button class="w-full text-left font-['Lexend'] text-[10px] font-bold uppercase tracking-widest text-primary hover:text-white transition-colors">View All Scores</button>
+</div>
+<div class="mt-auto border-t border-white/5 pt-4">
+<a class="flex items-center gap-4 text-[#E5E2E1]/40 py-2 px-6 hover:text-[#E5E2E1] transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">settings</span>
+<span class="font-['Lexend'] text-[10px] uppercase tracking-widest">Settings</span>
+</a>
+<a class="flex items-center gap-4 text-[#E5E2E1]/40 py-2 px-6 hover:text-[#E5E2E1] transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">help_outline</span>
+<span class="font-['Lexend'] text-[10px] uppercase tracking-widest">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="lg:ml-64 pt-16 min-h-screen">
+<!-- Match Result Hero -->
+<section class="relative h-[614px] min-h-[500px] flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent z-10"></div>
+<img alt="Cinematic wide shot of a glowing stadium at night" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8r2WpD4cSbXx59-MoGNeRfB8vltX14KwO4ZBYIt0_tTsO8Zhu8ZYxuHpEgUlt6hNdthKKb6mWtTPyeCT5eVDJtU-Eo0iBf85FwWtrh-l7J1Oy6k8D_hlh0SopDNrDhdFwxeB8OH_fUGuS8AyTFgFXb5cyGYbKcAP9nKKD7WtkvOq8kD4Rj0ePYUEQzh6KuzT3hn12hPiWCAI2rrhAEaMCLmHve-GM6c8ukLp8HtXyu_ed9xbW55zoGKl94BmSgFcdBEMQv5k7de-q"/>
+</div>
+<div class="relative z-20 container mx-auto px-8 flex flex-col items-center">
+<div class="flex items-center justify-between w-full max-w-5xl gap-12">
+<!-- Home Team -->
+<div class="flex flex-col items-center text-center flex-1">
+<img alt="London Warriors Team Crest" class="w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(204,22,22,0.5)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlWTGYKQS1zTNruaOjktZI1leWhvt689vWROkH3ILiwxU9uBWbxOYhFh0RkJLo6lXvn6XSk3_qylKoSRl6fH3Csjwg1OA2SUI-18TT-q8kPCAqc_fmUOxMSNBPudauJN_-VJmvuQTHOn9H4SZPUVLv3RQ5Jy-OXzEYItVjTWuh_1XmaOGilL7KcSJsyhdu4M8d6FkUqrj24X5zzMu9ndxCpxOKGejTp80bvSGF2blOoakD-S9PZxl9-7t2nsasJIUd7acDcVr9L2EU"/>
+<h2 class="mt-6 text-4xl font-black italic tracking-tighter uppercase">London Warriors</h2>
+<div class="flex flex-col mt-4 space-y-1 opacity-60">
+<span class="text-xs font-bold tracking-widest uppercase">G. Sterling (24')</span>
+<span class="text-xs font-bold tracking-widest uppercase">M. Vardy (56')</span>
+</div>
+</div>
+<!-- Scoreboard -->
+<div class="flex flex-col items-center">
+<div class="bg-surface-container-high/40 backdrop-blur-xl px-12 py-8 rounded-xl border border-white/10 flex items-center gap-8">
+<span class="text-8xl font-black tracking-tighter text-on-surface">2</span>
+<span class="text-4xl font-light text-primary/40">-</span>
+<span class="text-8xl font-black tracking-tighter text-on-surface">1</span>
+</div>
+<div class="mt-6 flex items-center gap-3">
+<span class="bg-secondary-container text-on-secondary px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full">Final Result</span>
+</div>
+</div>
+<!-- Away Team -->
+<div class="flex flex-col items-center text-center flex-1">
+<img alt="Northern Lions Team Crest" class="w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(0,83,31,0.5)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQ-xoqIDEnwwsqyvoG7g1QQ8u37kMtQCABjkT3z-VO6ia-QTkdfSg2C-b9e8_NljDvLqrqI3ueCXR1UkUPlMFZ6aZj2UQKSCkCZfW7aJI1B0aGSlxJTHVeI4xcAH3h-QkW5SMNZbwVSub0XFZIxj5CTVQJDa9LKMdFvG2-7GLpvGRMs6u1X2d0OoxWd2acJohVdtyDlrX8NXaOx4FgO8ItXof1KnmGqzl28eDH5UZtWCnq9rT6qt87M13-fL6o7XYLfj7A4t9NFgmU"/>
+<h2 class="mt-6 text-4xl font-black italic tracking-tighter uppercase">Northern Lions</h2>
+<div class="flex flex-col mt-4 space-y-1 opacity-60">
+<span class="text-xs font-bold tracking-widest uppercase">D. Silva (82' P)</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid Analysis -->
+<section class="container mx-auto px-8 -mt-20 relative z-30 pb-20">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Match Highlights Player -->
+<div class="md:col-span-8 bg-surface border border-white/5 rounded-xl overflow-hidden shadow-2xl group">
+<div class="relative aspect-video">
+<img class="w-full h-full object-cover" data-alt="Match action snapshot highlight frame" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsbC0hx_CLl_AhTOJnWH86H79xDOWbZZ6OodZB6C1tE2Fv3QoaUzscLQQ154Ku8sABogua3IBSVgc7bL_158beKCUox9suJfp3aLZiEofI0mnGNJ26F6AiPv-JXDgeJm5KefghJoXbHxL1dna6KnoOxVHQNQWqIh31h_QTeUroQTCrx17GLt9Dj64Rg8NFZ6kxwofB-DK5QP-VuY2L9zlak8ejI07XSMZG3j3bUNwJll6qXRko8XUBrRHwnYU5MGRaVolwS5lH2vgg">
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+<button class="w-20 h-20 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: &quot;FILL&quot; 1;">play_arrow</span>
+</button>
+</div>
+<div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+<h3 class="text-xl font-bold uppercase tracking-tight">Full Match Highlights: Warriors vs Lions</h3>
+<p class="text-xs text-on-surface-variant/80 uppercase tracking-widest mt-1">Duration: 12:45 • 4K UHD Broadcast</p>
+</div>
+</div>
+</div>
+<!-- Performer of the Match -->
+<div class="md:col-span-4 glass-card p-8 rounded-xl flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-6">
+<span class="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Key Performer</span>
+<span class="text-3xl font-black text-secondary">9.4</span>
+</div>
+<h4 class="text-2xl font-black italic uppercase tracking-tighter leading-none mb-1">Gabriel Sterling</h4>
+<p class="text-xs uppercase tracking-widest text-on-surface-variant/60">London Warriors • Forward</p>
+<div class="mt-8 space-y-4">
+<div class="flex justify-between text-xs font-bold uppercase tracking-widest">
+<span class="text-on-surface-variant/40">Goals</span>
+<span class="">1</span>
+</div>
+<div class="flex justify-between text-xs font-bold uppercase tracking-widest">
+<span class="text-on-surface-variant/40">Expected Goals (xG)</span>
+<span class="">0.84</span>
+</div>
+<div class="flex justify-between text-xs font-bold uppercase tracking-widest">
+<span class="text-on-surface-variant/40">Pass Accuracy</span>
+<span class="">92%</span>
+</div>
+<div class="flex justify-between text-xs font-bold uppercase tracking-widest">
+<span class="text-on-surface-variant/40">Distance Run</span>
+<span class="">11.2 km</span>
+</div>
+</div>
+</div>
+<img class="w-full aspect-square object-cover rounded-lg mt-8 filter grayscale hover:grayscale-0 transition-all duration-500" data-alt="Professional football player celebratory portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_bk3o7WQrGroURctM-tB2S0WnRNpcoyewaY41hjCL56yOY0-R52RgZrMh87vgD-waqxrWeStB7B9nWrB18tlJNgxidD-AfkeqMaHYNXpTQZYWaq5dvuiTQGy892qzcTO8AfJUED-4Xz8L_eponWAhV-OQgW7vZoNmUXmOXqahL94drk1XvX0QBCWfhIS2xsyvH2OJ2Ub7PAjK1kH4OnYD8xYP0X1EAh2ToHIHVilWEAg4D6woyvfUSKZS74HfvJiPsVpdiKjdWNmk">
+</div>
+<!-- Tactical Heatmap -->
+<div class="md:col-span-6 bg-surface-container-high rounded-xl p-8 border border-white/5">
+<div class="flex justify-between items-center mb-8">
+<h4 class="font-black italic uppercase tracking-widest text-lg">London Warriors Heatmap</h4>
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-primary-container"></div>
+<div class="w-3 h-3 rounded-full bg-primary-container/40"></div>
+<div class="w-3 h-3 rounded-full bg-primary-container/10"></div>
+</div>
+</div>
+<div class="relative bg-[#1A2A1A] aspect-[4/3] rounded-lg border-2 border-white/10 overflow-hidden flex items-center justify-center">
+<!-- Pitch Markings -->
+<div class="absolute inset-4 border border-white/20"></div>
+<div class="absolute inset-y-4 left-1/2 w-[1px] bg-white/20"></div>
+<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 border border-white/20 rounded-full"></div>
+<!-- Mock Heatmap -->
+<div class="absolute top-1/4 right-1/4 w-32 h-32 bg-primary-container/40 blur-[40px] rounded-full"></div>
+<div class="absolute top-1/2 right-1/8 w-24 h-24 bg-primary-container/60 blur-[30px] rounded-full"></div>
+<div class="absolute bottom-1/3 left-1/3 w-40 h-40 bg-primary-container/20 blur-[50px] rounded-full"></div>
+<span class="text-[10px] font-black uppercase tracking-[0.5em] text-white/20 z-10">Tactical Positioning Zone</span>
+</div>
+</div>
+<!-- Match Stats Comparison -->
+<div class="md:col-span-6 bg-surface-container-high rounded-xl p-8 border border-white/5">
+<h4 class="font-black italic uppercase tracking-widest text-lg mb-8 text-center">Match Statistics</h4>
+<div class="space-y-8">
+<div>
+<div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+<span class="">14</span>
+<span class="">Shots</span>
+<span class="">11</span>
+</div>
+<div class="flex h-1.5 gap-1">
+<div class="w-[56%] bg-primary"></div>
+<div class="flex-1 bg-white/10"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+<span class="">48%</span>
+<span class="">Possession</span>
+<span class="">52%</span>
+</div>
+<div class="flex h-1.5 gap-1">
+<div class="w-[48%] bg-primary"></div>
+<div class="flex-1 bg-white/10"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+<span class="">6</span>
+<span class="">Shots on Target</span>
+<span class="">4</span>
+</div>
+<div class="flex h-1.5 gap-1">
+<div class="w-[60%] bg-primary"></div>
+<div class="flex-1 bg-white/10"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+<span class="">84%</span>
+<span class="">Pass Accuracy</span>
+<span class="">88%</span>
+</div>
+<div class="flex h-1.5 gap-1">
+<div class="w-[84%] bg-primary"></div>
+<div class="flex-1 bg-white/10"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Integrated Sponsorship -->
+<div class="md:col-span-12 glass-card py-6 px-12 rounded-xl flex items-center justify-between border-primary/20">
+<div class="flex items-center gap-8">
+<span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40">Official Timing Partner</span>
+<img class="h-8 opacity-50 grayscale hover:grayscale-0 transition-all" data-alt="Luxury watch brand logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjaBy5bfyI7_WYS4x2VIGCYZC0eWHl3tLl5se0CtiUmfH6n-AxmM837imk3KU4UbsV1r4cQweP0erXdQH9vvig9bsfE0ZAQrvjl53lYCDEWuKkKrqXNgLY86R62SYSQv3ETb0xnsC06rJJ_83vV2l7KWXPv0ilZNDmcqy40wxs7a7rFxhBxxQAqyh17tlErBhBZulb4kDS_UmW_Dy3M0taCPpOoA6vkkXcYGi7lYpR8kkai72372uzgHijQOjctWhneJT-sT-F1sOk">
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xs font-bold uppercase tracking-tighter">Experience more with Gold Membership</span>
+<button class="bg-primary text-on-primary px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-full">Join Now</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="lg:ml-64 w-full py-12 px-8 border-t border-white/5 bg-[#0E0E0E] flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col items-center md:items-start gap-2">
+<span class="text-lg font-black text-[#E5E2E1]/50 italic tracking-tighter">LivescoreFree</span>
+<p class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/30">© 2024 LivescoreFree Media. All Rights Reserved.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-6">
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors" href="#">Privacy Policy</a>
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors" href="#">Terms of Service</a>
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors" href="#">Broadcast Rights</a>
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors" href="#">Careers</a>
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors" href="#">Cookie Settings</a>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-[#CC1616] cursor-pointer hover:scale-110 transition-transform" style="">share</span>
+<span class="material-symbols-outlined text-[#CC1616] cursor-pointer hover:scale-110 transition-transform" style="">public</span>
+</div>
+</footer>
+</body></html>

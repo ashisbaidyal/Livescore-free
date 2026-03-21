@@ -1,4 +1,4 @@
-* {
+﻿* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -5641,7 +5641,7 @@ textarea {
   }
 
   .app-dock a[data-nav="/top-leagues"] {
-    --dock-accent: #a78bfa;
+    --dock-accent: #10b981;
   }
 }
 
@@ -7463,7 +7463,7 @@ html {
 }
 
 /* ================================================================
-   LIVE PAGE UPGRADE — Sport Tabs, Quick Scores, League Groups
+   LIVE PAGE UPGRADE â€” Sport Tabs, Quick Scores, League Groups
    ================================================================ */
 
 /* -- Sport filter tab bar -- */
