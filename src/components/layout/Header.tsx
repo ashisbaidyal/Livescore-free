@@ -46,18 +46,18 @@ export default function Header() {
           >
             <span>Ko-fi</span>
           </a>
-          <button className="p-2 text-muted hover:text-brand transition-colors">
+          <Link href="/search" className="p-2 text-muted hover:text-brand transition-colors">
             <Search className="w-5 h-5" />
-          </button>
+          </Link>
           <button 
             className="p-2 text-muted hover:text-accent transition-colors hidden sm:block"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           >
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
-          <button className="p-2 text-muted hover:text-foreground transition-colors">
+          <Link href="/favorites" className="p-2 text-muted hover:text-foreground transition-colors">
             <User className="w-5 h-5" />
-          </button>
+          </Link>
         </div>
         
       </div>

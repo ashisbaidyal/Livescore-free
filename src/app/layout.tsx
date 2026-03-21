@@ -3,6 +3,7 @@ import { Inter, Oswald, Montserrat } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
+import MobileNav from '@/components/layout/MobileNav';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const oswald = Oswald({ subsets: ['latin'], variable: '--font-display' });
@@ -48,12 +49,13 @@ export default function RootLayout({
       </head>
       <body className={`${montserrat.className} ${oswald.variable} min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden`}>
         <Header />
-        <div className="container mx-auto px-4 py-8 flex-1 flex gap-8">
+        <div className="container mx-auto px-4 py-8 flex-1 flex gap-8 pb-24 md:pb-8">
           <main className="flex-1 min-w-0">
             {children}
           </main>
           <Sidebar />
         </div>
+        <MobileNav />
       </body>
     </html>
   );
