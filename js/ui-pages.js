@@ -76,6 +76,7 @@ export async function renderRoute() {
     case "privacy-policy": renderSimpleArticle(main, "Privacy Policy", "How browser storage and basic site data are handled.", "<p>Favorites, history, language, theme, and feedback are stored locally in the browser.</p>"); break;
     case "terms-of-service": renderSimpleArticle(main, "Terms of Service", "Terms for using the livescoreFree.online website and score feeds.", "<p>Replace this placeholder with your final legal text.</p>"); break;
     case "dmca-policy": renderSimpleArticle(main, "DMCA Policy", "How takedown requests are handled.", "<p>Replace this placeholder with your DMCA process and contact details.</p>"); break;
+    case "cookie-policy": renderSimpleArticle(main, "Cookie Policy", "How cookies and local storage are used on livescorefree.online.", "<p>This website uses browser local storage (not cookies) to store your preferences, match history, favorites, and theme settings. No tracking cookies are used. All data stays in your browser and is never sent to external servers.</p><p><strong>What we store locally:</strong></p><ul><li>Theme preference (dark/light)</li><li>Match viewing history</li><li>Favorite matches</li><li>Feedback notes</li><li>Language preference</li></ul><p>You can clear this data at any time by clearing your browser's local storage or using your browser's privacy settings.</p>"); break;
     case "contact": renderContactPage(main); break;
     case "about": renderAboutPage(main); break;
     default: renderNotFoundPage(main); break;

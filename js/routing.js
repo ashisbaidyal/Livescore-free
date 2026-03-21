@@ -37,6 +37,7 @@ export function parseRoute(path) {
   if (path === "/terms-of-service") return { type: "terms-of-service" };
   if (path === "/data-sources") return { type: "data-sources" };
   if (path === "/dmca-policy") return { type: "dmca-policy" };
+  if (path === "/cookie-policy") return { type: "cookie-policy" };
   if (path === "/about") return { type: "about" };
   if (path === "/contact") return { type: "contact" };
 
