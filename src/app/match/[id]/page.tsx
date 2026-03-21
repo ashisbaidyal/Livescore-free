@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+export const runtime = 'edge';
+
 export default function MatchDetails({ params }: { params: { id: string } }) {
   const { id } = params;
 
