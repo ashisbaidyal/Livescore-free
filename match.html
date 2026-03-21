@@ -1,101 +1,377 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Match Overview | LiveScoreFree</title>
-  
-  <link href="/css/style.css" rel="stylesheet">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>LivescoreFree.online | Real Madrid vs Man City | UCL Live Match Detail</title>
+<meta name="description" content="Watch Real Madrid vs Man City live. Real-time scores, tactical timeline, match stats, and starting lineups. Champions League Quarter Final coverage.">
+<meta property="og:title" content="LivescoreFree.online | Real Madrid vs Man City Live">
+<meta property="og:description" content="Watch Real Madrid vs Man City live. Real-time scores, stats, and lineups.">
+<meta property="og:image" content="https://livescorefree.online/logo.png">
+<meta property="og:url" content="https://livescorefree.online/match/real-madrid-vs-man-city">
+<meta property="og:type" content="website">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed": "#dfe2eb",
+              "outline": "#ad8883",
+              "on-error": "#690005",
+              "primary-fixed-dim": "#ffb4aa",
+              "tertiary-container": "#63676f",
+              "error-container": "#93000a",
+              "secondary-container": "#cc1616", // Replaced green with vibrant red
+              "on-tertiary": "#2d3137",
+              "on-secondary": "#ffffff", // Replaced dark green text with white
+              "surface": "#131313",
+              "surface-container-highest": "#353534",
+              "on-secondary-fixed-variant": "#930006", // Replaced green variant
+              "surface-container-low": "#1c1b1b",
+              "on-surface-variant": "#e6bdb7",
+              "secondary-fixed-dim": "#ffb4aa", // Replaced green dim
+              "surface-variant": "#353534",
+              "outline-variant": "#5d3f3c",
+              "secondary-fixed": "#ffdad5", // Replaced green fixed
+              "on-primary-container": "#ffdfda",
+              "inverse-surface": "#e5e2e1",
+              "inverse-primary": "#bf050e",
+              "primary-fixed": "#ffdad5",
+              "surface-bright": "#3a3939",
+              "secondary": "#cc1616", // Primary accent red
+              "surface-container-lowest": "#0e0e0e",
+              "on-primary-fixed-variant": "#930006",
+              "on-primary": "#690003",
+              "inverse-on-surface": "#313030",
+              "on-surface": "#e5e2e1",
+              "surface-tint": "#ffb4aa",
+              "on-tertiary-container": "#e3e6ef",
+              "on-primary-fixed": "#410001",
+              "primary": "#ffb4aa",
+              "surface-container-high": "#2a2a2a",
+              "on-background": "#e5e2e1",
+              "tertiary-fixed-dim": "#c3c6cf",
+              "on-secondary-fixed": "#410001", // Replaced green fixed
+              "background": "#131313",
+              "on-error-container": "#ffdad6",
+              "primary-container": "#cc1616",
+              "surface-container": "#201f1f",
+              "tertiary": "#c3c6cf",
+              "on-tertiary-fixed": "#181c22",
+              "on-secondary-container": "#ffdfda", // Replaced green container text
+              "on-tertiary-fixed-variant": "#43474e",
+              "error": "#ffb4ab",
+              "surface-dim": "#131313"
+            },
+            fontFamily: {
+              "headline": ["Lexend"],
+              "body": ["Lexend"],
+              "label": ["Lexend"],
+              "digital": ["Orbitron"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .stadium-gradient {
+            background: linear-gradient(45deg, #cc1616 0%, #ff5252 100%);
+        }
+        .scoreboard-glow {
+            text-shadow: 0 0 20px rgba(255, 180, 170, 0.4);
+        }
+        .digital-glow {
+            text-shadow: 0 0 10px rgba(204, 22, 22, 0.6);
+        }
+    </style>
 </head>
-<body class="bg-background text-foreground min-h-screen flex flex-col font-sans">
-  
-  <header class="sticky top-0 z-50 w-full border-b border-line bg-surface/80 backdrop-blur">
-    <div class="container mx-auto px-4 h-16 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2 text-muted hover:text-foreground transition-colors group">
-        <i data-lucide="chevron-left" class="w-6 h-6"></i>
-        <span class="font-display font-bold text-lg tracking-wider uppercase group-hover:text-brand transition-colors">Back to Live</span>
-      </a>
-    </div>
-  </header>
-
-  <main class="container mx-auto px-4 py-8 flex-1">
-    
-    <!-- Match Info Injected by JS -->
-    <div id="match-details" class="max-w-4xl mx-auto space-y-6">
-      <div class="bg-surface rounded-xl border border-line p-8 animate-pulse h-64 w-full"></div>
-    </div>
-
-  </main>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      lucide.createIcons();
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('id');
-      const container = document.getElementById('match-details');
-
-      if (!id) {
-        container.innerHTML = '<div class="text-center py-12 text-muted">No Match ID Provided</div>';
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/match?id=${id}`);
-        const data = await res.json();
-        
-        if (data.notFound) throw new Error("Match not found");
-        
-        const isLive = data.status === 'live';
-        
-        container.innerHTML = `
-          <div class="bg-surface rounded-xl overflow-hidden shadow-2xl border ${isLive ? 'border-accent/40 shadow-[0_0_30px_rgba(255,94,91,0.15)]' : 'border-line'} relative">
-            
-            <div class="absolute inset-0 bg-gradient-to-br from-surface to-background w-full h-full z-0"></div>
-            
-            <div class="relative z-10 p-8 md:p-12">
-              <div class="text-center mb-10">
-                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full ${isLive ? 'bg-accent/10 border border-accent/20 text-accent font-bold animate-pulse-fast' : 'bg-surface-soft border border-line text-muted font-medium'} text-xs uppercase tracking-widest">
-                  ${isLive ? '<div class="w-2 h-2 rounded-full bg-accent"></div> LIVE NOW' : data.status === 'finished' ? 'FINAL SCORE' : 'UPCOMING FIXTURE'}
-                </span>
-                <div class="mt-4 text-sm font-bold tracking-widest text-muted uppercase">${data.league}</div>
-              </div>
-              
-              <div class="flex items-center justify-between w-full">
-                <!-- Home Team -->
-                <div class="flex flex-col items-center flex-1">
-                  <div class="w-20 h-20 md:w-32 md:h-32 mb-4 p-4 bg-surface rounded-full shadow-lg border border-line flex items-center justify-center">
-                    <img src="${data.homeTeam.logo}" class="w-full h-full object-contain" onerror="this.src='/public/logo.png'">
-                  </div>
-                  <h2 class="font-display font-bold text-xl md:text-3xl text-center leading-tight max-w-[150px] md:max-w-none">${data.homeTeam.name}</h2>
-                </div>
-                
-                <!-- Score -->
-                <div class="flex flex-col items-center flex-shrink-0 px-4">
-                  <div class="font-display font-bold text-5xl md:text-8xl tracking-tighter ${isLive ? 'text-foreground' : 'text-muted'}">
-                    ${isLive || data.status === 'finished' ? `${data.homeTeam.score} - ${data.awayTeam.score}` : 'vs'}
-                  </div>
-                  <div class="mt-2 text-brand font-bold uppercase tracking-widest text-sm">${data.time}</div>
-                </div>
-
-                <!-- Away Team -->
-                <div class="flex flex-col items-center flex-1">
-                  <div class="w-20 h-20 md:w-32 md:h-32 mb-4 p-4 bg-surface rounded-full shadow-lg border border-line flex items-center justify-center">
-                    <img src="${data.awayTeam.logo}" class="w-full h-full object-contain" onerror="this.src='/public/logo.png'">
-                  </div>
-                  <h2 class="font-display font-bold text-xl md:text-3xl text-center leading-tight max-w-[150px] md:max-w-none">${data.awayTeam.name}</h2>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      } catch (err) {
-        container.innerHTML = '<div class="text-center py-12 text-muted">Error loading match metrics. Please return to Live data.</div>';
-      }
-    });
-  </script>
-</body>
-</html>
+<body class="bg-surface-container-lowest text-on-surface font-body selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 border-b border-white/10 bg-[#131313]/80 backdrop-blur-xl flex justify-between items-center px-8 h-16 w-full">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black italic tracking-tighter text-[#FFB4AA] uppercase font-headline">Livescorefree</span>
+<nav class="hidden md:flex items-center gap-6 font-bold tracking-tight uppercase font-lexend text-[10px]">
+<a class="text-on-surface opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all font-bold" href="index.html">Home</a>
+<a class="text-on-surface opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all font-bold" href="live.html">Live</a>
+<a class="text-on-surface opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all font-bold" href="upcoming.html">Schedule</a>
+<a class="text-on-surface opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all font-bold" href="news.html">News</a>
+<a class="text-on-surface opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all font-bold" href="trending.html">Trending</a>
+</nav>
+</div>
+<div class="flex items-center space-x-4">
+<button class="bg-[#CC1616] text-[#FFDFDA] px-5 py-1.5 rounded-sm font-black text-[10px] uppercase tracking-widest active:scale-95 duration-200">Watch Live</button>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] flex flex-col py-6 hidden lg:flex font-headline">
+<div class="px-6 mb-8">
+<h2 class="text-sm font-medium uppercase tracking-widest text-primary">GUIDE</h2>
+</div>
+<nav class="flex-grow space-y-1">
+<a class="flex items-center space-x-4 py-3 px-6 text-on-surface/40 hover:bg-white/5 hover:text-white transition-all group" href="live.html">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">sensors</span>
+<span class="text-xs font-bold uppercase tracking-widest">Live Score</span>
+</a>
+<a class="flex items-center space-x-4 py-3 px-6 text-on-surface/40 hover:bg-white/5 hover:text-white transition-all group" href="upcoming.html">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">calendar_today</span>
+<span class="text-xs font-bold uppercase tracking-widest">Schedule</span>
+</a>
+<a class="flex items-center space-x-4 py-3 px-6 text-on-surface/40 hover:bg-white/5 hover:text-white transition-all group" href="news.html">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">newspaper</span>
+<span class="text-xs font-bold uppercase tracking-widest">Latest News</span>
+</a>
+<a class="flex items-center space-x-4 bg-primary-container/10 text-primary border-l-4 border-primary py-3 px-6" href="match.html">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+<span class="text-xs font-bold uppercase tracking-widest">Match Detail</span>
+</a>
+</nav>
+</aside>
+<div class="px-6 py-4">
+<button class="w-full py-2 border border-outline-variant/30 text-[10px] font-bold uppercase tracking-widest hover:bg-white/5 transition-colors">View All Scores</button>
+</div>
+<div class="mt-auto border-t border-white/5 pt-4 space-y-1">
+<a class="flex items-center space-x-4 py-2 px-6 text-[#E5E2E1]/40 hover:text-[#E5E2E1] transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span class="text-xs font-medium uppercase tracking-wider">Settings</span>
+</a>
+<a class="flex items-center space-x-4 py-2 px-6 text-[#E5E2E1]/40 hover:text-[#E5E2E1] transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">help_outline</span>
+<span class="text-xs font-medium uppercase tracking-wider">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="lg:ml-64 pt-16 min-h-screen">
+<!-- Redesigned Hero Match Header: Premium Stadium Scoreboard -->
+<section class="relative h-[614px] overflow-hidden flex items-center justify-center bg-black">
+<div class="absolute inset-0 z-0">
+<img alt="Cinematic wide shot of a full football stadium at night under bright lights" class="w-full h-full object-cover opacity-20 scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEa1ZZ3sX69KmrnWeRz-LKHVUACOEuFdf1J0WG1D9m8JTQBfAJbraphGmkAT2LrsVALs_63RX4Oczt3heCDrRrM3Bm85H-F1Ra0mIVrEryxbd3DdnTqewYGi3IqL1lGvX6IrHffz37-vjRTA6uXrY6vPtCp4-M5PwtHvUTSQFg80mzk1YPha1PiBmzRC8ix3ILIhKlGZ_p1CCRdMW8YvuuZYlMkInAF_hXoszOxvsS4IdQ-UDtwPr7FFgAf3IOvfb6t11fBL_waclm">
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-surface/90"></div>
+</div>
+<div class="relative z-10 w-full max-w-6xl px-8">
+<div class="flex flex-col items-center">
+<!-- Status Badge -->
+<div class="flex items-center justify-center space-x-4 mb-12">
+<span class="bg-[#CC1616] text-white px-4 py-1.5 rounded-sm text-xs font-black tracking-[0.2em] animate-pulse flex items-center shadow-[0_0_15px_rgba(204,22,22,0.5)]">
+<span class="w-1.5 h-1.5 rounded-full bg-white mr-2"></span> LIVE
+                    </span>
+<span class="text-on-surface font-bold text-sm uppercase tracking-widest opacity-80">Champions League • Quarter Final</span>
+</div>
+<!-- Main Scoreboard Grid -->
+<div class="grid grid-cols-12 gap-4 items-center w-full">
+<!-- Home Team -->
+<div class="col-span-4 flex flex-col items-end text-right">
+<div class="relative mb-6">
+<div class="absolute inset-0 bg-white/5 rounded-full blur-2xl"></div>
+<img id="home-team-logo" alt="Home Team Logo" class="relative w-24 h-24 lg:w-40 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
+</div>
+<h1 id="home-team-name" class="text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow">Loading...</h1>
+<div class="flex items-center mt-2 space-x-2">
+<span class="text-primary font-medium text-base">Vini Jr. 24'</span>
+<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: &quot;FILL&quot; 1;">sports_soccer</span>
+</div>
+</div>
+<!-- Scoreboard Central -->
+<div class="col-span-4 flex flex-col items-center">
+<div class="glass-panel p-8 lg:p-12 rounded-xl border-white/5 shadow-2xl flex flex-col items-center min-w-[320px]">
+<div class="flex items-baseline space-x-6">
+<span id="home-score" class="text-8xl lg:text-[140px] font-digital font-bold tracking-tighter text-on-surface digital-glow">0</span>
+<span class="text-5xl lg:text-7xl font-digital font-light text-white/10">:</span>
+<span id="away-score" class="text-8xl lg:text-[140px] font-digital font-bold tracking-tighter text-on-surface digital-glow">0</span>
+</div>
+<div class="mt-8 flex flex-col items-center">
+<div class="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mb-2">Match Clock</div>
+<div class="px-8 py-3 bg-black/40 rounded-lg border border-white/5">
+<span id="match-clock" class="text-3xl lg:text-5xl font-digital font-medium tracking-widest text-[#CC1616] digital-glow">00:00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Away Team -->
+<div class="col-span-4 flex flex-col items-start text-left">
+<div class="relative mb-6">
+<div class="absolute inset-0 bg-sky-500/10 rounded-full blur-2xl"></div>
+<img id="away-team-logo" alt="Away Team Logo" class="relative w-24 h-24 lg:w-40 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
+</div>
+<h1 id="away-team-name" class="text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow">Loading...</h1>
+<div class="flex items-center mt-2 space-x-2">
+<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: &quot;FILL&quot; 1;">sports_soccer</span>
+<span class="text-primary font-medium text-base">Haaland 41' (P)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Dynamic Content Grid -->
+<section class="max-w-7xl mx-auto px-8 -mt-20 relative z-20 pb-20">
+<div class="grid grid-cols-12 gap-8">
+<!-- Match Stats Column -->
+<div class="col-span-12 lg:col-span-8 space-y-8">
+<!-- Tactical Stats Card -->
+<div class="bg-surface-container-high p-8 rounded-sm border border-white/5">
+<div class="flex justify-between items-end mb-10">
+<div>
+<h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary">Live Data</h3>
+<h2 class="text-3xl font-bold italic tracking-tight">Match Performance</h2>
+</div>
+<div class="flex space-x-2">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-white/10"></div>
+<div class="w-2 h-2 rounded-full bg-white/10"></div>
+</div>
+</div>
+<div id="stats-container" class="space-y-8">
+  <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Live statistics will appear here during the match.</p>
+</div>
+</div>
+<!-- Tactical Timeline -->
+<div class="bg-surface-container-high p-8 rounded-sm border border-white/5">
+<h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-8">Tactical Timeline</h3>
+<div id="timeline-container" class="relative py-10 min-h-[100px] flex items-center justify-center">
+  <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Match timeline loading...</p>
+</div>
+</div>
+<!-- Premium Ad: EA Sports -->
+<div class="relative w-full h-48 rounded-sm overflow-hidden group cursor-pointer">
+<img alt="Dynamic football action shot featuring motion blur and vibrant stadium lights" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATWBNubReKVFUPtmhinl4aQkth08TVqbeOvxTrvAkedkNPhv5KRB26x0_Tkg6mzVwQTk3MMwb0nUMR5VwV5OsfohByOiNsFFVYjOGSy8OCvPBMOJ-aRW-z9D3411LRMrBVWIp3DSDjd3N4Fs59SMlfkpRLoIXHCpqwUkNutzsBehIyQ9gbhLNlAfa_HwXGJk9vvhfudOXnnSjneI1Hx8AXxtTS7LD77OihHAJrQBMWv4mO7xK1XHidZDpSH-JzjMNJOQtbc7kmDS6Q">
+<div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center px-12">
+<span class="text-primary text-[10px] font-black tracking-widest uppercase mb-2">Partner Content</span>
+<h2 class="text-4xl font-black italic leading-none mb-4">FC 26<br><span class="text-on-surface/50 text-xl font-medium not-italic">Pre-order the Ultimate Edition</span></h2>
+<button class="w-max px-6 py-2 stadium-gradient text-white font-black text-[10px] uppercase tracking-widest">Buy Now</button>
+</div>
+<div class="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-2 py-1 text-[8px] font-bold uppercase tracking-widest border border-white/10">AD</div>
+</div>
+</div>
+<!-- Side Info Column -->
+<div class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Lineups Card -->
+<div class="bg-surface-container-high rounded-sm border border-white/5 overflow-hidden">
+<div class="p-6 border-b border-white/5 flex justify-between items-center">
+<h3 class="text-sm font-black uppercase tracking-widest">Lineups</h3>
+<button class="text-primary text-[10px] font-bold uppercase hover:underline transition-all">View Tactics</button>
+</div>
+<div class="p-0">
+<!-- Team Selection -->
+<div class="flex">
+<button class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest bg-surface border-b-2 border-[#CC1616]">Real Madrid</button>
+<button class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40 hover:bg-white/5 transition-colors">Man City</button>
+</div>
+<!-- Player List -->
+<div class="p-6 space-y-4">
+<div class="flex items-center justify-between group cursor-default">
+<div class="flex items-center space-x-4">
+<span class="text-xs font-bold text-on-surface-variant/40">1</span>
+<span class="text-sm font-bold group-hover:text-primary transition-colors">Thibaut Courtois</span>
+</div>
+<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">GK</span>
+</div>
+<div class="flex items-center justify-between group cursor-default">
+<div class="flex items-center space-x-4">
+<span class="text-xs font-bold text-on-surface-variant/40">2</span>
+<span class="text-sm font-bold group-hover:text-primary transition-colors">Dani Carvajal</span>
+</div>
+<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">RB</span>
+</div>
+<div class="flex items-center justify-between group cursor-default">
+<div class="flex items-center space-x-4">
+<span class="text-xs font-bold text-on-surface-variant/40">22</span>
+<span class="text-sm font-bold group-hover:text-primary transition-colors">Antonio Rüdiger</span>
+</div>
+<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">CB</span>
+</div>
+<div class="flex items-center justify-between group cursor-default">
+<div class="flex items-center space-x-4">
+<span class="text-xs font-bold text-on-surface-variant/40">5</span>
+<span class="text-sm font-bold group-hover:text-primary transition-colors">Jude Bellingham</span>
+</div>
+<div class="flex space-x-1">
+<span class="material-symbols-outlined text-xs text-[#CC1616]">star</span>
+<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">CAM</span>
+</div>
+</div>
+<div class="flex items-center justify-between group cursor-default">
+<div class="flex items-center space-x-4">
+<span class="text-xs font-bold text-on-surface-variant/40">7</span>
+<span class="text-sm font-bold group-hover:text-primary transition-colors">Vini Jr.</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-xs text-[#CC1616]" style="font-variation-settings: &quot;FILL&quot; 1;">sports_soccer</span>
+<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">LW</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- DraftKings Ad (Red Accents) -->
+<div class="bg-[#1C1B1B] p-8 border border-outline-variant/10 rounded-sm">
+<div class="flex items-center space-x-2 mb-6">
+<div class="w-8 h-8 bg-[#CC1616] rounded-sm flex items-center justify-center font-black text-white italic">DK</div>
+<span class="text-[10px] font-black uppercase tracking-widest">DraftKings Sportsbook</span>
+</div>
+<h4 class="text-xl font-bold italic tracking-tight mb-4 leading-tight">Bet $5, Get $200 in Bonus Bets Instantly</h4>
+<div class="space-y-3 mb-6">
+<div class="flex justify-between items-center p-3 bg-surface-container-lowest border border-white/5 rounded-sm">
+<span class="text-xs font-bold">Real Madrid to Win</span>
+<span class="text-primary font-black">+185</span>
+</div>
+<div class="flex justify-between items-center p-3 bg-surface-container-lowest border border-white/5 rounded-sm">
+<span class="text-xs font-bold">Manchester City to Win</span>
+<span class="text-primary font-black">-115</span>
+</div>
+</div>
+<button class="w-full py-3 bg-[#CC1616] text-white font-black text-xs uppercase tracking-[0.2em] rounded-sm active:scale-95 transition-all">Bet Now</button>
+<p class="text-[8px] text-white/20 mt-4 leading-tight">21+ Gambling Problem? Call 1-800-GAMBLER. Terms and conditions apply.</p>
+</div>
+<!-- Trending News Bento (Red Highlights) -->
+<div class="space-y-4">
+<h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary">Live Commentary</h3>
+<div class="bg-surface-container-high p-4 rounded-sm border-l-4 border-[#CC1616]">
+<span class="text-[8px] font-black text-[#CC1616] uppercase mb-1 block">57' — Substitution</span>
+<p class="text-xs leading-relaxed font-medium">Kevin De Bruyne is preparing to enter the field. Guardiola looking for more control in the midfield.</p>
+</div>
+<div class="bg-surface-container-high p-4 rounded-sm border-l-4 border-white/10">
+<span class="text-[8px] font-black text-on-surface-variant/50 uppercase mb-1 block">55' — Tactical foul</span>
+<p class="text-xs leading-relaxed font-medium">Rodri receives a yellow card for a cynical challenge on Bellingham in the middle of the park.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="lg:ml-64 w-full py-12 px-8 border-t border-white/5 bg-[#0E0E0E] flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col items-center md:items-start">
+<div class="text-lg font-black text-[#E5E2E1]/50 mb-2 italic tracking-tighter uppercase">LivescoreFree</div>
+<p class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/30">© 2024 LivescoreFree Media. All Rights Reserved.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-x-8 gap-y-4">
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Privacy Policy</a>
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Terms of Service</a>
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Broadcast Rights</a>
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Careers</a>
+<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Cookie Settings</a>
+</div>
+<div class="flex space-x-6">
+<span class="material-symbols-outlined text-[#E5E2E1]/30 hover:text-[#FFB4AA] transition-colors cursor-pointer">public</span>
+<span class="material-symbols-outlined text-[#E5E2E1]/30 hover:text-[#FFB4AA] transition-colors cursor-pointer">share</span>
+</div>
+</footer>
+<script src="/js/script.js"></script>
+<script src="js/script.js"></script>
+</body></html>

@@ -1,5 +1,6 @@
 // --- CONSTANTS ---
-const API_BASE = '/api/live'; 
+const API_LIVE = '/api/live'; 
+const API_MATCH = '/api/match';
 const SPORTS = [
   { id: 'all', name: 'All' },
   { id: 'football', name: 'Football' },
@@ -15,24 +16,62 @@ let autoRefreshTimer = null;
 const tabsContainer = document.getElementById('sports-tabs');
 const matchesContainer = document.getElementById('matches-container');
 
+// Specific Match Detail Elements
+const homeTeamName = document.getElementById('home-team-name');
+const awayTeamName = document.getElementById('away-team-name');
+const homeTeamLogo = document.getElementById('home-team-logo');
+const awayTeamLogo = document.getElementById('away-team-logo');
+const homeScore = document.getElementById('home-score');
+const awayScore = document.getElementById('away-score');
+const matchClock = document.getElementById('match-clock');
+const statsContainer = document.getElementById('stats-container');
+const timelineContainer = document.getElementById('timeline-container');
+
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-  if (tabsContainer && matchesContainer) {
-    renderTabs();
-    fetchMatches();
-    startAutoRefresh();
+  const path = window.location.pathname;
+  
+  // Check for dynamic match detail first
+  const urlParams = new URLSearchParams(window.location.search);
+  const matchId = urlParams.get('id');
+  
+  if (matchId && homeTeamName) {
+    fetchMatchDetail(matchId);
+    startAutoRefresh(() => fetchMatchDetail(matchId));
+    return;
+  }
+
+  // Handle Hub Pages (Home, Live, Upcoming, Trending, Results)
+  if (matchesContainer) {
+    if (tabsContainer) renderTabs();
+    
+    // Determine page filter
+    let statusFilter = null;
+    if (path.includes('live.html')) statusFilter = 'live';
+    if (path.includes('upcoming.html')) statusFilter = 'upcoming';
+    if (path.includes('results.html')) statusFilter = 'finished';
+
+    fetchMatches(statusFilter);
+    startAutoRefresh(() => fetchMatches(statusFilter));
+  }
+
+  // News Hub logic (placeholder for now)
+  const newsContainer = document.getElementById('news-container');
+  if (newsContainer) {
+    newsContainer.innerHTML = '<div class="col-span-full py-20 text-center opacity-50 font-black uppercase tracking-widest text-xs">Loading Kinetic News Stream...</div>';
   }
 });
 
 // --- RENDER TABS ---
 function renderTabs() {
+  if (!tabsContainer) return;
   tabsContainer.innerHTML = SPORTS.map(sport => `
     <button 
       onclick="switchTab('${sport.id}')"
-      class="px-5 py-2 whitespace-nowrap rounded-full text-sm font-bold uppercase tracking-wider transition-colors border
+      class="flex items-center gap-2 px-4 py-2 rounded font-black text-[10px] uppercase tracking-widest transition-all
       ${currentTab === sport.id 
-        ? 'bg-foreground text-surface border-foreground' 
-        : 'bg-surface-soft text-muted border-line hover:border-brand/40'
+        ? 'bg-primary text-white' 
+        : 'bg-white/5 text-on-surface/60 hover:bg-white/10 hover:text-white'
       }"
     >
       ${sport.name}
@@ -45,39 +84,58 @@ window.switchTab = function(tabId) {
   currentTab = tabId;
   renderTabs();
   
-  // Show skeleton loader
-  matchesContainer.innerHTML = Array(4).fill(`
-    <div class="bg-surface rounded-xl border border-line p-5 w-full animate-pulse h-40"></div>
-  `).join('');
+  if (matchesContainer) {
+    matchesContainer.innerHTML = Array(3).fill(`
+      <div class="bg-surface-container border border-white/5 p-6 rounded-lg animate-pulse h-48"></div>
+    `).join('');
+  }
 
   fetchMatches();
 }
 
-// --- FETCH & UPDATE DATA ---
-async function fetchMatches() {
+// --- FETCH & UPDATE HOME DATA ---
+async function fetchMatches(statusFilter = null) {
   try {
-    const res = await fetch(`${API_BASE}?sport=${currentTab}`);
+    const res = await fetch(`${API_LIVE}?sport=${currentTab}`);
     const data = await res.json();
-    renderMatches(data.matches || []);
+    let matches = data.matches || [];
+    
+    if (statusFilter) {
+      matches = matches.filter(m => m.status === statusFilter);
+    }
+    
+    renderMatches(matches);
   } catch (err) {
     console.error('Failed to fetch matches:', err);
-    matchesContainer.innerHTML = `
-      <div class="col-span-full py-12 text-center bg-surface-soft rounded-xl border border-line">
-        <p class="text-muted font-sans flex items-center justify-center gap-2">
-          <i data-lucide="alert-triangle" class="w-5 h-5 text-accent"></i> Failed to connect to live network. Retrying...
-        </p>
-      </div>
-    `;
-    lucide.createIcons();
+    if (matchesContainer) {
+      matchesContainer.innerHTML = `
+        <div class="col-span-full py-12 text-center bg-surface-container rounded-lg border border-white/5">
+          <p class="text-on-surface/40 font-black uppercase tracking-widest text-[10px]">Failed to fetch matches. Retrying...</p>
+        </div>
+      `;
+    }
   }
 }
 
-// --- RENDER MATCH CARDS ---
+// --- FETCH & UPDATE MATCH DETAIL ---
+async function fetchMatchDetail(id) {
+  try {
+    const res = await fetch(`${API_MATCH}?id=${id}`);
+    const data = await res.json();
+    renderMatchDetail(data);
+  } catch (err) {
+    console.error('Failed to fetch match detail:', err);
+  }
+}
+
+// --- RENDER MATCH CARDS (HOME) ---
 function renderMatches(matches) {
+  if (!matchesContainer) return;
+
   if (matches.length === 0) {
     matchesContainer.innerHTML = `
-      <div class="col-span-full py-12 text-center bg-surface-soft rounded-xl border border-line">
-        <p class="text-muted font-sans font-bold uppercase tracking-wider">No active fixtures right now</p>
+      <div class="col-span-full py-12 text-center bg-surface-container rounded-lg border border-white/5">
+        <p class="text-on-surface/40 font-black uppercase tracking-widest text-[10px]">No active matches found.</p>
       </div>
     `;
     return;
@@ -85,49 +143,127 @@ function renderMatches(matches) {
 
   matchesContainer.innerHTML = matches.map(match => {
     const isLive = match.status === 'live';
-    const timeDisplay = isLive 
-      ? `<span class="text-accent font-bold animate-pulse-fast ml-auto">${match.time}</span>` 
-      : `<span class="text-muted ml-auto">${match.time}</span>`;
+    const isFinished = match.status === 'finished';
+    
+    const statusLabel = isLive 
+      ? `<span class="flex items-center gap-1.5 bg-primary text-white px-2.5 py-1 rounded-sm text-[9px] font-black italic">
+          <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE
+         </span>` 
+      : isFinished 
+      ? `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">FINAL</span>`
+      : `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">UPCOMING</span>`;
 
     return `
-      <a href="/match.html?id=${match.id}" class="block group cursor-pointer h-full">
-        <div class="bg-surface h-full rounded-xl p-5 border ${isLive ? 'border-accent/40 shadow-[0_0_15px_rgba(255,94,91,0.1)]' : 'border-line'} hover:border-brand/40 transition-colors">
+      <a href="/match.html?id=${match.id}" class="block group h-full">
+        <div class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-6  
+                    hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden h-full">
           
-          <div class="flex items-center justify-between mb-4 text-xs font-bold tracking-widest uppercase">
-            <div class="flex items-center gap-2 text-muted">
-              ${isLive ? '<div class="w-2 h-2 rounded-full bg-accent animate-pulse-fast"></div>' : ''}
-              ${match.league || 'Int. Friendly'}
+          ${isLive ? '<div class="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full pointer-events-none"></div>' : ''}
+          
+          <div class="flex justify-between items-center relative">
+            <div class="flex items-center gap-2">
+              <span class="${isLive ? 'text-primary' : 'text-on-surface/50'} font-black italic text-[10px] tracking-widest truncate max-w-[150px]">
+                ${match.league || 'Event'}
+              </span>
             </div>
+            ${statusLabel}
           </div>
           
-          <div class="space-y-4">
-            <!-- Home Team -->
-            <div class="flex items-center gap-3">
-              <img src="${match.homeTeam.logo}" alt="${match.homeTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">
-              <span class="font-display font-medium text-lg leading-none ${isLive ? 'text-foreground' : 'text-muted'}">${match.homeTeam.name}</span>
-              ${isLive || match.status === 'finished' ? `<span class="ml-auto font-display font-bold text-2xl leading-none text-foreground">${match.homeTeam.score}</span>` : ''}
+          <div class="flex justify-between items-center relative flex-1">
+            <div class="flex flex-col items-center gap-3 w-1/3">
+              <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center font-black italic">
+                <img src="${match.homeTeam.logo}" alt="${match.homeTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">
+              </div>
+              <span class="text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2">
+                ${match.homeTeam.name}
+              </span>
             </div>
             
-            <!-- Away Team -->
-            <div class="flex items-center gap-3">
-              <img src="${match.awayTeam.logo}" alt="${match.awayTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">
-              <span class="font-display font-medium text-lg leading-none ${isLive ? 'text-foreground' : 'text-muted'}">${match.awayTeam.name}</span>
-              ${isLive || match.status === 'finished' ? `<span class="ml-auto font-display font-bold text-2xl leading-none text-foreground">${match.awayTeam.score}</span>` : timeDisplay}
+            <div class="flex flex-col items-center justify-center">
+              ${isLive || isFinished 
+                ? `<span class="text-4xl font-black italic ${isLive ? 'text-primary' : 'text-on-surface/50'}">${match.homeTeam.score} - ${match.awayTeam.score}</span>`
+                : `<span class="text-4xl font-black italic text-on-surface/20">VS</span>`
+              }
+              <span class="text-[10px] font-black text-on-surface-variant mt-2 tracking-widest uppercase truncate max-w-[80px]">
+                ${match.time}
+              </span>
+            </div>
+            
+            <div class="flex flex-col items-center gap-3 w-1/3">
+              <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center font-black italic">
+                <img src="${match.awayTeam.logo}" alt="${match.awayTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">
+              </div>
+              <span class="text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2">
+                ${match.awayTeam.name}
+              </span>
             </div>
           </div>
-
         </div>
       </a>
     `;
   }).join('');
+}
 
-  lucide.createIcons();
+// --- RENDER MATCH DETAILS ---
+function renderMatchDetail(data) {
+  if (!homeTeamName) return;
+
+  homeTeamName.textContent = data.homeTeam.name || 'Team A';
+  awayTeamName.textContent = data.awayTeam.name || 'Team B';
+  homeTeamLogo.src = data.homeTeam.logo || '/public/logo.png';
+  awayTeamLogo.src = data.awayTeam.logo || '/public/logo.png';
+  homeScore.textContent = data.homeTeam.score !== undefined ? data.homeTeam.score : '0';
+  awayScore.textContent = data.awayTeam.score !== undefined ? data.awayTeam.score : '0';
+  matchClock.textContent = data.time || 'LIVE';
+
+  if (statsContainer && data.stats && data.stats.length > 0) {
+    statsContainer.innerHTML = data.stats.map(stat => {
+      const homeVal = parseFloat(stat.home) || 0;
+      const awayVal = parseFloat(stat.away) || 0;
+      const total = homeVal + awayVal || 1;
+      const homePercent = (homeVal / total) * 100;
+      const awayPercent = (awayVal / total) * 100;
+
+      return `
+        <div class="space-y-2">
+          <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1">
+            <span>${stat.label}</span>
+            <span class="text-primary">${stat.home} — ${stat.away}</span>
+          </div>
+          <div class="h-1.5 w-full bg-white/5 flex rounded-full overflow-hidden">
+            <div class="h-full bg-on-surface" style="width: ${homePercent}%"></div>
+            <div class="h-full bg-[#CC1616]" style="width: ${awayPercent}%"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (timelineContainer && data.timeline && data.timeline.length > 0) {
+    timelineContainer.innerHTML = `
+      <div class="absolute left-0 right-0 h-0.5 bg-white/5 top-1/2 -translate-y-1/2"></div>
+      <div class="relative flex justify-between items-center px-4 w-full overflow-x-auto gap-8">
+        ${data.timeline.map(event => `
+          <div class="flex flex-col items-center relative min-w-[60px]">
+            <span class="material-symbols-outlined text-[#CC1616] text-xl mb-1 ${event.type === 'goal' ? 'animate-bounce' : ''}" 
+                  style="font-variation-settings: 'FILL' 1;">
+              ${event.type === 'goal' ? 'sports_soccer' : (event.type === 'card' ? 'style' : 'history')}
+            </span>
+            <div class="w-1.5 h-1.5 rounded-full bg-white/20"></div>
+            <span class="text-[8px] font-black mt-2 text-primary uppercase tracking-tighter text-center">
+              ${event.time}' ${event.player || ''}
+            </span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
 }
 
 // --- AUTO-REFRESH (15s) ---
-function startAutoRefresh() {
+function startAutoRefresh(callback) {
   if (autoRefreshTimer) clearInterval(autoRefreshTimer);
   autoRefreshTimer = setInterval(() => {
-    fetchMatches();
+    callback();
   }, 15000);
 }
