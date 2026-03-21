@@ -15,6 +15,7 @@ let autoRefreshTimer = null;
 // --- DOM ELEMENTS ---
 const tabsContainer = document.getElementById('sports-tabs');
 const matchesContainer = document.getElementById('matches-container');
+const sidebarLiveContainer = document.getElementById('sidebar-live-container');
 
 // Specific Match Detail Elements
 const homeTeamName = document.getElementById('home-team-name');
@@ -31,6 +32,18 @@ const timelineContainer = document.getElementById('timeline-container');
 document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
   
+  // Highlight Active Sidebar Link
+  const sidebarLinks = document.querySelectorAll('aside nav a');
+  sidebarLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    if (href && (path.includes(href) || (path === '/' && href === 'index.html'))) {
+      link.classList.remove('text-on-surface/60');
+      link.classList.add('text-primary', 'bg-white/5', 'border-l-2', 'border-primary', 'pl-5');
+      // Adjust padding for the border
+      link.style.paddingLeft = '1.25rem';
+    }
+  });
+
   // Check for dynamic match detail first
   const urlParams = new URLSearchParams(window.location.search);
   const matchId = urlParams.get('id');
@@ -38,11 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (matchId && homeTeamName) {
     fetchMatchDetail(matchId);
     startAutoRefresh(() => fetchMatchDetail(matchId));
+    // Also fetch sidebar live scores
+    fetchMatches(null, true);
     return;
   }
 
   // Handle Hub Pages (Home, Live, Upcoming, Trending, Results)
-  if (matchesContainer) {
+  if (matchesContainer || sidebarLiveContainer) {
     if (tabsContainer) renderTabs();
     
     // Determine page filter
@@ -94,12 +109,20 @@ window.switchTab = function(tabId) {
 }
 
 // --- FETCH & UPDATE HOME DATA ---
-async function fetchMatches(statusFilter = null) {
+async function fetchMatches(statusFilter = null, sidebarOnly = false) {
   try {
     const res = await fetch(`${API_LIVE}?sport=${currentTab}`);
     const data = await res.json();
     let matches = data.matches || [];
     
+    // Always render sidebar live scores if container exists
+    if (sidebarLiveContainer) {
+      const liveMatches = matches.filter(m => m.status === 'live').slice(0, 5);
+      renderSidebarLive(liveMatches);
+    }
+
+    if (sidebarOnly) return;
+
     if (statusFilter) {
       matches = matches.filter(m => m.status === statusFilter);
     }
@@ -107,7 +130,7 @@ async function fetchMatches(statusFilter = null) {
     renderMatches(matches);
   } catch (err) {
     console.error('Failed to fetch matches:', err);
-    if (matchesContainer) {
+    if (!sidebarOnly && matchesContainer) {
       matchesContainer.innerHTML = `
         <div class="col-span-full py-12 text-center bg-surface-container rounded-lg border border-white/5">
           <p class="text-on-surface/40 font-black uppercase tracking-widest text-[10px]">Failed to fetch matches. Retrying...</p>
@@ -115,6 +138,43 @@ async function fetchMatches(statusFilter = null) {
       `;
     }
   }
+}
+
+// --- RENDER SIDEBAR LIVE ---
+function renderSidebarLive(matches) {
+  if (!sidebarLiveContainer) return;
+
+  if (matches.length === 0) {
+    sidebarLiveContainer.innerHTML = `
+      <div class="py-4 text-center opacity-30 text-[9px] font-black uppercase tracking-widest">No Live Matches</div>
+    `;
+    return;
+  }
+
+  sidebarLiveContainer.innerHTML = matches.map(match => `
+    <a href="/match.html?id=${match.id}" class="flex flex-col gap-2 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group">
+      <div class="flex justify-between items-center">
+        <span class="text-[8px] font-black text-primary uppercase italic tracking-tighter">${match.league || 'LIVE'}</span>
+        <span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+      </div>
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex flex-col gap-1 flex-1">
+          <div class="flex items-center gap-2">
+            <img src="${match.homeTeam.logo}" class="w-3 h-3 object-contain opacity-70" onerror="this.src='/public/logo.png'">
+            <span class="text-[9px] font-bold text-on-surface/80 truncate">${match.homeTeam.name}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <img src="${match.awayTeam.logo}" class="w-3 h-3 object-contain opacity-70" onerror="this.src='/public/logo.png'">
+            <span class="text-[9px] font-bold text-on-surface/80 truncate">${match.awayTeam.name}</span>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] font-black text-primary">${match.homeTeam.score}</div>
+          <div class="text-[10px] font-black text-primary">${match.awayTeam.score}</div>
+        </div>
+      </div>
+    </a>
+  `).join('');
 }
 
 // --- FETCH & UPDATE MATCH DETAIL ---

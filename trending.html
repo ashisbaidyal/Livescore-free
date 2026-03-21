@@ -111,22 +111,74 @@
 </div>
 </header>
 <!-- SideNavBar -->
-<aside class="fixed left-0 top-20 h-[calc(100vh-80px)] w-64 border-r border-white/5 bg-[#0E0E0E] hidden lg:flex flex-col py-6 gap-2 font-['Lexend']">
-<div class="px-6 mb-4">
-<h3 class="font-bold text-xs tracking-widest uppercase text-[#CC1616]">GUIDE</h3>
+<aside class="hidden lg:flex flex-col pt-8 pb-10 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] sticky top-16 shrink-0 overflow-y-auto no-scrollbar">
+<nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
+<!-- Main Navigation -->
+<div class="px-6 mb-8 space-y-1">
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="leagues.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">public</span>
+<span class="font-black uppercase tracking-widest text-[10px]">All Leagues</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="leagues.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">leaderboard</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Standings</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="upcoming.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">calendar_month</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Fixtures</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="leagues.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">groups</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Teams Hub</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="index.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">shield</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Team Profile</span>
+</a>
 </div>
-<a class="flex items-center gap-4 px-6 py-3 text-on-surface/60 hover:text-primary hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest" href="live.html">
-<span class="material-symbols-outlined">sensors</span> Live Score
-        </a>
-<a class="flex items-center gap-4 px-6 py-3 text-on-surface/60 hover:text-primary hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest" href="upcoming.html">
-<span class="material-symbols-outlined">calendar_today</span> Schedule
-        </a>
-<a class="flex items-center gap-4 px-6 py-3 bg-gradient-to-r from-[#CC1616]/20 to-transparent text-[#FFB4AA] border-l-4 border-[#CC1616] text-xs font-bold uppercase tracking-widest" href="trending.html">
-<span class="material-symbols-outlined">trending_up</span> Trending
-        </a>
-<a class="flex items-center gap-4 px-6 py-3 text-on-surface/60 hover:text-primary hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest" href="news.html">
-<span class="material-symbols-outlined">newspaper</span> Latest News
-        </a>
+<!-- Players Section -->
+<div class="px-6 mb-8">
+<div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Players</div>
+<div class="space-y-1">
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="players.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">group</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Players Hub</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="players.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">person</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Player Profile</span>
+</a>
+</div>
+</div>
+<!-- Today's Live Scores Section -->
+<div class="px-6 mb-8">
+<div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Today's Live Scores</div>
+<div id="sidebar-live-container" class="space-y-3">
+<!-- Live score snippets will be injected here -->
+<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+</div>
+</div>
+<!-- Quick Links -->
+<div class="px-6 mb-8">
+<div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Quick Links</div>
+<div class="space-y-1">
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">policy</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Privacy Policy</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">campaign</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Advertise</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">favorite</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Support Us</span>
+</a>
+</div>
+</div>
+</nav>
 </aside>
 <!-- Main Content Canvas -->
 <main class="lg:ml-64 pt-20 min-h-screen">

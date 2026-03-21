@@ -118,33 +118,74 @@
 </nav>
 
 <!-- SideNavBar -->
-<aside class="hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] bg-[#0E0E0E] w-64 border-r border-white/5 font-['Lexend'] font-bold text-sm z-40">
-<div class="p-6 space-y-1">
-<a href="live.html" class="flex items-center space-x-3 p-3 bg-gradient-to-r from-[#CC1616]/20 to-transparent text-[#FFB4AA] border-l-4 border-[#CC1616] transition-all duration-200 ease-in-out cursor-pointer">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">sensors</span>
-<span>LIVE SCORES</span>
+<aside class="hidden lg:flex flex-col pt-8 pb-10 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] sticky top-16 shrink-0 overflow-y-auto no-scrollbar">
+<nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
+<!-- Main Navigation -->
+<div class="px-6 mb-8 space-y-1">
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="leagues.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">public</span>
+<span class="font-black uppercase tracking-widest text-[10px]">All Leagues</span>
 </a>
-<a href="upcoming.html" class="flex items-center space-x-3 p-3 text-[#E5E2E1] opacity-50 hover:bg-white/5 hover:opacity-100 transition-colors cursor-pointer">
-<span class="material-symbols-outlined">calendar_today</span>
-<span>SCHEDULE</span>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="leagues.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">leaderboard</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Standings</span>
 </a>
-<a href="news.html" class="flex items-center space-x-3 p-3 text-[#E5E2E1] opacity-50 hover:bg-white/5 hover:opacity-100 transition-colors cursor-pointer">
-<span class="material-symbols-outlined">newspaper</span>
-<span>NEWS</span>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="upcoming.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">calendar_month</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Fixtures</span>
 </a>
-<a href="leagues.html" class="flex items-center space-x-3 p-3 text-[#E5E2E1] opacity-50 hover:bg-white/5 hover:opacity-100 transition-colors cursor-pointer">
-<span class="material-symbols-outlined">leaderboard</span>
-<span>LEAGUES</span>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="leagues.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">groups</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Teams Hub</span>
 </a>
-<a href="results.html" class="flex items-center space-x-3 p-3 text-[#E5E2E1] opacity-50 hover:bg-white/5 hover:opacity-100 transition-colors cursor-pointer">
-<span class="material-symbols-outlined">star</span>
-<span>RESULTS</span>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="index.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">shield</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Team Profile</span>
 </a>
 </div>
-<div class="mt-auto p-6 border-t border-white/5">
-<div class="text-xs text-outline font-light tracking-widest opacity-40 mb-2 uppercase">PREMIUM BROADCAST</div>
-<div class="text-[#FFB4AA] font-black text-xl">LivescoreFree</div>
+<!-- Players Section -->
+<div class="px-6 mb-8">
+<div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Players</div>
+<div class="space-y-1">
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="players.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">group</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Players Hub</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="players.html">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">person</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Player Profile</span>
+</a>
 </div>
+</div>
+<!-- Today's Live Scores Section -->
+<div class="px-6 mb-8">
+<div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Today's Live Scores</div>
+<div id="sidebar-live-container" class="space-y-3">
+<!-- Live score snippets will be injected here -->
+<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+</div>
+</div>
+<!-- Quick Links -->
+<div class="px-6 mb-8">
+<div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Quick Links</div>
+<div class="space-y-1">
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">policy</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Privacy Policy</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">campaign</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Advertise</span>
+</a>
+<a class="flex items-center gap-4 py-3 text-on-surface/60 hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">favorite</span>
+<span class="font-black uppercase tracking-widest text-[10px]">Support Us</span>
+</a>
+</div>
+</div>
+</nav>
 </aside>
 <main class="lg:ml-64 mt-16 pb-24 min-h-screen">
 <!-- Hero Section: Kinetic Broadcast Mode -->
