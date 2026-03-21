@@ -1566,18 +1566,60 @@ function renderSimpleArticle(container, title, lead, bodyHtml) {
 }
 
 function renderNotFoundPage(container) {
-  setSeo({ title: "Signal Lost | 404 Not Found", description: "The requested arena route could not be located." });
+  setSeo({ 
+    title: "LivescoreFree | Signal Lost (404)", 
+    description: "The requested sports signal is temporarily lost. Redirecting you back to the arena center.",
+    path: "/404"
+  });
+  
   container.innerHTML = `
-    <section class="min-h-screen flex flex-col items-center justify-center p-8 text-center">
-      <div class="relative mb-12">
-        <span class="material-symbols-outlined text-9xl text-primary opacity-20 animate-pulse">explore_off</span>
-        <div class="absolute inset-0 flex items-center justify-center">
-           <span class="text-6xl font-black italic tracking-tighter text-white">404</span>
+    <!-- High-Fidelity 404 Experience -->
+    <section class="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+      <!-- Background Decorative Elements -->
+      <div class="absolute inset-0 z-0 pointer-events-none">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px]"></div>
+      </div>
+
+      <div class="relative z-10 max-w-xl w-full">
+        <!-- Animated Signal Lost Icon -->
+        <div class="relative mb-16 inline-block">
+          <div class="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse"></div>
+          <div class="relative bg-surface-container-high border border-white/10 p-10 rounded-full shadow-2xl">
+            <span class="material-symbols-outlined text-[120px] text-primary" style="font-variation-settings: 'wght' 200;">broadcast_on_home</span>
+            <!-- Glitch overlays -->
+            <div class="absolute top-0 left-0 w-full h-full border-2 border-primary/30 rounded-full animate-ping opacity-20"></div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="inline-flex items-center gap-2 bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-[0.3em] italic mb-4">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            SECTOR 404: FREQUENCY DEAD
+          </div>
+          
+          <h1 class="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none text-on-surface mb-6">
+            SIGNAL <br><span class="text-primary text-glow-red">LOST</span>
+          </h1>
+          
+          <p class="text-xs md:text-sm font-black text-on-surface/40 uppercase tracking-[0.4em] leading-relaxed max-w-md mx-auto mb-16 italic">
+            The requested arena frequency has been decommissioned or is currently out of range. 
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a data-link href="/home" class="bg-primary hover:bg-primary/90 text-white px-12 py-5 rounded-lg font-black uppercase text-xs tracking-[0.2em] shadow-[0_0_30px_rgba(204,22,22,0.4)] transition-all transform hover:scale-105 active:scale-95 no-underline flex items-center justify-center gap-3">
+              <span class="material-symbols-outlined text-sm">home_storage</span> RECALL TO ARENA HOME
+            </a>
+            <a data-link href="/live" class="bg-white/5 border border-white/10 hover:bg-white/10 text-on-surface px-10 py-5 rounded-lg font-black uppercase text-xs tracking-[0.2em] transition-all no-underline flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-sm">sensors</span> SCAN LIVE FEEDS
+            </a>
+          </div>
+        </div>
+
+        <!-- Decorative Footnote -->
+        <div class="mt-24 pt-8 border-t border-white/5">
+          <p class="text-[9px] font-black text-on-surface/20 uppercase tracking-[0.5em]">LIVESCOREFREE KINETIC BROADCAST ENGINE v2.0</p>
         </div>
       </div>
-      <h1 class="text-4xl font-black italic uppercase tracking-tighter mb-4">SIGNAL LOST</h1>
-      <p class="text-[10px] font-black text-on-surface opacity-40 uppercase tracking-[0.3em] mb-12 italic">THE REQUESTED ARENA ROUTE DOES NOT EXIST IN THIS SECTOR.</p>
-      <a data-link href="/home" class="bg-primary text-black px-12 py-4 text-[10px] font-black uppercase tracking-widest rounded shadow-2xl active:scale-95 transition-all no-underline italic">ABORT AND RECALL HOME</a>
     </section>
   `;
 }

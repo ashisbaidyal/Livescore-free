@@ -3,46 +3,211 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>livescorefree.online | 404 Signal Lost</title>
+  <title>Signal Lost | LivescoreFree.online</title>
   <meta name="description" content="404 - The global sports signal is temporarily lost. Redirecting you back to the arena.">
-  <meta property="og:title" content="livescorefree.online | 404 Signal Lost">
-  <meta property="og:description" content="404 - The global sports signal is temporarily lost. Redirecting you back to the arena.">
+  
+  <!-- SEO & Branding -->
+  <meta property="og:title" content="Signal Lost | LivescoreFree.online">
+  <meta property="og:description" content="404 - The requested sports signal is lost in the multiverse.">
   <meta property="og:image" content="https://livescorefree.online/logo.png">
   <meta property="og:url" content="https://livescorefree.online">
   <meta property="og:type" content="website">
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
   <style>
+    :root {
+      --primary: #CC1616;
+      --bg: #0E0E0E;
+      --surface: #1A1A1A;
+      --text: #e5e2e1;
+    }
+
     body { 
-      background: #0E0E0E; 
-      color: #e5e2e1; 
+      background: var(--bg); 
+      color: var(--text); 
       font-family: 'Lexend', system-ui, sans-serif; 
       display: flex; 
       align-items: center; 
       justify-content: center; 
       min-height: 100vh; 
       margin: 0;
+      overflow: hidden;
     }
-    .container { text-align: center; }
-    h1 { font-size: 3rem; font-weight: 900; font-style: italic; letter-spacing: -0.05em; margin-bottom: 0.5rem; }
-    .accent { color: #CC1616; }
-    p { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; opacity: 0.4; }
-    .bar { width: 120px; height: 3px; background: rgba(255,255,255,0.05); border-radius: 999px; margin: 2rem auto; overflow: hidden; }
-    .bar-fill { width: 33%; height: 100%; background: #CC1616; animation: progress 1.5s ease-in-out infinite; }
-    @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+
+    .background-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(204, 22, 22, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container { 
+      text-align: center; 
+      position: relative; 
+      z-index: 10;
+      max-width: 90%;
+    }
+
+    .icon-box {
+      position: relative;
+      margin-bottom: 3rem;
+      display: inline-block;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 2.5rem;
+      border-radius: 50%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .icon-glow {
+      position: absolute;
+      inset: 0;
+      background: var(--primary);
+      filter: blur(40px);
+      opacity: 0.15;
+      animation: pulse 3s infinite;
+      border-radius: 50%;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.15; transform: scale(1); }
+      50% { opacity: 0.25; transform: scale(1.1); }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(204, 22, 22, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(204, 22, 22, 0.2);
+      padding: 0.4rem 1rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      font-style: italic;
+      margin-bottom: 2rem;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--primary);
+      border-radius: 50%;
+      animation: dot-pulse 1.5s infinite;
+    }
+
+    @keyframes dot-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    h1 { 
+      font-size: clamp(3.5rem, 10vw, 6rem); 
+      font-weight: 900; 
+      font-style: italic; 
+      letter-spacing: -0.05em; 
+      line-height: 0.85;
+      margin: 0 0 1.5rem; 
+      text-transform: uppercase;
+    }
+
+    .accent { color: var(--primary); }
+
+    p.lead { 
+      font-size: 0.75rem; 
+      font-weight: 800; 
+      letter-spacing: 0.4em; 
+      text-transform: uppercase; 
+      opacity: 0.4; 
+      margin-bottom: 3rem;
+      font-style: italic;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      padding: 1.25rem 2.5rem;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 30px rgba(204, 22, 22, 0.4);
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      background: #e61919;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .footer {
+      margin-top: 6rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.6rem;
+      font-weight: 900;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      opacity: 0.2;
+    }
   </style>
   <script>
     // SPA redirect: send path to the main app via query param
     var path = window.location.pathname;
-    if (path && path !== '/' && path !== '/404.html') {
+    // Only redirect if it's not the actual /404.html page (direct access for preview)
+    if (path && path !== '/' && path !== '/404.html' && path !== '/404') {
+      console.log("[404] Intercepted path: " + path + ". Redirecting to SPA route...");
       window.location.replace("/?route=" + encodeURIComponent(path));
     }
   </script>
 </head>
 <body>
+  <div class="background-glow"></div>
+  
   <div class="container">
-    <h1><span class="accent">404</span> Signal Lost</h1>
-    <p>Redirecting to the arena...</p>
-    <div class="bar"><div class="bar-fill"></div></div>
-    <p><a href="/" style="color: #CC1616; text-decoration: none;">Return to Home</a></p>
+    <div class="icon-box">
+      <div class="icon-glow"></div>
+      <span class="material-symbols-outlined" style="font-size: 80px; color: var(--primary); font-variation-settings: 'wght' 200;">broadcast_on_home</span>
+    </div>
+
+    <div class="badge">
+      <div class="pulse-dot"></div>
+      Sector 404: Frequency Dead
+    </div>
+
+    <h1>Signal <br><span class="accent">Lost</span></h1>
+    <p class="lead">The requested arena route is decommissioned</p>
+    
+    <a href="/" class="btn">
+      <span class="material-symbols-outlined" style="font-size: 18px;">home_storage</span>
+      Recall Home
+    </a>
+
+    <div class="footer">
+      LivescoreFree Kinetic Broadcast Engine v2.0
+    </div>
   </div>
 </body>
 </html>
