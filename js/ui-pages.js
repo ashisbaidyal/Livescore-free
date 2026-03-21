@@ -9,7 +9,7 @@ import {
 } from "./utils.js";
 import { state } from "./state.js";
 import { SPORT_GROUPS, LEAGUES, TOP_LEAGUE_KEYS, DONATION_KOFI_URL, LEAGUE_REGIONS, NAV_TOUCH_INFO, SPORT_DISPLAY_NAMES } from "./constants.js"; // Added NAV_TOUCH_INFO, SPORT_DISPLAY_NAMES
-import { parseRoute, getCurrentPath, routeForMatch, routeForLeague, routeForSport, routeForPlayer, routeForTeam, getSportIcon, getSportImagePath } from "./routing.js"; // Added routeForSport, routeForPlayer, routeForTeam, getSportIcon, getSportImagePath
+import { parseRoute, getCurrentPath, routeForMatch, routeForLeague, routeForSport, routeForPlayer, routeForTeam } from "./routing.js";
 import {
   renderMatchGrid,
   renderPmTeamLogo,
