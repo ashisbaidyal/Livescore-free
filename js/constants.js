@@ -153,6 +153,8 @@ export const PLAYER_TABS = [
 
 export const PROXIED_DATA_HOSTS = new Set([
   "site.api.espn.com",
+  "sports.core.api.espn.com",
+  "cdn.espn.com",
   "www.thesportsdb.com",
   "gnews.io"
 ]);
