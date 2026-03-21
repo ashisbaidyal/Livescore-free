@@ -43,54 +43,6 @@ import { fetchSportsNews, renderHighlightsNewsCard } from "./news.js";
 const MATCH_DETAILS_CACHE = new Map();
 
 
-export async function renderHomePage(container) {
-  setSeo({
-    title: "Global Sports Hub | livescorefree.online",
-    description: "Live scores, results, and highlights for all your favorite sports in real-time.",
-    path: "/"
-  });
-
-  container.innerHTML = `
-    <main class="min-h-screen">
-      
-      <section id="hero-carousel" class="relative h-[500px] overflow-hidden">
-        <div id="carousel-slides" class="h-full flex transition-transform duration-700"></div>
-        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20" id="carousel-dots"></div>
-      </section>
-
-      <section class="max-w-7xl mx-auto px-4 lg:px-8 py-12">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
-          <div class="lg:col-span-8 space-y-12">
-            
-            <div id="matches-section">
-              <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl font-black italic uppercase tracking-tighter">Live Arena</h2>
-                <div class="flex items-center gap-4 bg-surface-container-high p-1 rounded-sm border border-white/5">
-                  <button class="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-primary text-white rounded-sm">ALL</button>
-                  <button class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-on-surface/40 hover:text-white transition-colors">LIVE</button>
-                  <button class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-on-surface/40 hover:text-white transition-colors">RESULTS</button>
-                </div>
-              </div>
-              <div id="matches-grid" class="grid gap-6"></div>
-            </div>
-          </div>
-          
-          
-          <aside class="lg:col-span-4 space-y-12">
-            <div id="breaking-news"></div>
-            <div id="standings-preview"></div>
-          </aside>
-        </div>
-      </section>
-    </main>
-  `;
-
-  // Initialize features
-  wireMatchTabs();
-  initHeroCarousel();
-  refreshHomepageContent();
-}
 
 export async function renderRoute() {
   const path = getCurrentPath();
