@@ -195,24 +195,24 @@
 <nav class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl">
   <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
     <div class="flex items-center gap-4">
-      <span class="material-symbols-outlined text-primary pulse-red rounded-full" style="">broadcast_on_personal</span>
-      <a href="/home" data-link class="text-2xl font-black italic tracking-tighter text-primary no-underline font-headline uppercase" style="">GoalStream</a>
+      <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
+      <a href="/home" data-link class="text-2xl font-black italic tracking-tighter text-primary no-underline font-headline uppercase">GoalStream</a>
     </div>
     <div class="hidden lg:flex gap-8 items-center font-headline font-bold uppercase tracking-tighter text-xs">
-      <a class="text-primary border-b-2 border-primary pb-1 transition-all no-underline" href="/home" data-link>Home</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/live" data-link>live score</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/upcoming" data-link>upcoming matches</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/trending" data-link>trending</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/news" data-link>news</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/top-leagues" data-link>top league</a>
+      <a class="text-primary border-b-2 border-primary pb-1 transition-all no-underline" href="/home" data-link>HOME</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/sports" data-link>SPORTS</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/live" data-link>LIVE STREAM</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/news" data-link>HIGHLIGHTS</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/trending" data-link>ODDS</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all no-underline" href="/discord" data-link>DISCORD</a>
     </div>
     <div class="flex items-center gap-6">
       <div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
-        <span class="material-symbols-outlined text-sm text-primary animate-pulse" style="">radio_button_checked</span>
-        <span class="text-[10px] font-black tracking-widest uppercase" style="">KINETIC FEED LIVE</span>
+        <span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
+        <span class="text-[10px] font-black tracking-widest uppercase">KINETIC FEED LIVE</span>
       </div>
-      <button class="material-symbols-outlined text-on-surface hover:text-primary transition-all" style="">search</button>
-      <button class="material-symbols-outlined text-on-surface hover:text-primary transition-all relative" style="">
+      <button class="material-symbols-outlined text-on-surface hover:text-primary transition-all">search</button>
+      <button class="material-symbols-outlined text-on-surface hover:text-primary transition-all relative">
         notifications
         <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
       </button>
@@ -225,23 +225,23 @@
   <aside class="hidden lg:flex flex-col pt-8 pb-10 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] sticky top-16 shrink-0 z-40">
     <nav class="flex flex-col gap-1 font-headline font-medium text-sm">
       <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3 no-underline" href="/live" data-link id="nav-live">
-        <span class="material-symbols-outlined" style="">sensors</span> Live Score
+        <span class="material-symbols-outlined">sensors</span> Live Score
       </a>
       <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3 no-underline" href="/upcoming" data-link id="nav-upcoming">
-        <span class="material-symbols-outlined" style="">calendar_today</span> Full Schedule
+        <span class="material-symbols-outlined">calendar_today</span> Full Schedule
       </a>
       <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3 no-underline" href="/history" data-link id="nav-history">
-        <span class="material-symbols-outlined" style="">star</span> My Favorites
+        <span class="material-symbols-outlined">star</span> My Favorites
       </a>
       <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3 no-underline" href="/news" data-link id="nav-news">
-        <span class="material-symbols-outlined" style="">newspaper</span> Latest News
+        <span class="material-symbols-outlined">newspaper</span> Latest News
       </a>
       <a class="text-on-surface/60 hover:bg-white/5 px-6 py-4 transition-colors flex items-center gap-3 no-underline" href="/top-leagues" data-link id="nav-leagues">
-        <span class="material-symbols-outlined" style="">leaderboard</span> Advanced Stats
+        <span class="material-symbols-outlined">leaderboard</span> Advanced Stats
       </a>
       
       <div class="my-6 px-6">
-        <div class="text-[10px] font-black text-on-surface/40 uppercase tracking-[0.2em] mb-4" style="">Trending Leagues</div>
+        <div class="text-[10px] font-black text-on-surface/40 uppercase tracking-[0.2em] mb-4">Trending Leagues</div>
         <div class="space-y-3" id="sidebar-trending-leagues">
           <!-- Dynamically populated -->
           <a class="flex items-center gap-3 text-xs font-bold hover:text-primary transition-all no-underline text-on-surface/80" href="/league/eng.1" data-link>
@@ -281,44 +281,39 @@
     <div class="text-[10px] font-black tracking-[0.4em] text-on-surface/20 uppercase">The Kinetic Broadcast Leader</div>
   </div>
   
-  <div class="grid grid-cols-2 md:grid-cols-5 gap-16 w-full max-w-6xl border-y border-white/5 py-16">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-16 w-full max-w-6xl border-y border-white/5 py-16 text-left">
     <div class="flex flex-col space-y-4">
-      <span class="text-[10px] font-black tracking-widest text-primary uppercase">Platform</span>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/live" data-link>Live Scores</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/upcoming" data-link>Schedules</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/trending" data-link>Trending</a>
+      <span class="text-[10px] font-black tracking-widest text-primary uppercase">WHICH ZONE</span>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/live" data-link>Matches</a>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/upcoming" data-link>Schedules</a>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/trending" data-link>Trending</a>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/news" data-link>Highlights</a>
     </div>
     <div class="flex flex-col space-y-4">
-      <span class="text-[10px] font-black tracking-widest text-primary uppercase">Company</span>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/about" data-link>About Us</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/contact" data-link>Contact</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/advertise" data-link>Advertise</a>
+      <span class="text-[10px] font-black tracking-widest text-primary uppercase">LEGAL</span>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/privacy-policy" data-link>Privacy</a>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/terms-of-service" data-link>Terms</a>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/dmca-policy" data-link>DMCA</a>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/policy" data-link>Policy</a>
     </div>
     <div class="flex flex-col space-y-4">
-      <span class="text-[10px] font-black tracking-widest text-primary uppercase">Legal</span>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/privacy-policy" data-link>Privacy</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/terms-of-service" data-link>Terms</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/dmca-policy" data-link>DMCA</a>
+      <span class="text-[10px] font-black tracking-widest text-primary uppercase">RESOURCES</span>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/data-sources" data-link>Data Sources</a>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/help" data-link>Help Center</a>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/api-docs" data-link>API documentation</a>
     </div>
     <div class="flex flex-col space-y-4">
-      <span class="text-[10px] font-black tracking-widest text-primary uppercase">Resources</span>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/data-sources" data-link>Sources</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/feedback" data-link>Feedback</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/top-leagues" data-link>Leagues</a>
-    </div>
-    <div class="flex flex-col space-y-4">
-      <span class="text-[10px] font-black tracking-widest text-primary uppercase">Community</span>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/donate" data-link>Support Us</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/history" data-link>Favorites</a>
-      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase" href="/news" data-link>Highlights</a>
+      <span class="text-[10px] font-black tracking-widest text-primary uppercase">SUPPORT</span>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/contact" data-link>Get Help 24/7</a>
+      <a class="text-xs font-bold text-on-surface/40 hover:text-primary transition-colors uppercase no-underline" href="/status" data-link>Platform Status</a>
     </div>
   </div>
 
   <div class="flex flex-col items-center space-y-6">
     <div class="flex space-x-10">
-      <a class="text-on-surface/40 hover:text-primary transition-all scale-125" href="#"><span class="material-symbols-outlined">public</span></a>
-      <a class="text-on-surface/40 hover:text-primary transition-all scale-125" href="#"><span class="material-symbols-outlined">share</span></a>
-      <a class="text-on-surface/40 hover:text-primary transition-all scale-125" href="#"><span class="material-symbols-outlined">mail</span></a>
+      <a class="text-on-surface/40 hover:text-primary transition-all scale-125 no-underline" href="#"><span class="material-symbols-outlined">public</span></a>
+      <a class="text-on-surface/40 hover:text-primary transition-all scale-125 no-underline" href="#"><span class="material-symbols-outlined">share</span></a>
+      <a class="text-on-surface/40 hover:text-primary transition-all scale-125 no-underline" href="#"><span class="material-symbols-outlined">mail</span></a>
     </div>
     <div class="text-primary/40 font-headline font-light text-[10px] tracking-[0.4em] text-center uppercase">
       © 2024 GOALSTREAM KINETIC BROADCAST. ALL RIGHTS RESERVED.

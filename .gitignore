@@ -10,3 +10,7 @@ node_modules/
 dist/
 build/
 *.mjs.map
+
+# Exclude designer folders
+Public-ESPN-API-main/
+full website design/

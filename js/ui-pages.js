@@ -131,48 +131,116 @@ async function renderHomePage(container) {
       </div>
     </div>
 
-    <!-- Enhanced All-Sports Hero Hub -->
-    <section class="relative w-full h-[716px] min-h-[600px] overflow-hidden group">
-      <div class="relative w-full h-full">
-        <div class="absolute inset-0 z-10">
-          <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" 
-               style="background-image: linear-gradient(to top, rgb(14, 14, 14) 15%, transparent 60%), 
-                      linear-gradient(to right, rgba(14, 14, 14, 0.95), rgba(14, 14, 14, 0.2)), 
-                      url('${heroMatch ? (heroMatch.homeBadge || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076&auto=format&fit=crop') : 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2070&auto=format&fit=crop'}');"></div>
-          
-          <div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
-            <div class="flex items-center gap-3 mb-6">
-              <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase font-headline shadow-lg">
-                <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> FEATURED ${heroMatch?.status === 'live' ? 'LIVE' : 'UPCOMING'}
-              </span>
-              <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase font-headline">${escapeHtml(heroMatch?.leagueLabel || 'Sports Universe')} • Arena Prime</span>
-            </div>
-            
-            ${heroMatch ? `
-              <div class="flex items-end gap-6 mb-8 translate-y-2">
-                <h1 class="font-headline font-black text-6xl md:text-[8rem] tracking-tighter leading-[0.8] uppercase italic text-on-surface">
-                  ${escapeHtml(heroMatch.homeAbbr || heroMatch.homeName.substring(0, 3))} 
-                  <span class="text-primary text-glow-red">${heroMatch.homeScore || 0}-${heroMatch.awayScore || 0}</span> <br>
-                  ${escapeHtml(heroMatch.awayAbbr || heroMatch.awayName.substring(0, 3))}
-                </h1>
-                <div class="mb-6 hidden sm:block border-l-2 border-primary/40 pl-6">
-                  <div class="text-[10px] font-black uppercase text-primary tracking-widest mb-1 font-headline opacity-60">Session Status</div>
-                  <div class="text-4xl font-black italic font-headline text-on-surface">${escapeHtml(heroMatch.statusDetail || heroMatch.statusLabel || "72'")}</div>
-                </div>
+    <!-- Enhanced Global Hero Hub -->
+    <section class="relative w-full min-h-[750px] overflow-hidden group">
+      <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[30s] scale-110 group-hover:scale-100" 
+             style="background-image: linear-gradient(to top, #0e0e0e 5%, transparent 50%), 
+                    linear-gradient(to right, rgba(14, 14, 14, 0.9) 20%, transparent 70%), 
+                    url('${heroMatch?.homeBadge || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076&auto=format&fit=crop'}');"></div>
+      </div>
+
+      <div class="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-20 flex flex-col lg:flex-row gap-12 items-center lg:items-start">
+        <!-- Main Content -->
+        <div class="flex-1 text-left">
+          <div class="flex items-center gap-3 mb-8">
+            <span class="bg-primary text-white text-[10px] font-black px-4 py-1 uppercase tracking-widest rounded-sm italic animate-pulse">
+              TRANS-GLOBAL LIVE SIGNAL
+            </span>
+            <span class="text-on-surface/40 text-[10px] font-black uppercase tracking-[0.3em]">ARENA PRIME • NODE 01-A</span>
+          </div>
+
+          ${heroMatch ? `
+            <h1 class="text-6xl md:text-[9rem] font-black italic uppercase leading-[0.8] tracking-tighter mb-12">
+              ${escapeHtml(heroMatch.homeAbbr || heroMatch.homeName.substring(0, 3))} <span class="text-primary text-glow-red">${heroMatch.homeScore || 0}-${heroMatch.awayScore || 0}</span> <br>
+              <span class="opacity-40 animate-pulse text-white">${escapeHtml(heroMatch.awayAbbr || heroMatch.awayName.substring(0, 3))}</span>
+            </h1>
+
+            <!-- Performance Bars -->
+            <div class="max-w-md space-y-8 mb-16">
+              <div class="space-y-3">
+                 <div class="flex justify-between text-[10px] font-black uppercase tracking-widest italic opacity-60">
+                    <span>POSSESSION</span>
+                    <span>44% - 56%</span>
+                 </div>
+                 <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden flex">
+                    <div class="h-full bg-primary" style="width: 44%"></div>
+                    <div class="h-full bg-white opacity-20" style="width: 56%"></div>
+                 </div>
               </div>
-            ` : `
-              <h1 class="font-headline font-black text-6xl md:text-[8rem] tracking-tighter leading-[0.8] uppercase italic text-on-surface">
-                GOAL<span class="text-primary text-glow-red">STREAM</span>
-              </h1>
-            `}
-            
-            <div class="flex flex-wrap gap-6 mt-12">
-              <a href="/live" data-link class="glow-on-hover bg-primary px-12 py-5 rounded-lg text-white font-black uppercase text-[11px] tracking-[0.3em] flex items-center gap-3 transition-all transform active:scale-95 shadow-[0_0_40px_rgba(204,22,22,0.5)] font-headline no-underline">
-                 ACTIVATE MULTIVERSE FEED
-              </a>
+              <div class="space-y-3">
+                 <div class="flex justify-between text-[10px] font-black uppercase tracking-widest italic opacity-60">
+                    <span>SHOTS (ON)</span>
+                    <span>14 (6) - 9 (4)</span>
+                 </div>
+                 <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden flex">
+                    <div class="h-full bg-primary" style="width: 62%"></div>
+                    <div class="h-full bg-white opacity-20" style="width: 38%"></div>
+                 </div>
+              </div>
+            </div>
+          ` : `
+            <h1 class="text-6xl md:text-[9rem] font-black italic uppercase leading-[0.8] tracking-tighter mb-12">
+              GOAL<span class="text-primary text-glow-red">STREAM</span>
+            </h1>
+          `}
+
+          <div class="flex flex-wrap gap-6">
+            <a href="/live" data-link class="px-12 py-5 kinetic-gradient text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-lg shadow-[0_0_50px_rgba(204,22,22,0.4)] hover:scale-105 active:scale-95 transition-all no-underline font-headline">PLAY BROADCAST</a>
+            <a href="/analytics" data-link class="px-12 py-5 bg-white/5 border border-white/10 text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-lg hover:bg-white/10 transition-all no-underline font-headline">VIEW ARENA ANALYTICS</a>
+          </div>
+        </div>
+
+        <!-- Sidebar Widgets -->
+        <div class="w-full lg:w-96 flex flex-col gap-6">
+          <!-- Upcoming Next Card -->
+          <div class="glass-card p-8 rounded-3xl border border-white/10 relative overflow-hidden group/card shadow-2xl">
+            <div class="absolute top-0 right-0 p-8 opacity-5 group-hover/card:opacity-10 transition-opacity">
+               <span class="material-symbols-outlined text-8xl">event_upcoming</span>
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-6 block italic">UPCOMING NEXT</span>
+            <h3 class="text-2xl font-black italic uppercase tracking-tighter mb-4 leading-none">MANCHESTER DERBY</h3>
+            <p class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest mb-8 italic">PREMIER LEAGUE • TODAY 19:30</p>
+            <div class="flex items-center gap-4">
+               <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-xs">MU</div>
+               <span class="text-xs font-black opacity-20">VS</span>
+               <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-xs">MC</div>
+            </div>
+          </div>
+
+          <!-- Live Odds / Volume Card -->
+          <div class="glass-card p-8 rounded-3xl border border-white/10 shadow-2xl">
+            <div class="flex items-center justify-between mb-8">
+               <span class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 italic">LIVE VOLUMES</span>
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/DraftKings_logo.svg/2560px-DraftKings_logo.svg.png" class="h-4 opacity-60 grayscale invert brightness-200" alt="DraftKings">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+               <div class="p-4 bg-white/5 border border-white/5 rounded-xl hover:border-primary transition-all cursor-pointer group/odds">
+                  <div class="text-[9px] font-black text-on-surface/30 group-hover/odds:text-primary mb-1">HOME</div>
+                  <div class="text-xl font-black italic tracking-tighter">2.14</div>
+               </div>
+               <div class="p-4 bg-white/5 border border-white/5 rounded-xl hover:border-primary transition-all cursor-pointer group/odds">
+                  <div class="text-[9px] font-black text-on-surface/30 group-hover/odds:text-primary mb-1">AWAY</div>
+                  <div class="text-xl font-black italic tracking-tighter">3.40</div>
+               </div>
+               <div class="p-4 bg-white/5 border border-white/5 rounded-xl hover:border-primary transition-all cursor-pointer group/odds">
+                  <div class="text-[9px] font-black text-on-surface/30 group-hover/odds:text-primary mb-1">DRAW</div>
+                  <div class="text-xl font-black italic tracking-tighter">3.05</div>
+               </div>
+               <div class="p-4 bg-primary text-white rounded-xl flex items-center justify-center">
+                  <span class="material-symbols-outlined text-2xl font-black">trending_up</span>
+               </div>
             </div>
           </div>
         </div>
+      </div>
+      
+      <!-- Content Divider Icons (as seen in image) -->
+      <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 opacity-20">
+         <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+         <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+         <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+         <span class="w-1.5 h-1.5 rounded-full bg-white/20"></span>
       </div>
     </section>
 
@@ -214,6 +282,28 @@ async function renderHomePage(container) {
         ${renderGoalStreamMatchGrid(liveMatches.slice(0, 6), "Scanning for active signals in the live multiverse...")}
       </div>
     </section>
+
+    <!-- DraftKings Middle Banner -->
+    <section class="py-12 px-6 max-w-7xl mx-auto">
+       <div class="relative rounded-3xl h-32 overflow-hidden flex items-center justify-between px-12 group cursor-pointer shadow-2xl border border-white/5">
+          <div class="absolute inset-0 bg-[#004a29] z-0"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent z-10"></div>
+          <div class="relative z-20 flex items-center gap-8">
+             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/DraftKings_logo.svg/2560px-DraftKings_logo.svg.png" class="h-8 invert brightness-0" alt="DraftKings">
+             <div class="flex flex-col">
+                <span class="text-white text-2xl font-black italic uppercase tracking-tighter">BET $5, GET $200</span>
+                <span class="text-white/40 text-[10px] font-black uppercase tracking-widest italic leading-none">INSTANTLY IN BONUS BETS • ARENA EXCLUSIVE</span>
+             </div>
+          </div>
+          <div class="relative z-20 hidden md:flex items-center gap-6">
+             <div class="flex gap-1">
+                <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                <span class="w-10 h-0.5 bg-white/40 mt-1"></span>
+             </div>
+             <button class="bg-white text-black px-8 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform">ACTIVATE SIGNAL</button>
+          </div>
+       </div>
+    </section>
     <!-- Arena Scheduled Events -->
     <section class="py-24 px-6 max-w-7xl mx-auto border-t border-white/5">
       <div class="flex items-end justify-between mb-16 border-l-4 border-secondary pl-8">
@@ -231,81 +321,71 @@ async function renderHomePage(container) {
       </div>
     </section>
 
-    <!-- Point Table / Standings Relay -->
-    <section class="py-24 px-6 max-w-7xl mx-auto bg-surface-container-highest/30 rounded-[3rem] border border-white/5 mb-24">
-       <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 p-4">
-          <div class="lg:col-span-4 text-left">
-             <span class="text-[10px] font-black text-primary uppercase tracking-[0.5em] mb-4 block font-headline italic">S-TIER ANALYTICS</span>
-             <h2 class="text-6xl font-black italic tracking-tighter uppercase leading-[0.9] font-headline text-on-surface mb-8">POINT <br><span class="text-primary text-glow-red">TABLE</span></h2>
-             <p class="text-[11px] font-black text-on-surface opacity-30 uppercase tracking-[0.3em] leading-relaxed mb-10 font-headline italic">Live standing frequencies for the elite multiverse competitions. Tactical superiority ranks updated in real-time.</p>
-             <div class="flex flex-col gap-4">
-                ${topLeagueSummaries().slice(0, 4).map(l => `
-                  <a href="/league/${l.key}" data-link class="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-primary hover:text-white transition-all group flex items-center justify-between no-underline">
-                    <span class="text-xs font-black uppercase tracking-widest font-headline">${escapeHtml(l.label)}</span>
-                    <span class="material-symbols-outlined text-lg group-hover:translate-x-2 transition-transform">east</span>
-                  </a>
-                `).join("")}
+    <!-- Elite Analytics Hub: Arena Table & Athlete Spotlight -->
+    <section class="py-24 px-6 max-w-7xl mx-auto border-t border-white/5">
+       <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          
+          <!-- Arena Table (Standings) -->
+          <div class="lg:col-span-4 flex flex-col gap-6">
+             <div class="p-8 bg-surface-container-low rounded-[2rem] border border-white/5 flex-1 relative overflow-hidden group">
+                <span class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-8 block italic">ARENA TABLE RANKINGS</span>
+                <div class="space-y-4" id="arena-table-standings">
+                   ${topLeagueSummaries().slice(0, 7).map((l, i) => `
+                      <a href="/league/${l.key}" data-link class="flex items-center justify-between p-5 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all no-underline group/item hover:border-primary/20">
+                         <div class="flex items-center gap-4">
+                            <span class="text-xl font-black italic opacity-20 group-hover/item:opacity-100 transition-opacity text-primary">${String(i + 1).padStart(2, '0')}</span>
+                            <span class="text-xs font-black uppercase tracking-widest font-headline">${escapeHtml(l.label)}</span>
+                         </div>
+                         <div class="flex items-center gap-3">
+                            ${l.live > 0 ? `<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_#cc1616]"></span>` : ''}
+                            <span class="material-symbols-outlined text-[16px] opacity-10 group-hover/item:opacity-100 group-hover/item:translate-x-1 transition-all text-primary">east</span>
+                         </div>
+                      </a>
+                   `).join("")}
+                </div>
+                <div class="mt-8 pt-6 border-t border-white/5">
+                   <a href="/top-leagues" data-link class="text-[10px] font-black text-on-surface/40 hover:text-primary transition-colors uppercase tracking-[0.3em] no-underline italic">ACCESS FULL MULTIVERSE TABLE →</a>
+                </div>
              </div>
           </div>
-          <div class="lg:col-span-8">
-             <div id="home-standings-container" class="glass-card rounded-2xl border border-white/5 min-h-[500px] shadow-2xl overflow-hidden">
-                <!-- Hydrated via renderStandingsTable -->
-                <div class="h-full flex flex-col items-center justify-center p-20 gap-6 opacity-20">
-                   <span class="material-symbols-outlined text-6xl animate-spin">sync</span>
-                   <p class="text-[10px] font-black uppercase tracking-[0.4em] font-headline">Synchronizing Arena Rankings...</p>
+
+          <!-- Athlete Analytics (Highlight Card) -->
+          <div class="lg:col-span-5 relative group rounded-[2rem] overflow-hidden bg-[#0e0e0e] shadow-2xl h-[600px] lg:h-auto">
+             <img src="${featuredPlayer.image}" class="absolute inset-0 w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-[20s]" alt="Athlete Analytics">
+             <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-transparent"></div>
+             <div class="absolute bottom-10 left-10 right-10">
+                <span class="bg-primary text-white text-[9px] font-black px-4 py-1.5 uppercase tracking-widest mb-6 inline-block rounded-sm italic shadow-lg">ATHLETE ANALYTICS</span>
+                <h2 class="text-6xl font-black italic uppercase tracking-tighter leading-none text-white mb-8">
+                   ${featuredPlayer.firstName}<br><span class="text-primary text-glow-red">${featuredPlayer.lastName}</span>
+                </h2>
+                <div class="grid grid-cols-3 gap-8">
+                   ${featuredPlayer.stats.map(s => `
+                      <div class="flex flex-col">
+                         <span class="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">${s.label}</span>
+                         <span class="text-3xl font-black italic tracking-tighter text-white">${s.value}</span>
+                      </div>
+                   `).join("")}
+                </div>
+             </div>
+             <div class="absolute top-10 right-10 p-4 rounded-full bg-black/40 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="material-symbols-outlined text-primary">analytics</span>
+             </div>
+          </div>
+
+          <!-- Gatorade Sidebar Ad (Vertical) -->
+          <div class="lg:col-span-3 flex flex-col gap-6">
+             <div class="relative flex-1 rounded-[2rem] overflow-hidden group stadium-shadow border border-white/5 min-h-[400px]">
+                <img src="https://images.unsplash.com/photo-1544441893-675973e31d35?q=80&w=2070&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#ea6309] via-[#ea6309]/40 to-transparent"></div>
+                <div class="absolute inset-0 flex flex-col justify-end p-10 text-left">
+                   <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gatorade_G_logo.svg?q=80&w=100" class="h-12 w-max mb-6 drop-shadow-xl invert brightness-0" alt="Gatorade">
+                   <h3 class="text-4xl font-black italic uppercase tracking-tighter text-white leading-none mb-4">FUEL THE<br>FUEL</h3>
+                   <p class="text-[10px] font-black text-white/80 uppercase tracking-widest mb-8 leading-relaxed italic">Optimize your performance signal for the ultra-hub.</p>
+                   <button class="bg-white text-black py-4 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 active:scale-95 transition-all">SHOP NOW</button>
                 </div>
              </div>
           </div>
        </div>
-    </section>
-    <!-- FEATURED: Player Spotlight & League Standings Hub -->
-    <section class="py-24 px-6 max-w-7xl mx-auto border-t border-white/5">
-      <div class="grid grid-cols-1 xl:grid-cols-2 gap-12">
-        <!-- Player Spotlight -->
-        <div class="glass-card rounded-[2rem] overflow-hidden relative group h-[600px] shadow-2xl">
-          <img src="${featuredPlayer.image}" class="absolute inset-0 w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-[10s]" alt="Featured Athlete">
-          <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-transparent"></div>
-          <div class="absolute bottom-10 left-10 text-left">
-            <span class="bg-primary text-white text-[10px] font-black px-4 py-1 uppercase tracking-widest mb-6 inline-block rounded-sm italic">S-TIER ATHLETE INTEL</span>
-            <h2 class="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none text-white mb-8">
-              ${featuredPlayer.firstName}<br><span class="text-primary text-glow-red">${featuredPlayer.lastName}</span>
-            </h2>
-            <div class="flex gap-12">
-              ${featuredPlayer.stats.map(s => `
-                <div class="flex flex-col">
-                  <span class="text-[10px] font-black uppercase tracking-widest text-on-surface opacity-40 mb-2">${s.label}</span>
-                  <span class="text-4xl font-black italic tracking-tighter text-white">${s.value}</span>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-        </div>
-
-        <!-- League Standings Hub (List Style) -->
-        <div class="flex flex-col gap-6 text-left">
-           <div class="p-10 bg-surface-container-low rounded-[2rem] border border-white/5 flex-1 relative overflow-hidden group">
-              <div class="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
-                 <span class="material-symbols-outlined text-[12rem]">analytics</span>
-              </div>
-              <h3 class="text-4xl font-black italic uppercase tracking-tighter mb-8 border-l-4 border-primary pl-6 leading-none">SECTOR <span class="text-primary">RANKINGS</span></h3>
-              <div class="space-y-4">
-                 ${topLeagueSummaries().slice(0, 5).map((l, i) => `
-                    <a href="/league/${l.key}" data-link class="flex items-center justify-between p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all no-underline group/item">
-                       <div class="flex items-center gap-6">
-                          <span class="text-2xl font-black italic opacity-20 group-hover/item:opacity-100 transition-opacity text-primary">${i+1}</span>
-                          <span class="text-sm font-black uppercase tracking-widest font-headline">${escapeHtml(l.label)}</span>
-                       </div>
-                       <div class="flex items-center gap-4">
-                          ${l.live > 0 ? `<span class="bg-primary/20 text-primary px-2 py-0.5 rounded text-[8px] font-black animate-pulse uppercase italic">LIVE SIGNAL</span>` : ''}
-                          <span class="material-symbols-outlined text-lg opacity-20 group-hover/item:opacity-100 group-hover/item:translate-x-2 transition-all text-primary">east</span>
-                       </div>
-                    </a>
-                 `).join("")}
-              </div>
-              <a href="/top-leagues" data-link class="mt-10 inline-block text-[10px] font-black text-on-surface/40 hover:text-primary transition-colors uppercase tracking-[0.4em] no-underline italic">GLOBAL COMPETITION MAP →</a>
-           </div>
-        </div>
-      </div>
     </section>
 
     <!-- HEADLINE REPORTS & NEWS -->
@@ -324,34 +404,38 @@ async function renderHomePage(container) {
            ${trendingNews.map(item => renderGoalStreamNewsCard(item, "horizontal")).join("")}
         </div>
         
-        <!-- Sidebar News -->
+        <!-- Sidebar: Trending Now & Odds -->
         <div class="lg:col-span-4 flex flex-col gap-8">
-           <div class="p-8 bg-surface-container-low rounded-2xl border border-white/5 mb-4">
-              <h3 class="text-xs font-black uppercase tracking-[0.4em] text-primary mb-8 italic">REAL-TIME SIGNALS</h3>
+           <div class="p-8 bg-surface-container-low rounded-[2rem] border border-white/5 mb-4">
+              <h3 class="text-xs font-black uppercase tracking-[0.4em] text-primary mb-8 italic">TRENDING NOW</h3>
               <div class="space-y-8">
-                 ${sidebarNews.map(item => `
-                   <a class="flex flex-col gap-3 group no-underline text-left" href="${item.url || '#'}" target="_blank">
-                      <span class="text-[8px] font-black uppercase tracking-widest text-on-surface/40 group-hover:text-primary transition-colors italic">${escapeHtml(item.source || 'BROADCAST')} • ${escapeHtml(item.timeStr || 'RECENT')}</span>
-                      <h4 class="text-sm font-black uppercase italic leading-loose tracking-tighter group-hover:text-primary transition-colors">${escapeHtml(item.title)}</h4>
+                 ${sidebarNews.map((item, i) => `
+                   <a class="flex gap-4 group no-underline text-left" href="${item.url || '#'}" target="_blank">
+                      <span class="text-3xl font-black italic text-on-surface/10 group-hover:text-primary transition-colors">${i + 1}</span>
+                      <div class="flex flex-col gap-1">
+                         <span class="text-[8px] font-black uppercase tracking-widest text-on-surface/40 italic">${escapeHtml(item.source || 'BROADCAST')}</span>
+                         <h4 class="text-sm font-black uppercase italic leading-tight tracking-tighter group-hover:text-primary transition-colors">${escapeHtml(item.title)}</h4>
+                      </div>
                    </a>
                  `).join("")}
               </div>
            </div>
            
-           <!-- Betting / Odds Banner Ads (GoalStream Style) -->
-           <div class="relative rounded-2xl overflow-hidden aspect-[4/5] stadium-shadow group">
+           <!-- Betting / Odds Banner Ads -->
+           <div class="relative rounded-[2rem] overflow-hidden aspect-[4/5] stadium-shadow group border border-white/5">
               <img src="https://images.unsplash.com/photo-1518152006812-edab29b069ac?q=80&w=2070&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-[10s]">
               <div class="absolute inset-0 bg-gradient-to-t from-[#690003] via-[#690003]/40 to-transparent"></div>
               <div class="absolute inset-0 flex flex-col justify-end p-10 text-left">
                  <span class="bg-white text-black text-[10px] font-black px-3 py-1 uppercase tracking-widest mb-6 w-max rounded-sm italic">ARENA BETTING</span>
                  <h3 class="text-4xl font-black italic uppercase tracking-tighter text-white leading-none mb-6">KINETIC<br>ODDS ENGINE</h3>
                  <p class="text-[10px] font-black text-white opacity-60 uppercase tracking-widest mb-10 leading-relaxed italic">Real-time betting frequencies synced with the elite multiverse centers.</p>
-                 <button class="bg-white text-black py-4 font-black uppercase tracking-widest text-[10px] rounded-lg shadow-2xl active:scale-95 transition-all">DEPOSIT SIGNAL</button>
+                 <button class="bg-white text-black py-4 font-black uppercase tracking-widest text-[10px] rounded-xl shadow-2xl active:scale-95 transition-all">DEPOSIT SIGNAL</button>
               </div>
            </div>
         </div>
       </div>
     </section>
+
     <!-- NICHE LEAGUES COVERAGE -->
     <section class="py-24 px-6 max-w-7xl mx-auto border-t border-white/5">
       <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
@@ -379,6 +463,25 @@ async function renderHomePage(container) {
       </div>
     </section>
 
+    <!-- EA SPORTS FC 26 BIG FOOTER AD -->
+    <section class="py-12 px-6 max-w-7xl mx-auto">
+       <div class="relative rounded-[3rem] h-[300px] overflow-hidden group shadow-2xl border border-white/5">
+          <img src="https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=2070&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[10s]">
+          <div class="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
+          <div class="relative z-10 h-full flex flex-col justify-center p-16 text-left">
+             <div class="flex items-center gap-4 mb-6">
+                <span class="text-4xl font-black italic text-white tracking-tighter">EA SPORTS</span>
+                <span class="text-primary text-4xl font-black italic tracking-tighter">FC 26</span>
+             </div>
+             <p class="text-white text-xl font-black uppercase italic tracking-widest mb-8 leading-none">PRE-SYNC THE ARENA DATA NOW</p>
+             <button class="w-max bg-primary text-white px-12 py-4 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-[0_0_30px_rgba(204,22,22,0.4)] hover:scale-105 transition-transform">PRE-ORDER FREQUENCY</button>
+          </div>
+          <div class="absolute right-10 bottom-10 opacity-20 group-hover:opacity-40 transition-opacity">
+             <span class="material-symbols-outlined text-[10rem] text-primary">sports_soccer</span>
+          </div>
+       </div>
+    </section>
+
     <!-- FUEL THE BROADCAST: Global CTA -->
     <section class="py-32 px-6 max-w-7xl mx-auto">
        <div class="relative rounded-[3rem] p-12 md:p-24 overflow-hidden shadow-2xl border border-white/5 group bg-[#0e0e0e]">
@@ -404,12 +507,6 @@ async function renderHomePage(container) {
 
 
 
-  // Hydrate Standings if container is in DOM
-  const standingsTarget = qs("#home-standings-container");
-  if (standingsTarget) {
-    // Default to Premier League (eng.1) sportsdb id 4328
-    renderStandingsTable(standingsTarget, "4328");
-  }
 }
 
 

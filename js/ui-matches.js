@@ -105,33 +105,39 @@ export function renderGoalStreamMatchCard(match) {
   const status = isLive ? (match.statusDetail || "LIVE") : (match.status === "final" ? "FINAL" : formatTime(match.date));
 
   return `
-    <div id="${matchId}" class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-6 group hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden" data-match-key="${match.sportGroup}:${match.slug}">
-      <div class="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+    <div id="${matchId}" class="glass-card border border-white/5 p-8 rounded-2xl flex flex-col gap-8 group hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden" data-match-key="${match.sportGroup}:${match.slug}">
       <div class="flex justify-between items-center relative">
         <div class="flex items-center gap-2">
-          <span class="text-primary font-black italic text-[10px] tracking-widest font-headline uppercase">${escapeHtml(match.leagueLabel || match.sportGroup)}</span>
+          <span class="text-primary font-black italic text-[9px] tracking-[0.3em] font-headline uppercase">${escapeHtml(match.leagueLabel || match.sportGroup)}</span>
           <span class="w-1 h-1 bg-white/20 rounded-full"></span>
-          <span class="text-[10px] font-black uppercase tracking-widest opacity-60 font-headline">ARENA EVENT</span>
+          <span class="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 font-headline">ARENA SIGNAL</span>
         </div>
         ${statusBadge(match)}
       </div>
-      <a href="${route}" data-link class="flex justify-between items-center relative no-underline text-inherit group-hover:scale-[1.02] transition-transform duration-300">
-        <div class="flex flex-col items-center gap-3 w-1/3">
-          <div class="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center font-black italic overflow-hidden border border-white/5 shadow-inner">
+      
+      <a href="${route}" data-link class="flex justify-between items-center relative no-underline text-inherit transform group-hover:scale-[1.02] transition-transform duration-500">
+        <div class="flex flex-col items-center gap-4 w-1/3">
+          <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center font-black italic overflow-hidden border border-white/5 shadow-2xl group-hover:border-primary/30 transition-colors">
             ${renderPmTeamLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, fallbackIcon: (match.homeName || "H")[0] })}
           </div>
-          <span class="text-[11px] font-black uppercase italic tracking-tighter text-center truncate w-full font-headline">${escapeHtml(match.homeAbbr || match.homeName)}</span>
+          <span class="text-[10px] font-black uppercase italic tracking-tighter text-center truncate w-full font-headline">${escapeHtml(match.homeAbbr || match.homeName)}</span>
         </div>
+        
         <div class="flex flex-col items-center w-1/3">
-          <span class="text-4xl font-black italic text-primary font-headline" id="${matchId}-scores">${homeScore} - ${awayScore}</span>
-          <span class="text-[10px] font-black text-on-surface-variant mt-2 tracking-widest uppercase font-headline blur-[0.3px]" id="${matchId}-status-detail">${escapeHtml(status)}</span>
+          <span class="text-5xl font-black italic text-primary font-headline tracking-tighter" id="${matchId}-scores">${homeScore} - ${awayScore}</span>
+          <span class="text-[10px] font-black text-on-surface/40 mt-3 tracking-[0.2em] uppercase font-headline animate-pulse" id="${matchId}-status-detail">${escapeHtml(status)}</span>
         </div>
-        <div class="flex flex-col items-center gap-3 w-1/3">
-          <div class="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center font-black italic overflow-hidden border border-white/5 shadow-inner">
+        
+        <div class="flex flex-col items-center gap-4 w-1/3">
+          <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center font-black italic overflow-hidden border border-white/5 shadow-2xl group-hover:border-primary/30 transition-colors">
             ${renderPmTeamLogo({ teamLogo: match.awayLogo, teamName: match.awayName, teamAbbr: match.awayAbbr, fallbackIcon: (match.awayName || "A")[0] })}
           </div>
-          <span class="text-[11px] font-black uppercase italic tracking-tighter text-center truncate w-full font-headline">${escapeHtml(match.awayAbbr || match.awayName)}</span>
+          <span class="text-[10px] font-black uppercase italic tracking-tighter text-center truncate w-full font-headline">${escapeHtml(match.awayAbbr || match.awayName)}</span>
         </div>
+      </a>
+
+      <a href="${route}" data-link class="w-full py-4 kinetic-gradient rounded-xl text-white text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 no-underline opacity-90 hover:opacity-100 transition-all font-headline shadow-lg group-hover:shadow-primary/20">
+         <span class="material-symbols-outlined text-lg">play_circle</span> WATCH HD
       </a>
     </div>
   `;
