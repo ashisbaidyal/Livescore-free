@@ -1,64 +1,31 @@
 import { NextResponse } from 'next/server';
-import connectToDatabase from '@/lib/db';
-import Favorite from '@/models/Favorite';
 
 export const runtime = 'edge';
 
+// NEXT.JS ON CLOUDFLARE EDGE NOTE:
+// Cloudflare Page's Edge Runtime strictly forbids native Node.js libraries (like `stream`, `net`, `tls`)
+// which traditional ORMs like Mongoose rely heavily on. 
+// To interact with MongoDB on Cloudflare Edge, you must use the 'MongoDB Atlas Data API' via standard HTTP fetches,
+// or rely on our existing Zustand LocalStorage implementation.
+
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
-
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  try {
-    await connectToDatabase();
-    const favorites = await Favorite.find({ userId });
-    return NextResponse.json({ success: true, data: favorites });
-  } catch (e: unknown) {
-    const error = e instanceof Error ? e.message : 'Unknown error';
-    return NextResponse.json({ success: false, error }, { status: 500 });
-  }
+  return NextResponse.json({ 
+    success: true, 
+    notice: 'Database features are temporarily disabled on the Edge. Favorites are currently tracked locally via Zustand.',
+    data: [] 
+  });
 }
 
 export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { userId, type, targetId, metadata } = body;
-
-    if (!userId || !type || !targetId) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
-    }
-
-    await connectToDatabase();
-
-    const existing = await Favorite.findOne({ userId, type, targetId });
-    if (existing) return NextResponse.json({ success: true, data: existing });
-
-    const favorite = await Favorite.create({ userId, type, targetId, metadata });
-    return NextResponse.json({ success: true, data: favorite });
-  } catch (e: unknown) {
-    const error = e instanceof Error ? e.message : 'Unknown error';
-    return NextResponse.json({ success: false, error }, { status: 500 });
-  }
+  return NextResponse.json({ 
+    success: true, 
+    notice: 'Database features are temporarily disabled on the Edge. Favorites are currently tracked locally via Zustand.',
+  });
 }
 
 export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const type = searchParams.get('type');
-    const targetId = searchParams.get('targetId');
-
-    if (!userId || !type || !targetId) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
-    }
-
-    await connectToDatabase();
-    await Favorite.deleteOne({ userId, type, targetId });
-    
-    return NextResponse.json({ success: true });
-  } catch (e: unknown) {
-    const error = e instanceof Error ? e.message : 'Unknown error';
-    return NextResponse.json({ success: false, error }, { status: 500 });
-  }
+  return NextResponse.json({ 
+    success: true,
+    notice: 'Database features are temporarily disabled on the Edge. Favorites are currently tracked locally via Zustand.',
+  });
 }
