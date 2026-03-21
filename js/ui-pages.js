@@ -95,7 +95,9 @@ async function renderHomePage(container) {
 
   const liveMatches = state.liveMatches || [];
   const upcomingMatches = state.upcomingMatches || [];
-  const heroMatch = liveMatches[0] || upcomingMatches[0] || trendingMatches(1)[0];
+  const heroMatches = [...liveMatches, ...upcomingMatches, ...state.matches].slice(0, 5);
+  const heroMatch = heroMatches[0]; // fallback
+  window.heroMatchesList = heroMatches;
   const tickerMatches = [...liveMatches, ...upcomingMatches].slice(0, 15);
   const news = await fetchSportsNews();
   const trendingNews = news.slice(0, 4);
@@ -131,111 +133,105 @@ async function renderHomePage(container) {
   `}
 </div>
 </div>
-<!-- Enhanced All-Sports Hero Hub -->
-<section class="relative w-full h-[716px] min-h-[600px] overflow-hidden group">
+<!-- Enhanced All-Sports Hero Hub Carousel -->
+<section class="relative w-full h-[716px] min-h-[600px] overflow-hidden group" id="hero-carousel">
 <!-- Multi-Slide Hub Container -->
-<div class="relative w-full h-full">
-<!-- Slide 1: Featured Live Match (Active State Example) -->
-<div class="absolute inset-0 z-10">
-<div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" style="background-image: linear-gradient(to top, rgb(19, 19, 19) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${heroMatch?.homeBadge || getSportImagePath('football')}');"></div>
-<div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
-<div class="flex items-center gap-3 mb-6">
-<span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
-<span class="w-2 h-2 bg-white rounded-full ${heroMatch?.status === 'live' ? 'animate-pulse' : ''}"></span> ${heroMatch?.status === 'live' ? 'FEATURED LIVE' : 'FEATURED MATCH'}
-</span>
-<span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${escapeHtml(heroMatch?.leagueLabel || 'Premier League')} • Game of the Week</span>
+<div class="relative w-full h-full" id="hero-slides">
+  ${window.heroMatchesList.length > 0 ? window.heroMatchesList.map((match, idx) => `
+    <div class="hero-slide absolute inset-0 z-10 transition-opacity duration-1000" style="opacity: ${idx === 0 ? '1' : '0'}; pointer-events: ${idx === 0 ? 'auto' : 'none'};" data-slide="${idx}">
+      <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-[1.05]" style="background-image: linear-gradient(to top, #0E0E0E 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${match.homeBadge || getSportImagePath(match.sportGroup)}');"></div>
+      <div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase shadow-lg">
+            <span class="w-2 h-2 bg-white rounded-full ${match.status === 'live' ? 'animate-pulse' : ''}"></span> ${match.status === 'live' ? 'FEATURED LIVE' : 'FEATURED MATCH'}
+          </span>
+          <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${escapeHtml(match.leagueLabel || 'Premier League')} • ${match.status === 'live' ? 'In Progress' : 'Upcoming Showcase'}</span>
+        </div>
+        <div class="flex items-end gap-6 mb-8 cursor-pointer hover:opacity-80 transition-opacity relative z-20" onclick="window.navigate('${routeForMatch(match)}')">
+          <h1 class="font-headline font-black text-6xl md:text-9xl tracking-tighter leading-[0.85] uppercase italic text-on-surface drop-shadow-2xl">
+            ${escapeHtml(match.homeAbbr || match.homeName.substring(0,3))} <span class="text-primary">${match.homeScore || 0}-${match.awayScore || 0}</span> ${escapeHtml(match.awayAbbr || match.awayName.substring(0,3))}
+          </h1>
+          <div class="mb-2 hidden sm:block drop-shadow-lg">
+            <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">Elapsed</div>
+            <div class="text-3xl font-black italic">${match.statusDetail || (match.status === 'live' ? "LIVE" : "0'")}</div>
+          </div>
+        </div>
+        <div class="flex gap-10 mb-12 relative z-20" id="scoreboard-stats-${idx}">
+          <div class="glass-card p-4 rounded-lg flex items-center gap-4 border border-white/5 shadow-2xl">
+            <div class="text-center">
+              <div class="text-[10px] font-black text-on-surface/40 uppercase">Possession</div>
+              <div class="text-xl font-black italic">54% - 46%</div>
+            </div>
+            <div class="w-[1px] h-8 bg-white/10"></div>
+            <div class="text-center">
+              <div class="text-[10px] font-black text-on-surface/40 uppercase">Shots (On)</div>
+              <div class="text-xl font-black italic">14 (6) - 9 (4)</div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-4 relative z-20">
+          <a href="${routeForMatch(match)}" data-link class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)] no-underline">
+            <span class="material-symbols-outlined">play_circle</span> LIVE NOW
+          </a>
+          <a href="${routeForMatch(match)}" data-link class="bg-white/5 backdrop-blur-md border border-white/20 px-10 py-5 rounded-lg text-on-surface font-black uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-colors no-underline">
+            LIVE TIMERS
+          </a>
+        </div>
+      </div>
+    </div>
+  `).join("") : ''}
 </div>
-<div class="flex items-end gap-6 mb-8">
-<h1 class="font-headline font-black text-6xl md:text-9xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
-  ${escapeHtml(heroMatch?.homeAbbr || heroMatch?.homeName?.substring(0,3) || 'LIV')} <span class="text-primary">${heroMatch?.homeScore || 0}-${heroMatch?.awayScore || 0}</span> ${escapeHtml(heroMatch?.awayAbbr || heroMatch?.awayName?.substring(0,3) || 'ARS')}
-</h1>
-<div class="mb-2 hidden sm:block">
-<div class="text-xs font-black uppercase text-primary tracking-widest mb-1">Elapsed</div>
-<div class="text-3xl font-black italic">${heroMatch?.statusDetail || "90'"}</div>
-</div>
-</div>
-<div class="flex gap-10 mb-12">
-<div class="glass-card p-4 rounded-lg flex items-center gap-4 border border-white/5">
-<div class="text-center">
-<div class="text-[10px] font-black text-on-surface/40 uppercase">Possession</div>
-<div class="text-xl font-black italic">54% - 46%</div>
-</div>
-<div class="w-[1px] h-8 bg-white/10"></div>
-<div class="text-center">
-<div class="text-[10px] font-black text-on-surface/40 uppercase">Shots (On)</div>
-<div class="text-xl font-black italic">14 (6) - 9 (4)</div>
-</div>
-</div>
-</div>
-<div class="flex flex-wrap gap-4">
-<a href="/live" data-link class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)] no-underline">
-<span class="material-symbols-outlined">play_circle</span> Watch 4K Stream
-</a>
-<a href="/analytics" data-link class="bg-white/5 backdrop-blur-md border border-white/20 px-10 py-5 rounded-lg text-on-surface font-black uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-colors no-underline">
-Full Match Center
-</a>
-</div>
-</div>
-</div>
+
 <!-- Slide Navigation Controls -->
 <div class="absolute bottom-12 left-8 md:left-20 z-30 flex flex-col gap-6">
-<div class="flex gap-4">
-<div class="group cursor-pointer">
-<div class="w-16 h-1.5 bg-primary relative overflow-hidden rounded-full">
-<div class="absolute inset-0 bg-white/30 animate-[progress_5s_linear_infinite]"></div>
+  <div class="flex gap-4">
+    ${window.heroMatchesList.map((m, idx) => `
+      <div class="group cursor-pointer opacity-${idx===0 ? '100' : '40'} hover:opacity-100 transition-opacity hero-nav-btn" onclick="window.setHeroSlide(${idx})">
+        <div class="w-16 h-1.5 ${idx===0 ? 'bg-primary' : 'bg-white/10'} relative overflow-hidden rounded-full hero-nav-bar">
+          ${idx===0 ? '<div class="absolute inset-0 bg-white/30 animate-[progress_5s_linear_infinite] hero-progress"></div>' : ''}
+        </div>
+        <span class="text-[9px] font-black uppercase mt-2 block tracking-widest ${idx===0 ? 'text-primary' : ''} hero-nav-text">${m.status === 'live' ? 'LIVE NOW' : 'NEXT SCORE'}</span>
+      </div>
+    `).join('')}
+  </div>
 </div>
-<span class="text-[9px] font-black uppercase mt-2 block tracking-widest text-primary">LIVE NOW</span>
-</div>
-<div class="group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
-<div class="w-16 h-1.5 bg-white/10 rounded-full"></div>
-<span class="text-[9px] font-black uppercase mt-2 block tracking-widest">COUNTDOWN</span>
-</div>
-<div class="group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
-<div class="w-16 h-1.5 bg-white/10 rounded-full"></div>
-<span class="text-[9px] font-black uppercase mt-2 block tracking-widest">SPORTS HUB</span>
-</div>
-<div class="group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
-<div class="w-16 h-1.5 bg-white/10 rounded-full"></div>
-<span class="text-[9px] font-black uppercase mt-2 block tracking-widest">LATEST NEWS</span>
-</div>
-</div>
-</div>
-<!-- Side Widgets -->
-<div class="absolute right-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 z-30">
-<div class="glass-card p-6 rounded-2xl border-l-4 border-white/20 w-80 shadow-2xl group hover:border-primary transition-all cursor-pointer">
-<div class="flex justify-between items-start mb-4">
-<div class="text-[10px] font-black uppercase tracking-widest text-on-surface/40">Next Major Event</div>
-<div class="bg-white/10 px-2 py-0.5 rounded text-[9px] font-black">2H 14M</div>
-</div>
-<div class="text-xl font-black italic uppercase leading-none mb-1">Manchester Derby</div>
-<div class="text-[10px] font-bold text-primary tracking-widest uppercase">Premier League • 20:00 GMT</div>
-</div>
-<div class="glass-card p-6 rounded-2xl border border-white/5 w-80 shadow-2xl">
-<div class="text-[10px] font-black uppercase tracking-widest text-on-surface/40 mb-4">The Multiverse Quick-Jump</div>
-<div class="grid grid-cols-4 gap-3">
-<a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group no-underline text-on-surface" href="/sport/soccer" data-link>
-<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_soccer</span>
-</a>
-<a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group no-underline text-on-surface" href="/sport/basketball" data-link>
-<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_basketball</span>
-</a>
-<a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group no-underline text-on-surface" href="/sport/football" data-link>
-<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_football</span>
-</a>
-<a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group no-underline text-on-surface" href="/sport/mma" data-link>
-<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_mma</span>
-</a>
-</div>
-</div>
-<div class="glass-card p-5 rounded-2xl border border-white/5 w-80 shadow-2xl overflow-hidden relative">
-<div class="flex items-center gap-2 mb-3">
-<span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
-<span class="text-[10px] font-black uppercase tracking-widest">Breaking Now</span>
-</div>
-<p class="text-xs font-bold leading-tight uppercase opacity-80 group-hover:text-primary transition-colors">Hamilton confirms shock move to Ferrari for 2025 season.</p>
-<a class="inline-block mt-3 text-[9px] font-black uppercase tracking-widest border-b border-primary text-primary pb-0.5 no-underline" href="/news" data-link>Read More</a>
-</div>
-</div>
+
+<!-- Side Widgets (Auto Hides on Desktop, reveals on hover) -->
+<div id="hero-floating-bars" class="absolute right-0 lg:right-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 z-40 transition-transform duration-700 hover:translate-x-0 translate-x-[90%] before:content-[''] before:absolute before:-left-12 before:top-0 before:bottom-0 before:w-16">
+  <div class="absolute -left-10 top-1/2 -translate-y-1/2 bg-[#0e0e0e]/90 backdrop-blur-md border border-white/10 w-10 h-24 rounded-l-xl flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity shadow-[0_0_20px_rgba(0,0,0,0.8)] cursor-e-resize">
+    <span class="material-symbols-outlined text-white rotate-180 animate-pulse">double_arrow</span>
+  </div>
+  
+  ${upcomingMatches[0] ? `
+  <a href="${routeForMatch(upcomingMatches[0])}" data-link class="glass-card p-6 rounded-2xl border-l-4 border-white/20 w-80 shadow-2xl hover:border-primary transition-all cursor-pointer no-underline text-on-surface block">
+    <div class="flex justify-between items-start mb-4">
+      <div class="text-[10px] font-black uppercase tracking-widest opacity-40">Next Major Event</div>
+      <div class="bg-white/10 px-2 py-0.5 rounded text-[9px] font-black overflow-hidden relative"><div class="absolute inset-0 bg-white/20 animate-[progress_2s_linear_infinite]"></div>SOON</div>
+    </div>
+    <div class="text-xl font-black italic uppercase leading-none mb-1 truncate">${escapeHtml(upcomingMatches[0].homeName)} vs</div>
+    <div class="text-xl font-black italic uppercase leading-none mb-1 truncate">${escapeHtml(upcomingMatches[0].awayName)}</div>
+    <div class="text-[10px] font-bold text-primary tracking-widest uppercase truncate mt-2">${escapeHtml(upcomingMatches[0].leagueLabel)}</div>
+  </a>` : ''}
+  
+  <a href="/top-leagues" data-link class="glass-card p-6 rounded-2xl border border-white/5 w-80 shadow-2xl cursor-pointer hover:border-primary transition-all no-underline text-on-surface block">
+    <div class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4">The Multiverse Quick-Jump</div>
+    <div class="grid grid-cols-4 gap-3">
+      ${Object.entries(SPORT_GROUPS).slice(0,4).map(([k]) => `
+      <div class="aspect-square bg-white/5 group-hover:bg-primary/20 transition-all rounded-lg flex items-center justify-center">
+        <span class="material-symbols-outlined text-xl">${getSportIcon(k)}</span>
+      </div>`).join('')}
+    </div>
+  </a>
+
+  ${news && news[0] ? `
+  <a href="${news[0].url}" data-link class="glass-card p-5 rounded-2xl border border-white/5 w-80 shadow-2xl overflow-hidden relative cursor-pointer hover:border-primary transition-all no-underline text-on-surface block">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></span>
+      <span class="text-[10px] font-black uppercase tracking-widest">Breaking Now</span>
+    </div>
+    <p class="text-xs font-bold leading-tight uppercase opacity-80 group-hover:text-primary transition-colors">${escapeHtml(news[0].title)}</p>
+    <div class="inline-block mt-3 text-[9px] font-black uppercase tracking-widest border-b border-primary text-primary pb-0.5">Read More</div>
+  </a>` : ''}
 </div>
 </section>
 <!-- The Multiverse Grid -->
@@ -2698,4 +2694,56 @@ async function renderStandingsHubPage(container) {
 
 
 
-window.filterLiveCategory = function(s, e) { if(e) e.preventDefault(); const buttons = document.querySelectorAll('.live-filter-btn'); buttons.forEach(b => { b.classList.remove('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.add('text-on-surface/50'); if(b.dataset.sport === s) { b.classList.add('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.remove('text-on-surface/50'); } }); const cards = document.querySelectorAll('.live-match-card-item'); let count = 0; cards.forEach(c => { const act = s === 'all' || c.dataset.sportGroup === s; c.style.display = act ? 'block' : 'none'; if(act) count++; }); const empty = document.getElementById('live-empty-state'); if(empty) empty.style.display = count === 0 ? 'flex' : 'none'; };
+window.filterLiveCategory = function(s, e) { if(e) e.preventDefault(); const buttons = document.querySelectorAll('.live-filter-btn'); buttons.forEach(b => { b.classList.remove('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.add('text-on-surface/50'); if(b.dataset.sport === s) { b.classList.add('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.remove('text-on-surface/50'); } }); const cards = document.querySelectorAll('.live-match-card-item'); let count = 0; cards.forEach(c => { const act = s === 'all' || c.dataset.sportGroup === s; c.style.display = act ? 'block' : 'none'; if(act) count++; }); const empty = document.getElementById('live-empty-state'); if(empty) empty.style.display = count === 0 ? 'flex' : 'none'; };\n// Auto-Slider logic for Hero Hub
+window.currentHeroSlide = 0;
+window.setHeroSlide = function(idx) {
+  if(!document.getElementById('hero-slides')) return;
+  const slides = document.querySelectorAll('.hero-slide');
+  const navs = document.querySelectorAll('.hero-nav-btn');
+  const texts = document.querySelectorAll('.hero-nav-text');
+  const bars = document.querySelectorAll('.hero-nav-bar');
+  
+  if(!slides.length || idx >= slides.length) return;
+  
+  slides.forEach((s, i) => {
+    s.style.opacity = i === idx ? '1' : '0';
+    s.style.pointerEvents = i === idx ? 'auto' : 'none';
+  });
+  
+  navs.forEach((n, i) => {
+    n.classList.remove('opacity-100');
+    n.classList.add('opacity-40');
+    if (i === idx) {
+       n.classList.remove('opacity-40');
+       n.classList.add('opacity-100');
+    }
+  });
+  
+  texts.forEach((t, i) => {
+    t.classList.remove('text-primary');
+    if(i === idx) t.classList.add('text-primary');
+  });
+  
+  bars.forEach((b, i) => {
+    b.classList.remove('bg-primary');
+    b.classList.add('bg-white/10');
+    b.innerHTML = '';
+    if(i===idx) {
+      b.classList.add('bg-primary');
+      b.classList.remove('bg-white/10');
+      b.innerHTML = '<div class="absolute inset-0 bg-white/30 animate-[progress_5s_linear_infinite] hero-progress"></div>';
+    }
+  });
+  
+  window.currentHeroSlide = idx;
+};
+
+// Initialize or restart the interval safely globally
+if (window.heroInterval) clearInterval(window.heroInterval);
+window.heroInterval = setInterval(() => {
+  if(!document.getElementById('hero-slides')) return;
+  const count = document.querySelectorAll('.hero-slide').length;
+  if (count <= 1) return;
+  const next = (window.currentHeroSlide + 1) % count;
+  window.setHeroSlide(next);
+}, 5000);
