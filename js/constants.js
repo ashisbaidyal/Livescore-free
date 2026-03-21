@@ -54,6 +54,12 @@ export const SPORT_DISPLAY_NAMES = {
   rugby: "🏉 Rugby",
   mma: "🥊 MMA",
   f1: "🏎️ Formula 1",
+  afl: "🏉 Aussie Rules",
+  lacrosse: "🥍 Lacrosse",
+  volleyball: "🏐 Volleyball",
+  waterpolo: "🤽 Water Polo",
+  fieldhockey: "🏑 Field Hockey",
+  rugbyleague: "🏉 Rugby League",
   default: "🏆 Sports"
 };
 export const LEAGUE_DISPLAY_NAMES = {
@@ -126,6 +132,15 @@ export const SPORT_CONTEXT_TONES = {
   mma: { accent: "255 84 120", glow: "79 181 255" },
   f1: { accent: "255 102 102", glow: "255 182 72" },
   golf: { accent: "132 228 95", glow: "57 181 74" },
+  
+  // New ESPN Sports Tones
+  afl: { accent: "255 75 87", glow: "79 181 255" },
+  lacrosse: { accent: "79 181 255", glow: "255 130 64" },
+  rugbyleague: { accent: "255 97 84", glow: "57 181 74" },
+  fieldhockey: { accent: "47 149 64", glow: "255 182 72" },
+  volleyball: { accent: "132 228 95", glow: "79 181 255" },
+  waterpolo: { accent: "66 163 255", glow: "57 181 74" },
+  
   default: { accent: "79 181 255", glow: "57 181 74" }
 };
 export const LEAGUE_PAGE_SECTIONS = ["overview", "live", "upcoming", "results", "history", "teams", "players", "schedule"];
@@ -203,7 +218,16 @@ export const LEAGUES = {
   mma: { feed: "mma/ufc", label: "MMA / UFC", sportGroup: "mma" },
   f1: { feed: "racing/f1", label: "Formula 1", sportGroup: "f1" },
   irl: { feed: "racing/irl", label: "IndyCar", sportGroup: "f1" },
-  "nascar-premier": { feed: "racing/nascar-premier", label: "NASCAR Cup", sportGroup: "f1" }
+  "nascar-premier": { feed: "racing/nascar-premier", label: "NASCAR Cup", sportGroup: "f1" },
+  
+  // New Missing ESPN Sports
+  afl: { feed: "australian-football/afl", label: "Aussie Rules (AFL)", sportGroup: "afl" },
+  pll: { feed: "lacrosse/pll", label: "Premier Lacrosse League", sportGroup: "lacrosse" },
+  "mens-college-lacrosse": { feed: "lacrosse/mens-college-lacrosse", label: "NCAA Mens Lacrosse", sportGroup: "lacrosse" },
+  "rugby-league": { feed: "rugby-league/nrl", label: "NRL (Rugby League)", sportGroup: "rugbyleague" },
+  "field-hockey": { feed: "field-hockey/fih", label: "FIH Pro League", sportGroup: "fieldhockey" },
+  "mens-college-volleyball": { feed: "volleyball/mens-college-volleyball", label: "NCAA Volleyball", sportGroup: "volleyball" },
+  "mens-college-water-polo": { feed: "water-polo/mens-college-water-polo", label: "NCAA Water Polo", sportGroup: "waterpolo" }
 };
 
 export const TOP_LEAGUE_KEYS = ["eng.1", "esp.1", "uefa.champions", "uefa.europa", "ita.1", "ger.1", "fra.1", "por.1", "nba", "nfl", "cricket", "tennis", "mlb", "nhl", "pga", "f1", "atp"];
@@ -235,7 +259,16 @@ export const LEAGUE_REGIONS = {
   mlb: "United States",
   rugby: "International",
   mma: "International",
-  f1: "International"
+  f1: "International",
+  
+  // New ESPN Leagues Regions
+  afl: "Australia",
+  pll: "United States",
+  "mens-college-lacrosse": "United States",
+  "rugby-league": "International",
+  "field-hockey": "International",
+  "mens-college-volleyball": "United States",
+  "mens-college-water-polo": "United States"
 };
 
 export const SPORT_GROUPS = {
@@ -269,7 +302,15 @@ export const SPORT_GROUPS = {
   rugby: { label: "Rugby", icon: "RUG", leagues: ["rugby"], description: "Rugby live score coverage." },
   mma: { label: "MMA", icon: "MMA", leagues: ["mma"], description: "MMA live score coverage." },
   f1: { label: "F1", icon: "F1", leagues: ["f1", "irl", "nascar-premier"], description: "Formula 1 and racing live coverage." },
-  golf: { label: "Golf", icon: "GLF", leagues: ["pga", "lpga", "liv", "eur"], description: "Golf live tour coverage." }
+  golf: { label: "Golf", icon: "GLF", leagues: ["pga", "lpga", "liv", "eur"], description: "Golf live tour coverage." },
+  
+  // New ESPN Sports
+  afl: { label: "Aussie Rules", icon: "AFL", leagues: ["afl"], description: "AFL live score coverage." },
+  lacrosse: { label: "Lacrosse", icon: "LAX", leagues: ["pll", "mens-college-lacrosse"], description: "Lacrosse live scores and schedule." },
+  rugbyleague: { label: "Rugby League", icon: "NRL", leagues: ["rugby-league"], description: "NRL live score coverage." },
+  fieldhockey: { label: "Field Hockey", icon: "FIH", leagues: ["field-hockey"], description: "FIH live coverage." },
+  volleyball: { label: "Volleyball", icon: "VBL", leagues: ["mens-college-volleyball"], description: "Volleyball live scores." },
+  waterpolo: { label: "Water Polo", icon: "WTP", leagues: ["mens-college-water-polo"], description: "Water Polo live scores." }
 };
 
 export const SPORT_IMAGE_MAP = {
@@ -284,6 +325,15 @@ export const SPORT_IMAGE_MAP = {
   mma: "sport-mma.svg",
   f1: "sport-f1.svg",
   golf: "sport-default.svg",
+  
+  // New ESPN Sports image mapping
+  afl: "sport-default.svg",
+  lacrosse: "sport-default.svg",
+  rugbyleague: "sport-default.svg",
+  fieldhockey: "sport-default.svg",
+  volleyball: "sport-default.svg",
+  waterpolo: "sport-default.svg",
+  
   default: "sport-default.svg"
 };
 
@@ -332,7 +382,15 @@ export const SPORT_ALIASES = {
   baseball: "baseball",
   rugby: "rugby",
   mma: "mma",
-  f1: "f1"
+  f1: "f1",
+  
+  // New ESPN Sports Aliases
+  afl: "afl",
+  lacrosse: "lacrosse",
+  rugbyleague: "rugbyleague",
+  fieldhockey: "fieldhockey",
+  volleyball: "volleyball",
+  waterpolo: "waterpolo"
 };
 
 export const SPORTSDB_SPORTS = {

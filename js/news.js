@@ -17,7 +17,7 @@ export async function fetchSportsNews() {
 }
 
 export function renderLivescoreFreeNewsCard(article) {
-  const img = article.images?.[0]?.url || "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1973&auto=format&fit=crop";
+  const img = article.images?.[0]?.url || "/bg-stadium-night-1.svg";
   const category = article.categories?.[0]?.description || (article.type === "Analysis" ? "Analysis" : "Sports News");
   
   return `
