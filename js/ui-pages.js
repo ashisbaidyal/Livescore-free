@@ -95,7 +95,7 @@ async function renderHomePage(container) {
 
   const liveMatches = state.liveMatches || [];
   const upcomingMatches = state.upcomingMatches || [];
-  const heroMatches = [...liveMatches, ...upcomingMatches, ...state.matches].slice(0, 5);
+  const heroMatches = [...liveMatches, ...upcomingMatches, ...(state.matches || [])].slice(0, 5);
   const heroMatch = heroMatches[0]; // fallback
   window.heroMatchesList = heroMatches;
   const tickerMatches = [...liveMatches, ...upcomingMatches].slice(0, 15);
