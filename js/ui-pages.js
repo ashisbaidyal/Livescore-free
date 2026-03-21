@@ -247,22 +247,40 @@ async function renderHomePage(container) {
 </div>
 </section>
 <!-- The Multiverse Grid -->
-<section class="py-20 px-6 max-w-7xl mx-auto">
-<div class="flex justify-between items-end mb-12 border-b border-white/5 pb-8">
-<div>
-<h2 class="text-5xl font-black italic tracking-tighter uppercase mb-3 leading-none">Multiverse of sports</h2>
-<p class="text-on-surface-variant text-xs font-bold tracking-[0.3em] uppercase opacity-60">Navigate every league match in the score universe</p>
-</div>
-<div class="hidden md:block w-32 h-[2px] bg-primary"></div>
-</div>
-<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-  ${Object.entries(SPORT_GROUPS).map(([key, sport]) => `
-<a class="group glass-card p-8 rounded-lg flex flex-col items-center gap-6 hover:bg-primary hover:text-white transition-all duration-500 shadow-xl border border-white/5 no-underline text-on-surface" href="/sport/${key}" data-link>
-<span class="material-symbols-outlined text-5xl group-hover:scale-125 transition-transform duration-500">${getSportIcon(key)}</span>
-<span class="font-black text-[10px] tracking-[0.3em] uppercase">${escapeHtml(sport.label)}</span>
-</a>
-  `).join("")}
-</div>
+<section class="py-24 px-6 max-w-7xl mx-auto overflow-hidden">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
+    <div class="space-y-2">
+      <h2 class="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-[0.85] text-on-surface">
+        Multiverse<br><span class="text-primary text-glow-red">Of Sports</span>
+      </h2>
+      <p class="text-on-surface/40 text-[10px] font-black tracking-[0.4em] uppercase italic">NAVIGATE EVERY MATCH IN THE SCORE UNIVERSE</p>
+    </div>
+    <div class="h-px flex-grow bg-white/5 mx-8 hidden lg:block"></div>
+    <div class="flex items-center gap-4 bg-white/5 px-6 py-3 rounded-full border border-white/5">
+      <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+      <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/60">17 SECTORS ACTIVE</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
+    ${Object.entries(SPORT_GROUPS).map(([key, sport]) => `
+      <a href="/sport/${key}" data-link class="group relative aspect-square bg-[#141414] border border-white/5 rounded-xl flex flex-col items-center justify-center p-6 transition-all duration-500 hover:bg-primary hover:border-primary hover:-translate-y-2 shadow-2xl no-underline text-on-surface overflow-hidden">
+        <!-- Shine Effect on Hover -->
+        <div class="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        
+        <span class="material-symbols-outlined text-[64px] text-white opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500 mb-6" style="font-variation-settings: 'wght' 200;">
+          ${getSportIcon(key)}
+        </span>
+        
+        <span class="font-black text-[11px] tracking-[0.2em] uppercase text-white group-hover:tracking-[0.3em] transition-all duration-500">
+          ${escapeHtml(sport.label)}
+        </span>
+
+        <!-- Floating Decoration -->
+        <div class="absolute bottom-0 left-0 w-full h-1 bg-white/5 group-hover:bg-white/20 transition-colors"></div>
+      </a>
+    `).join("")}
+  </div>
 </section>
 <!-- Live Score Grid -->
 <section class="py-16 px-6 max-w-7xl mx-auto">
