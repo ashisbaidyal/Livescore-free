@@ -354,6 +354,77 @@ export function wireMatchTabs(match) {
   });
 }
 
+// HERO CAROUSEL LOGIC
+let heroTimer = null;
+let currentHeroSlide = 0;
+const HERO_SLIDE_DURATION = 5000;
+
+window.setHeroSlide = function(index) {
+  const slides = document.querySelectorAll('.hero-slide');
+  const navBtns = document.querySelectorAll('.hero-nav-btn');
+  const navBars = document.querySelectorAll('.hero-nav-bar');
+  const navTexts = document.querySelectorAll('.hero-nav-text');
+  
+  if (!slides.length) return;
+  
+  currentHeroSlide = index;
+  
+  slides.forEach((slide, i) => {
+    slide.style.opacity = i === index ? '1' : '0';
+    slide.style.pointerEvents = i === index ? 'auto' : 'none';
+    slide.style.zIndex = i === index ? '20' : '10';
+  });
+  
+  navBtns.forEach((btn, i) => {
+    btn.classList.toggle('opacity-100', i === index);
+    btn.classList.toggle('opacity-40', i !== index);
+  });
+  
+  navBars.forEach((bar, i) => {
+    bar.classList.toggle('bg-primary', i === index);
+    bar.classList.toggle('bg-white/10', i !== index);
+    // Reset progress bar
+    const progress = bar.querySelector('.hero-progress');
+    if (progress) progress.style.width = '0%';
+  });
+  
+  navTexts.forEach((text, i) => {
+    text.classList.toggle('text-primary', i === index);
+  });
+  
+  // Restart timer
+  window.initHeroCarousel();
+};
+
+window.initHeroCarousel = function() {
+  if (heroTimer) clearInterval(heroTimer);
+  
+  const slides = document.querySelectorAll('.hero-slide');
+  if (!slides.length) return;
+  
+  // Progress animation
+  const activeBar = document.querySelectorAll('.hero-nav-bar')[currentHeroSlide];
+  if (activeBar) {
+    let progress = activeBar.querySelector('.hero-progress');
+    if (!progress) {
+      progress = document.createElement('div');
+      progress.className = 'absolute inset-0 bg-white/30 hero-progress';
+      activeBar.appendChild(progress);
+    }
+    progress.style.transition = 'none';
+    progress.style.width = '0%';
+    setTimeout(() => {
+      progress.style.transition = `width ${HERO_SLIDE_DURATION}ms linear`;
+      progress.style.width = '100%';
+    }, 50);
+  }
+
+  heroTimer = setInterval(() => {
+    const next = (currentHeroSlide + 1) % slides.length;
+    window.setHeroSlide(next);
+  }, HERO_SLIDE_DURATION);
+};
+
 
 
 

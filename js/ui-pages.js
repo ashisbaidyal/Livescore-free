@@ -93,15 +93,27 @@ async function renderHomePage(container) {
     path: "/home"
   });
 
-  const liveMatches = state.liveMatches || [];
-  const upcomingMatches = state.upcomingMatches || [];
-  const heroMatches = [...liveMatches, ...upcomingMatches, ...(state.matches || [])].slice(0, 5);
-  const heroMatch = heroMatches[0]; // fallback
+  const liveMatches = (state.liveMatches || []).filter(Boolean);
+  const upcomingMatches = (state.upcomingMatches || []).filter(Boolean);
+  const matches = (state.matches || []).filter(Boolean);
+  const heroMatches = [...liveMatches, ...upcomingMatches, ...matches].slice(0, 5);
   window.heroMatchesList = heroMatches;
   const tickerMatches = [...liveMatches, ...upcomingMatches].slice(0, 15);
-  const news = await fetchSportsNews();
-  const trendingNews = news.slice(0, 4);
-  const sidebarNews = news.slice(4, 8);
+  
+  // Non-blocking news fetch to avoid hanging the entire page hydration
+  let news = [];
+  try {
+    // Attempt fetch with a low timeout or just proceed if it takes too long
+    news = await Promise.race([
+      fetchSportsNews().catch(() => []),
+      new Promise(resolve => setTimeout(() => resolve([]), 3000))
+    ]);
+  } catch (err) {
+    console.warn("[SPA] News fetch failed or timed out:", err);
+  }
+
+  const trendingNews = (news || []).slice(0, 4);
+  const sidebarNews = (news || []).slice(4, 8);
   
   // Pick a featured player (Haaland by default as per design)
   const featuredPlayer = {
@@ -477,7 +489,9 @@ async function renderHomePage(container) {
 </div></div></section>
   `;
 
-
+    if (typeof window.initHeroCarousel === 'function') {
+      window.initHeroCarousel();
+    }
 }
 
 function renderHistoryPage(container) {
@@ -511,7 +525,7 @@ function renderTopLeaguesPage(container) {
     <section class="p-6 md:p-8">
       <div class="relative w-full h-[400px] bg-surface-container-high overflow-hidden rounded-xl group border border-white/5">
         <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
-             src=getSportImagePath('football') 
+             src="${getSportImagePath('football')}" 
              alt="Dynamic Arena Atmosphere"/>
         <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
         <div class="absolute bottom-0 left-0 p-10 max-w-2xl text-left">
@@ -722,7 +736,7 @@ async function renderMatchListingPage(container, title, subtitle, path, toneClas
       <!-- Premium Arena Banner -->
       <section class="mt-20">
         <div class="relative w-full aspect-[21/9] md:aspect-[4/1] rounded-lg overflow-hidden group border border-white/5 shadow-2xl">
-          <img src=getSportImagePath('football') class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000">
+          <img src="${getSportImagePath('football')}" class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000">
           <div class="absolute inset-0 bg-gradient-to-r from-[#0E0E0E] via-[#0E0E0E]/80 to-transparent flex flex-col justify-center px-12">
             <span class="bg-primary text-white text-[9px] font-black px-3 py-1 uppercase tracking-[0.3em] mb-4 w-max rounded-sm">Stadia Elite</span>
             <h2 class="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-none mb-6 text-on-surface">THE MULTIVERSE<br>COMMUNITY HUB</h2>
@@ -2694,56 +2708,5 @@ async function renderStandingsHubPage(container) {
 
 
 
-window.filterLiveCategory = function(s, e) { if(e) e.preventDefault(); const buttons = document.querySelectorAll('.live-filter-btn'); buttons.forEach(b => { b.classList.remove('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.add('text-on-surface/50'); if(b.dataset.sport === s) { b.classList.add('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.remove('text-on-surface/50'); } }); const cards = document.querySelectorAll('.live-match-card-item'); let count = 0; cards.forEach(c => { const act = s === 'all' || c.dataset.sportGroup === s; c.style.display = act ? 'block' : 'none'; if(act) count++; }); const empty = document.getElementById('live-empty-state'); if(empty) empty.style.display = count === 0 ? 'flex' : 'none'; };\n// Auto-Slider logic for Hero Hub
-window.currentHeroSlide = 0;
-window.setHeroSlide = function(idx) {
-  if(!document.getElementById('hero-slides')) return;
-  const slides = document.querySelectorAll('.hero-slide');
-  const navs = document.querySelectorAll('.hero-nav-btn');
-  const texts = document.querySelectorAll('.hero-nav-text');
-  const bars = document.querySelectorAll('.hero-nav-bar');
-  
-  if(!slides.length || idx >= slides.length) return;
-  
-  slides.forEach((s, i) => {
-    s.style.opacity = i === idx ? '1' : '0';
-    s.style.pointerEvents = i === idx ? 'auto' : 'none';
-  });
-  
-  navs.forEach((n, i) => {
-    n.classList.remove('opacity-100');
-    n.classList.add('opacity-40');
-    if (i === idx) {
-       n.classList.remove('opacity-40');
-       n.classList.add('opacity-100');
-    }
-  });
-  
-  texts.forEach((t, i) => {
-    t.classList.remove('text-primary');
-    if(i === idx) t.classList.add('text-primary');
-  });
-  
-  bars.forEach((b, i) => {
-    b.classList.remove('bg-primary');
-    b.classList.add('bg-white/10');
-    b.innerHTML = '';
-    if(i===idx) {
-      b.classList.add('bg-primary');
-      b.classList.remove('bg-white/10');
-      b.innerHTML = '<div class="absolute inset-0 bg-white/30 animate-[progress_5s_linear_infinite] hero-progress"></div>';
-    }
-  });
-  
-  window.currentHeroSlide = idx;
-};
+window.filterLiveCategory = function(s, e) { if(e) e.preventDefault(); const buttons = document.querySelectorAll('.live-filter-btn'); buttons.forEach(b => { b.classList.remove('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.add('text-on-surface/50'); if(b.dataset.sport === s) { b.classList.add('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.remove('text-on-surface/50'); } }); const cards = document.querySelectorAll('.live-match-card-item'); let count = 0; cards.forEach(c => { const act = s === 'all' || c.dataset.sportGroup === s; c.style.display = act ? 'block' : 'none'; if(act) count++; }); const empty = document.getElementById('live-empty-state'); if(empty) empty.style.display = count === 0 ? 'flex' : 'none'; };
 
-// Initialize or restart the interval safely globally
-if (window.heroInterval) clearInterval(window.heroInterval);
-window.heroInterval = setInterval(() => {
-  if(!document.getElementById('hero-slides')) return;
-  const count = document.querySelectorAll('.hero-slide').length;
-  if (count <= 1) return;
-  const next = (window.currentHeroSlide + 1) % count;
-  window.setHeroSlide(next);
-}, 5000);
