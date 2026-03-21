@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q6RD50823E"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q6RD50823E');
+</script>
+  <meta name="msvalidate.01" content="7E4B24284B6317789D715E28BF91FD1D" />
+  <meta name="google-site-verification" content="IWNRzZKEwiFv_1uYKpsyvGx0N9uMLb7k2Nw1x9ZdFa4" />
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" id="meta-theme-color" content="#071322">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="application-name" content="livescoreFree.online">
+  <meta name="apple-mobile-web-app-title" content="livescoreFree.online">
+  <meta name="description" content="livescoreFree.online delivers fast, brutalist live scores, headline reports, and arena tables across every major competition in the streaming universe.">
+  <meta name="keywords" content="live soccer scores, livescoreFree.online, stadium spectacle, matchday center, sports results, brutalist sports portal">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="googlebot" content="translate">
+  <meta name="language" content="en-US">
+  <meta name="revisit-after" content="1 days">
+  <meta name="author" content="livescoreFree.online Kinetic">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="livescoreFree.online">
+  <meta property="og:title" content="livescoreFree.online | The Stadium Spectacle | Live Scores & Arena Coverage">
+  <meta property="og:description" content="Track the global matchday universe with high-contrast scores and tactical headline reports.">
+  <meta property="og:image" content="https://livescoreFree.online/logo.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:url" content="https://livescoreFree.online">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="livescoreFree.online | The Stadium Spectacle">
+  <meta name="twitter:description" content="Fast, brutalist live scores and arena coverage for the modern sports fan.">
+  <meta name="twitter:image" content="https://livescoreFree.online/logo.png">
+  <meta name="twitter:site" content="@livescoreFree.online">
+  <link rel="canonical" id="canonical-link" href="https://livescoreFree.online">
+  <link rel="alternate" hreflang="en" href="https://livescoreFree.online">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/logo-mark-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/logo-mark-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/logo-mark-180.png">
+  <!-- DNS Prefetch and Preconnect for External Services (Performance & Google Crawl Optimization) -->
+  <link rel="dns-prefetch" href="https://site.api.espn.com">
+  <link rel="dns-prefetch" href="https://www.thesportsdb.com">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=20260320">
+  <title>livescoreFree.online | The Ultimate Live Scores Center</title>
+  <script type="application/ld+json" id="base-schema">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "livescoreFree.online",
+    "alternateName": "livescoreFree.online Scores",
+    "description": "Free community-powered sports scoreboard with live scores, commentary, lineups, and results",
+    "url": "https://livescoreFree.online",
+    "image": "https://livescoreFree.online/logo.png",
+    "publisher": {
+      "@type": "Organization",
+      "name": "livescoreFree.online",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://livescoreFree.online/logo-mark-512.png"
+      }
+    },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://livescoreFree.online/live",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <script type="application/ld+json" id="dynamic-schema"></script>
+  <!-- Breadcrumb Structured Data for Better SEO -->
+  <script type="application/ld+json" id="breadcrumb-schema">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://livescoreFree.online"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Live Scores",
+        "item": "https://livescoreFree.online/live"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Top Leagues",
+        "item": "https://livescoreFree.online/top-leagues"
+      }
+    ]
+  }
+  </script>
+  <!-- Organization Structured Data for Rich Results -->
+  <script type="application/ld+json" id="organization-schema">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "livescoreFree.online",
+    "url": "https://livescoreFree.online",
+    "logo": "https://livescoreFree.online/logo-mark-512.png",
+    "description": "Free community-powered sports scoreboard with live scores, commentary, lineups, and results",
+    "sameAs": [
+      "https://twitter.com/livescoreFree.online"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "availableLanguage": ["en"]
+    }
+  }
+  </script>
+
+<!-- Tailwind & Fonts from Design System -->
+
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LIVESCOREFREE.ONLINE | KINETIC BROADCAST</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary": "#690003",
+                        "tertiary-fixed-dim": "#c3c6cf",
+                        "on-primary-fixed-variant": "#930006",
+                        "secondary-container": "#1fa64a",
+                        "on-secondary-fixed-variant": "#00531f",
+                        "surface-container-low": "#1c1b1b",
+                        "tertiary": "#c3c6cf",
+                        "on-tertiary-container": "#e3e6ef",
+                        "inverse-primary": "#bf050e",
+                        "secondary": "#62df7b",
+                        "inverse-surface": "#e5e2e1",
+                        "surface": "#131313",
+                        "on-secondary-fixed": "#002108",
+                        "tertiary-container": "#63676f",
+                        "on-background": "#e5e2e1",
+                        "on-primary-container": "#ffdfda",
+                        "background": "#131313",
+                        "outline-variant": "#5d3f3c",
+                        "tertiary-fixed": "#dfe2eb",
+                        "on-tertiary": "#2d3137",
+                        "secondary-fixed-dim": "#62df7b",
+                        "secondary-fixed": "#80fc94",
+                        "surface-dim": "#131313",
+                        "surface-bright": "#3a3939",
+                        "on-surface-variant": "#e6bdb7",
+                        "error": "#ffb4ab",
+                        "surface-container-highest": "#353534",
+                        "primary": "#ffb4aa",
+                        "on-tertiary-fixed-variant": "#43474e",
+                        "inverse-on-surface": "#313030",
+                        "primary-fixed-dim": "#ffb4aa",
+                        "primary-container": "#cc1616",
+                        "on-secondary": "#003913",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#ffdad5",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-high": "#2a2a2a",
+                        "error-container": "#93000a",
+                        "surface-tint": "#ffb4aa",
+                        "on-error": "#690005",
+                        "outline": "#ad8883",
+                        "on-tertiary-fixed": "#181c22",
+                        "on-secondary-container": "#00320f",
+                        "surface-variant": "#353534",
+                        "surface-container": "#201f1f",
+                        "on-primary-fixed": "#410001"
+                    },
+                    fontFamily: {
+                        "headline": ["Lexend"],
+                        "body": ["Lexend"],
+                        "label": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(42, 42, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tonal-transition {
+            background: linear-gradient(to bottom, #131313, #1C1B1B);
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0E0E0E; }
+        ::-webkit-scrollbar-thumb { background: #CC1616; }
+    </style>
+
+</head>
+<body>
+  <nav class="fixed top-0 w-full z-50 border-b border-white/10 bg-[#131313]/80 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
+<div class="text-2xl font-black italic tracking-tighter text-[#FFB4AA]">LIVESCOREFREE.ONLINE</div>
+<div class="hidden md:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter">
+<a class="text-[#FFB4AA] border-b-2 border-[#CC1616] pb-1 hover:opacity-100 transition-all duration-300" href="#">NBA</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">NFL</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">EPL</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">UCL</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">MLB</a>
+<a class="text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] hover:opacity-100 transition-all duration-300" href="#">LALIGA</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] transition-all">notifications</button>
+<button class="material-symbols-outlined text-[#E5E2E1] opacity-70 hover:text-[#FFB4AA] transition-all">settings</button>
+</div>
+</div>
+</nav>
+<div class="flex pt-16 min-h-screen">
+<aside class="hidden lg:flex flex-col pt-4 pb-10 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] sticky top-16">
+<div class="px-6 mb-8">
+<div class="text-xl font-extrabold text-[#FFB4AA] tracking-tight">LIVESCOREFREE.ONLINE</div>
+<div class="text-[10px] tracking-[0.2em] text-[#E5E2E1]/40 uppercase">LIVE BROADCAST</div>
+</div>
+<nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-sm">
+<a class="bg-gradient-to-r from-[#CC1616] to-[#FFB4AA] text-white rounded-md px-4 py-3 mx-2 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">sensors</span> Live Scores
+            </a>
+<a class="text-[#E5E2E1] hover:bg-white/5 px-4 py-3 mx-2 rounded-md transition-colors flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">calendar_today</span> Schedule
+            </a>
+<a class="text-[#E5E2E1] hover:bg-white/5 px-4 py-3 mx-2 rounded-md transition-colors flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">format_list_numbered</span> Standings
+            </a>
+<a class="text-[#E5E2E1] hover:bg-white/5 px-4 py-3 mx-2 rounded-md transition-colors flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">newspaper</span> News
+            </a>
+<a class="text-[#E5E2E1] hover:bg-white/5 px-4 py-3 mx-2 rounded-md transition-colors flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">leaderboard</span> Stats
+            </a>
+</nav>
+</aside>
+<main class="flex-1 w-full bg-surface" id="main" aria-live="polite"></main>
+
+
+  
+</div><!-- End layout flex -->
+<footer class="w-full border-t border-white/10 pt-12 pb-8 bg-[#0E0E0E]">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 px-10 max-w-7xl mx-auto">
+<div class="col-span-2 md:col-span-1">
+<div class="text-lg font-black text-[#E5E2E1] mb-4">LIVESCOREFREE.ONLINE</div>
+<p class="font-['Lexend'] text-[10px] tracking-widest uppercase text-[#E5E2E1]/40 leading-relaxed">
+                © 2024 LIVESCOREFREE.ONLINE KINETIC BROADCAST. ALL RIGHTS RESERVED.
+            </p>
+</div>
+<div>
+<h6 class="text-[#CC1616] font-['Lexend'] text-[10px] tracking-widest uppercase mb-6 font-bold">Quick Links</h6>
+<ul class="space-y-3">
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Football</a></li>
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Basketball</a></li>
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Baseball</a></li>
+</ul>
+</div>
+<div>
+<h6 class="text-[#CC1616] font-['Lexend'] text-[10px] tracking-widest uppercase mb-6 font-bold">Legal</h6>
+<ul class="space-y-3">
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Terms of Service</a></li>
+<li><a class="text-[#E5E2E1]/40 font-['Lexend'] text-[10px] tracking-widest uppercase hover:text-[#1FA64A] transition-colors" href="#">Cookie Settings</a></li>
+</ul>
+</div>
+<div class="flex items-end justify-end">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-[#E5E2E1]/20 hover:text-primary cursor-pointer transition-colors">share</span>
+<span class="material-symbols-outlined text-[#E5E2E1]/20 hover:text-primary cursor-pointer transition-colors">rss_feed</span>
+</div>
+</div>
+</div>
+</footer>
+<nav class="app-dock" aria-label="Mobile primary">
+    <a href="/home" data-link data-nav="/home" aria-label="Home">
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+      <span class="dock-label">Home</span>
+    </a>
+    <a href="/live" data-link data-nav="/live" aria-label="Live scores">
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/></svg></span>
+      <span class="dock-label">Live</span>
+    </a>
+    <a href="/results" data-link data-nav="/results" aria-label="Sports Highlights">
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="2"/></svg></span>
+      <span class="dock-label">Highlight</span>
+    </a>
+    <a href="/trending" data-link data-nav="/trending" aria-label="Trending matches">
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+      <span class="dock-label">Trending</span>
+    </a>
+    <a href="/upcoming" data-link data-nav="/upcoming" aria-label="Upcoming matches">
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V10.5a.5.5 0 0 0-1 0V22"/><path d="M14 22V10.5a.5.5 0 0 1 1 0V22"/><path d="M8 9h8l1 5H7l1-5z"/></svg></span>
+      <span class="dock-label">Upcoming</span>
+    </a>
+    <a href="/top-leagues" data-link data-nav="/top-leagues" aria-label="Top leagues">
+      <span class="dock-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/></svg></span>
+      <span class="dock-label">Leagues</span>
+    </a>
+  </nav>
+
+  <div id="pwa-prompt" class="pwa-prompt" hidden>
+    <div class="pwa-prompt-content">
+      <div class="pwa-prompt-text">
+        <img src="/logo-mark-192.png" alt="" width="48" height="48" class="pwa-prompt-icon">
+        <strong>Install livescoreFree.online</strong>
+        <span>Get fast access, app-like experience, and offline essentials.</span>
+        <span id="pwa-ios-tip" class="pwa-prompt-tip" hidden>On iPhone/iPad: tap Share and choose "Add to Home Screen".</span>
+      </div>
+      <div class="pwa-prompt-actions">
+        <button id="pwa-install-btn" class="btn btn-primary" type="button">Install</button>
+        <button id="pwa-dismiss-btn" class="btn btn-ghost" type="button">Not now</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="/api-config.js" defer></script>
+  <script>
+    function hideLoader() { document.documentElement.className = document.documentElement.className.replace('loading',''); }
+    window.addEventListener('load', hideLoader);
+    setTimeout(hideLoader, 2000);
+  </script>
+
+  <!-- Hidden Google Translate Element -->
+  <div id="google_translate_element" style="display:none;"></div>
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script async src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
+
+
