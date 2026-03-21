@@ -1,13 +1,15 @@
 import {
   qs,
   escapeHtml,
+  formatTime,
   formatDateTime,
   renderDonationProgress,
-  getTrustSignals
+  getTrustSignals,
+  qsa
 } from "./utils.js";
 import { state } from "./state.js";
-import { SPORT_GROUPS, LEAGUES, TOP_LEAGUE_KEYS, DONATION_KOFI_URL, LEAGUE_REGIONS } from "./constants.js";
-import { parseRoute, getCurrentPath, routeForMatch, routeForLeague } from "./routing.js";
+import { SPORT_GROUPS, LEAGUES, TOP_LEAGUE_KEYS, DONATION_KOFI_URL, LEAGUE_REGIONS, NAV_TOUCH_INFO, SPORT_DISPLAY_NAMES } from "./constants.js"; // Added NAV_TOUCH_INFO, SPORT_DISPLAY_NAMES
+import { parseRoute, getCurrentPath, routeForMatch, routeForLeague, routeForSport, routeForPlayer, routeForTeam, getSportIcon, getSportImagePath } from "./routing.js"; // Added routeForSport, routeForPlayer, routeForTeam, getSportIcon, getSportImagePath
 import {
   renderMatchGrid,
   renderPmTeamLogo,
@@ -17,7 +19,8 @@ import {
   getSportIcon,
   topLeagueSummaries,
   trendingMatches,
-  buildAutoBackgroundAttrs
+  buildAutoBackgroundAttrs,
+  renderKineticMatchCard
 } from "./ui-matches.js";
 import {
   setSeo,
@@ -38,6 +41,56 @@ import { toggleFavoriteKey, saveFeedbackNotes } from "./storage.js";
 import { fetchSportsNews, renderHighlightsNewsCard } from "./news.js";
 
 const MATCH_DETAILS_CACHE = new Map();
+
+
+export async function renderHomePage(container) {
+  setSeo({
+    title: "Global Sports Hub | livescorefree.online",
+    description: "Live scores, results, and highlights for all your favorite sports in real-time.",
+    path: "/"
+  });
+
+  container.innerHTML = `
+    <main class="min-h-screen">
+      
+      <section id="hero-carousel" class="relative h-[500px] overflow-hidden">
+        <div id="carousel-slides" class="h-full flex transition-transform duration-700"></div>
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20" id="carousel-dots"></div>
+      </section>
+
+      <section class="max-w-7xl mx-auto px-4 lg:px-8 py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          
+          <div class="lg:col-span-8 space-y-12">
+            
+            <div id="matches-section">
+              <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-black italic uppercase tracking-tighter">Live Arena</h2>
+                <div class="flex items-center gap-4 bg-surface-container-high p-1 rounded-sm border border-white/5">
+                  <button class="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-primary text-white rounded-sm">ALL</button>
+                  <button class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-on-surface/40 hover:text-white transition-colors">LIVE</button>
+                  <button class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-on-surface/40 hover:text-white transition-colors">RESULTS</button>
+                </div>
+              </div>
+              <div id="matches-grid" class="grid gap-6"></div>
+            </div>
+          </div>
+          
+          
+          <aside class="lg:col-span-4 space-y-12">
+            <div id="breaking-news"></div>
+            <div id="standings-preview"></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  `;
+
+  // Initialize features
+  wireMatchTabs();
+  initHeroCarousel();
+  refreshHomepageContent();
+}
 
 export async function renderRoute() {
   const path = getCurrentPath();
@@ -128,7 +181,7 @@ async function renderHomePage(container) {
   };
 
       container.innerHTML = `
-<!-- Ticker Style Scoreboard -->
+
 <div class="bg-surface-container-low border-b border-white/5 py-3 overflow-hidden">
 <div class="flex animate-[scroll_40s_linear_infinite] whitespace-nowrap gap-12 px-6">
   ${tickerMatches.length > 0 ? tickerMatches.map((m, i) => `
@@ -145,9 +198,9 @@ async function renderHomePage(container) {
   `}
 </div>
 </div>
-<!-- Enhanced All-Sports Hero Hub Carousel -->
+
 <section class="relative w-full h-[716px] min-h-[600px] overflow-hidden group" id="hero-carousel">
-<!-- Multi-Slide Hub Container -->
+
 <div class="relative w-full h-full" id="hero-slides">
   ${window.heroMatchesList.length > 0 ? window.heroMatchesList.map((match, idx) => `
     <div class="hero-slide absolute inset-0 z-10 transition-opacity duration-1000" style="opacity: ${idx === 0 ? '1' : '0'}; pointer-events: ${idx === 0 ? 'auto' : 'none'};" data-slide="${idx}">
@@ -194,7 +247,7 @@ async function renderHomePage(container) {
   `).join("") : ''}
 </div>
 
-<!-- Slide Navigation Controls -->
+
 <div class="absolute bottom-12 left-8 md:left-20 z-30 flex flex-col gap-6">
   <div class="flex gap-4">
     ${window.heroMatchesList.map((m, idx) => `
@@ -208,7 +261,7 @@ async function renderHomePage(container) {
   </div>
 </div>
 
-<!-- Side Widgets (Auto Hides on Desktop, reveals on hover) -->
+
 <div id="hero-floating-bars" class="absolute right-0 lg:right-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 z-40 transition-transform duration-700 hover:translate-x-0 translate-x-[90%] before:content-[''] before:absolute before:-left-12 before:top-0 before:bottom-0 before:w-16">
   <div class="absolute -left-10 top-1/2 -translate-y-1/2 bg-[#0e0e0e]/90 backdrop-blur-md border border-white/10 w-10 h-24 rounded-l-xl flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity shadow-[0_0_20px_rgba(0,0,0,0.8)] cursor-e-resize">
     <span class="material-symbols-outlined text-white rotate-180 animate-pulse">double_arrow</span>
@@ -246,7 +299,7 @@ async function renderHomePage(container) {
   </a>` : ''}
 </div>
 </section>
-<!-- The Multiverse Grid -->
+
 <section class="py-24 px-6 max-w-7xl mx-auto overflow-hidden">
   <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
     <div class="space-y-2">
@@ -265,7 +318,7 @@ async function renderHomePage(container) {
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
     ${Object.entries(SPORT_GROUPS).map(([key, sport]) => `
       <a href="/sport/${key}" data-link class="group relative aspect-square bg-[#141414] border border-white/5 rounded-xl flex flex-col items-center justify-center p-6 transition-all duration-500 hover:bg-primary hover:border-primary hover:-translate-y-2 shadow-2xl no-underline text-on-surface overflow-hidden">
-        <!-- Shine Effect on Hover -->
+        
         <div class="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         
         <span class="material-symbols-outlined text-[64px] text-white opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500 mb-6" style="font-variation-settings: 'wght' 200;">
@@ -276,20 +329,11 @@ async function renderHomePage(container) {
           ${escapeHtml(sport.label)}
         </span>
 
-        <!-- Floating Decoration -->
+        
         <div class="absolute bottom-0 left-0 w-full h-1 bg-white/5 group-hover:bg-white/20 transition-colors"></div>
       </a>
     `).join("")}
   </div>
-</section>
-<!-- Live Score Grid -->
-<section class="py-16 px-6 max-w-7xl mx-auto">
-<div class="flex items-center justify-between mb-12">
-<h2 class="text-4xl font-black italic tracking-tighter uppercase leading-none">Live Scores Center</h2>
-<div class="flex gap-4">
-<button class="flex items-center gap-2 bg-white/5 px-4 py-2 rounded font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all">Filter: ALL SPORTS <span class="material-symbols-outlined text-sm">filter_list</span></button>
-</div>
-</div>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   ${liveMatches.slice(0, 3).map(m => `
 <a href="${routeForMatch(m)}" data-link class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-6 group hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden no-underline text-on-surface">
@@ -306,7 +350,7 @@ async function renderHomePage(container) {
 </div>
 <div class="flex justify-between items-center relative">
 <div class="flex flex-col items-center gap-3 w-1/3">
-<img src="${escapeHtml(m.homeBadge)}" class="w-12 h-12 object-contain bg-white/5 rounded-full p-1" alt="${escapeHtml(m.homeName)}">
+<img src="${escapeHtml(m.homeBadge)}" class="w-12 h-12 object-contain bg-white/5 rounded-full p-1" alt="${escapeHtml(m.homeName)}" />
 <span class="text-sm font-black uppercase italic tracking-tighter text-center">${escapeHtml(m.homeAbbr || m.homeName.substring(0,6))}</span>
 </div>
 <div class="flex flex-col items-center w-1/3">
@@ -314,7 +358,7 @@ async function renderHomePage(container) {
 <span class="text-[10px] font-black text-on-surface-variant mt-2 tracking-widest uppercase">${escapeHtml(m.statusDetail || 'PLAYING')}</span>
 </div>
 <div class="flex flex-col items-center gap-3 w-1/3">
-<img src="${escapeHtml(m.awayBadge)}" class="w-12 h-12 object-contain bg-white/5 rounded-full p-1" alt="${escapeHtml(m.awayName)}">
+<img src="${escapeHtml(m.awayBadge)}" class="w-12 h-12 object-contain bg-white/5 rounded-full p-1" alt="${escapeHtml(m.awayName)}" />
 <span class="text-sm font-black uppercase italic tracking-tighter text-center">${escapeHtml(m.awayAbbr || m.awayName.substring(0,6))}</span>
 </div>
 </div>
@@ -322,7 +366,7 @@ async function renderHomePage(container) {
   `).join("")}
 </div>
 </section>
-<!-- Ad Placement 1: DraftKings Premium Banner -->
+
 <section class="px-6 max-w-7xl mx-auto mb-20">
 <div class="w-full bg-[#111111] border border-white/5 p-8 relative overflow-hidden rounded-lg group cursor-pointer shadow-2xl">
 <div class="absolute right-0 top-0 h-full w-1/3 opacity-30 group-hover:opacity-50 transition-opacity duration-700 pointer-events-none" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA9M-q-CR51FQ56oHzejzyh63E6ixHGkkEhcgg5KA4DQjfSEVeB2SQqmYSRy1wLZ-96xJq2_POWZ06DC6s-5OLBrKPQfatEsgsp18RJf5kwUydlfFNj0U0uCsE7pA2Bdv4MhX3pydROx4LBx208LLVz-j9c6hgheYvo7kYgBsVKVU192GC8tdvl_0FIZG99Khi0Syf3mzdTMUj6ykl1iWB-Wzu74XEcNeJbwKhpkZjLpMgCYl_YOg7sRB5y13fjAOw_2MB5ztMtHDid'); background-size: cover; background-position: center;"></div>
@@ -343,7 +387,7 @@ async function renderHomePage(container) {
 </div>
 </div>
 </section>
-<!-- Arena Scheduled Events -->
+
 <section class="py-20 px-6 bg-surface-container-low border-y border-white/5">
 <div class="max-w-7xl mx-auto">
 <div class="flex items-center gap-4 mb-16">
@@ -360,12 +404,12 @@ async function renderHomePage(container) {
 </div>
 <div class="flex items-center justify-between mb-12">
 <div class="flex flex-col items-center gap-3 w-1/3">
-<img src="${escapeHtml(m.homeBadge)}" class="w-10 h-10 object-contain bg-surface-container-high rounded-full p-1" alt="${escapeHtml(m.homeName)}">
+<img src="${escapeHtml(m.homeBadge)}" class="w-10 h-10 object-contain bg-surface-container-high rounded-full p-1" alt="${escapeHtml(m.homeName)}" />
 <span class="text-[10px] font-black uppercase tracking-tight opacity-40 text-center">${escapeHtml(m.homeAbbr || m.homeName.substring(0,6))}</span>
 </div>
 <span class="text-xl font-black text-primary italic transform group-hover:scale-125 transition-transform">VS</span>
 <div class="flex flex-col items-center gap-3 w-1/3">
-<img src="${escapeHtml(m.awayBadge)}" class="w-10 h-10 object-contain bg-surface-container-high rounded-full p-1" alt="${escapeHtml(m.awayName)}">
+<img src="${escapeHtml(m.awayBadge)}" class="w-10 h-10 object-contain bg-surface-container-high rounded-full p-1" alt="${escapeHtml(m.awayName)}" />
 <span class="text-[10px] font-black uppercase tracking-tight opacity-40 text-center">${escapeHtml(m.awayAbbr || m.awayName.substring(0,6))}</span>
 </div>
 </div>
@@ -376,7 +420,7 @@ async function renderHomePage(container) {
 </div>
 </div>
 </section>
-<!-- Featured: Player Spotlight & Standings -->
+
 <section class="py-24 px-6 max-w-7xl mx-auto">
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
 <div class="lg:col-span-2 relative h-[600px] rounded-lg overflow-hidden group shadow-2xl">
@@ -429,7 +473,7 @@ async function renderHomePage(container) {
 </div>
 </div>
 </section>
-<!-- Headline Reports & News -->
+
 <section class="py-24 px-6 max-w-7xl mx-auto border-t border-white/5">
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-16">
 <div class="lg:col-span-3">
@@ -441,7 +485,7 @@ async function renderHomePage(container) {
   ${trendingNews.slice(0, 2).map((item) => `
 <article class="group cursor-pointer">
 <div class="relative aspect-[16/10] rounded-lg overflow-hidden mb-6 shadow-2xl border border-white/5">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="${escapeHtml(item.image || getSportImagePath('football'))}" alt="${escapeHtml(item.title)}">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="${escapeHtml(item.image || getSportImagePath('football'))}" alt="${escapeHtml(item.title)}" />
 <div class="absolute top-5 left-5 bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">Analysis</div>
 </div>
 <h5 class="text-2xl font-black uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors mb-3 italic">${escapeHtml(item.title)}</h5>
@@ -468,7 +512,7 @@ async function renderHomePage(container) {
 </div>
 </div>
 </section>
-<!-- New Support & Niche Section -->
+
 <section class="py-20 px-6 max-w-7xl mx-auto space-y-16 border-t border-white/5">
 <div class="flex flex-col gap-8">
 <h4 class="text-xs font-black uppercase tracking-[0.4em] text-on-surface/40">Niche Leagues Coverage</h4>
@@ -539,7 +583,7 @@ function renderTopLeaguesPage(container) {
   }, {});
 
   container.innerHTML = `
-    <!-- Top Leagues Kinetic Header -->
+    
     <section class="p-6 md:p-8">
       <div class="relative w-full h-[400px] bg-surface-container-high overflow-hidden rounded-xl group border border-white/5">
         <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
@@ -561,7 +605,7 @@ function renderTopLeaguesPage(container) {
       </div>
     </section>
 
-    <!-- League Directory -->
+    
     <div class="px-6 md:px-8 pb-20 space-y-16 max-w-7xl mx-auto">
       ${Object.entries(grouped).map(([sportKey, leagues]) => `
         <section>
@@ -577,7 +621,7 @@ function renderTopLeaguesPage(container) {
               <a href="${routeForLeague(l.key)}" data-link class="bg-surface-container-high border border-white/5 rounded p-5 hover:bg-surface-container-highest transition-colors group relative overflow-hidden no-underline text-left">
                 <div class="flex justify-between items-start mb-6">
                   <div class="w-12 h-12 bg-white/5 rounded flex items-center justify-center p-2 group-hover:bg-primary/20 transition-all">
-                    <img src="${escapeHtml(getLeagueImagePath(l.key, l.sportGroup))}" alt="${escapeHtml(l.label)}" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all">
+                    <img src="${escapeHtml(getLeagueImagePath(l.key, l.sportGroup))}" alt="${escapeHtml(l.label)}" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all" />
                   </div>
                   ${l.live > 0 ? `
                     <div class="bg-secondary-container/20 text-secondary-container border border-secondary-container/30 px-2 py-0.5 rounded text-[9px] font-bold uppercase animate-pulse">Live Now</div>
@@ -594,7 +638,7 @@ function renderTopLeaguesPage(container) {
         </section>
       `).join("")}
 
-      <!-- Official Partners Section (livescorefree.online Style) -->
+      
       <div class="w-full py-12 bg-surface-container-lowest border border-white/5 rounded-xl flex flex-col items-center justify-center gap-8 overflow-hidden relative stadium-shadow mt-12">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
         <span class="text-[10px] font-black text-on-surface opacity-20 uppercase tracking-[0.5em] absolute top-4">Official Broadcast Partners</span>
@@ -640,7 +684,7 @@ async function renderSportPage(container, route) {
     .map(([key, l]) => ({ key, ...l, live: liveMatches.filter(m => m.leagueKey === key).length }));
 
   container.innerHTML = `
-    <!-- Sport Hero Hub -->
+    
     <section class="relative h-[500px] overflow-hidden group border-b border-white/5 bg-surface-container-low stadium-shadow text-left">
       <div class="absolute inset-0 z-0">
         <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110 opacity-40 grayscale group-hover:grayscale-0 group-hover:scale-100" 
@@ -671,9 +715,9 @@ async function renderSportPage(container, route) {
       </div>
     </section>
 
-    <!-- Content Area -->
+    
     <div class="p-8 max-w-7xl mx-auto space-y-24 pb-24">
-      <!-- Live Center -->
+      
       ${liveMatches.length > 0 ? `
         <section>
           <div class="flex items-end justify-between mb-12 border-l-4 border-secondary pl-6">
@@ -689,7 +733,7 @@ async function renderSportPage(container, route) {
         </section>
       ` : ''}
 
-      <!-- Competition Directory -->
+      
       <section>
         <div class="flex items-end justify-between mb-12 border-l-4 border-primary pl-6">
           <div class="text-left">
@@ -702,7 +746,7 @@ async function renderSportPage(container, route) {
             <a href="${routeForLeague(l.key)}" data-link class="bg-surface-container-high border border-white/5 rounded p-6 hover:bg-surface-container-highest transition-colors group relative overflow-hidden no-underline text-left">
               <div class="flex justify-between items-start mb-8">
                 <div class="w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center p-3 group-hover:bg-primary/20 transition-all">
-                  <img src="${escapeHtml(getLeagueImagePath(l.key, l.sportGroup))}" alt="${escapeHtml(l.label)}" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all">
+                  <img src="${escapeHtml(getLeagueImagePath(l.key, l.sportGroup))}" alt="${escapeHtml(l.label)}" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all" />
                 </div>
                 ${l.live > 0 ? `
                   <div class="bg-secondary/20 text-secondary border border-secondary/30 px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest animate-pulse">Live</div>
@@ -718,7 +762,7 @@ async function renderSportPage(container, route) {
         </div>
       </section>
 
-      <!-- Fuel The Broadcast Integration -->
+      
       <div class="w-full py-16 bg-surface-container-lowest border border-white/5 rounded-2xl flex flex-col items-center justify-center gap-10 overflow-hidden relative stadium-shadow">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
         <div class="text-center z-10 px-6">
@@ -751,10 +795,10 @@ async function renderMatchListingPage(container, title, subtitle, path, toneClas
         ${renderMatchGrid(matches, "No sessions found in this frequency.")}
       </section>
 
-      <!-- Premium Arena Banner -->
+      
       <section class="mt-20">
         <div class="relative w-full aspect-[21/9] md:aspect-[4/1] rounded-lg overflow-hidden group border border-white/5 shadow-2xl">
-          <img src="${getSportImagePath('football')}" class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" alt="Sports Atmosphere">
+          <img src="${getSportImagePath('football')}" class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" alt="Sports Atmosphere" />
           <div class="absolute inset-0 bg-gradient-to-r from-[#0E0E0E] via-[#0E0E0E]/80 to-transparent flex flex-col justify-center px-12">
             <span class="bg-primary text-white text-[9px] font-black px-3 py-1 uppercase tracking-[0.3em] mb-4 w-max rounded-sm">Stadia Elite</span>
             <h2 class="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-none mb-6 text-on-surface">THE MULTIVERSE<br>COMMUNITY HUB</h2>
@@ -786,10 +830,10 @@ async function renderLeaguePage(container, route) {
   const resultMatches = leagueMatches.filter(m => m.status === "final").slice(0, 5);
 
   container.innerHTML = `
-    <!-- League Hero Hub -->
+    
     <section class="relative px-8 pt-16 pb-12 overflow-hidden bg-surface-container-low border-b border-white/5 group stadium-shadow">
       <div class="absolute inset-0 z-0 opacity-10 grayscale group-hover:grayscale-0 transition-all duration-700">
-         <img src="${escapeHtml(getLeagueImagePath(leagueKey, league.sportGroup))}" class="w-full h-full object-cover" alt="${escapeHtml(league.label)} Logo">
+         <img src="${escapeHtml(getLeagueImagePath(leagueKey, league.sportGroup))}" class="w-full h-full object-cover" alt="${escapeHtml(league.label)} Logo" />
       </div>
       <div class="relative z-10 flex flex-col lg:flex-row gap-12 max-w-7xl mx-auto">
         <div class="lg:w-2/3 text-left">
@@ -808,7 +852,7 @@ async function renderLeaguePage(container, route) {
           </div>
         </div>
         
-        <!-- Premium Sidebar Ad (livescorefree.online Style) -->
+        
         <div class="lg:w-1/3">
            <div class="h-full bg-gradient-to-br from-[#cc1616] to-[#690003] p-8 flex flex-col justify-between relative overflow-hidden rounded-xl border border-white/10 shadow-2xl">
               <div class="absolute -right-12 -top-12 w-48 h-48 border-[20px] border-white/5 rounded-full animate-spin-slow"></div>
@@ -823,7 +867,7 @@ async function renderLeaguePage(container, route) {
       </div>
     </section>
 
-    <!-- Sub-Navigation (Kinetic Tabs) -->
+    
     <div class="sticky top-16 z-30 bg-[#0e0e0e]/95 backdrop-blur-xl border-b border-white/5 px-8 h-16 flex items-center shadow-xl">
       <div class="flex items-center gap-8 max-w-7xl mx-auto w-full overflow-x-auto scrollbar-hide">
         <button class="text-primary font-black uppercase tracking-tighter italic text-xs border-b-2 border-primary h-full px-4">OVERVIEW</button>
@@ -835,18 +879,18 @@ async function renderLeaguePage(container, route) {
     </div>
 
     <div class="p-8 max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-12 gap-12">
-      <!-- Main Content Area: Table -->
+      
       <div class="xl:col-span-8 space-y-16">
-         <!-- Arena Standings Table -->
+         
          <div id="league-standings-target" class="stadium-shadow min-h-[400px]">
-             <!-- Hydrated by renderStandingsTable -->
+             
              <div class="p-20 text-center flex flex-col items-center gap-6 opacity-20">
                 <span class="material-symbols-outlined text-6xl animate-spin">sync</span>
                 <p class="text-xs font-black uppercase tracking-[0.4em]">Synchronizing Arena Tables...</p>
              </div>
          </div>
 
-         <!-- Featured News Section (Abstracted from News Grid) -->
+         
          <section class="border-t border-white/5 pt-16">
             <div class="flex items-end justify-between mb-8 border-l-4 border-primary pl-6">
               <div class="text-left">
@@ -861,9 +905,9 @@ async function renderLeaguePage(container, route) {
          </section>
       </div>
       
-      <!-- Side Rail: Matchday Feed -->
+      
       <aside class="xl:col-span-4 flex flex-col gap-12">
-        <!-- Live Feed if any -->
+        
         ${liveMatches.length > 0 ? `
           <section>
             <h3 class="text-xs font-black uppercase tracking-[.3em] text-secondary mb-6 flex items-center gap-2">
@@ -875,7 +919,7 @@ async function renderLeaguePage(container, route) {
           </section>
         ` : ''}
 
-        <!-- Upcoming Schedule -->
+        
         <section>
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xs font-black uppercase tracking-[.3em] text-primary italic">Upcoming Cycle</h3>
@@ -886,7 +930,7 @@ async function renderLeaguePage(container, route) {
           </div>
         </section>
 
-        <!-- Strategy Insight Banner -->
+        
         <div class="bg-surface-container-high p-8 rounded-xl border border-white/5 stadium-shadow text-left">
           <span class="material-symbols-outlined text-4xl text-secondary mb-6">bolt</span>
           <h4 class="text-xl font-black uppercase italic leading-none mb-4">TACTICAL<br>ENGINE</h4>
@@ -896,7 +940,7 @@ async function renderLeaguePage(container, route) {
           </div>
         </div>
 
-        <!-- Recent Final Scores -->
+        
         <section>
           <h3 class="text-xs font-black uppercase tracking-[.3em] text-on-surface/40 mb-6 italic">Historical Archive</h3>
           <div class="space-y-4">
@@ -937,9 +981,7 @@ async function renderMatchPage(container, route) {
     return renderMatchPage(container, route);
   }
 
-  const favoriteKey = `${match.sportGroup}:${match.slug}`;
   const details = await fetchMatchDetails(match);
-  const activeTab = state.matchTabBySlug[favoriteKey] || "summary";
   
   setSeo({
     title: `${match.homeName} vs ${match.awayName} | livescorefree.online Arena`,
@@ -947,178 +989,313 @@ async function renderMatchPage(container, route) {
     path: routeForMatch(match)
   });
 
-  const isLive = match.status === "live";
-
-  container.innerHTML = `
-    <div class="min-h-screen stadium-shadow">
-      <!-- Match Hero (Stadium style) -->
-      <section class="relative bg-surface-container-high border-b border-white/5 overflow-hidden stadium-shadow">
-        <div class="absolute inset-0 opacity-10 grayscale mix-blend-overlay">
-           <img src=getSportImagePath('football') class="w-full h-full object-cover" alt="Football Arena Background">
-        </div>
-        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#131313]/50 to-[#131313]"></div>
-        
-        <div class="relative z-10 px-8 py-16 md:py-24 max-w-6xl mx-auto">
-          <div class="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-20">
-            <!-- Home Team -->
-            <div class="flex-1 flex flex-col items-center md:items-end text-center md:text-right group">
-               <div class="w-24 h-24 md:w-32 md:h-32 mb-6 bg-surface-container rounded-full p-5 shadow-2xl group-hover:scale-105 transition-transform duration-500 border border-white/5 relative">
-                  <div class="absolute inset-0 bg-primary/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <img src="${escapeHtml(getTeamLogo(match.homeName, match.sportGroup))}" class="w-full h-full object-contain relative z-10" alt="${escapeHtml(match.homeName)} Logo">
-               </div>
-               <h2 class="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none mb-2">${escapeHtml(match.homeName)}</h2>
-               <p class="text-[10px] font-black uppercase tracking-[0.4em] text-on-surface/40 italic">Sector Commander</p>
-            </div>
-
-            <!-- Score / Status -->
-            <div class="flex flex-col items-center px-10">
-               <div class="mb-8 flex flex-col items-center gap-4">
-                  ${isLive ? `
-                    <div class="bg-primary/20 text-primary border border-primary/30 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 animate-pulse">
-                       <span class="w-2 h-2 bg-primary rounded-full"></span>
-                       ${escapeHtml(match.statusDetail || 'LIVE TRANSMISSION')}
-                    </div>
-                  ` : `
-                    <div class="bg-white/5 text-on-surface/40 border border-white/10 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] italic">
-                       ${escapeHtml(match.statusDetail || formatDateTime(match.date))}
-                    </div>
-                  `}
-               </div>
-               
-               <div class="flex items-center gap-6 md:gap-10">
-                  <span class="text-7xl md:text-9xl font-black italic tracking-tighter text-on-surface text-glow-red">${escapeHtml(match.homeScore)}</span>
-                  <span class="text-4xl md:text-6xl font-thin text-on-surface/20 italic">:</span>
-                  <span class="text-7xl md:text-9xl font-black italic tracking-tighter text-on-surface/60">${escapeHtml(match.awayScore)}</span>
-               </div>
-
-               <div class="mt-12 flex flex-col items-center gap-4">
-                  <span class="text-[10px] font-black uppercase tracking-[0.5em] text-on-surface/20 italic">${escapeHtml(match.leagueLabel)}</span>
-                  <button class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:text-white transition-colors group">
-                    <span class="material-symbols-outlined text-lg group-hover:animate-pulse">sensors</span>
-                    ARENA BROADCAST FEED
-                  </button>
-               </div>
-            </div>
-
-            <!-- Away Team -->
-          ${renderTabButton("analysis", "Head-To-Head", activeTab)}
-        </nav>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <main class="lg:col-span-8 space-y-12">
-             <div class="match-tab-panel ${activeTab === "summary" ? "block" : "hidden"}" data-tab-panel="summary">
-                <section class="space-y-10">
-                   <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                      <div class="bg-surface-container-low p-6 rounded-xl border border-white/5">
-                         <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface/40 block mb-2">VENUE</span>
-                         <p class="font-black italic uppercase text-sm">${escapeHtml(match.venue || 'TBA Arena')}</p>
-                      </div>
-                      <div class="bg-surface-container-low p-6 rounded-xl border border-white/5">
-                         <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface/40 block mb-2">KICKOFF</span>
-                         <p class="font-black italic uppercase text-sm">${formatTime(match.date)}</p>
-                      </div>
-                      <div class="bg-surface-container-low p-6 rounded-xl border border-white/5">
-                         <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface/40 block mb-2">EVENTS</span>
-                         <p class="font-black italic uppercase text-sm">${details.timeline.length} Piped</p>
-                      </div>
-                      <div class="bg-surface-container-low p-6 rounded-xl border border-white/5">
-                         <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface/40 block mb-2">STATUS</span>
-                         <p class="font-black italic uppercase text-sm text-primary">${escapeHtml(match.statusDetail || 'Pending')}</p>
-                      </div>
-                   </div>
-                   
-                   <div class="space-y-6">
-                     <h3 class="text-xl font-black uppercase italic tracking-tighter border-l-4 border-primary pl-4">Arena Analysis</h3>
-                     <div class="bg-surface-container-low rounded-xl border border-white/5 p-8 flex flex-col md:flex-row items-center gap-12">
-                        <div class="flex flex-col items-center gap-4 w-full md:w-1/3">
-                           <span class="text-[10px] font-bold uppercase tracking-widest opacity-40">${escapeHtml(match.homeName)} Form</span>
-                           ${renderFormTrack(getTeamForm(match.homeName, match.sportGroup))}
-                        </div>
-                        <div class="h-[1px] w-full md:w-[1px] md:h-12 bg-white/5"></div>
-                        <div class="flex flex-col items-center gap-4 w-full md:w-1/3">
-                           <span class="text-[10px] font-bold uppercase tracking-widest opacity-40">Probability Draw</span>
-                           <div class="text-4xl font-black italic tracking-tighter">24%</div>
-                        </div>
-                        <div class="h-[1px] w-full md:w-[1px] md:h-12 bg-white/5"></div>
-                        <div class="flex flex-col items-center gap-4 w-full md:w-1/3">
-                           <span class="text-[10px] font-bold uppercase tracking-widest opacity-40">${escapeHtml(match.awayName)} Form</span>
-                           ${renderFormTrack(getTeamForm(match.awayName, match.sportGroup))}
-                        </div>
-                     </div>
-                   </div>
-                </section>
-             </div>
-             
-             <div class="match-tab-panel ${activeTab === "events" ? "block" : "hidden"}" data-tab-panel="events">
-                <section class="space-y-8">
-                   <h3 class="text-xl font-black uppercase italic tracking-tighter border-l-4 border-primary pl-4">Live Timeline</h3>
-                   ${renderTimeline(details.timeline)}
-                </section>
-             </div>
-             
-             <div class="match-tab-panel ${activeTab === "standings" ? "block" : "hidden"}" data-tab-panel="standings">
-                <section id="match-standings-target"></section>
-             </div>
-             
-             <div class="match-tab-panel ${activeTab === "analysis" ? "block" : "hidden"}" data-tab-panel="analysis">
-                <section class="space-y-8">
-                   <h3 class="text-xl font-black uppercase italic tracking-tighter border-l-4 border-primary pl-4">Head-to-Head History</h3>
-                   <div class="space-y-4">
-                      ${renderMatchGrid(getHeadToHead(match).slice(0, 5), "No previous arena meetings indexed.")}
-                   </div>
-                </section>
-             </div>
-          </main>
-          
-          <aside class="lg:col-span-4 space-y-12">
-             <div class="bg-surface-container-low rounded-2xl border border-white/5 p-8 space-y-8">
-                <div>
-                   <span class="text-[10px] font-black uppercase tracking-widest text-primary block mb-1 italic">ARENA PRO INSIGHT</span>
-                   <h4 class="text-2xl font-black uppercase italic tracking-tighter leading-tight">PREDICTION ENGINE</h4>
-                </div>
-                <div class="space-y-6">
-                   <div class="flex justify-between items-end">
-                      <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface/40">Home Win</span>
-                      <span class="font-black italic text-lg tracking-tighter">48%</span>
-                   </div>
-                   <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div class="h-full bg-primary" style="width: 48%"></div>
-                   </div>
-                   
-                   <div class="flex justify-between items-end">
-                      <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface/40">Away Win</span>
-                      <span class="font-black italic text-lg tracking-tighter">28%</span>
-                   </div>
-                   <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div class="h-full bg-on-surface/10" style="width: 28%"></div>
-                   </div>
-                </div>
-                <button class="w-full bg-surface-container-highest hover:bg-white/5 text-on-surface text-[10px] font-black uppercase tracking-widest py-4 rounded transition-all">DEEP STATS UPGRADE</button>
-             </div>
-             
-             <div class="relative rounded-2xl overflow-hidden aspect-square flex flex-col justify-end p-8 border border-white/5 group">
-                <img src=getSportImagePath('football') class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" alt="Football Background">
-                <div class="relative z-10 space-y-4">
-                   <h4 class="text-2xl font-black uppercase italic tracking-tighter leading-tight">STADIUM<br>ADVERTISING</h4>
-                   <p class="text-[10px] font-bold uppercase tracking-widest opacity-60">Join the arena network as a premium partner.</p>
-                   <a href="#" class="inline-block bg-primary text-white text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded">CONTACT US</a>
-                </div>
-             </div>
-          </aside>
-        </div>
-      </div>
-    </div>
-  `;
-
-  if (activeTab === "standings") {
-    const target = qs("#match-standings-target", container);
-    if (target) renderStandingsTable(target, match.leagueId);
+  if (match.status === "live") {
+    container.innerHTML = renderLiveMatchDetail(match, details);
+  } else if (match.status === "final") {
+    container.innerHTML = renderResultMatchDetail(match, details);
+  } else {
+    container.innerHTML = renderUpcomingMatchDetail(match, details);
   }
-
-  wireMatchTabs(match);
-  wireFavoriteButton();
 }
 
+function renderTimeline(timeline = []) {
+  if (!timeline.length) return `<div class="p-8 text-center text-[10px] font-black uppercase opacity-20 tracking-widest">No Sector Events Logged</div>`;
+  return timeline.map(event => `
+    <div class="flex items-center gap-6 p-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-all">
+      <span class="text-xs font-black text-primary w-12 text-right">${event.time}'</span>
+      <div class="flex-1">
+        <p class="text-xs font-black uppercase tracking-tight">${escapeHtml(event.text || event.description)}</p>
+        ${event.subText ? `<p class="text-[8px] font-bold text-on-surface/30 uppercase tracking-widest mt-1">${escapeHtml(event.subText)}</p>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function getSportImagePath(sport) {
+  const images = {
+    'football': 'https://lh3.googleusercontent.com/aida-public/AB6AXuCY-9XGqdujKWTNX8Uk-LprTYiPCIQ9kmD3x5iCxTbvVObXN3K2oGAMfsyd4WDY15X6hcfOHsOI8EMDk4szJaYHYHBGyhi9GPGodZpStr4QvhGNZgZY5ttcGr9V0cX7mnm3UzrFbVM_1hPZnRyRLnln_ZRI3gaxJqiEN3ozgkCvUlPAVd-GsGFMADtS566oO1fEz_0SfqZlXQuyzXUvotNsap3O820sHqpWCoUaKu3Pu-lMzv9YBM8EZvTT_DsucCJF2hU9qNFqB0K9',
+    'cricket': 'https://lh3.googleusercontent.com/aida-public/AB6AXuB8r2WpD4cSbXx59-MoGNeRfB8vltX14KwO4ZBYIt0_tTsO8Zhu8ZYxuHpEgUlt6hNdthKKb6mWtTPyeCT5eVDJtU-Eo0iBf85FwWtrh-l7J1Oy6k8D_hlh0SopDNrDhdFwxeB8OH_fUGuS8AyTFgFXb5cyGYbKcAP9nKKD7WtkvOq8kD4Rj0ePYUEQzh6KuzT3hn12hPiWCAI2rrhAEaMCLmHve-GM6c8ukLp8HtXyu_ed9xbW55zoGKl94BmSgFcdBEMQv5k7de-q',
+    'basketball': 'https://lh3.googleusercontent.com/aida-public/AB6AXuB_bk3o7WQrGroURctM-tB2S0WnRNpcoyewaY41hjCL56yOY0-R52RgZrMh87vgD-waqxrWeStB7B9nWrB18tlJNgxidD-AfkeqMaHYNXpTQZYWaq5dvuiTQGy892qzcTO8AfJUED-4Xz8L_eponWAhV-OQgW7vZoNmUXmOXqahL94drk1XvX0QBCWfhIS2xsyvH2OJ2Ub7PAjK1kH4OnYD8xYP0X1EAh2ToHIHVilWEAg4D6woyvfUSKZS74HfvJiPsVpdiKjdWNmk'
+  };
+  return images[sport] || images['football'];
+}
+
+function renderLiveMatchDetail(m, d) {
+  return `
+    <main class="pt-16 min-h-screen bg-surface">
+      <section class="relative h-[614px] overflow-hidden flex items-center justify-center bg-black">
+        <div class="absolute inset-0 z-0">
+          <img alt="Stadium Background" class="w-full h-full object-cover opacity-20 scale-105" src="${getSportImagePath(m.sportGroup)}" />
+          <div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-surface/90"></div>
+        </div>
+        <div class="relative z-10 w-full max-w-6xl px-8">
+          <div class="flex flex-col items-center">
+            <div class="flex items-center justify-center space-x-4 mb-12">
+              <span class="bg-[#CC1616] text-white px-4 py-1.5 rounded-sm text-xs font-black tracking-[0.2em] animate-pulse flex items-center shadow-[0_0_15px_rgba(204,22,22,0.5)]">
+                <span class="w-1.5 h-1.5 rounded-full bg-white mr-2"></span> LIVE
+              </span>
+              <span class="text-on-surface font-bold text-sm uppercase tracking-widest opacity-80">${escapeHtml(m.leagueLabel || 'Competition')}</span>
+            </div>
+            <div class="grid grid-cols-12 gap-4 items-center w-full">
+              <div class="col-span-4 flex flex-col items-end text-right">
+                <div class="relative mb-6 text-white">
+                  <div class="absolute inset-0 bg-white/5 rounded-full blur-2xl"></div>
+                  <img src="${escapeHtml(m.homeLogo || m.homeBadge || '')}" class="relative w-24 h-24 lg:w-40 lg:h-40 object-contain drop-shadow-2xl" alt="${escapeHtml(m.homeName)}" />
+                  <h1 class="mt-4 text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow">${escapeHtml(m.homeName)}</h1>
+                </div>
+              </div>
+              <div class="col-span-4 flex flex-col items-center">
+                <div class="bg-white/5 backdrop-blur-xl p-8 lg:p-12 rounded-xl border border-white/5 shadow-2xl flex flex-col items-center min-w-[320px]">
+                  <div class="flex items-baseline space-x-6">
+                    <span class="text-8xl lg:text-[140px] font-bold tracking-tighter text-white">${m.homeScore || 0}</span>
+                    <span class="text-5xl lg:text-7xl font-light text-white/10">:</span>
+                    <span class="text-8xl lg:text-[140px] font-bold tracking-tighter text-white">${m.awayScore || 0}</span>
+                  </div>
+                  <div class="mt-8 flex flex-col items-center">
+                    <div class="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mb-2">Match Clock</div>
+                    <div class="px-8 py-3 bg-black/40 rounded-lg border border-white/5">
+                      <span class="text-3xl lg:text-5xl font-medium tracking-widest text-[#CC1616]">${escapeHtml(m.statusDetail || 'LIVE')}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-span-4 flex flex-col items-start text-left">
+                <div class="relative mb-6 text-white">
+                  <div class="absolute inset-0 bg-white/5 rounded-full blur-2xl"></div>
+                  <img src="${escapeHtml(m.awayLogo || m.awayBadge || '')}" class="relative w-24 h-24 lg:w-40 lg:h-40 object-contain drop-shadow-2xl" alt="${escapeHtml(m.awayName)}" />
+                  <h1 class="mt-4 text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow">${escapeHtml(m.awayName)}</h1>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="max-w-7xl mx-auto px-8 -mt-20 relative z-20 pb-20">
+        <div class="grid grid-cols-12 gap-8">
+          <div class="col-span-12 lg:col-span-8 space-y-8">
+            <div class="bg-surface-container-high p-8 rounded-sm border border-white/5">
+              <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-8">Match Performance</h3>
+              <div class="grid grid-cols-3 gap-4">
+                 <div class="bg-surface-container-low p-6 text-center border-b-4 border-[#CC1616]">
+                    <p class="text-[10px] font-medium text-on-surface-variant/50 uppercase tracking-widest mb-1">Live Momentum</p>
+                    <p class="text-4xl font-black italic text-white">${m.homeScore || 0} — ${m.awayScore || 0}</p>
+                 </div>
+                 <div class="bg-surface-container-low p-6 text-center border-b-4 border-white/10">
+                    <p class="text-[10px] font-medium text-on-surface-variant/50 uppercase tracking-widest mb-1">Time Elapsed</p>
+                    <p class="text-4xl font-black italic text-primary">${escapeHtml(m.statusDetail || 'LIVE')}</p>
+                 </div>
+                 <div class="bg-surface-container-low p-6 text-center border-b-4 border-[#CC1616]">
+                    <p class="text-[10px] font-medium text-on-surface-variant/50 uppercase tracking-widest mb-1">Arena Signal</p>
+                    <p class="text-4xl font-black italic text-white">MAX</p>
+                 </div>
+              </div>
+            </div>
+
+
+            <div class="bg-surface-container-high rounded-sm border border-white/5 overflow-hidden">
+               <div class="p-8 border-b border-white/5 flex items-center justify-between">
+                  <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary">Global Event Timeline</h3>
+                  <span class="text-[9px] font-bold text-on-surface/30 uppercase tracking-widest">Sector Prime Feed</span>
+               </div>
+               <div class="divide-y divide-white/5">
+                  ${renderTimeline(d.timeline)}
+               </div>
+            </div>
+          </div>
+          <aside class="col-span-12 lg:col-span-4 space-y-8">
+            <div class="bg-surface-container-high p-8 rounded-sm border border-white/5 flex flex-col gap-4">
+               <button data-favorite-match="${m.id}" class="w-full bg-white/5 border border-white/10 py-4 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all rounded-sm flex items-center justify-center gap-3">
+                  <span class="material-symbols-outlined text-sm">favorite</span> Add to Favorites
+               </button>
+               <button onclick="window.shareMatch('${m.id}')" class="w-full bg-primary text-white py-4 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all rounded-sm flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(204,22,22,0.3)]">
+                  <span class="material-symbols-outlined text-sm">share</span> Share Intel
+               </button>
+            </div>
+
+            <div class="bg-surface-container-high p-8 rounded-sm border border-white/5">
+              <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-6">Arena Info</h3>
+              <div class="space-y-4 text-white">
+                <div class="flex justify-between">
+                   <span class="text-[10px] uppercase font-bold text-on-surface/40">Venue</span>
+                   <span class="text-xs font-black uppercase">${escapeHtml(m.venue || 'TBA Stadium')}</span>
+                </div>
+                <div class="flex justify-between">
+                   <span class="text-[10px] uppercase font-bold text-on-surface/40">Competition</span>
+                   <span class="text-xs font-black uppercase">${escapeHtml(m.leagueLabel || 'Global Sector')}</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  `;
+}
+
+function renderResultMatchDetail(m, d) {
+  return `
+    <main class="pt-16 min-h-screen bg-surface">
+      <section class="relative h-[614px] min-h-[500px] flex items-center justify-center overflow-hidden bg-black">
+        <div class="absolute inset-0 z-0">
+          <div class="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent z-10"></div>
+          <img alt="Stadium" class="w-full h-full object-cover opacity-20" src="${getSportImagePath(m.sportGroup)}"/>
+        </div>
+        <div class="relative z-20 container mx-auto px-8 flex flex-col items-center">
+          <div class="flex items-center justify-between w-full max-w-5xl gap-12">
+            <div class="flex flex-col items-center text-center flex-1 text-white">
+              <img src="${escapeHtml(m.homeLogo || m.homeBadge || '')}" class="w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(204,22,22,0.5)]" alt="${escapeHtml(m.homeName)}" />
+              <h2 class="mt-6 text-4xl font-black italic tracking-tighter uppercase">${escapeHtml(m.homeName)}</h2>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="bg-surface-container-high/40 backdrop-blur-xl px-12 py-8 rounded-xl border border-white/10 flex items-center gap-8">
+                <span class="text-8xl font-black tracking-tighter text-on-surface text-white">${m.homeScore || 0}</span>
+                <span class="text-4xl font-light text-primary/40">-</span>
+                <span class="text-8xl font-black tracking-tighter text-on-surface text-white">${m.awayScore || 0}</span>
+              </div>
+              <div class="mt-6 flex items-center gap-3">
+                <span class="bg-secondary-container text-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full shadow-[0_0_20px_rgba(31,166,74,0.4)]">Final Result</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-center text-center flex-1 text-white">
+              <img src="${escapeHtml(m.awayLogo || m.awayBadge || '')}" class="w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(204,22,22,0.5)]" alt="${escapeHtml(m.awayName)}" />
+              <h2 class="mt-6 text-4xl font-black italic tracking-tighter uppercase">${escapeHtml(m.awayName)}</h2>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="container mx-auto px-8 -mt-20 relative z-30 pb-20">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div class="md:col-span-8 space-y-8">
+            <div class="bg-surface border border-white/5 rounded-xl overflow-hidden shadow-2xl group relative aspect-video">
+               <img src="${getSportImagePath(m.sportGroup)}" class="w-full h-full object-cover" />
+               <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                 <button class="w-20 h-20 bg-[#CC1616] text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                   <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                 </button>
+               </div>
+               <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                 <h3 class="text-xl font-bold uppercase tracking-tight text-white">Full Match Highlights: ${escapeHtml(m.homeName)} vs ${escapeHtml(m.awayName)}</h3>
+               </div>
+            </div>
+
+            <div class="bg-surface-container-high p-8 rounded-xl border border-white/5">
+               <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-8">Strategic Head-to-Head</h3>
+               <div class="space-y-4">
+                  ${getHeadToHead(m).slice(0, 3).map(h => `
+                     <div class="flex items-center justify-between p-4 bg-surface-container-low border border-white/5 rounded-lg">
+                        <span class="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest">${formatDate(h.startTime)}</span>
+                        <div class="flex items-center gap-6">
+                           <span class="text-xs font-black uppercase italic">${escapeHtml(h.homeName)}</span>
+                           <span class="bg-white/5 px-3 py-1 text-xs font-black rounded">${h.homeScore} - ${h.awayScore}</span>
+                           <span class="text-xs font-black uppercase italic">${escapeHtml(h.awayName)}</span>
+                        </div>
+                     </div>
+                  `).join('') || '<p class="text-[10px] font-black uppercase opacity-20 text-center py-4">No historical records in sector</p>'}
+               </div>
+            </div>
+          </div>
+          
+          <aside class="md:col-span-4 space-y-8">
+            <div class="bg-surface-container-high p-8 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
+               <span class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Final Verdict</span>
+               <h4 class="text-2xl font-black italic uppercase mb-2 text-white">Peak Momentum</h4>
+               <span class="text-5xl font-black italic text-primary">${m.homeScore > m.awayScore ? 'HOME WIN' : m.awayScore > m.homeScore ? 'AWAY WIN' : 'DRAW'}</span>
+            </div>
+
+            <div class="bg-surface-container-high p-8 rounded-xl border border-white/5">
+               <h3 class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-6">Arena Form Track</h3>
+               <div class="space-y-6">
+                  <div>
+                     <p class="text-[10px] font-black uppercase mb-3 text-white">${escapeHtml(m.homeName)}</p>
+                     <div class="flex gap-2">
+                        ${renderFormTrack(getTeamForm(m.homeName, m.sportGroup).join(''))}
+                     </div>
+                  </div>
+                  <div>
+                     <p class="text-[10px] font-black uppercase mb-3 text-white">${escapeHtml(m.awayName)}</p>
+                     <div class="flex gap-2">
+                        ${renderFormTrack(getTeamForm(m.awayName, m.sportGroup).join(''))}
+                     </div>
+                  </div>
+               </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  `;
+}
+
+function renderUpcomingMatchDetail(m, d) {
+  return `
+    <main class="pt-16 min-h-screen bg-surface">
+      <section class="relative h-[819px] w-full flex items-center justify-center overflow-hidden bg-black">
+        <div class="absolute inset-0 z-0">
+          <img class="w-full h-full object-cover opacity-40 mix-blend-luminosity" src="${getSportImagePath(m.sportGroup)}" />
+          <div class="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent"></div>
+        </div>
+        <div class="relative z-10 w-full max-w-6xl px-8 flex flex-col items-center text-center">
+          <div class="inline-flex items-center space-x-3 bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full mb-8 border border-white/10">
+            <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Marquee Matchday</span>
+          </div>
+          <div class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-24 mb-12">
+            <div class="flex flex-col items-center text-white">
+              <div class="w-32 h-32 md:w-48 md:h-48 bg-white/5 backdrop-blur-md rounded-full p-6 mb-6 border border-white/10">
+                <img src="${escapeHtml(m.homeLogo || m.homeBadge || '')}" class="w-full h-full object-contain" alt="${escapeHtml(m.homeName)}" />
+              </div>
+              <h2 class="text-3xl md:text-5xl font-black italic tracking-tighter uppercase">${escapeHtml(m.homeName)}</h2>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="text-6xl md:text-8xl font-black text-white/5 italic tracking-tighter mb-4">VS</span>
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center">
+                  <span class="text-4xl font-black text-primary">04</span>
+                  <span class="text-[8px] uppercase tracking-widest text-on-surface/40">Days</span>
+                </div>
+                <span class="text-4xl font-bold text-white/20">:</span>
+                <div class="flex flex-col items-center">
+                  <span class="text-4xl font-black text-primary">12</span>
+                  <span class="text-[8px] uppercase tracking-widest text-on-surface/40">Hrs</span>
+                </div>
+                <span class="text-4xl font-bold text-white/20">:</span>
+                <div class="flex flex-col items-center">
+                  <span class="text-4xl font-black text-primary">45</span>
+                  <span class="text-[8px] uppercase tracking-widest text-on-surface/40">Min</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center text-white">
+              <div class="w-32 h-32 md:w-48 md:h-48 bg-white/5 backdrop-blur-md rounded-full p-6 mb-6 border border-white/10">
+                <img src="${escapeHtml(m.awayLogo || m.awayBadge || '')}" class="w-full h-full object-contain" alt="${escapeHtml(m.awayName)}" />
+              </div>
+              <h2 class="text-3xl md:text-5xl font-black italic tracking-tighter uppercase">${escapeHtml(m.awayName)}</h2>
+            </div>
+          </div>
+          <div class="flex flex-wrap justify-center gap-6">
+            <button class="bg-[#CC1616] text-white px-10 py-4 rounded-lg font-black uppercase tracking-widest flex items-center space-x-3 active:scale-95 transition-all shadow-[0_0_20px_rgba(204,22,22,0.4)]">
+              <span class="material-symbols-outlined">notifications_active</span>
+              <span>Notify Me</span>
+            </button>
+            <button class="bg-white/5 border border-white/10 text-white px-10 py-4 rounded-lg font-black uppercase tracking-widest hover:bg-white/5 transition-all">
+              Match Preview
+            </button>
+          </div>
+        </div>
+      </section>
+      <section class="max-w-7xl mx-auto px-8 -mt-24 relative z-20 pb-20">
+         <div class="bg-surface-container-high p-12 rounded-xl border border-white/10 text-white">
+            <h3 class="text-3xl font-black italic uppercase tracking-tighter mb-8 text-primary">Tactical Preview</h3>
+            <p class="text-on-surface/60 leading-relaxed uppercase tracking-widest text-sm">
+               The stage is set for an epic encounter in the ${escapeHtml(m.leagueLabel || 'Competition')}. 
+               Both teams enter the arena with high stakes and absolute focus. 
+               Expect a masterpiece of tactical execution and physical dominance.
+            </p>
+         </div>
+      </section>
+    </main>
+  `;
+}
 async function renderPlayersHubPage(container) {
   setSeo({
     title: "Ultimate Players Hub | livescorefree.online",
@@ -1128,9 +1305,9 @@ async function renderPlayersHubPage(container) {
 
   container.innerHTML = `
     <div class="min-h-screen">
-      <!-- Hero Slider Section (Lionel Messi as featured) -->
+      
       <section class="relative h-[600px] w-full overflow-hidden stadium-shadow">
-        <img src='/bg-stadium-night-2.svg' class="w-full h-full object-cover" alt="Stadium Night Atmosphere">
+        <img src='/bg-stadium-night-2.svg' class="w-full h-full object-cover" alt="Stadium Night Atmosphere" />
         <div class="absolute inset-0 bg-gradient-to-r from-[#131313] via-[#131313]/50 to-transparent"></div>
         <div class="absolute inset-0 flex items-center px-12 lg:px-24">
           <div class="max-w-2xl space-y-6 text-left">
@@ -1150,7 +1327,7 @@ async function renderPlayersHubPage(container) {
         </div>
       </section>
 
-      <!-- Player Directory Filters -->
+      
       <section class="px-6 lg:px-12 py-12 border-b border-white/5">
         <div class="flex flex-wrap items-center justify-between gap-8 max-w-7xl mx-auto">
           <div class="text-left">
@@ -1166,7 +1343,7 @@ async function renderPlayersHubPage(container) {
         </div>
       </section>
 
-      <!-- Trending Players Grid -->
+      
       <section class="px-6 lg:px-12 py-16 max-w-7xl mx-auto">
         <div class="flex items-center justify-between mb-12 border-l-4 border-secondary pl-6">
            <div class="text-left">
@@ -1177,11 +1354,11 @@ async function renderPlayersHubPage(container) {
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-           <!-- Featured Player Cards (Placeholder for now) -->
+           
            ${Array.from({length: 8}).map((_, i) => `
               <div class="bg-surface-container-high border border-white/5 rounded-xl overflow-hidden group hover:border-primary/20 transition-all stadium-shadow text-left">
                  <div class="relative h-48 bg-surface-container overflow-hidden">
-                    <img src='/bg-stadium-day-1.svg' class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" alt="Stadium Day View">
+                    <img src='/bg-stadium-day-1.svg' class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" alt="Stadium Day View" />
                     <div class="absolute inset-0 bg-gradient-to-t from-[#131313] to-transparent opacity-60"></div>
                     <div class="absolute bottom-4 left-4">
                        <p class="text-[8px] font-black text-primary uppercase tracking-widest italic">Forward</p>
@@ -1204,7 +1381,7 @@ async function renderPlayersHubPage(container) {
         </div>
       </section>
 
-      <!-- Premium Banner Integration -->
+      
       <section class="p-8 max-w-7xl mx-auto">
          <div class="bg-gradient-to-r from-[#1fa64a]/20 to-transparent border border-[#1fa64a]/20 p-10 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-10 text-left relative overflow-hidden">
             <div class="absolute -right-20 -top-20 w-80 h-80 bg-[#1fa64a]/5 rounded-full blur-3xl"></div>
@@ -1229,10 +1406,10 @@ async function renderTeamsHubPage(container) {
 
   container.innerHTML = `
     <div class="min-h-screen">
-      <!-- Teams Video/Hero Header -->
+      
       <section class="relative h-[500px] overflow-hidden stadium-shadow bg-surface-container-low border-b border-white/5">
         <div class="absolute inset-0 opacity-20 grayscale mix-blend-overlay">
-           <img src='/bg-stadium-night-3.svg' class="w-full h-full object-cover" alt="Football Stadium Night">
+           <img src='/bg-stadium-night-3.svg' class="w-full h-full object-cover" alt="Football Stadium Night" />
         </div>
         <div class="absolute inset-0 bg-gradient-to-b from-[#131313]/0 to-[#131313]"></div>
         <div class="relative z-10 h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto text-left">
@@ -1249,7 +1426,7 @@ async function renderTeamsHubPage(container) {
         </div>
       </section>
 
-      <!-- Search & Filters -->
+      
       <section class="px-6 lg:px-12 py-12 border-b border-white/5">
         <div class="flex flex-wrap items-center justify-between gap-8 max-w-7xl mx-auto">
            <div class="relative w-full max-w-md">
@@ -1266,14 +1443,14 @@ async function renderTeamsHubPage(container) {
         </div>
       </section>
 
-      <!-- Teams Grid -->
+      
       <section class="px-6 lg:px-12 py-16 max-w-7xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
            ${Array.from({length: 12}).map((_, i) => `
               <div class="bg-surface-container-high border border-white/5 rounded-2xl p-8 hover:bg-surface-container-highest transition-all group relative overflow-hidden stadium-shadow text-center">
                  <div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary/5 rounded-full blur-2xl group-hover:bg-secondary/10 transition-all"></div>
                  <div class="w-24 h-24 bg-surface-container rounded-full mx-auto mb-6 p-5 border border-white/5 group-hover:scale-110 transition-all duration-500 shadow-xl">
-                    <img src="https://images.thesportsdb.com/images/media/team/badge/xqwpuy1471203233.png" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all">
+                    <img src="https://images.thesportsdb.com/images/media/team/badge/xqwpuy1471203233.png" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all" />
                  </div>
                  <h4 class="text-xl font-black uppercase italic tracking-tighter mb-2 group-hover:text-secondary transition-colors">Team Unit ${i+1}</h4>
                  <p class="text-[9px] font-bold uppercase tracking-widest text-on-surface opacity-30 mb-8">Europe Primary Sector</p>
@@ -1379,7 +1556,7 @@ function renderDonatePage(container) {
   });
   
   container.innerHTML = `
-    <!-- Kinetic Hero Results Slider (News Style) -->
+    
     <section class="relative w-full h-[600px] overflow-hidden group">
       <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] group-hover:scale-105" 
            style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('/bg-stadium-night-2.svg')"></div>
@@ -1400,7 +1577,7 @@ function renderDonatePage(container) {
       </div>
     </section>
 
-    <!-- Results Grid / News Index -->
+    
     <div class="p-8 max-w-7xl mx-auto">
       <div class="flex justify-between items-center mb-12 border-l-4 border-primary pl-4">
          <h2 class="text-3xl font-black italic uppercase tracking-tighter">Editorial Grid</h2>
@@ -1412,7 +1589,7 @@ function renderDonatePage(container) {
       </div>
     </div>
 
-    <!-- Multi-League Directory (Footer Style) -->
+    
     <section class="bg-surface-container-high border-t border-white/5 py-16 px-8 mt-20">
       <div class="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-12">
         <div class="space-y-6">
@@ -1451,7 +1628,7 @@ function renderContactPage(container) {
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-        <!-- Contact Card 1 -->
+        
         <div class="bg-surface-container-high border border-white/5 p-10 rounded-2xl group hover:border-primary/20 transition-all relative overflow-hidden">
            <div class="absolute -right-10 -top-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all"></div>
            <span class="text-[10px] font-black text-primary uppercase tracking-widest mb-6 block italic">Signal Channel 01</span>
@@ -1460,7 +1637,7 @@ function renderContactPage(container) {
            <a href="mailto:support@livescoreFree.online" class="text-primary text-xs font-black uppercase tracking-widest border-b border-primary/20 pb-1 hover:text-white transition-all no-underline">support@livescoreFree.online</a>
         </div>
 
-        <!-- Contact Card 2 -->
+        
         <div class="bg-surface-container-high border border-white/5 p-10 rounded-2xl group hover:border-secondary/20 transition-all relative overflow-hidden">
            <div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary/5 rounded-full blur-2xl group-hover:bg-secondary/10 transition-all"></div>
            <span class="text-[10px] font-black text-secondary uppercase tracking-widest mb-6 block italic">Signal Channel 02</span>
@@ -1591,20 +1768,20 @@ function renderNotFoundPage(container) {
   });
   
   container.innerHTML = `
-    <!-- High-Fidelity 404 Experience -->
+    
     <section class="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
-      <!-- Background Decorative Elements -->
+      
       <div class="absolute inset-0 z-0 pointer-events-none">
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px]"></div>
       </div>
 
       <div class="relative z-10 max-w-xl w-full">
-        <!-- Animated Signal Lost Icon -->
+        
         <div class="relative mb-16 inline-block">
           <div class="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse"></div>
           <div class="relative bg-surface-container-high border border-white/10 p-10 rounded-full shadow-2xl">
             <span class="material-symbols-outlined text-[120px] text-primary" style="font-variation-settings: 'wght' 200;">broadcast_on_home</span>
-            <!-- Glitch overlays -->
+            
             <div class="absolute top-0 left-0 w-full h-full border-2 border-primary/30 rounded-full animate-ping opacity-20"></div>
           </div>
         </div>
@@ -1633,7 +1810,7 @@ function renderNotFoundPage(container) {
           </div>
         </div>
 
-        <!-- Decorative Footnote -->
+        
         <div class="mt-24 pt-8 border-t border-white/5">
           <p class="text-[9px] font-black text-on-surface/20 uppercase tracking-[0.5em]">LIVESCOREFREE KINETIC BROADCAST ENGINE v2.0</p>
         </div>
@@ -1695,65 +1872,52 @@ async function renderLivePage(container) {
   container.innerHTML = `
     ${heroHTML}
     
-    <!-- Category Filter Bar -->
-    <div class="sticky top-16 z-30 w-full bg-[#0e0e0e]/80 backdrop-blur-xl border-b border-white/5 px-8 py-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
-      <div class="flex items-center space-x-8 max-w-7xl mx-auto">
-        <button onclick="window.filterLiveCategory('all', event)" class="live-filter-btn active text-primary border-b-2 border-primary pb-1 font-black text-[10px] tracking-widest uppercase" data-sport="all">ALL SPORTS</button>
-        ${Object.entries(SPORT_GROUPS).map(([key, sport]) => `
-          <button onclick="window.filterLiveCategory('${key}', event)" class="live-filter-btn text-on-surface/50 hover:text-primary pb-1 font-bold text-[10px] tracking-widest uppercase transition-colors" data-sport="${key}">${escapeHtml(sport.label)}</button>
-        `).join("")}
+    
+    <div class="sticky top-16 z-30 w-full bg-[#0e0e0e]/95 backdrop-blur-xl border-b border-white/5 px-8 py-6 flex items-center justify-between gap-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
+      <div class="flex items-center gap-3">
+        <button onclick="window.filterLiveCategory('all', event)" data-sport="all" 
+                class="live-filter-btn active kinetic-gradient px-8 py-4 rounded-lg text-[11px] font-black uppercase tracking-widest text-white shadow-lg transition-all hover:scale-105">
+          ALL LIVE SIGNALS
+        </button>
+        ${Object.keys(SPORT_GROUPS).map(s => `
+          <button onclick="window.filterLiveCategory('${s}', event)" data-sport="${s}" 
+                  class="live-filter-btn px-8 py-4 rounded-lg text-[11px] font-black uppercase tracking-widest text-on-surface/40 hover:text-white hover:bg-white/5 transition-all">
+            ${escapeHtml(s.toUpperCase())}
+          </button>
+        `).join('')}
+      </div>
+      
+      <div class="hidden lg:flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-3 rounded-full">
+        <span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+        <span class="text-[9px] font-black uppercase tracking-widest text-primary italic">TOTAL SIGNALS: ${liveMatches.length}</span>
       </div>
     </div>
 
-    <!-- Main Live Grid -->
-    <section class="px-8 py-16 max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        ${liveMatches.length > 0 ? liveMatches.map(m => `
-          <a href="${routeForMatch(m)}" data-link data-sport-group="${m.sportGroup}" class="live-match-card-item group bg-surface-container-high rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative">
-            <div class="p-6">
-              <div class="flex justify-between items-start mb-8">
-                <div class="flex flex-col">
-                  <span class="text-[10px] font-black tracking-[0.2em] text-primary uppercase italic">${escapeHtml(m.leagueLabel)}</span>
-                  <span class="text-[9px] font-bold text-on-surface/40 uppercase mt-1 tracking-widest" id="match-${m.sportGroup}-${m.slug}-status">${escapeHtml(m.statusLabel || 'Live')}</span>
+    
+    <div class="p-8 max-w-7xl mx-auto min-h-[600px]">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="live-page-grid">
+        ${liveMatches.length > 0 ? liveMatches.map(m => renderKineticMatchCard(m)).join("") : `
+          <div class="col-span-full py-48 flex flex-col items-center justify-center text-center space-y-8 bg-[#141414] border border-white/5 rounded-3xl">
+             <div class="relative">
+                <span class="material-symbols-outlined text-[120px] text-on-surface/5" style="font-variation-settings: 'wght' 100;">broadcast_on_home</span>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-5xl text-primary animate-pulse">sensors</span>
                 </div>
-                <span class="text-primary font-black text-xs italic tracking-tighter" id="match-${m.sportGroup}-${m.slug}-status-detail">${m.statusDetail || 'In Progress'}</span>
-              </div>
-              <div class="space-y-8 mb-8">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-4">
-                    <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic shadow-inner border border-white/5">
-                      ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" class="w-6 h-6 object-contain">` : (m.homeAbbr || m.homeName.charAt(0))}
-                    </div>
-                    <span class="font-black text-lg tracking-tight italic uppercase">${escapeHtml(m.homeName)}</span>
-                  </div>
-                  <span class="text-3xl font-black italic text-primary" id="match-${m.sportGroup}-${m.slug}-home-score">${m.homeScore || 0}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-4">
-                    <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic shadow-inner border border-white/5">
-                      ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" class="w-6 h-6 object-contain">` : (m.awayAbbr || m.awayName.charAt(0))}
-                    </div>
-                    <span class="font-black text-lg tracking-tight italic uppercase">${escapeHtml(m.awayName)}</span>
-                  </div>
-                  <span class="text-3xl font-black italic text-primary" id="match-${m.sportGroup}-${m.slug}-away-score">${m.awayScore || 0}</span>
-                </div>
-              </div>
-              <div class="flex gap-2">
-                <div class="flex-1 bg-surface-container-highest py-3 rounded text-[10px] font-black tracking-widest uppercase text-center opacity-70">Arena Hub</div>
-                <button class="flex-1 kinetic-gradient py-3 rounded text-[10px] font-black tracking-widest uppercase text-white shadow-xl text-center">Live Stream</button>
-              </div>
-            </div>
-          </a>
-        `).join("") : `
-          <div id="live-empty-state" class="col-span-full py-32 text-center flex flex-col items-center gap-6 opacity-20">
-            <span class="material-symbols-outlined text-7xl">sensors_off</span>
-            <p class="text-xs font-black uppercase tracking-[0.3em]">No live match signals detected right now.</p>
+             </div>
+             <div>
+               <h3 class="text-3xl font-black italic uppercase tracking-tighter text-on-surface mb-4">No Signals Detected</h3>
+               <p class="text-xs font-black uppercase tracking-[0.5em] text-on-surface/30 italic">Searching all sectors for active sports frequencies...</p>
+             </div>
+             <a href="/schedules" data-link class="bg-primary hover:bg-primary/90 text-white px-12 py-5 rounded-lg font-black uppercase text-xs tracking-[0.2em] shadow-2xl transition-all transform hover:scale-105 no-underline">View Upcoming Arena Frequencies</a>
           </div>
         `}
       </div>
-    </section>
+      <div id="live-empty-state" class="hidden py-48 flex flex-col items-center justify-center text-center space-y-4 bg-[#141414] border border-white/5 rounded-3xl">
+         <p class="text-xs font-black uppercase tracking-[0.5em] text-on-surface/30 italic">No matches active for selected sport sector</p>
+      </div>
+    </div>
 
-    <!-- Recent Results (Tonal Transition) -->
+    
     <section class="bg-surface-container-low py-16 px-8 mt-12">
       <div class="max-w-7xl mx-auto">
         <div class="flex justify-between items-center mb-10 border-b border-white/5 pb-4">
@@ -1781,7 +1945,7 @@ async function renderLivePage(container) {
       </div>
     </section>
 
-    <!-- Upcoming Today Section -->
+    
     <section class="py-20 px-8 max-w-7xl mx-auto">
       <div class="flex justify-between items-center mb-10 border-b border-white/5 pb-4">
         <h2 class="text-4xl font-black font-headline uppercase tracking-tighter leading-none">Upcoming <span class="text-primary">Today</span></h2>
@@ -1811,7 +1975,7 @@ async function renderLivePage(container) {
       </div>
     </section>
 
-    <!-- Global Niche Coverage Banner -->
+    
     <section class="px-8 pb-20 max-w-7xl mx-auto">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2 bg-surface-container-high p-8 rounded-xl border border-white/5 relative overflow-hidden group shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
@@ -1925,7 +2089,7 @@ async function renderTrendingPage(container) {
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center font-bold text-[10px]">
-                      ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" class="w-6 h-6 object-contain">` : (m.homeAbbr || m.homeName.charAt(0))}
+                      ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" class="w-6 h-6 object-contain" />` : (m.homeAbbr || m.homeName.charAt(0))}
                     </div>
                     <span class="font-bold text-sm tracking-tight">${escapeHtml(m.homeName)}</span>
                   </div>
@@ -1934,7 +2098,7 @@ async function renderTrendingPage(container) {
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center font-bold text-[10px]">
-                      ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" class="w-6 h-6 object-contain">` : (m.awayAbbr || m.awayName.charAt(0))}
+                      ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" class="w-6 h-6 object-contain" />` : (m.awayAbbr || m.awayName.charAt(0))}
                     </div>
                     <span class="font-bold text-sm tracking-tight">${escapeHtml(m.awayName)}</span>
                   </div>
@@ -1955,13 +2119,13 @@ async function renderTrendingPage(container) {
           </div>
         </div>
 
-        <!-- Viral Moments -->
+        
         <div class="space-y-6 pt-12">
           <h3 class="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
             Viral Moments <span class="bg-primary-container px-2 text-[10px] not-italic rounded tracking-normal">SOCIAL CLIP CLOUD</span>
           </h3>
           <div id="viral-moments-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-             <!-- Populated by news or defaults -->
+             
              <div class="message-box col-span-full">Loading viral match spikes...</div>
           </div>
         </div>
@@ -2049,7 +2213,7 @@ async function renderUpcomingPage(container) {
   container.innerHTML = `
     ${heroHTML}
     
-    <!-- Date Filter Bar -->
+    
     <div class="sticky top-16 z-30 bg-[#0e0e0e]/95 backdrop-blur-lg border-b border-white/5 px-8 py-4">
       <div class="flex items-center gap-4 overflow-x-auto scrollbar-hide max-w-7xl mx-auto">
         <button class="px-6 py-2 rounded-full bg-primary text-white font-black text-[10px] tracking-widest uppercase whitespace-nowrap">TODAY</button>
@@ -2063,7 +2227,7 @@ async function renderUpcomingPage(container) {
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-12 p-8 max-w-7xl mx-auto">
-      <!-- Match Listings -->
+      
       <div class="xl:col-span-8 space-y-16">
         ${Object.entries(SPORT_GROUPS).map(([sportKey, sport]) => {
           const sportMatches = matches.filter(m => m.sportGroup === sportKey);
@@ -2086,13 +2250,13 @@ async function renderUpcomingPage(container) {
                       <div class="flex-1 flex flex-col md:flex-row items-center justify-end gap-5">
                         <span class="font-black text-lg order-2 md:order-1 uppercase italic tracking-tighter">${escapeHtml(m.homeName)}</span>
                         <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic text-[10px] order-1 md:order-2 border border-white/5 shadow-inner">
-                          ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" class="w-6 h-6 object-contain">` : (m.homeAbbr || m.homeName.charAt(0))}
+                          ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" class="w-6 h-6 object-contain" />` : (m.homeAbbr || m.homeName.charAt(0))}
                         </div>
                       </div>
                       <div class="px-3 py-1 bg-surface-container-highest rounded text-[10px] font-black opacity-20 italic">VS</div>
                       <div class="flex-1 flex flex-col md:flex-row items-center justify-start gap-5">
                         <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic text-[10px] border border-white/5 shadow-inner">
-                          ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" class="w-6 h-6 object-contain">` : (m.awayAbbr || m.awayName.charAt(0))}
+                          ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" class="w-6 h-6 object-contain" />` : (m.awayAbbr || m.awayName.charAt(0))}
                         </div>
                         <span class="font-black text-lg uppercase italic tracking-tighter">${escapeHtml(m.awayName)}</span>
                       </div>
@@ -2114,9 +2278,9 @@ async function renderUpcomingPage(container) {
         }).join("") || `<div class="col-span-full py-40 text-center flex flex-col items-center gap-6 opacity-20"><span class="material-symbols-outlined text-8xl">event_busy</span><p class="text-xs font-black uppercase tracking-[0.4em]">No match transmissions scheduled today.</p></div>`}
       </div>
 
-      <!-- Sidebar Content -->
+      
       <aside class="xl:col-span-4 space-y-12">
-        <!-- Trending Series: Bento Style -->
+        
         <div class="bg-surface-container-high p-8 rounded-xl border border-white/5 stadium-shadow">
           <h3 class="text-xl font-black uppercase tracking-tighter italic mb-8 flex items-center gap-3">
             <span class="w-2 h-5 bg-primary rounded-sm"></span> Trending Series
@@ -2132,7 +2296,7 @@ async function renderUpcomingPage(container) {
           </div>
         </div>
 
-        <!-- Fan Poll (Sleek Dark) -->
+        
         <div class="bg-surface-container-high p-8 rounded-xl border border-white/5 relative overflow-hidden stadium-shadow">
           <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-[60px]"></div>
           <h3 class="text-xl font-black uppercase tracking-tighter italic mb-6">Arena Consensus</h3>
@@ -2154,7 +2318,7 @@ async function renderUpcomingPage(container) {
           <p class="text-[9px] font-black opacity-30 mt-8 text-center uppercase tracking-[0.3em]">1.2M BROADCST SIGNALS CAPTURED</p>
         </div>
 
-        <!-- Promo Section -->
+        
         <div class="relative rounded-xl h-72 overflow-hidden group stadium-shadow">
           <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 grayscale group-hover:grayscale-0" src='/bg-stadium-day-2.svg' alt="Premium Promo"/>
           <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
@@ -2212,7 +2376,7 @@ async function renderResultsPage(container) {
             </div>
           </div>
         </div>
-        <!-- Slider Indicators (Visual Only) -->
+        
         <div class="absolute bottom-12 right-12 flex gap-3">
           <div class="w-16 h-1 bg-primary rounded-full shadow-[0_0_20px_rgba(204,22,22,0.8)]"></div>
           <div class="w-16 h-1 bg-white/10 rounded-full hover:bg-white/30 cursor-pointer transition-colors"></div>
@@ -2234,7 +2398,7 @@ async function renderResultsPage(container) {
   container.innerHTML = `
     ${heroHTML}
     
-    <!-- League Filter Bar -->
+    
     <section class="bg-[#0e0e0e]/95 backdrop-blur-lg sticky top-16 z-40 py-6 px-12 flex items-center gap-6 overflow-x-auto scrollbar-hide border-b border-white/5 shadow-xl">
       <div class="flex items-center gap-6 max-w-7xl mx-auto w-full">
         <button class="px-6 py-2 rounded-full bg-primary text-white font-black uppercase tracking-widest text-[10px] whitespace-nowrap shadow-lg">All Results</button>
@@ -2245,7 +2409,7 @@ async function renderResultsPage(container) {
     </section>
 
     <div class="max-w-7xl mx-auto w-full px-8 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
-      <!-- Results Grid -->
+      
       <div class="lg:col-span-8 space-y-12">
         <div class="flex justify-between items-end border-l-4 border-primary pl-6">
           <div>
@@ -2266,7 +2430,7 @@ async function renderResultsPage(container) {
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-4">
                     <div class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-[10px] font-black italic border border-white/5 shadow-inner">
-                      ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" class="w-6 h-6 object-contain">` : (m.homeAbbr || m.homeName.charAt(0))}
+                      ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" class="w-6 h-6 object-contain" />` : (m.homeAbbr || m.homeName.charAt(0))}
                     </div>
                     <span class="font-black text-lg text-on-surface uppercase italic tracking-tighter">${escapeHtml(m.homeName)}</span>
                   </div>
@@ -2275,7 +2439,7 @@ async function renderResultsPage(container) {
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-4">
                     <div class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-[10px] font-black italic border border-white/5 shadow-inner">
-                      ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" class="w-6 h-6 object-contain">` : (m.awayAbbr || m.awayName.charAt(0))}
+                      ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" class="w-6 h-6 object-contain" />` : (m.awayAbbr || m.awayName.charAt(0))}
                     </div>
                     <span class="font-black text-lg text-on-surface uppercase italic tracking-tighter">${escapeHtml(m.awayName)}</span>
                   </div>
@@ -2291,9 +2455,9 @@ async function renderResultsPage(container) {
         </div>
       </div>
 
-      <!-- Side Rails (Premium Ads) -->
+      
       <aside class="xl:col-span-4 space-y-12">
-        <!-- DraftKings Kinetic -->
+        
         <div class="bg-[#0e0e0e] border border-primary/20 p-8 rounded-xl stadium-shadow relative overflow-hidden group">
           <div class="absolute -top-12 -right-12 w-32 h-32 bg-primary blur-[100px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
           <div class="flex justify-between items-center mb-8">
@@ -2312,7 +2476,7 @@ async function renderResultsPage(container) {
           <a href="/donate" data-link class="block w-full bg-primary text-white font-black uppercase text-xs py-4 tracking-widest rounded-sm text-center no-underline shadow-[0_0_30px_rgba(204,22,22,0.4)] active:scale-95 transition-all">ACTIVATE NOW</a>
         </div>
 
-        <!-- Strategy Insight -->
+        
         <div class="bg-surface-container-high p-8 rounded-xl border border-white/5 stadium-shadow">
           <h3 class="text-xl font-black uppercase tracking-tighter italic mb-6">Arena xG Metric</h3>
           <p class="text-sm font-bold opacity-60 uppercase mb-8 leading-relaxed italic">Global finish efficiency is trending at <span class="text-secondary">1.12x</span> expected goals across current live sectors.</p>
@@ -2326,7 +2490,7 @@ async function renderResultsPage(container) {
       </aside>
     </div>
 
-    <!-- Featured Analysis Spotlight -->
+    
     <section class="bg-surface-container-low py-24 px-8 mt-12 border-t border-white/5">
       <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
@@ -2335,7 +2499,7 @@ async function renderResultsPage(container) {
             <h2 class="text-6xl font-black italic uppercase tracking-tighter text-white mt-6 mb-8 leading-tight">ARENA<br/>MASTERCLASS</h2>
             <p class="text-on-surface/50 font-bold uppercase italic text-lg mb-12 leading-relaxed max-w-xl">Deep tactical analysis of the latest peak engagement results. From high-line paralysis to Rodri's pivot play efficiency.</p>
             <div id="results-analysis-news" class="grid grid-cols-1 gap-6">
-              <!-- Inline Tactical News -->
+              
               <div class="message-box bg-white/5 p-8 rounded-xl border border-white/10 uppercase font-black text-xs tracking-widest opacity-40">Scanning post-match data streams...</div>
             </div>
           </div>
@@ -2418,7 +2582,7 @@ async function renderLeagueStandingsCard(container, leagueKey, heading) {
 
 function renderStandingsMarkup(rows) {
   if (!rows.length) return `<div class="message-box">Standings are not available for this competition yet.</div>`;
-  return `<div class="table-responsive"><table class="standings-table"><thead><tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead><tbody id="standings-markup-body">${rows.map((row) => `<tr><td>${escapeHtml(row.rank || row.intRank || "-")}</td><td class="team-cell">${row.teamLogo || row.strTeamBadge ? `<img src="${escapeHtml(row.teamLogo || row.strTeamBadge)}" alt="" class="team-badge-sm">` : ""}<span>${escapeHtml(row.teamName || row.strTeam || "Unknown")}</span></td><td>${escapeHtml(row.played || row.intPlayed || "-")}</td><td>${escapeHtml(row.won || row.intWin || "-")}</td><td>${escapeHtml(row.drawn || row.intDraw || "-")}</td><td>${escapeHtml(row.lost || row.intLoss || "-")}</td><td>${escapeHtml(row.goalDifference || row.intGoalDifference || "-")}</td><td><strong>${escapeHtml(row.points || row.intPoints || "-")}</strong></td></tr>`).join("")}</tbody></table></div>`;
+  return `<div class="table-responsive"><table class="standings-table"><thead><tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead><tbody id="standings-markup-body">${rows.map((row) => `<tr><td>${escapeHtml(row.rank || row.intRank || "-")}</td><td class="team-cell">${row.teamLogo || row.strTeamBadge ? `<img src="${escapeHtml(row.teamLogo || row.strTeamBadge)}" alt="" class="team-badge-sm" />` : ""}<span>${escapeHtml(row.teamName || row.strTeam || "Unknown")}</span></td><td>${escapeHtml(row.played || row.intPlayed || "-")}</td><td>${escapeHtml(row.won || row.intWin || "-")}</td><td>${escapeHtml(row.drawn || row.intDraw || "-")}</td><td>${escapeHtml(row.lost || row.intLoss || "-")}</td><td>${escapeHtml(row.goalDifference || row.intGoalDifference || "-")}</td><td><strong>${escapeHtml(row.points || row.intPoints || "-")}</strong></td></tr>`).join("")}</tbody></table></div>`;
 }
 
 function renderTimeline(events) {
@@ -2520,7 +2684,7 @@ function renderLeagueCard(item) {
     <a href="${routeForLeague(key)}" data-link class="group glass-card p-6 rounded-lg border border-white/5 hover:border-primary transition-all duration-300 relative overflow-hidden flex flex-col gap-6 shadow-xl">
       <div class="flex justify-between items-start">
         <div class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center p-2 border border-white/5 group-hover:scale-110 transition-transform">
-          <img src="${escapeHtml(getLeagueImagePath(key, sportGroup))}" alt="${escapeHtml(label)}" class="w-full h-full object-contain" onerror="this.src='/logo-mark.png';">
+          <img src="${escapeHtml(getLeagueImagePath(key, sportGroup))}" alt="${escapeHtml(label)}" class="w-full h-full object-contain" onerror="this.src='/logo-mark.png';" />
         </div>
         ${liveCount > 0 ? `
           <span class="bg-primary/20 text-primary text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">Live</span>
@@ -2592,7 +2756,7 @@ async function renderSchedulesHubPage(container) {
   });
 
   container.innerHTML = `
-    <!-- Schedule Centre Hero -->
+    
     <section class="relative w-full h-[500px] overflow-hidden group">
       <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" 
            style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('/bg-stadium-night-3.svg')"></div>
@@ -2611,7 +2775,7 @@ async function renderSchedulesHubPage(container) {
       </div>
     </section>
 
-    <!-- Live Now Strip -->
+    
     ${live.length > 0 ? `
     <section class="bg-primary/5 border-y border-primary/20 px-6 py-6">
       <div class="max-w-7xl mx-auto flex items-center gap-6 overflow-x-auto">
@@ -2630,7 +2794,7 @@ async function renderSchedulesHubPage(container) {
     </section>
     ` : ''}
 
-    <!-- Schedule Grid by League -->
+    
     <div class="p-8 max-w-7xl mx-auto space-y-16">
       ${Object.entries(grouped).length > 0 ? Object.entries(grouped).map(([league, matches]) => `
         <section>
@@ -2652,7 +2816,7 @@ async function renderSchedulesHubPage(container) {
                 </div>
                 <div class="flex justify-between items-center">
                   <div class="flex flex-col items-center gap-2 w-2/5">
-                    ${m.homeLogo ? `<img src="${escapeHtml(m.homeLogo)}" class="w-10 h-10 object-contain" alt="${escapeHtml(m.homeName)}">` : `<div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic text-xs">${escapeHtml(m.homeAbbr)}</div>`}
+                    ${m.homeLogo ? `<img src="${escapeHtml(m.homeLogo)}" class="w-10 h-10 object-contain" alt="${escapeHtml(m.homeName)}" />` : `<div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic text-xs">${escapeHtml(m.homeAbbr)}</div>`}
                     <span class="text-xs font-black uppercase tracking-tight text-center">${escapeHtml(m.homeAbbr)}</span>
                   </div>
                   <div class="text-center">
@@ -2663,7 +2827,7 @@ async function renderSchedulesHubPage(container) {
                     <p class="text-[9px] font-black uppercase tracking-widest opacity-40 mt-2">${escapeHtml(m.statusDetail || '')}</p>
                   </div>
                   <div class="flex flex-col items-center gap-2 w-2/5">
-                    ${m.awayLogo ? `<img src="${escapeHtml(m.awayLogo)}" class="w-10 h-10 object-contain" alt="${escapeHtml(m.awayName)}">` : `<div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic text-xs">${escapeHtml(m.awayAbbr)}</div>`}
+                    ${m.awayLogo ? `<img src="${escapeHtml(m.awayLogo)}" class="w-10 h-10 object-contain" alt="${escapeHtml(m.awayName)}" />` : `<div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic text-xs">${escapeHtml(m.awayAbbr)}</div>`}
                     <span class="text-xs font-black uppercase tracking-tight text-center">${escapeHtml(m.awayAbbr)}</span>
                   </div>
                 </div>
@@ -2694,7 +2858,7 @@ async function renderStandingsHubPage(container) {
   };
 
   container.innerHTML = `
-    <!-- Standings Hero -->
+    
     <section class="relative w-full h-[450px] overflow-hidden group">
       <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" 
            style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('/bg-stadium-day-3.svg')"></div>
@@ -2713,7 +2877,7 @@ async function renderStandingsHubPage(container) {
       </div>
     </section>
 
-    <!-- Standings Tables -->
+    
     <div class="p-8 max-w-7xl mx-auto space-y-16">
       ${Object.entries(topLeagueIds).map(([leagueKey, sportsDbId]) => {
         const league = LEAGUES[leagueKey];
@@ -2736,7 +2900,7 @@ async function renderStandingsHubPage(container) {
         `;
       }).join('')}
 
-      <!-- Other Leagues Directory -->
+      
       <section class="border-t border-white/5 pt-16">
         <h3 class="text-xl font-black italic uppercase tracking-tighter mb-8 border-l-4 border-primary pl-4">More League Tables</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -2768,5 +2932,31 @@ async function renderStandingsHubPage(container) {
 
 
 
-window.filterLiveCategory = function(s, e) { if(e) e.preventDefault(); const buttons = document.querySelectorAll('.live-filter-btn'); buttons.forEach(b => { b.classList.remove('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.add('text-on-surface/50'); if(b.dataset.sport === s) { b.classList.add('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.remove('text-on-surface/50'); } }); const cards = document.querySelectorAll('.live-match-card-item'); let count = 0; cards.forEach(c => { const act = s === 'all' || c.dataset.sportGroup === s; c.style.display = act ? 'block' : 'none'; if(act) count++; }); const empty = document.getElementById('live-empty-state'); if(empty) empty.style.display = count === 0 ? 'flex' : 'none'; };
+window.filterLiveCategory = function(s, e) {
+  if (e) e.preventDefault();
+  state.liveSportFilter = s;
+  
+  // Update buttons
+  const buttons = document.querySelectorAll('.live-filter-btn');
+  buttons.forEach(b => {
+    const isActive = b.dataset.sport === s;
+    b.classList.toggle('active', isActive);
+    b.classList.toggle('bg-primary', isActive);
+    b.classList.toggle('text-white', isActive);
+    b.classList.toggle('text-on-surface/40', !isActive);
+  });
+
+  // Filter cards
+  const cards = document.querySelectorAll('.live-match-card-item');
+  let count = 0;
+  cards.forEach(c => {
+    const isVisible = s === 'all' || c.dataset.sportGroup === s;
+    c.style.display = isVisible ? 'block' : 'none';
+    if (isVisible) count++;
+  });
+
+  // Empty state
+  const empty = document.getElementById('live-empty-state');
+  if (empty) empty.style.display = count === 0 ? 'flex' : 'none';
+};
 

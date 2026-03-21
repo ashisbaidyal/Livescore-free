@@ -22,6 +22,7 @@ export const state = {
   },
   notificationLog: {},
   historyFilter: "all",
+  liveSportFilter: "all",
   activePath: "/live",
   loading: true,
   languagePreference: "auto",
