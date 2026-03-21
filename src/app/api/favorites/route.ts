@@ -12,8 +12,9 @@ export async function GET(request: Request) {
     await connectToDatabase();
     const favorites = await Favorite.find({ userId });
     return NextResponse.json({ success: true, data: favorites });
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    const error = e instanceof Error ? e.message : 'Unknown error';
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }
 
@@ -33,8 +34,9 @@ export async function POST(request: Request) {
 
     const favorite = await Favorite.create({ userId, type, targetId, metadata });
     return NextResponse.json({ success: true, data: favorite });
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    const error = e instanceof Error ? e.message : 'Unknown error';
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }
 
@@ -53,7 +55,8 @@ export async function DELETE(request: Request) {
     await Favorite.deleteOne({ userId, type, targetId });
     
     return NextResponse.json({ success: true });
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    const error = e instanceof Error ? e.message : 'Unknown error';
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }

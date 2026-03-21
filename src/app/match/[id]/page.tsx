@@ -15,7 +15,7 @@ export default function MatchDetails({ params }: { params: { id: string } }) {
          <div className="text-center mb-8 relative z-10">
            <span className="text-sm font-bold text-brand uppercase tracking-wider bg-brand/10 border border-brand/20 px-4 py-1.5 rounded-full drop-shadow">
              <span className="w-2 h-2 rounded-full bg-brand inline-block mr-2 animate-pulse"></span>
-             Live - 75'
+             Live - 75&apos;
            </span>
          </div>
          
@@ -51,15 +51,15 @@ export default function MatchDetails({ params }: { params: { id: string } }) {
              </h3>
              <div className="space-y-4 font-sans text-sm">
                <div className="flex gap-4 p-3 bg-surface-soft rounded-lg border border-line/50">
-                 <span className="text-brand font-bold w-12">75'</span>
+                 <span className="text-brand font-bold w-12">75&apos;</span>
                  <span className="text-foreground">Substitution (Man City)</span>
                </div>
                <div className="flex gap-4 p-3 bg-surface-soft rounded-lg border border-line/50">
-                 <span className="text-accent font-bold w-12">62'</span>
+                 <span className="text-accent font-bold w-12">62&apos;</span>
                  <span className="text-foreground font-semibold">Goal - Man City (K. De Bruyne)</span>
                </div>
                <div className="flex gap-4 p-3 bg-surface-soft rounded-lg border border-line/50">
-                 <span className="text-muted font-bold w-12">45'</span>
+                 <span className="text-muted font-bold w-12">45&apos;</span>
                  <span className="text-foreground">Half Time</span>
                </div>
              </div>

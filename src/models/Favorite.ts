@@ -4,7 +4,7 @@ export interface IFavorite extends Document {
   userId: string;
   type: 'team' | 'league' | 'match';
   targetId: string;
-  metadata?: any;
+  metadata?: unknown;
   createdAt: Date;
 }
 
@@ -18,4 +18,7 @@ const FavoriteSchema: Schema = new Schema({
 
 FavoriteSchema.index({ userId: 1, type: 1, targetId: 1 }, { unique: true });
 
-export default mongoose.models.Favorite || mongoose.model<IFavorite>('Favorite', FavoriteSchema);
+// Prevent model overwrite in serverless Next.js functions
+const Favorite = mongoose.models.Favorite || mongoose.model('Favorite', FavoriteSchema);
+
+export default Favorite;

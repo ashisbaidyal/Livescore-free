@@ -1,5 +1,4 @@
 "use client";
-import Link from 'next/link';
 import { useStore } from '@/store/useStore';
 import { Star } from 'lucide-react';
 
@@ -24,7 +23,7 @@ export default function FavoritesPage() {
         <div className="bg-surface rounded-xl p-6 border border-line shadow-sm">
           <h2 className="font-display font-bold text-xl mb-4 text-accent uppercase">Saved Teams</h2>
           {favoriteTeams.length === 0 ? (
-            <p className="text-muted font-sans text-sm">You haven't added any favorite teams yet.</p>
+            <p className="text-muted font-sans text-sm">You haven&apos;t added any favorite teams yet.</p>
           ) : (
             <div className="space-y-3">
                <p className="text-brand">Dynamically mapping from Zustand store...</p>
@@ -35,7 +34,7 @@ export default function FavoritesPage() {
         <div className="bg-surface rounded-xl p-6 border border-line shadow-sm">
           <h2 className="font-display font-bold text-xl mb-4 text-brand uppercase">Saved Matches</h2>
           {favoriteMatches.length === 0 ? (
-            <p className="text-muted font-sans text-sm">You aren't tracking any specific matches yet.</p>
+            <p className="text-muted font-sans text-sm">You aren&apos;t tracking any specific matches yet.</p>
           ) : (
             <div className="space-y-3">
                <p className="text-brand">Dynamically mapping from Zustand store...</p>
