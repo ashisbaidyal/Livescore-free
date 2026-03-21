@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiveScoreFree | Real-time Sports Multiverse</title>
+  <meta name="description" content="All Sports. One Score. Real-time live scores from across the globe.">
+  
+  <!-- Tailwind CSS Output -->
+  <link href="/css/style.css" rel="stylesheet">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-background text-foreground min-h-screen flex flex-col font-sans">
+  
+  <!-- Header -->
+  <header class="sticky top-0 z-50 w-full border-b border-line bg-surface/80 backdrop-blur">
+    <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2">
+        <span class="font-display font-bold text-2xl tracking-wider uppercase text-foreground">
+          Live<span class="text-brand">Score</span>Free
+        </span>
+      </a>
+      
+      <div class="flex items-center gap-4">
+        <a href="https://ko-fi.com/livescorefree" target="_blank" class="hidden sm:flex items-center gap-2 bg-accent hover:bg-[#ff4744] text-white px-4 py-1.5 rounded-full text-sm font-bold transition-colors shadow-sm">
+          <span>Support Us on Ko-fi</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8 flex-1">
+    
+    <!-- Hero Section -->
+    <section class="bg-surface rounded-xl p-6 md:p-8 border border-line shadow-sm relative overflow-hidden mb-8">
+      <div class="relative z-10">
+        <h1 class="font-display font-bold text-3xl mb-2 text-brand uppercase tracking-wider flex items-center gap-3">
+          <i data-lucide="radio" class="w-8 h-8"></i> Live Sports Multiverse
+        </h1>
+        <p class="text-muted font-sans max-w-2xl">
+          Real-time, up-to-the-minute scores from top leagues across the globe. Auto-refreshes every 15 seconds.
+        </p>
+      </div>
+    </section>
+
+    <!-- Tabs Container -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-6 custom-scrollbar" id="sports-tabs">
+      <!-- Tabs injected by JS -->
+    </div>
+
+    <!-- Live Matches Grid -->
+    <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      
+      <!-- Skeleton Loading State -->
+      <div class="bg-surface rounded-xl border border-line p-5 w-full animate-pulse h-40"></div>
+      <div class="bg-surface rounded-xl border border-line p-5 w-full animate-pulse h-40"></div>
+      <div class="bg-surface rounded-xl border border-line p-5 w-full animate-pulse h-40"></div>
+
+    </div>
+
+  </main>
+
+  <script src="/js/script.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

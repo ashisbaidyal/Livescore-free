@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match Overview | LiveScoreFree</title>
+  
+  <link href="/css/style.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-background text-foreground min-h-screen flex flex-col font-sans">
+  
+  <header class="sticky top-0 z-50 w-full border-b border-line bg-surface/80 backdrop-blur">
+    <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2 text-muted hover:text-foreground transition-colors group">
+        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+        <span class="font-display font-bold text-lg tracking-wider uppercase group-hover:text-brand transition-colors">Back to Live</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 flex-1">
+    
+    <!-- Match Info Injected by JS -->
+    <div id="match-details" class="max-w-4xl mx-auto space-y-6">
+      <div class="bg-surface rounded-xl border border-line p-8 animate-pulse h-64 w-full"></div>
+    </div>
+
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      lucide.createIcons();
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      const container = document.getElementById('match-details');
+
+      if (!id) {
+        container.innerHTML = '<div class="text-center py-12 text-muted">No Match ID Provided</div>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/match?id=${id}`);
+        const data = await res.json();
+        
+        if (data.notFound) throw new Error("Match not found");
+        
+        const isLive = data.status === 'live';
+        
+        container.innerHTML = `
+          <div class="bg-surface rounded-xl overflow-hidden shadow-2xl border ${isLive ? 'border-accent/40 shadow-[0_0_30px_rgba(255,94,91,0.15)]' : 'border-line'} relative">
+            
+            <div class="absolute inset-0 bg-gradient-to-br from-surface to-background w-full h-full z-0"></div>
+            
+            <div class="relative z-10 p-8 md:p-12">
+              <div class="text-center mb-10">
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full ${isLive ? 'bg-accent/10 border border-accent/20 text-accent font-bold animate-pulse-fast' : 'bg-surface-soft border border-line text-muted font-medium'} text-xs uppercase tracking-widest">
+                  ${isLive ? '<div class="w-2 h-2 rounded-full bg-accent"></div> LIVE NOW' : data.status === 'finished' ? 'FINAL SCORE' : 'UPCOMING FIXTURE'}
+                </span>
+                <div class="mt-4 text-sm font-bold tracking-widest text-muted uppercase">${data.league}</div>
+              </div>
+              
+              <div class="flex items-center justify-between w-full">
+                <!-- Home Team -->
+                <div class="flex flex-col items-center flex-1">
+                  <div class="w-20 h-20 md:w-32 md:h-32 mb-4 p-4 bg-surface rounded-full shadow-lg border border-line flex items-center justify-center">
+                    <img src="${data.homeTeam.logo}" class="w-full h-full object-contain" onerror="this.src='/public/logo.png'">
+                  </div>
+                  <h2 class="font-display font-bold text-xl md:text-3xl text-center leading-tight max-w-[150px] md:max-w-none">${data.homeTeam.name}</h2>
+                </div>
+                
+                <!-- Score -->
+                <div class="flex flex-col items-center flex-shrink-0 px-4">
+                  <div class="font-display font-bold text-5xl md:text-8xl tracking-tighter ${isLive ? 'text-foreground' : 'text-muted'}">
+                    ${isLive || data.status === 'finished' ? `${data.homeTeam.score} - ${data.awayTeam.score}` : 'vs'}
+                  </div>
+                  <div class="mt-2 text-brand font-bold uppercase tracking-widest text-sm">${data.time}</div>
+                </div>
+
+                <!-- Away Team -->
+                <div class="flex flex-col items-center flex-1">
+                  <div class="w-20 h-20 md:w-32 md:h-32 mb-4 p-4 bg-surface rounded-full shadow-lg border border-line flex items-center justify-center">
+                    <img src="${data.awayTeam.logo}" class="w-full h-full object-contain" onerror="this.src='/public/logo.png'">
+                  </div>
+                  <h2 class="font-display font-bold text-xl md:text-3xl text-center leading-tight max-w-[150px] md:max-w-none">${data.awayTeam.name}</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = '<div class="text-center py-12 text-muted">Error loading match metrics. Please return to Live data.</div>';
+      }
+    });
+  </script>
+</body>
+</html>
