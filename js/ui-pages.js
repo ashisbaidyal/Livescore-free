@@ -1628,9 +1628,9 @@ async function renderLivePage(container) {
     <!-- Category Filter Bar -->
     <div class="sticky top-16 z-30 w-full bg-[#0e0e0e]/80 backdrop-blur-xl border-b border-white/5 px-8 py-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
       <div class="flex items-center space-x-8 max-w-7xl mx-auto">
-        <button class="text-primary border-b-2 border-primary pb-1 font-black text-[10px] tracking-widest uppercase">ALL SPORTS</button>
+        <button onclick="window.filterLiveCategory('all', event)" class="live-filter-btn active text-primary border-b-2 border-primary pb-1 font-black text-[10px] tracking-widest uppercase" data-sport="all">ALL SPORTS</button>
         ${Object.entries(SPORT_GROUPS).map(([key, sport]) => `
-          <a href="/sport/${key}" data-link class="text-on-surface/50 hover:text-primary font-bold text-[10px] tracking-widest uppercase transition-colors">${escapeHtml(sport.label)}</a>
+          <button onclick="window.filterLiveCategory('${key}', event)" class="live-filter-btn text-on-surface/50 hover:text-primary pb-1 font-bold text-[10px] tracking-widest uppercase transition-colors" data-sport="${key}">${escapeHtml(sport.label)}</button>
         `).join("")}
       </div>
     </div>
@@ -1639,7 +1639,7 @@ async function renderLivePage(container) {
     <section class="px-8 py-16 max-w-7xl mx-auto">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         ${liveMatches.length > 0 ? liveMatches.map(m => `
-          <a href="${routeForMatch(m)}" data-link class="group bg-surface-container-high rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative">
+          <a href="${routeForMatch(m)}" data-link data-sport-group="${m.sportGroup}" class="live-match-card-item group bg-surface-container-high rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative">
             <div class="p-6">
               <div class="flex justify-between items-start mb-8">
                 <div class="flex flex-col">
@@ -1675,7 +1675,7 @@ async function renderLivePage(container) {
             </div>
           </a>
         `).join("") : `
-          <div class="col-span-full py-32 text-center flex flex-col items-center gap-6 opacity-20">
+          <div id="live-empty-state" class="col-span-full py-32 text-center flex flex-col items-center gap-6 opacity-20">
             <span class="material-symbols-outlined text-7xl">sensors_off</span>
             <p class="text-xs font-black uppercase tracking-[0.3em]">No live match signals detected right now.</p>
           </div>
@@ -2696,3 +2696,6 @@ async function renderStandingsHubPage(container) {
 
 
 
+
+
+window.filterLiveCategory = function(s, e) { if(e) e.preventDefault(); const buttons = document.querySelectorAll('.live-filter-btn'); buttons.forEach(b => { b.classList.remove('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.add('text-on-surface/50'); if(b.dataset.sport === s) { b.classList.add('active', 'text-primary', 'border-b-2', 'border-primary'); b.classList.remove('text-on-surface/50'); } }); const cards = document.querySelectorAll('.live-match-card-item'); let count = 0; cards.forEach(c => { const act = s === 'all' || c.dataset.sportGroup === s; c.style.display = act ? 'block' : 'none'; if(act) count++; }); const empty = document.getElementById('live-empty-state'); if(empty) empty.style.display = count === 0 ? 'flex' : 'none'; };
