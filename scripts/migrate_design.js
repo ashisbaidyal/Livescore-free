@@ -87,11 +87,11 @@ if (matchStart) {
    }
 }
 
-// 3. Rename any occurrences of "GoalStream" or "GOALSTREAM" to "LivescoreFree.Online"
+// 3. Rename any occurrences of "livescorefree.online" or "LIVESCOREFREE.ONLINE" to "LivescoreFree.Online"
 function replaceInFile(filePath) {
     let content = fs.readFileSync(filePath, 'utf8');
-    let replaced = content.replace(/GOALSTREAM/g, 'LIVESCOREFREE.ONLINE');
-    replaced = replaced.replace(/GoalStream/g, 'LivescoreFree.Online');
+    let replaced = content.replace(/LIVESCOREFREE.ONLINE/g, 'LIVESCOREFREE.ONLINE');
+    replaced = replaced.replace(/livescorefree.online/g, 'LivescoreFree.Online');
     if (content !== replaced) {
         fs.writeFileSync(filePath, replaced);
     }

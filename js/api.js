@@ -587,10 +587,16 @@ export function syncMatchRealtimeState(match, updates = {}) {
     const homeEl = document.getElementById(`${matchId}-home-score`);
     const awayEl = document.getElementById(`${matchId}-away-score`);
     const statusEl = document.getElementById(`${matchId}-status`);
-    const metaEl = document.getElementById(`${matchId}-meta`);
+    const scoresEl = document.getElementById(`${matchId}-scores`);
+    const detailEl = document.getElementById(`${matchId}-status-detail`);
 
     if (homeEl && updates.homeScore !== undefined) homeEl.textContent = updates.homeScore;
     if (awayEl && updates.awayScore !== undefined) awayEl.textContent = updates.awayScore;
+    if (scoresEl && updates.homeScore !== undefined && updates.awayScore !== undefined) {
+      scoresEl.textContent = `${updates.homeScore} - ${updates.awayScore}`;
+    }
+    if (detailEl && updates.statusDetail !== undefined) detailEl.textContent = updates.statusDetail;
+    
     if (statusEl && (updates.status !== undefined || updates.statusDetail !== undefined)) {
       // Re-render only the badge part if we have the full match object updated
       import("./ui-matches.js").then(m => {

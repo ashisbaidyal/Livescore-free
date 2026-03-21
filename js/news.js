@@ -16,7 +16,7 @@ export async function fetchSportsNews() {
   }
 }
 
-export function renderGoalStreamNewsCard(article) {
+export function renderlivescorefree.onlineNewsCard(article) {
   const img = article.images?.[0]?.url || "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1973&auto=format&fit=crop";
   const category = article.categories?.[0]?.description || (article.type === "Analysis" ? "Analysis" : "Sports News");
   
@@ -34,7 +34,7 @@ export function renderGoalStreamNewsCard(article) {
 }
 
 export function renderHighlightsNewsCard(article) {
-  return renderGoalStreamNewsCard(article);
+  return renderlivescorefree.onlineNewsCard(article);
 }
 
 

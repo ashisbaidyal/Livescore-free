@@ -85,8 +85,8 @@ export async function renderRoute() {
 
 async function renderHomePage(container) {
   setSeo({
-    title: "GoalStream | Kinetic Broadcast | Live Scores & Arena Analytics",
-    description: "Navigate the global sports multiverse with GoalStream. High-contrast scores, 4K streams, and elite scouting reports for every major league.",
+    title: "livescorefree.online | Kinetic Broadcast | Live Scores & Arena Analytics",
+    description: "Navigate the global sports multiverse with livescorefree.online. High-contrast scores, 4K streams, and elite scouting reports for every major league.",
     path: "/home"
   });
 
@@ -496,7 +496,7 @@ function renderHistoryPage(container) {
 }
 function renderTopLeaguesPage(container) {
   setSeo({ 
-    title: "Leagues Hub | GoalStream Kinetic Directory", 
+    title: "Leagues Hub | livescorefree.online Kinetic Directory", 
     description: "Browse the global map of elite sports competitions and active arena frequencies.", 
     path: "/top-leagues" 
   });
@@ -563,7 +563,7 @@ function renderTopLeaguesPage(container) {
         </section>
       `).join("")}
 
-      <!-- Official Partners Section (GoalStream Style) -->
+      <!-- Official Partners Section (livescorefree.online Style) -->
       <div class="w-full py-12 bg-surface-container-lowest border border-white/5 rounded-xl flex flex-col items-center justify-center gap-8 overflow-hidden relative stadium-shadow mt-12">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
         <span class="text-[10px] font-black text-on-surface opacity-20 uppercase tracking-[0.5em] absolute top-4">Official Broadcast Partners</span>
@@ -585,7 +585,7 @@ function renderTopLeaguesPage(container) {
             <span class="text-2xl font-black italic">PUMA</span>
           </div>
         </div>
-        <p class="text-[9px] font-black opacity-10 uppercase tracking-[0.3em]">GoalStream Kinetic Signal • Encrypted Feed</p>
+        <p class="text-[9px] font-black opacity-10 uppercase tracking-[0.3em]">livescorefree.online Kinetic Signal • Encrypted Feed</p>
       </div>
     </div>
   `;
@@ -597,7 +597,7 @@ async function renderSportPage(container, route) {
   if (!sport) return renderNotFoundPage(container);
 
   setSeo({ 
-    title: `${sport.label} | GoalStream Spectacle`, 
+    title: `${sport.label} | livescorefree.online Spectacle`, 
     description: sport.description,
     path: `/sport/${sportKey}` 
   });
@@ -744,8 +744,8 @@ async function renderLeaguePage(container, route) {
   if (!league) return renderNotFoundPage(container);
 
   setSeo({ 
-    title: `${league.label} | GoalStream Arena Standings`, 
-    description: `Track ${league.label} live rankings, point tables, and matchday action on GoalStream.`,
+    title: `${league.label} | livescorefree.online Arena Standings`, 
+    description: `Track ${league.label} live rankings, point tables, and matchday action on livescorefree.online.`,
     path: routeForLeague(leagueKey)
   });
 
@@ -777,7 +777,7 @@ async function renderLeaguePage(container, route) {
           </div>
         </div>
         
-        <!-- Premium Sidebar Ad (GoalStream Style) -->
+        <!-- Premium Sidebar Ad (livescorefree.online Style) -->
         <div class="lg:w-1/3">
            <div class="h-full bg-gradient-to-br from-[#cc1616] to-[#690003] p-8 flex flex-col justify-between relative overflow-hidden rounded-xl border border-white/10 shadow-2xl">
               <div class="absolute -right-12 -top-12 w-48 h-48 border-[20px] border-white/5 rounded-full animate-spin-slow"></div>
@@ -911,7 +911,7 @@ async function renderMatchPage(container, route) {
   const activeTab = state.matchTabBySlug[favoriteKey] || "summary";
   
   setSeo({
-    title: `${match.homeName} vs ${match.awayName} | GoalStream Arena`,
+    title: `${match.homeName} vs ${match.awayName} | livescorefree.online Arena`,
     description: `${match.homeName} vs ${match.awayName} live score and match detail center.`,
     path: routeForMatch(match)
   });
@@ -1090,7 +1090,7 @@ async function renderMatchPage(container, route) {
 
 async function renderPlayersHubPage(container) {
   setSeo({
-    title: "Ultimate Players Hub | GoalStream",
+    title: "Ultimate Players Hub | livescorefree.online",
     description: "Explore the profiles, stats, and legacies of the world's greatest athletes.",
     path: "/players"
   });
@@ -1105,7 +1105,7 @@ async function renderPlayersHubPage(container) {
           <div class="max-w-2xl space-y-6 text-left">
             <div class="flex items-center gap-4">
               <span class="bg-primary text-on-primary px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-sm italic">LEGENDARY STATUS</span>
-              <span class="text-on-surface-variant text-[10px] font-black tracking-widest uppercase opacity-40 italic">GOALSTREAM FEATURE</span>
+              <span class="text-on-surface-variant text-[10px] font-black tracking-widest uppercase opacity-40 italic">LIVESCOREFREE.ONLINE FEATURE</span>
             </div>
             <h1 class="text-7xl lg:text-9xl font-black italic tracking-tighter uppercase leading-[0.8] text-on-surface drop-shadow-2xl">
               Lionel<br/><span class="text-primary text-glow-red">Messi</span>
@@ -1180,7 +1180,7 @@ async function renderPlayersHubPage(container) {
             <div class="relative z-10">
                <span class="text-[10px] font-black text-[#1fa64a] uppercase tracking-[0.4em] mb-4 block">OFFICIAL ARENA PARTNER</span>
                <h3 class="text-4xl font-black uppercase italic tracking-tighter text-white leading-none">FUEL THE<br><span class="text-[#1fa64a]">BROADCAST</span></h3>
-               <p class="text-xs font-black text-on-surface opacity-40 uppercase tracking-widest mt-6 max-w-md italic">Join the GoalStream collective. Support independent sports transmission and unlock ultra-kinetic features.</p>
+               <p class="text-xs font-black text-on-surface opacity-40 uppercase tracking-widest mt-6 max-w-md italic">Join the livescorefree.online collective. Support independent sports transmission and unlock ultra-kinetic features.</p>
             </div>
             <button class="bg-[#1fa64a] text-black px-12 py-4 font-black uppercase tracking-widest text-[10px] rounded-lg shadow-2xl active:scale-95 transition-all relative z-10">UNLEASH NOW</button>
          </div>
@@ -1191,7 +1191,7 @@ async function renderPlayersHubPage(container) {
 
 async function renderTeamsHubPage(container) {
   setSeo({
-    title: "Ultimate Teams Hub | GoalStream",
+    title: "Ultimate Teams Hub | livescorefree.online",
     description: "Connect with the world's most elite sports organizations and club legacies.",
     path: "/teams"
   });
@@ -1267,7 +1267,7 @@ async function renderTeamsHubPage(container) {
 
 async function renderPlayerProfilePage(container, route) {
    // Placeholder for player profile intel
-   setSeo({ title: "Player Profile Intel | GoalStream", description: "In-depth kinetic metrics and career mission logs." });
+   setSeo({ title: "Player Profile Intel | livescorefree.online", description: "In-depth kinetic metrics and career mission logs." });
    container.innerHTML = `<div class="p-20 text-center flex flex-col items-center gap-8 opacity-40">
       <span class="material-symbols-outlined text-7xl animate-pulse">monitoring</span>
       <p class="text-xs font-black uppercase tracking-[0.5em] italic">Transmitting Athlete Tactical Data...</p>
@@ -1277,7 +1277,7 @@ async function renderPlayerProfilePage(container, route) {
 
 async function renderTeamProfilePage(container, route) {
    // Placeholder for team profile intel
-   setSeo({ title: "Team Tactical Intel | GoalStream", description: "Strategic squad metrics and arena achievement records." });
+   setSeo({ title: "Team Tactical Intel | livescorefree.online", description: "Strategic squad metrics and arena achievement records." });
    container.innerHTML = `<div class="p-20 text-center flex flex-col items-center gap-8 opacity-40">
       <span class="material-symbols-outlined text-7xl animate-pulse">hub</span>
       <p class="text-xs font-black uppercase tracking-[0.5em] italic">Accessing Unit Command Post...</p>
@@ -1287,7 +1287,7 @@ async function renderTeamProfilePage(container, route) {
 
 function renderDonatePage(container) {
   setSeo({ 
-    title: "Support the Arena | GoalStream Collective", 
+    title: "Support the Arena | livescorefree.online Collective", 
     description: "Help fund server costs and real-time kinetic sports coverage.", 
     path: "/donate" 
   });
@@ -1296,7 +1296,7 @@ function renderDonatePage(container) {
   container.innerHTML = `
     <section class="min-h-screen py-24 px-8 max-w-5xl mx-auto stadium-shadow">
       <div class="border-l-4 border-primary pl-8 mb-16 text-left">
-        <span class="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-4 block">GOALSTREAM COLLECTIVE</span>
+        <span class="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-4 block">LIVESCOREFREE.ONLINE COLLECTIVE</span>
         <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-6">FUEL THE<br><span class="text-glow-red text-primary">BROADCAST</span></h1>
         <p class="text-xs font-black text-on-surface opacity-40 uppercase tracking-widest max-w-xl leading-loose italic">Independent sports transmission requires collective energy. Your support keeps the signals clear and the data real-time.</p>
       </div>
@@ -1333,7 +1333,7 @@ function renderDonatePage(container) {
          <div class="flex flex-col md:flex-row items-center justify-between gap-10">
             <div class="text-left">
                <h4 class="text-xl font-black italic uppercase tracking-tighter mb-4">SPONSOR SECTOR</h4>
-               <p class="text-[10px] font-bold text-on-surface opacity-30 uppercase tracking-widest max-w-sm italic">Brand placement across the GoalStream universe for premium sports traffic.</p>
+               <p class="text-[10px] font-bold text-on-surface opacity-30 uppercase tracking-widest max-w-sm italic">Brand placement across the livescorefree.online universe for premium sports traffic.</p>
             </div>
             ${renderInlineSponsorCard("Elite Brand Placement", "/advertise")}
          </div>
@@ -1343,7 +1343,7 @@ function renderDonatePage(container) {
 }async function renderNewsPage(container) {
   setSeo({ 
     title: "Newsroom | Livescorefree Kinetic Broadcast", 
-    description: "Editorial sports coverage, tactical analysis, and premium headlines from the GoalStream universe.", 
+    description: "Editorial sports coverage, tactical analysis, and premium headlines from the livescorefree.online universe.", 
     path: "/news" 
   });
   
@@ -1406,7 +1406,7 @@ function renderDonatePage(container) {
 
 function renderContactPage(container) {
   setSeo({ 
-    title: "Contact the Hub | GoalStream Center", 
+    title: "Contact the Hub | livescorefree.online Center", 
     description: "Support, advertising, and arena partnership contact page.", 
     path: "/contact" 
   });
@@ -1444,7 +1444,7 @@ function renderContactPage(container) {
 
 function renderAboutPage(container) {
   setSeo({ 
-    title: "About the Project | GoalStream Protocol", 
+    title: "About the Project | livescorefree.online Protocol", 
     description: "The logic and vision behind the ultimate kinetic sports platform.", 
     path: "/about" 
   });
@@ -1453,7 +1453,7 @@ function renderAboutPage(container) {
     <section class="min-h-screen py-24 px-8 max-w-5xl mx-auto stadium-shadow text-left">
       <div class="border-l-4 border-primary pl-8 mb-16">
         <span class="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-4 block italic">PROTOCOL OVERVIEW</span>
-        <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-6">THE<br><span class="text-glow-red text-primary">GOALSTREAM VISION</span></h1>
+        <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-6">THE<br><span class="text-glow-red text-primary">LIVESCOREFREE.ONLINE VISION</span></h1>
         <p class="text-xs font-black text-on-surface opacity-40 uppercase tracking-widest max-w-xl leading-loose italic">A faster, lighter, and more immersive way to experience the world's elite sports data.</p>
       </div>
 
@@ -1464,7 +1464,7 @@ function renderAboutPage(container) {
               <h3 class="text-2xl font-black italic uppercase tracking-tighter">DATA AS ENERGY</h3>
            </div>
            <div class="md:col-span-8">
-              <p class="text-xs font-black text-on-surface/60 uppercase tracking-widest leading-loose italic">GoalStream was built on the belief that sports data shouldn't be static. It should feel kinetic, alive, and immersive. Every score, every card, and every timeline event is a pulse in the global arena.</p>
+              <p class="text-xs font-black text-on-surface/60 uppercase tracking-widest leading-loose italic">livescorefree.online was built on the belief that sports data shouldn't be static. It should feel kinetic, alive, and immersive. Every score, every card, and every timeline event is a pulse in the global arena.</p>
            </div>
         </div>
 
@@ -1484,7 +1484,7 @@ function renderAboutPage(container) {
 
 function renderFeedbackPage(container) {
   setSeo({ 
-    title: "Feedback Terminal | GoalStream Hub", 
+    title: "Feedback Terminal | livescorefree.online Hub", 
     description: "Submit tactical reports and feedback directly to the protocol team.", 
     path: "/feedback" 
   });
@@ -1654,9 +1654,9 @@ async function renderMatchListingPage(container, title, description, path, toneC
               <div class="flex justify-between items-start mb-8">
                 <div class="flex flex-col">
                   <span class="text-[10px] font-black tracking-[0.2em] text-primary uppercase italic">${escapeHtml(m.leagueLabel)}</span>
-                  <span class="text-[9px] font-bold text-on-surface/40 uppercase mt-1 tracking-widest">${escapeHtml(m.statusLabel || 'Live')}</span>
+                  <span class="text-[9px] font-bold text-on-surface/40 uppercase mt-1 tracking-widest" id="match-${m.sportGroup}-${m.slug}-status">${escapeHtml(m.statusLabel || 'Live')}</span>
                 </div>
-                <span class="text-primary font-black text-xs italic tracking-tighter">${m.statusDetail || 'In Progress'}</span>
+                <span class="text-primary font-black text-xs italic tracking-tighter" id="match-${m.sportGroup}-${m.slug}-status-detail">${m.statusDetail || 'In Progress'}</span>
               </div>
               <div class="space-y-8 mb-8">
                 <div class="flex items-center justify-between">
@@ -1666,7 +1666,7 @@ async function renderMatchListingPage(container, title, description, path, toneC
                     </div>
                     <span class="font-black text-lg tracking-tight italic uppercase">${escapeHtml(m.homeName)}</span>
                   </div>
-                  <span class="text-3xl font-black italic text-primary">${m.homeScore || 0}</span>
+                  <span class="text-3xl font-black italic text-primary" id="match-${m.sportGroup}-${m.slug}-home-score">${m.homeScore || 0}</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-4">
@@ -1675,7 +1675,7 @@ async function renderMatchListingPage(container, title, description, path, toneC
                     </div>
                     <span class="font-black text-lg tracking-tight italic uppercase">${escapeHtml(m.awayName)}</span>
                   </div>
-                  <span class="text-3xl font-black italic text-primary">${m.awayScore || 0}</span>
+                  <span class="text-3xl font-black italic text-primary" id="match-${m.sportGroup}-${m.slug}-away-score">${m.awayScore || 0}</span>
                 </div>
               </div>
               <div class="flex gap-2">
@@ -1773,7 +1773,7 @@ async function renderMatchListingPage(container, title, description, path, toneC
           <div>
             <span class="material-symbols-outlined text-4xl mb-4 text-white" style="font-variation-settings: 'FILL' 1;">campaign</span>
             <h3 class="text-2xl font-black font-headline uppercase tracking-tighter mb-2 text-white">Support the Stream</h3>
-            <p class="text-white/80 text-sm font-bold uppercase italic">Partner with GoalStream's elite broadcast network. Keep our premium live coverage 100% free for everyone.</p>
+            <p class="text-white/80 text-sm font-bold uppercase italic">Partner with livescorefree.online's elite broadcast network. Keep our premium live coverage 100% free for everyone.</p>
           </div>
           <a href="/donate" data-link class="bg-white text-primary py-3 font-black text-[10px] tracking-widest uppercase rounded-sm mt-8 transition-transform hover:scale-[1.05] active:scale-95 text-center no-underline">BECOME A PARTNER</a>
         </div>
@@ -2100,7 +2100,7 @@ async function renderUpcomingPage(container) {
           <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
           <div class="absolute bottom-8 left-8 right-8">
             <p class="text-[10px] font-black uppercase tracking-[0.3em] bg-primary text-white px-3 py-1 mb-4 inline-block italic">Pro Access</p>
-            <h4 class="text-3xl font-black italic uppercase tracking-tighter leading-none text-white">GoalStream+</h4>
+            <h4 class="text-3xl font-black italic uppercase tracking-tighter leading-none text-white">livescorefree.online+</h4>
             <p class="text-xs font-bold opacity-70 mt-3 uppercase tracking-tight text-white leading-relaxed">Multi-angle 4K streams & ad-free elite experience.</p>
             <a href="/donate" data-link class="inline-block mt-6 px-6 py-2 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-sm no-underline hover:scale-105 transition-transform active:scale-95">Upgrade Hub</a>
           </div>
