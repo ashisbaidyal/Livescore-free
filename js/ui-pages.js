@@ -114,18 +114,18 @@ async function renderHomePage(container) {
 <!-- Ticker Style Scoreboard -->
 <div class="bg-surface-container-low border-b border-white/5 py-3 overflow-hidden">
 <div class="flex animate-[scroll_40s_linear_infinite] whitespace-nowrap gap-12 px-6">
-  \${tickerMatches.length > 0 ? tickerMatches.map((m, i) => \`
-    <div class="flex items-center gap-4 \${i % 2 !== 0 ? 'opacity-60' : ''}">
-    <span class="text-[10px] font-black text-primary uppercase italic">\${escapeHtml(m.leagueLabel || m.sportGroup || 'SPORT')}</span>
-    <span class="text-xs font-bold">\${escapeHtml(m.homeAbbr || m.homeName.substring(0,3))} \${m.status === 'live' ? \`\${m.homeScore} - \${m.awayScore}\` : 'VS'} \${escapeHtml(m.awayAbbr || m.awayName.substring(0,3))}</span>
-    \${m.status === 'live' ? '<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>' : '<span class="text-[10px]">FINAL</span>'}
+  ${tickerMatches.length > 0 ? tickerMatches.map((m, i) => `
+    <div class="flex items-center gap-4 ${i % 2 !== 0 ? 'opacity-60' : ''}">
+    <span class="text-[10px] font-black text-primary uppercase italic">${escapeHtml(m.leagueLabel || m.sportGroup || 'SPORT')}</span>
+    <span class="text-xs font-bold">${escapeHtml(m.homeAbbr || m.homeName.substring(0,3))} ${m.status === 'live' ? `${m.homeScore} - ${m.awayScore}` : 'VS'} ${escapeHtml(m.awayAbbr || m.awayName.substring(0,3))}</span>
+    ${m.status === 'live' ? '<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>' : '<span class="text-[10px]">FINAL</span>'}
     </div>
-  \`).join("") : \`
+  `).join("") : `
     <div class="flex items-center gap-4">
     <span class="text-[10px] font-black text-primary uppercase italic">SYSTEM</span>
     <span class="text-xs font-bold">WAITING FOR LIVE DATA</span>
     </div>
-  \`}
+  `}
 </div>
 </div>
 <!-- Enhanced All-Sports Hero Hub -->
@@ -134,21 +134,21 @@ async function renderHomePage(container) {
 <div class="relative w-full h-full">
 <!-- Slide 1: Featured Live Match (Active State Example) -->
 <div class="absolute inset-0 z-10">
-<div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" style="background-image: linear-gradient(to top, rgb(19, 19, 19) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('\${heroMatch?.homeBadge || "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076"}');"></div>
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" style="background-image: linear-gradient(to top, rgb(19, 19, 19) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${heroMatch?.homeBadge || "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076"}');"></div>
 <div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
 <div class="flex items-center gap-3 mb-6">
 <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
-<span class="w-2 h-2 bg-white rounded-full \${heroMatch?.status === 'live' ? 'animate-pulse' : ''}"></span> \${heroMatch?.status === 'live' ? 'FEATURED LIVE' : 'FEATURED MATCH'}
+<span class="w-2 h-2 bg-white rounded-full ${heroMatch?.status === 'live' ? 'animate-pulse' : ''}"></span> ${heroMatch?.status === 'live' ? 'FEATURED LIVE' : 'FEATURED MATCH'}
 </span>
-<span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">\${escapeHtml(heroMatch?.leagueLabel || 'Premier League')} • Game of the Week</span>
+<span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${escapeHtml(heroMatch?.leagueLabel || 'Premier League')} • Game of the Week</span>
 </div>
 <div class="flex items-end gap-6 mb-8">
 <h1 class="font-headline font-black text-6xl md:text-9xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
-  \${escapeHtml(heroMatch?.homeAbbr || heroMatch?.homeName?.substring(0,3) || 'LIV')} <span class="text-primary">\${heroMatch?.homeScore || 0}-\${heroMatch?.awayScore || 0}</span> \${escapeHtml(heroMatch?.awayAbbr || heroMatch?.awayName?.substring(0,3) || 'ARS')}
+  ${escapeHtml(heroMatch?.homeAbbr || heroMatch?.homeName?.substring(0,3) || 'LIV')} <span class="text-primary">${heroMatch?.homeScore || 0}-${heroMatch?.awayScore || 0}</span> ${escapeHtml(heroMatch?.awayAbbr || heroMatch?.awayName?.substring(0,3) || 'ARS')}
 </h1>
 <div class="mb-2 hidden sm:block">
 <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">Elapsed</div>
-<div class="text-3xl font-black italic">\${heroMatch?.statusDetail || "90'"}</div>
+<div class="text-3xl font-black italic">${heroMatch?.statusDetail || "90'"}</div>
 </div>
 </div>
 <div class="flex gap-10 mb-12">
@@ -245,12 +245,12 @@ Full Match Center
 <div class="hidden md:block w-32 h-[2px] bg-primary"></div>
 </div>
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-  \${Object.entries(SPORT_GROUPS).map(([key, sport]) => \`
-<a class="group glass-card p-8 rounded-lg flex flex-col items-center gap-6 hover:bg-primary hover:text-white transition-all duration-500 shadow-xl border border-white/5 no-underline text-on-surface" href="/sport/\${key}" data-link>
-<span class="material-symbols-outlined text-5xl group-hover:scale-125 transition-transform duration-500">\${getSportIcon(key)}</span>
-<span class="font-black text-[10px] tracking-[0.3em] uppercase">\${escapeHtml(sport.label)}</span>
+  ${Object.entries(SPORT_GROUPS).map(([key, sport]) => `
+<a class="group glass-card p-8 rounded-lg flex flex-col items-center gap-6 hover:bg-primary hover:text-white transition-all duration-500 shadow-xl border border-white/5 no-underline text-on-surface" href="/sport/${key}" data-link>
+<span class="material-symbols-outlined text-5xl group-hover:scale-125 transition-transform duration-500">${getSportIcon(key)}</span>
+<span class="font-black text-[10px] tracking-[0.3em] uppercase">${escapeHtml(sport.label)}</span>
 </a>
-  \`).join("")}
+  `).join("")}
 </div>
 </section>
 <!-- Live Score Grid -->
@@ -262,12 +262,12 @@ Full Match Center
 </div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  \${liveMatches.slice(0, 3).map(m => \`
+  ${liveMatches.slice(0, 3).map(m => `
 <div class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-6 group hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden">
 <div class="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full pointer-events-none"></div>
 <div class="flex justify-between items-center relative">
 <div class="flex items-center gap-2">
-<span class="text-primary font-black italic text-[10px] tracking-widest">\${escapeHtml(m.leagueLabel || m.sportGroup)}</span>
+<span class="text-primary font-black italic text-[10px] tracking-widest">${escapeHtml(m.leagueLabel || m.sportGroup)}</span>
 <span class="w-1 h-1 bg-white/20 rounded-full"></span>
 <span class="text-[10px] font-black uppercase tracking-widest opacity-60">LIVE</span>
 </div>
@@ -277,20 +277,20 @@ Full Match Center
 </div>
 <div class="flex justify-between items-center relative">
 <div class="flex flex-col items-center gap-3 w-1/3">
-<img src="\${escapeHtml(m.homeBadge)}" class="w-12 h-12 object-contain bg-white/5 rounded-full p-1" alt="\${escapeHtml(m.homeName)}">
-<span class="text-sm font-black uppercase italic tracking-tighter text-center">\${escapeHtml(m.homeAbbr || m.homeName.substring(0,6))}</span>
+<img src="${escapeHtml(m.homeBadge)}" class="w-12 h-12 object-contain bg-white/5 rounded-full p-1" alt="${escapeHtml(m.homeName)}">
+<span class="text-sm font-black uppercase italic tracking-tighter text-center">${escapeHtml(m.homeAbbr || m.homeName.substring(0,6))}</span>
 </div>
 <div class="flex flex-col items-center w-1/3">
-<span class="text-4xl font-black italic text-primary">\${m.homeScore} - \${m.awayScore}</span>
-<span class="text-[10px] font-black text-on-surface-variant mt-2 tracking-widest uppercase">\${escapeHtml(m.statusDetail || 'PLAYING')}</span>
+<span class="text-4xl font-black italic text-primary">${m.homeScore} - ${m.awayScore}</span>
+<span class="text-[10px] font-black text-on-surface-variant mt-2 tracking-widest uppercase">${escapeHtml(m.statusDetail || 'PLAYING')}</span>
 </div>
 <div class="flex flex-col items-center gap-3 w-1/3">
-<img src="\${escapeHtml(m.awayBadge)}" class="w-12 h-12 object-contain bg-white/5 rounded-full p-1" alt="\${escapeHtml(m.awayName)}">
-<span class="text-sm font-black uppercase italic tracking-tighter text-center">\${escapeHtml(m.awayAbbr || m.awayName.substring(0,6))}</span>
+<img src="${escapeHtml(m.awayBadge)}" class="w-12 h-12 object-contain bg-white/5 rounded-full p-1" alt="${escapeHtml(m.awayName)}">
+<span class="text-sm font-black uppercase italic tracking-tighter text-center">${escapeHtml(m.awayAbbr || m.awayName.substring(0,6))}</span>
 </div>
 </div>
 </div>
-  \`).join("")}
+  `).join("")}
 </div>
 </section>
 <!-- Ad Placement 1: DraftKings Premium Banner -->
@@ -322,28 +322,28 @@ Full Match Center
 <h3 class="text-3xl font-black tracking-tighter uppercase leading-none italic">Arena Scheduled Events</h3>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-  \${upcomingMatches.slice(0, 4).map(m => \`
+  ${upcomingMatches.slice(0, 4).map(m => `
 <div class="bg-surface-container p-8 rounded-lg border border-white/5 hover:border-primary transition-all duration-500 shadow-xl flex flex-col justify-between h-full group">
 <div>
 <div class="flex justify-between text-[10px] font-black text-on-surface-variant mb-10 uppercase tracking-[0.2em]">
-<span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary"></span> \${escapeHtml(m.leagueLabel || m.sportGroup)}</span>
-<span>\${escapeHtml(formatDateTime(m.date))}</span>
+<span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary"></span> ${escapeHtml(m.leagueLabel || m.sportGroup)}</span>
+<span>${escapeHtml(formatDateTime(m.date))}</span>
 </div>
 <div class="flex items-center justify-between mb-12">
 <div class="flex flex-col items-center gap-3 w-1/3">
-<img src="\${escapeHtml(m.homeBadge)}" class="w-10 h-10 object-contain bg-surface-container-high rounded-full p-1" alt="\${escapeHtml(m.homeName)}">
-<span class="text-[10px] font-black uppercase tracking-tight opacity-40 text-center">\${escapeHtml(m.homeAbbr || m.homeName.substring(0,6))}</span>
+<img src="${escapeHtml(m.homeBadge)}" class="w-10 h-10 object-contain bg-surface-container-high rounded-full p-1" alt="${escapeHtml(m.homeName)}">
+<span class="text-[10px] font-black uppercase tracking-tight opacity-40 text-center">${escapeHtml(m.homeAbbr || m.homeName.substring(0,6))}</span>
 </div>
 <span class="text-xl font-black text-primary italic transform group-hover:scale-125 transition-transform">VS</span>
 <div class="flex flex-col items-center gap-3 w-1/3">
-<img src="\${escapeHtml(m.awayBadge)}" class="w-10 h-10 object-contain bg-surface-container-high rounded-full p-1" alt="\${escapeHtml(m.awayName)}">
-<span class="text-[10px] font-black uppercase tracking-tight opacity-40 text-center">\${escapeHtml(m.awayAbbr || m.awayName.substring(0,6))}</span>
+<img src="${escapeHtml(m.awayBadge)}" class="w-10 h-10 object-contain bg-surface-container-high rounded-full p-1" alt="${escapeHtml(m.awayName)}">
+<span class="text-[10px] font-black uppercase tracking-tight opacity-40 text-center">${escapeHtml(m.awayAbbr || m.awayName.substring(0,6))}</span>
 </div>
 </div>
 </div>
 <button class="w-full bg-white/5 group-hover:bg-primary group-hover:text-white py-4 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-white/10 group-hover:border-transparent">Notify Me</button>
 </div>
-  \`).join("")}
+  `).join("")}
 </div>
 </div>
 </section>
@@ -351,19 +351,19 @@ Full Match Center
 <section class="py-24 px-6 max-w-7xl mx-auto">
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
 <div class="lg:col-span-2 relative h-[600px] rounded-lg overflow-hidden group shadow-2xl">
-<div class="absolute inset-0 bg-cover bg-center transition-transform duration-[10s] group-hover:scale-110" style="background-image: linear-gradient(to top, rgb(14, 14, 14) 20%, transparent 60%), url('\${featuredPlayer.image}');"></div>
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-[10s] group-hover:scale-110" style="background-image: linear-gradient(to top, rgb(14, 14, 14) 20%, transparent 60%), url('${featuredPlayer.image}');"></div>
 <div class="absolute bottom-0 left-0 p-12 w-full">
 <div class="bg-primary text-white inline-flex items-center gap-3 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] mb-6 shadow-xl rounded-sm">
 <span class="material-symbols-outlined text-sm">military_tech</span> Player of the Month
 </div>
-<h3 class="text-6xl font-black italic uppercase leading-[0.85] mb-4 tracking-tighter">\${featuredPlayer.firstName} <br><span class="text-primary">\${featuredPlayer.lastName}</span></h3>
+<h3 class="text-6xl font-black italic uppercase leading-[0.85] mb-4 tracking-tighter">${featuredPlayer.firstName} <br><span class="text-primary">${featuredPlayer.lastName}</span></h3>
 <div class="flex gap-12 mt-10">
-  \${featuredPlayer.stats.map(s => \`
+  ${featuredPlayer.stats.map(s => `
 <div>
-<div class="text-[10px] text-on-surface-variant font-black uppercase tracking-widest mb-1 opacity-60">\${s.label}</div>
-<div class="text-4xl font-black italic">\${s.value}</div>
+<div class="text-[10px] text-on-surface-variant font-black uppercase tracking-widest mb-1 opacity-60">${s.label}</div>
+<div class="text-4xl font-black italic">${s.value}</div>
 </div>
-  \`).join("")}
+  `).join("")}
 </div>
 </div>
 </div>
@@ -373,15 +373,15 @@ Full Match Center
 <h4 class="font-black italic text-2xl uppercase tracking-tighter">Arena Table</h4>
 </div>
 <div class="space-y-6 flex-1">
-  \${topLeagueSummaries().slice(0, 4).map((l, i) => \`
-<a href="/league/\${l.key}" data-link class="flex items-center justify-between py-3 border-b border-white/5 hover:bg-white/5 transition-colors px-2 rounded-lg group no-underline text-on-surface">
+  ${topLeagueSummaries().slice(0, 4).map((l, i) => `
+<a href="/league/${l.key}" data-link class="flex items-center justify-between py-3 border-b border-white/5 hover:bg-white/5 transition-colors px-2 rounded-lg group no-underline text-on-surface">
 <div class="flex items-center gap-5">
-<span class="font-black italic text-primary text-lg">0\${i + 1}</span>
-<span class="font-black uppercase tracking-tight text-sm">\${escapeHtml(l.label)}</span>
+<span class="font-black italic text-primary text-lg">0${i + 1}</span>
+<span class="font-black uppercase tracking-tight text-sm">${escapeHtml(l.label)}</span>
 </div>
 <span class="font-black text-lg">LIVE</span>
 </a>
-  \`).join("")}
+  `).join("")}
 </div>
 <a href="/top-leagues" data-link class="block w-full text-center mt-10 py-4 text-[10px] font-black uppercase tracking-[0.3em] text-primary hover:bg-primary hover:text-white border border-primary/20 transition-all rounded-lg no-underline">View Full Table</a>
 </div>
@@ -409,32 +409,32 @@ Full Match Center
 <div class="flex-1 h-[2px] bg-white/5"></div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-  \${trendingNews.slice(0, 2).map((item) => \`
+  ${trendingNews.slice(0, 2).map((item) => `
 <article class="group cursor-pointer">
 <div class="relative aspect-[16/10] rounded-lg overflow-hidden mb-6 shadow-2xl border border-white/5">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="\${escapeHtml(item.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076')}">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="${escapeHtml(item.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076')}">
 <div class="absolute top-5 left-5 bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">Analysis</div>
 </div>
-<h5 class="text-2xl font-black uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors mb-3 italic">\${escapeHtml(item.title)}</h5>
-<p class="text-on-surface-variant text-sm font-medium leading-relaxed opacity-60">\${escapeHtml(item.description)}</p>
+<h5 class="text-2xl font-black uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors mb-3 italic">${escapeHtml(item.title)}</h5>
+<p class="text-on-surface-variant text-sm font-medium leading-relaxed opacity-60">${escapeHtml(item.description)}</p>
 </article>
-  \`).join("")}
+  `).join("")}
 </div>
 </div>
 <div>
 <h4 class="text-xl font-black italic uppercase tracking-widest mb-12 text-primary border-b border-primary/20 pb-4">Trending Now</h4>
 <div class="space-y-10">
-  \${sidebarNews.map((item, i) => \`
-<a href="\${item.url || '#'}" target="_blank" class="flex gap-6 items-start border-b border-white/5 pb-8 group cursor-pointer no-underline text-on-surface">
-<span class="text-3xl font-black text-on-surface/10 italic shrink-0 group-hover:text-primary transition-colors">0\${i + 1}</span>
+  ${sidebarNews.map((item, i) => `
+<a href="${item.url || '#'}" target="_blank" class="flex gap-6 items-start border-b border-white/5 pb-8 group cursor-pointer no-underline text-on-surface">
+<span class="text-3xl font-black text-on-surface/10 italic shrink-0 group-hover:text-primary transition-colors">0${i + 1}</span>
 <div>
 <div class="text-[10px] text-primary font-black uppercase tracking-widest mb-2 flex items-center gap-2">
-  \${i === 0 ? '<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>' : ''} \${escapeHtml(item.source || 'REPORT')}
+  ${i === 0 ? '<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>' : ''} ${escapeHtml(item.source || 'REPORT')}
 </div>
-<h6 class="text-base font-black uppercase leading-tight group-hover:underline tracking-tight">\${escapeHtml(item.title)}</h6>
+<h6 class="text-base font-black uppercase leading-tight group-hover:underline tracking-tight">${escapeHtml(item.title)}</h6>
 </div>
 </a>
-  \`).join("")}
+  `).join("")}
 </div>
 </div>
 </div>
@@ -461,7 +461,7 @@ Full Match Center
 <p class="text-white/80 font-bold text-sm uppercase leading-relaxed tracking-wide">Keep the stream alive and ad-free. Support our independent broadcast crew via Ko-fi or sponsor a segment.</p>
 </div>
 <div class="flex flex-wrap justify-center gap-4">
-<a href="\${DONATION_KOFI_URL}" target="_blank" class="bg-white text-black px-8 py-4 rounded-lg font-black uppercase text-[11px] tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl no-underline">Support on Ko-fi</a>
+<a href="${DONATION_KOFI_URL}" target="_blank" class="bg-white text-black px-8 py-4 rounded-lg font-black uppercase text-[11px] tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl no-underline">Support on Ko-fi</a>
 <button class="bg-black/20 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-lg font-black uppercase text-[11px] tracking-[0.2em] hover:bg-black/30 transition-all">Advertise Here</button>
 </div>
 </div>
@@ -476,7 +476,7 @@ Full Match Center
 </div>
 <p class="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 mb-8">The World's Game. Pre-order Now.</p>
 </div></div></section>
-  \`;
+  `;
 
 
 }
@@ -1569,21 +1569,8 @@ function renderNotFoundPage(container) {
   `;
 }
 
-async function renderMatchListingPage(container, title, description, path, toneClass, matches) {
-  setSeo({ title: `${title} | livescoreFree.online`, description, path });
-  const groupedBySport = matches.reduce((acc, match) => {
-    acc[match.sportGroup] = (acc[match.sportGroup] || 0) + 1;
-    return acc;
-  }, {});
 
-  container.innerHTML = `
-    <section class="hero" ${buildAutoBackgroundAttrs({ sportGroup: matches[0]?.sportGroup || "football", seedText: path, strength: 0.26 })}>
-      <div class="hero-inner-content"><div class="hero-text"><span class="hero-eyebrow">Full Match Feed</span><h1 class="hero-title">${escapeHtml(title)}</h1><p class="hero-lead">${escapeHtml(description)}</p></div><div class="hero-side-card"><div class="hero-side-label">Loaded Cards</div><div class="hero-side-score">${matches.length}</div><div class="hero-side-meta">Across ${Object.keys(groupedBySport).length || 1} sports</div></div></div>
-    </section>
-    <section class="section ${toneClass}"><div class="section-head"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></div></div><div class="trust-grid">${Object.entries(groupedBySport).map(([sportKey, count]) => `<div class="trust-card"><strong>${count}</strong><span>${escapeHtml(SPORT_GROUPS[sportKey]?.label || sportKey)}</span></div>`).join("") || `<div class="trust-card"><strong>0</strong><span>No matches</span></div>`}</div></section>
-    <section class="section ${toneClass}">${renderMatchGrid(matches, `No matches found for ${title.toLowerCase()}.`)}</section>
-  `;
-}async function renderLivePage(container) {
+async function renderLivePage(container) {
   setSeo({ 
     title: "Live Score Centre | Livescorefree Kinetic Broadcast", 
     description: "Immersive live coverage of global sports competitions. Real-time scores, tactical reports, and arena tables for every match in progress.", 

@@ -3,9 +3,9 @@ import {
   escapeHtml 
 } from "./utils.js";
 import { 
-  cachedJson,
-  SPORTSDB_BASE
+  cachedJson
 } from "./api.js";
+import { SPORTSDB_BASE } from "./constants.js";
 
 export async function renderStandingsTable(container, leagueId) {
   if (!container || !leagueId) return;

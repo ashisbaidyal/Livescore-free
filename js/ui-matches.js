@@ -96,7 +96,7 @@ export function buildAutoBackgroundAttrs({ sportGroup = "", leagueKey = "", seed
   return `style="--context-bg-image:url('${svgDataUri}');--context-bg-fit:${fit};--context-bg-position:${position};--context-bg-strength:${strength};"`;
 }
 
-export function renderlivescorefree.onlineMatchCard(match) {
+export function renderLivescoreFreeMatchCard(match) {
   const route = routeForMatch(match);
   const matchId = `match-${match.sportGroup}-${match.slug}`;
   const isLive = match.status === "live";
@@ -144,19 +144,19 @@ export function renderlivescorefree.onlineMatchCard(match) {
 }
 
 export function renderMatchCard(match) {
-  return renderlivescorefree.onlineMatchCard(match);
+  return renderLivescoreFreeMatchCard(match);
 }
 
-export function renderlivescorefree.onlineMatchGrid(matches, emptyMessage = "No arena events live at this frequency.") {
+export function renderLivescoreFreeMatchGrid(matches, emptyMessage = "No arena events live at this frequency.") {
   if (!matches.length) return `<div class="bg-surface-container border border-white/5 p-12 rounded-lg flex flex-col items-center text-center gap-4">
     <span class="material-symbols-outlined text-4xl opacity-20 animate-pulse">sensors_off</span>
     <span class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 font-headline">${escapeHtml(emptyMessage)}</span>
   </div>`;
-  return `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${matches.map(renderlivescorefree.onlineMatchCard).join("")}</div>`;
+  return `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${matches.map(renderLivescoreFreeMatchCard).join("")}</div>`;
 }
 
 export function renderMatchGrid(matches, emptyMessage) {
-  return renderlivescorefree.onlineMatchGrid(matches, emptyMessage);
+  return renderLivescoreFreeMatchGrid(matches, emptyMessage);
 }
 
 export function getSportIcon(sportGroup) {
