@@ -137,7 +137,7 @@ async function renderHomePage(container) {
 <div class="relative w-full h-full">
 <!-- Slide 1: Featured Live Match (Active State Example) -->
 <div class="absolute inset-0 z-10">
-<div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" style="background-image: linear-gradient(to top, rgb(19, 19, 19) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${heroMatch?.homeBadge || "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076"}');"></div>
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" style="background-image: linear-gradient(to top, rgb(19, 19, 19) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${heroMatch?.homeBadge || getSportImagePath('football')}');"></div>
 <div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
 <div class="flex items-center gap-3 mb-6">
 <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
@@ -415,7 +415,7 @@ Full Match Center
   ${trendingNews.slice(0, 2).map((item) => `
 <article class="group cursor-pointer">
 <div class="relative aspect-[16/10] rounded-lg overflow-hidden mb-6 shadow-2xl border border-white/5">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="${escapeHtml(item.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076')}">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="${escapeHtml(item.image || getSportImagePath('football'))}">
 <div class="absolute top-5 left-5 bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">Analysis</div>
 </div>
 <h5 class="text-2xl font-black uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors mb-3 italic">${escapeHtml(item.title)}</h5>
@@ -515,7 +515,7 @@ function renderTopLeaguesPage(container) {
     <section class="p-6 md:p-8">
       <div class="relative w-full h-[400px] bg-surface-container-high overflow-hidden rounded-xl group border border-white/5">
         <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
-             src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2093&auto=format&fit=crop" 
+             src=getSportImagePath('football') 
              alt="Dynamic Arena Atmosphere"/>
         <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
         <div class="absolute bottom-0 left-0 p-10 max-w-2xl text-left">
@@ -726,7 +726,7 @@ async function renderMatchListingPage(container, title, subtitle, path, toneClas
       <!-- Premium Arena Banner -->
       <section class="mt-20">
         <div class="relative w-full aspect-[21/9] md:aspect-[4/1] rounded-lg overflow-hidden group border border-white/5 shadow-2xl">
-          <img src="https://images.unsplash.com/photo-1540747913346-19e3adcc174b?q=80&w=2040&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000">
+          <img src=getSportImagePath('football') class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000">
           <div class="absolute inset-0 bg-gradient-to-r from-[#0E0E0E] via-[#0E0E0E]/80 to-transparent flex flex-col justify-center px-12">
             <span class="bg-primary text-white text-[9px] font-black px-3 py-1 uppercase tracking-[0.3em] mb-4 w-max rounded-sm">Stadia Elite</span>
             <h2 class="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-none mb-6 text-on-surface">THE MULTIVERSE<br>COMMUNITY HUB</h2>
@@ -926,7 +926,7 @@ async function renderMatchPage(container, route) {
       <!-- Match Hero (Stadium style) -->
       <section class="relative bg-surface-container-high border-b border-white/5 overflow-hidden stadium-shadow">
         <div class="absolute inset-0 opacity-10 grayscale mix-blend-overlay">
-           <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076&auto=format&fit=crop" class="w-full h-full object-cover">
+           <img src=getSportImagePath('football') class="w-full h-full object-cover">
         </div>
         <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#131313]/50 to-[#131313]"></div>
         
@@ -1069,7 +1069,7 @@ async function renderMatchPage(container, route) {
              </div>
              
              <div class="relative rounded-2xl overflow-hidden aspect-square flex flex-col justify-end p-8 border border-white/5 group">
-                <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2076&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700">
+                <img src=getSportImagePath('football') class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700">
                 <div class="relative z-10 space-y-4">
                    <h4 class="text-2xl font-black uppercase italic tracking-tighter leading-tight">STADIUM<br>ADVERTISING</h4>
                    <p class="text-[10px] font-bold uppercase tracking-widest opacity-60">Join the arena network as a premium partner.</p>
@@ -1102,7 +1102,7 @@ async function renderPlayersHubPage(container) {
     <div class="min-h-screen">
       <!-- Hero Slider Section (Lionel Messi as featured) -->
       <section class="relative h-[600px] w-full overflow-hidden stadium-shadow">
-        <img src="https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=1972&auto=format&fit=crop" class="w-full h-full object-cover">
+        <img src='/bg-stadium-night-2.svg' class="w-full h-full object-cover">
         <div class="absolute inset-0 bg-gradient-to-r from-[#131313] via-[#131313]/50 to-transparent"></div>
         <div class="absolute inset-0 flex items-center px-12 lg:px-24">
           <div class="max-w-2xl space-y-6 text-left">
@@ -1153,7 +1153,7 @@ async function renderPlayersHubPage(container) {
            ${Array.from({length: 8}).map((_, i) => `
               <div class="bg-surface-container-high border border-white/5 rounded-xl overflow-hidden group hover:border-primary/20 transition-all stadium-shadow text-left">
                  <div class="relative h-48 bg-surface-container overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1543351611-58f69d7c1781?q=80&w=1974&auto=format&fit=crop" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700">
+                    <img src='/bg-stadium-day-1.svg' class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#131313] to-transparent opacity-60"></div>
                     <div class="absolute bottom-4 left-4">
                        <p class="text-[8px] font-black text-primary uppercase tracking-widest italic">Forward</p>
@@ -1204,7 +1204,7 @@ async function renderTeamsHubPage(container) {
       <!-- Teams Video/Hero Header -->
       <section class="relative h-[500px] overflow-hidden stadium-shadow bg-surface-container-low border-b border-white/5">
         <div class="absolute inset-0 opacity-20 grayscale mix-blend-overlay">
-           <img src="https://images.unsplash.com/photo-1577223625816-7546f13df25d?q=80&w=1978&auto=format&fit=crop" class="w-full h-full object-cover">
+           <img src='/bg-stadium-night-3.svg' class="w-full h-full object-cover">
         </div>
         <div class="absolute inset-0 bg-gradient-to-b from-[#131313]/0 to-[#131313]"></div>
         <div class="relative z-10 h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto text-left">
@@ -1354,7 +1354,7 @@ function renderDonatePage(container) {
     <!-- Kinetic Hero Results Slider (News Style) -->
     <section class="relative w-full h-[600px] overflow-hidden group">
       <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] group-hover:scale-105" 
-           style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=2069&auto=format&fit=crop')"></div>
+           style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('/bg-stadium-night-2.svg')"></div>
       <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-[#0e0e0e]/40 to-transparent"></div>
       <div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6 max-w-7xl mx-auto">
         <div class="flex items-center gap-3">
@@ -2086,7 +2086,7 @@ async function renderUpcomingPage(container) {
 
         <!-- Promo Section -->
         <div class="relative rounded-xl h-72 overflow-hidden group stadium-shadow">
-          <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 grayscale group-hover:grayscale-0" src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1973&auto=format&fit=crop" alt="Premium Promo"/>
+          <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 grayscale group-hover:grayscale-0" src='/bg-stadium-day-2.svg' alt="Premium Promo"/>
           <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
           <div class="absolute bottom-8 left-8 right-8">
             <p class="text-[10px] font-black uppercase tracking-[0.3em] bg-primary text-white px-3 py-1 mb-4 inline-block italic">Pro Access</p>
@@ -2270,7 +2270,7 @@ async function renderResultsPage(container) {
             </div>
           </div>
           <div class="relative aspect-video rounded-2xl overflow-hidden group cursor-pointer shadow-2xl stadium-shadow">
-            <div class="absolute inset-0 bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-700" style="background-image: url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2093&auto=format&fit=crop')"></div>
+            <div class="absolute inset-0 bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-700" style="background-image: url('/bg-stadium-night-1.svg')"></div>
             <div class="absolute inset-0 bg-primary/20 mix-blend-overlay"></div>
             <div class="absolute inset-0 flex items-center justify-center">
               <div class="w-24 h-24 rounded-full bg-white/10 backdrop-blur-3xl flex items-center justify-center group-hover:scale-110 transition-transform border border-white/20 shadow-2xl">
@@ -2525,7 +2525,7 @@ async function renderSchedulesHubPage(container) {
     <!-- Schedule Centre Hero -->
     <section class="relative w-full h-[500px] overflow-hidden group">
       <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" 
-           style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?q=80&w=2070&auto=format&fit=crop')"></div>
+           style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('/bg-stadium-night-3.svg')"></div>
       <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-[#0e0e0e]/40 to-transparent"></div>
       <div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6 max-w-7xl mx-auto">
         <div class="flex items-center gap-3">
@@ -2627,7 +2627,7 @@ async function renderStandingsHubPage(container) {
     <!-- Standings Hero -->
     <section class="relative w-full h-[450px] overflow-hidden group">
       <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" 
-           style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?q=80&w=2070&auto=format&fit=crop')"></div>
+           style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('/bg-stadium-day-3.svg')"></div>
       <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-[#0e0e0e]/40 to-transparent"></div>
       <div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6 max-w-7xl mx-auto">
         <div class="flex items-center gap-3">
