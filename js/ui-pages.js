@@ -6,7 +6,7 @@ import {
   getTrustSignals
 } from "./utils.js";
 import { state } from "./state.js";
-import { SPORT_GROUPS, LEAGUES, TOP_LEAGUE_KEYS, DONATION_KOFI_URL } from "./constants.js";
+import { SPORT_GROUPS, LEAGUES, TOP_LEAGUE_KEYS, DONATION_KOFI_URL, LEAGUE_REGIONS } from "./constants.js";
 import { parseRoute, getCurrentPath, routeForMatch, routeForLeague } from "./routing.js";
 import {
   renderMatchGrid,
@@ -65,6 +65,8 @@ export async function renderRoute() {
     case "sport": renderSportPage(main, route); break;
     case "players": renderPlayersHubPage(main); break;
     case "teams": renderTeamsHubPage(main); break;
+    case "schedules": await renderSchedulesHubPage(main); break;
+    case "standings": await renderStandingsHubPage(main); break;
     case "player-profile": renderPlayerProfilePage(main, route); break;
     case "team-profile": renderTeamProfilePage(main, route); break;
     case "donate": renderDonatePage(main); break;
@@ -2500,6 +2502,193 @@ function wireFavoriteButton() {
     button.textContent = isFavorite ? "Saved to Favorites" : "Add to Favorites";
     showToast(isFavorite ? "Match added to favorites." : "Match removed from favorites.");
   });
+}
+
+async function renderSchedulesHubPage(container) {
+  setSeo({
+    title: "Global Schedule Centre | livescorefree.online",
+    description: "The complete matchday schedule across every league and sport. Plan your live sports viewing with real-time arena tracking.",
+    path: "/schedules"
+  });
+
+  const upcoming = state.upcomingMatches || [];
+  const live = state.liveMatches || [];
+  const grouped = {};
+  [...live, ...upcoming].forEach(m => {
+    const key = m.leagueLabel || m.sportGroup || 'Other';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(m);
+  });
+
+  container.innerHTML = `
+    <!-- Schedule Centre Hero -->
+    <section class="relative w-full h-[500px] overflow-hidden group">
+      <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" 
+           style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?q=80&w=2070&auto=format&fit=crop')"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-[#0e0e0e]/40 to-transparent"></div>
+      <div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6 max-w-7xl mx-auto">
+        <div class="flex items-center gap-3">
+          <span class="bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">FULL SCHEDULE</span>
+          <span class="text-white/60 text-xs font-bold uppercase tracking-tighter">${upcoming.length + live.length} Events Tracking</span>
+        </div>
+        <h1 class="text-5xl md:text-8xl font-black font-headline uppercase leading-none tracking-tighter text-on-surface">
+          Global<br/><span class="text-primary">Schedule</span>
+        </h1>
+        <p class="max-w-2xl text-on-surface/70 text-sm font-medium border-l-4 border-primary pl-4 uppercase italic tracking-tight">
+          EVERY UPCOMING MATCH. EVERY LEAGUE. ALL SPORTS. PLAN YOUR ARENA VIEWING.
+        </p>
+      </div>
+    </section>
+
+    <!-- Live Now Strip -->
+    ${live.length > 0 ? `
+    <section class="bg-primary/5 border-y border-primary/20 px-6 py-6">
+      <div class="max-w-7xl mx-auto flex items-center gap-6 overflow-x-auto">
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-primary">${live.length} LIVE NOW</span>
+        </div>
+        ${live.slice(0, 8).map(m => `
+          <a href="${m.route}" data-link class="shrink-0 bg-surface-container px-4 py-2 rounded border border-white/5 flex items-center gap-3 hover:border-primary/30 transition-all no-underline text-on-surface">
+            <span class="text-[9px] font-black text-primary uppercase">${escapeHtml(m.homeAbbr)}</span>
+            <span class="text-xs font-black">${m.homeScore} - ${m.awayScore}</span>
+            <span class="text-[9px] font-black uppercase">${escapeHtml(m.awayAbbr)}</span>
+          </a>
+        `).join('')}
+      </div>
+    </section>
+    ` : ''}
+
+    <!-- Schedule Grid by League -->
+    <div class="p-8 max-w-7xl mx-auto space-y-16">
+      ${Object.entries(grouped).length > 0 ? Object.entries(grouped).map(([league, matches]) => `
+        <section>
+          <div class="flex items-center justify-between mb-8 border-l-4 border-primary pl-4">
+            <div>
+              <h2 class="text-2xl font-black italic uppercase tracking-tighter">${escapeHtml(league)}</h2>
+              <p class="text-[10px] font-bold text-on-surface opacity-40 uppercase tracking-widest">${matches.length} Scheduled Events</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            ${matches.slice(0, 6).map(m => `
+              <a href="${m.route}" data-link class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-4 group hover:border-primary/50 transition-all shadow-xl no-underline text-on-surface">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-black text-primary/80 uppercase tracking-widest">${escapeHtml(m.leagueLabel || m.sportGroup)}</span>
+                  ${m.status === 'live' ? 
+                    '<span class="flex items-center gap-1.5 bg-primary text-white px-2 py-0.5 rounded-sm text-[9px] font-black"><span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE</span>' :
+                    `<span class="text-[9px] font-black uppercase tracking-widest opacity-40">${escapeHtml(formatDateTime(m.date))}</span>`
+                  }
+                </div>
+                <div class="flex justify-between items-center">
+                  <div class="flex flex-col items-center gap-2 w-2/5">
+                    ${m.homeLogo ? `<img src="${escapeHtml(m.homeLogo)}" class="w-10 h-10 object-contain" alt="${escapeHtml(m.homeName)}">` : `<div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic text-xs">${escapeHtml(m.homeAbbr)}</div>`}
+                    <span class="text-xs font-black uppercase tracking-tight text-center">${escapeHtml(m.homeAbbr)}</span>
+                  </div>
+                  <div class="text-center">
+                    ${m.status === 'live' || m.status === 'final' ?
+                      `<span class="text-3xl font-black italic ${m.status === 'live' ? 'text-primary' : ''}">${m.homeScore} - ${m.awayScore}</span>` :
+                      '<span class="text-xl font-black text-primary italic">VS</span>'
+                    }
+                    <p class="text-[9px] font-black uppercase tracking-widest opacity-40 mt-2">${escapeHtml(m.statusDetail || '')}</p>
+                  </div>
+                  <div class="flex flex-col items-center gap-2 w-2/5">
+                    ${m.awayLogo ? `<img src="${escapeHtml(m.awayLogo)}" class="w-10 h-10 object-contain" alt="${escapeHtml(m.awayName)}">` : `<div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-black italic text-xs">${escapeHtml(m.awayAbbr)}</div>`}
+                    <span class="text-xs font-black uppercase tracking-tight text-center">${escapeHtml(m.awayAbbr)}</span>
+                  </div>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        </section>
+      `).join('') : `
+        <div class="py-20 text-center opacity-30">
+          <span class="material-symbols-outlined text-6xl animate-pulse">calendar_today</span>
+          <p class="text-xs font-black uppercase tracking-[0.4em] mt-6">No scheduled events found. Refreshing arena feeds...</p>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+async function renderStandingsHubPage(container) {
+  setSeo({
+    title: "Global Standings Hub | livescorefree.online",
+    description: "League tables, rankings, and point standings for every major competition across all sports worldwide.",
+    path: "/standings"
+  });
+
+  const topLeagueIds = {
+    "eng.1": "4328", "esp.1": "4335", "ita.1": "4332",
+    "ger.1": "4331", "fra.1": "4334", "ned.1": "4337"
+  };
+
+  container.innerHTML = `
+    <!-- Standings Hero -->
+    <section class="relative w-full h-[450px] overflow-hidden group">
+      <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" 
+           style="background-image: linear-gradient(to top, #0e0e0e 10%, transparent 80%), url('https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?q=80&w=2070&auto=format&fit=crop')"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-[#0e0e0e]/40 to-transparent"></div>
+      <div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6 max-w-7xl mx-auto">
+        <div class="flex items-center gap-3">
+          <span class="bg-secondary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">ARENA TABLES</span>
+          <span class="text-white/60 text-xs font-bold uppercase tracking-tighter">${Object.keys(topLeagueIds).length} League Tables</span>
+        </div>
+        <h1 class="text-5xl md:text-8xl font-black font-headline uppercase leading-none tracking-tighter text-on-surface">
+          Global<br/><span class="text-secondary">Standings</span>
+        </h1>
+        <p class="max-w-2xl text-on-surface/70 text-sm font-medium border-l-4 border-secondary pl-4 uppercase italic tracking-tight">
+          COMPLETE LEAGUE TABLES. LIVE POINT STANDINGS. ELITE ARENA RANKINGS.
+        </p>
+      </div>
+    </section>
+
+    <!-- Standings Tables -->
+    <div class="p-8 max-w-7xl mx-auto space-y-16">
+      ${Object.entries(topLeagueIds).map(([leagueKey, sportsDbId]) => {
+        const league = LEAGUES[leagueKey];
+        return `
+          <section>
+            <div class="flex items-center justify-between mb-8 border-l-4 border-secondary pl-4">
+              <div>
+                <h2 class="text-2xl font-black italic uppercase tracking-tighter">${escapeHtml(league?.label || leagueKey)}</h2>
+                <p class="text-[10px] font-bold text-on-surface opacity-40 uppercase tracking-widest">${escapeHtml(LEAGUE_REGIONS[leagueKey] || 'Global')} • Season Table</p>
+              </div>
+              <a href="${routeForLeague(leagueKey)}" data-link class="text-[10px] font-black text-secondary uppercase tracking-widest hover:underline no-underline italic">Full Hub →</a>
+            </div>
+            <div id="standings-mount-${leagueKey}" class="min-h-[200px]">
+              <div class="p-12 text-center opacity-20">
+                <span class="material-symbols-outlined text-4xl animate-spin">sync</span>
+                <p class="text-[10px] font-black uppercase tracking-widest mt-4">Loading Table...</p>
+              </div>
+            </div>
+          </section>
+        `;
+      }).join('')}
+
+      <!-- Other Leagues Directory -->
+      <section class="border-t border-white/5 pt-16">
+        <h3 class="text-xl font-black italic uppercase tracking-tighter mb-8 border-l-4 border-primary pl-4">More League Tables</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          ${Object.entries(LEAGUES).filter(([k]) => !topLeagueIds[k]).slice(0, 18).map(([key, l]) => `
+            <a href="${routeForLeague(key)}" data-link class="bg-surface-container-high border border-white/5 p-4 rounded text-center hover:bg-surface-container-highest hover:border-primary/20 transition-all no-underline text-on-surface group">
+              <h4 class="text-xs font-black uppercase tracking-tight group-hover:text-primary transition-colors">${escapeHtml(l.label)}</h4>
+              <p class="text-[8px] font-bold text-on-surface/30 uppercase tracking-widest mt-1">${escapeHtml(l.sportGroup)}</p>
+            </a>
+          `).join('')}
+        </div>
+      </section>
+    </div>
+  `;
+
+  // Hydrate standings tables
+  for (const [leagueKey, sportsDbId] of Object.entries(topLeagueIds)) {
+    const target = qs(`#standings-mount-${leagueKey}`, container);
+    if (target) {
+      renderStandingsTable(target, sportsDbId).catch(() => {
+        target.innerHTML = `<div class="p-8 text-center opacity-20"><p class="text-[10px] font-black uppercase tracking-widest">Table data unavailable</p></div>`;
+      });
+    }
+  }
 }
 
 

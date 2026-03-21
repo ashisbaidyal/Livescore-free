@@ -1,19 +1,42 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Redirecting...</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>livescorefree.online | Redirecting...</title>
+  <style>
+    body { 
+      background: #0E0E0E; 
+      color: #e5e2e1; 
+      font-family: 'Lexend', system-ui, sans-serif; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      margin: 0;
+    }
+    .container { text-align: center; }
+    h1 { font-size: 3rem; font-weight: 900; font-style: italic; letter-spacing: -0.05em; margin-bottom: 0.5rem; }
+    .accent { color: #CC1616; }
+    p { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; opacity: 0.4; }
+    .bar { width: 120px; height: 3px; background: rgba(255,255,255,0.05); border-radius: 999px; margin: 2rem auto; overflow: hidden; }
+    .bar-fill { width: 33%; height: 100%; background: #CC1616; animation: progress 1.5s ease-in-out infinite; }
+    @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+  </style>
   <script>
-    (function () {
-      var route = window.location.pathname + window.location.search + window.location.hash;
-      var target = "/?route=" + encodeURIComponent(route);
-      window.location.replace(target);
-    })();
+    // SPA redirect: send path to the main app via query param
+    var path = window.location.pathname;
+    if (path && path !== '/' && path !== '/404.html') {
+      window.location.replace('/?route=' + encodeURIComponent(path));
+    }
   </script>
 </head>
 <body>
-  <p>Redirecting...</p>
+  <div class="container">
+    <h1><span class="accent">404</span> Signal Lost</h1>
+    <p>Redirecting to the arena...</p>
+    <div class="bar"><div class="bar-fill"></div></div>
+    <p><a href="/" style="color: #CC1616; text-decoration: none;">Return to Home</a></p>
+  </div>
 </body>
 </html>
-
