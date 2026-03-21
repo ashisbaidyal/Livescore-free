@@ -64,17 +64,36 @@ export const LEAGUE_DISPLAY_NAMES = {
   "ger.1": "⚽ Bundesliga",
   "fra.1": "⚽ Ligue 1",
   "ned.1": "⚽ Eredivisie",
-  cricket: "🏏 Cricket",
-  nba: "🏀 NBA",
-  ncaamb: "🏀 NCAA Basketball",
-  tennis: "🎾 Tennis",
-  nfl: "🏈 NFL",
-  nhl: "🏒 NHL",
-  mlb: "⚾ MLB",
-  rugby: "🏉 Rugby",
-  mma: "🥊 MMA",
-  f1: "🏎️ Formula 1",
-  default: "🏆 Sports"
+  "por.1": "⚽ Primeira Liga",
+  "eng.fa": "⚽ FA Cup",
+  "eng.league_cup": "⚽ Carabao Cup",
+  "uefa.europa": "⚽ Europa League",
+  "usa.1": "⚽ MLS",
+  "mex.1": "⚽ Liga MX",
+  "bra.1": "⚽ Brasileirão",
+  "arg.1": "⚽ Primera División",
+  "cricket": "🏏 Cricket",
+  "nba": "🏀 NBA",
+  "ncaamb": "🏀 NCAA Basketball",
+  "wnba": "🏀 WNBA",
+  "fiba": "🏀 FIBA World Cup",
+  "tennis": "🎾 Tennis",
+  "atp": "🎾 ATP Tour",
+  "wta": "🎾 WTA Tour",
+  "nfl": "🏈 NFL",
+  "college-football": "🏈 NCAA Football",
+  "nhl": "🏒 NHL",
+  "mens-college-hockey": "🏒 NCAA Hockey",
+  "mlb": "⚾ MLB",
+  "college-baseball": "⚾ NCAA Baseball",
+  "pga": "⛳ PGA TOUR",
+  "lpga": "⛳ LPGA",
+  "liv": "⛳ LIV Golf",
+  "rugby": "🏉 Rugby",
+  "mma": "🥊 MMA / UFC",
+  "f1": "🏎️ Formula 1",
+  "irl": "🏎️ IndyCar",
+  "default": "🏆 Sports"
 };
 export const LEAGUE_VISUAL_MATCHERS = {
   "eng.1": { names: ["Premier League", "English Premier League", "Premier League EPL"], sportNames: ["Soccer"] },
@@ -106,6 +125,7 @@ export const SPORT_CONTEXT_TONES = {
   rugby: { accent: "255 97 84", glow: "57 181 74" },
   mma: { accent: "255 84 120", glow: "79 181 255" },
   f1: { accent: "255 102 102", glow: "255 182 72" },
+  golf: { accent: "132 228 95", glow: "57 181 74" },
   default: { accent: "79 181 255", glow: "57 181 74" }
 };
 export const LEAGUE_PAGE_SECTIONS = ["overview", "live", "upcoming", "results", "history", "teams", "players", "schedule"];
@@ -155,20 +175,36 @@ export const LEAGUES = {
   "bra.1": { feed: "soccer/bra.1", label: "Brasileirão", sportGroup: "football" },
   "arg.1": { feed: "soccer/arg.1", label: "Primera División", sportGroup: "football" },
   "aus.1": { feed: "soccer/aus.1", label: "A-League", sportGroup: "football" },
+  "eng.fa": { feed: "soccer/eng.fa", label: "FA Cup", sportGroup: "football" },
+  "eng.league_cup": { feed: "soccer/eng.league_cup", label: "Carabao Cup", sportGroup: "football" },
   cricket: { feed: "cricket", label: "Cricket", sportGroup: "cricket" },
   nba: { feed: "basketball/nba", label: "NBA", sportGroup: "basketball" },
   ncaamb: { feed: "basketball/mens-college-basketball", label: "NCAA Basketball", sportGroup: "basketball" },
   wnba: { feed: "basketball/wnba", label: "WNBA", sportGroup: "basketball" },
+  "nba-development": { feed: "basketball/nba-development", label: "G League", sportGroup: "basketball" },
+  fiba: { feed: "basketball/fiba", label: "FIBA World Cup", sportGroup: "basketball" },
   tennis: { feed: "tennis", label: "Tennis", sportGroup: "tennis" },
+  atp: { feed: "tennis/atp", label: "ATP Tour", sportGroup: "tennis" },
+  wta: { feed: "tennis/wta", label: "WTA Tour", sportGroup: "tennis" },
   nfl: { feed: "football/nfl", label: "NFL", sportGroup: "nfl" },
+  "college-football": { feed: "football/college-football", label: "NCAA Football", sportGroup: "nfl" },
+  ufl: { feed: "football/ufl", label: "UFL", sportGroup: "nfl" },
   nhl: { feed: "hockey/nhl", label: "NHL", sportGroup: "hockey" },
+  "mens-college-hockey": { feed: "hockey/mens-college-hockey", label: "NCAA Hockey", sportGroup: "hockey" },
   mlb: { feed: "baseball/mlb", label: "MLB", sportGroup: "baseball" },
+  "college-baseball": { feed: "baseball/college-baseball", label: "NCAA Baseball", sportGroup: "baseball" },
+  pga: { feed: "golf/pga", label: "PGA TOUR", sportGroup: "golf" },
+  lpga: { feed: "golf/lpga", label: "LPGA", sportGroup: "golf" },
+  liv: { feed: "golf/liv", label: "LIV Golf", sportGroup: "golf" },
+  eur: { feed: "golf/eur", label: "DP World Tour", sportGroup: "golf" },
   rugby: { feed: "rugby", label: "Rugby", sportGroup: "rugby" },
   mma: { feed: "mma/ufc", label: "MMA / UFC", sportGroup: "mma" },
-  f1: { feed: "racing/f1", label: "Formula 1", sportGroup: "f1" }
+  f1: { feed: "racing/f1", label: "Formula 1", sportGroup: "f1" },
+  irl: { feed: "racing/irl", label: "IndyCar", sportGroup: "f1" },
+  "nascar-premier": { feed: "racing/nascar-premier", label: "NASCAR Cup", sportGroup: "f1" }
 };
 
-export const TOP_LEAGUE_KEYS = ["eng.1", "esp.1", "uefa.champions", "uefa.europa", "ita.1", "ger.1", "fra.1", "por.1", "nba", "nfl", "cricket", "tennis", "mlb", "nhl"];
+export const TOP_LEAGUE_KEYS = ["eng.1", "esp.1", "uefa.champions", "uefa.europa", "ita.1", "ger.1", "fra.1", "por.1", "nba", "nfl", "cricket", "tennis", "mlb", "nhl", "pga", "f1", "atp"];
 export const LEAGUE_REGIONS = {
   "eng.1": "England",
   "esp.1": "Spain",
@@ -230,7 +266,8 @@ export const SPORT_GROUPS = {
   baseball: { label: "Baseball", icon: "BSB", leagues: ["mlb"], description: "MLB live score coverage." },
   rugby: { label: "Rugby", icon: "RUG", leagues: ["rugby"], description: "Rugby live score coverage." },
   mma: { label: "MMA", icon: "MMA", leagues: ["mma"], description: "MMA live score coverage." },
-  f1: { label: "F1", icon: "F1", leagues: ["f1"], description: "Formula 1 live score coverage." }
+  f1: { label: "F1", icon: "F1", leagues: ["f1", "irl", "nascar-premier"], description: "Formula 1 and racing live coverage." },
+  golf: { label: "Golf", icon: "GLF", leagues: ["pga", "lpga", "liv", "eur"], description: "Golf live tour coverage." }
 };
 
 export const SPORT_IMAGE_MAP = {
@@ -244,6 +281,7 @@ export const SPORT_IMAGE_MAP = {
   rugby: "sport-rugby.svg",
   mma: "sport-mma.svg",
   f1: "sport-f1.svg",
+  golf: "sport-default.svg",
   default: "sport-default.svg"
 };
 

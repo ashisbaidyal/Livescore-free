@@ -25,6 +25,8 @@ export function parseRoute(path) {
   if (path === "/results") return { type: "results" };
   if (path === "/history") return { type: "history" };
   if (path === "/top-leagues") return { type: "top-leagues" };
+  if (path === "/players") return { type: "players" };
+  if (path === "/teams") return { type: "teams" };
   if (path === "/donate") return { type: "donate" };
   if (path === "/feedback") return { type: "feedback" };
   if (path === "/news") return { type: "news" };
@@ -37,6 +39,12 @@ export function parseRoute(path) {
   if (path === "/contact") return { type: "contact" };
 
   if (segments[0] === "sport" && segments[1]) {
+    if (segments[2] === "player" && segments[3]) {
+      return { type: "player-profile", sport: segments[1], slug: segments[3] };
+    }
+    if (segments[2] === "team" && segments[3]) {
+      return { type: "team-profile", sport: segments[1], slug: segments[3] };
+    }
     return { type: "sport", sport: segments[1] };
   }
 
@@ -61,7 +69,6 @@ export function navigate(path, replace = false) {
   } else {
     window.history.pushState(null, "", path);
   }
-  // This will trigger popstate if we listen for it, or we manualy call renderRoute
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
@@ -101,6 +108,3 @@ export function migrateLegacyHashPath() {
     navigate(hash.slice(1), true);
   }
 }
-
-
-

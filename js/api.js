@@ -26,6 +26,65 @@ import {
   routeForMatch 
 } from "./routing.js";
 
+/**
+ * ESPNClient: A robust JS port of the Python ESPN API client.
+ * Handles different domains (site, core, cdn) and provides a clean interface.
+ */
+export const ESPNClient = {
+  DOMAIN: {
+    SITE: "https://site.api.espn.com",
+    CORE: "https://sports.core.api.espn.com",
+    CDN: "https://cdn.espn.com"
+  },
+
+  async fetch(domainType, path, params = {}, ttlMs = REFRESH_INTERVAL_MS) {
+    const baseUrl = this.DOMAIN[domainType] || this.DOMAIN.SITE;
+    const url = new URL(path.startsWith("/") ? path : `/${path}`, baseUrl);
+    
+    Object.entries(params).forEach(([key, val]) => {
+      if (val !== undefined && val !== null) url.searchParams.append(key, val);
+    });
+
+    return cachedJson(url.toString(), ttlMs);
+  },
+
+  /**
+   * CDN Scoreboard: High speed, frequently updated.
+   */
+  async getCdnScoreboard(sport, limit = 50) {
+    // CDN endpoints require xhr=1 for JSON
+    return this.fetch("CDN", `core/${sport}/scoreboard`, { xhr: 1, limit }, 10000);
+  },
+
+  /**
+   * Site Scoreboard: Rich with team info and status details.
+   */
+  async getScoreboard(sport, league, dates = null) {
+    const path = `apis/site/v2/sports/${sport}/${league}/scoreboard`;
+    return this.fetch("SITE", path, { dates });
+  },
+
+  async getStandings(sport, league) {
+    const path = `apis/site/v2/sports/${sport}/${league}/standings`;
+    return this.fetch("SITE", path);
+  },
+
+  async getNews(sport, league, limit = 20) {
+    const path = `apis/site/v2/sports/${sport}/${league}/news`;
+    return this.fetch("SITE", path, { limit });
+  },
+
+  async getAthletes(sport, league, limit = 100) {
+    const path = `v2/sports/${sport}/leagues/${league}/athletes`;
+    return this.fetch("CORE", path, { limit });
+  },
+
+  async getSummary(sport, league, eventId) {
+    const path = `apis/site/v2/sports/${sport}/${league}/summary`;
+    return this.fetch("SITE", path, { event: eventId });
+  }
+};
+
 const requestCache = new Map();
 
 export function parseStatus(typeName) {
@@ -607,7 +666,10 @@ export async function refreshData({ silent = false } = {}) {
     const nextEvents = {};
     const espnTasks = Object.entries(LEAGUES).map(async ([leagueKey, leagueConfig]) => {
       try {
-        const data = await cachedJson(`${ESPN_BASE}/${leagueConfig.feed}/scoreboard`, 12000);
+        const data = await ESPNClient.getScoreboard(
+          leagueConfig.sportGroup === "football" ? "soccer" : leagueConfig.sportGroup,
+          leagueKey
+        );
         nextEvents[leagueKey] = data.events || [];
       } catch (error) {
         failed += 1;
@@ -619,7 +681,28 @@ export async function refreshData({ silent = false } = {}) {
       }
     });
 
-    await Promise.all(espnTasks);
+    // Special: Fast CDN Scores for Top Sports
+    const cdnTasks = ["soccer", "basketball", "football", "baseball"].map(async (sport) => {
+      try {
+        const cdnData = await ESPNClient.getCdnScoreboard(sport);
+        if (cdnData.events) {
+          // Merge CDN events into nextEvents for the corresponding leagues
+          cdnData.events.forEach(event => {
+            const league = event.league?.slug || event.league?.id;
+            if (league && nextEvents[league]) {
+              // Replace with fresher CDN event if possible, or just append
+              const idx = nextEvents[league].findIndex(e => e.id === event.id);
+              if (idx !== -1) nextEvents[league][idx] = event;
+              else nextEvents[league].push(event);
+            }
+          });
+        }
+      } catch (e) {
+        if (!silent) console.warn(`[API] CDN Scoreboard fetch failed for ${sport}`);
+      }
+    });
+
+    await Promise.all([...espnTasks, ...cdnTasks]);
 
     try {
       const cricketPayload = await cachedJson(CRICBUZZ_LIVE_URL, 10000);
@@ -719,6 +802,7 @@ export async function refreshData({ silent = false } = {}) {
       message: failed === 0 ? "✅ ESPN data loaded successfully" : `⚠️  ESPN partial failure: ${failed} league(s) unavailable`,
       failureDetails: Object.keys(failedErrors).length > 0 ? failedErrors : null
     };
+
     state.providerStatus.sportsdb = {
       ok: sportsDbFailures === 0,
       matches: externalEvents.length,
@@ -749,6 +833,26 @@ export async function refreshData({ silent = false } = {}) {
     });
 
   return state.refreshPromise;
+}
+
+export async function resolveTeamDetails(sport, league, teamId) {
+  try {
+    const teams = await ESPNClient.fetch("SITE", `apis/site/v2/sports/${sport}/${league}/teams/${teamId}`);
+    return teams.team || null;
+  } catch (e) {
+    console.error(`[API] Failed to resolve team ${teamId}:`, e.message);
+    return null;
+  }
+}
+
+export async function resolveAthleteDetails(sport, league, athleteId) {
+  try {
+    const athlete = await ESPNClient.fetch("SITE", `apis/site/v2/sports/${sport}/${league}/athletes/${athleteId}`);
+    return athlete.athlete || null;
+  } catch (e) {
+    console.error(`[API] Failed to resolve athlete ${athleteId}:`, e.message);
+    return null;
+  }
 }
 
 export function extractMatchStatPairs(match, summary, sportsDbBundle) {
