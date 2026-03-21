@@ -132,11 +132,11 @@ async function renderHomePage(container) {
 <div class="bg-surface-container-low border-b border-white/5 py-3 overflow-hidden">
 <div class="flex animate-[scroll_40s_linear_infinite] whitespace-nowrap gap-12 px-6">
   ${tickerMatches.length > 0 ? tickerMatches.map((m, i) => `
-    <div class="flex items-center gap-4 ${i % 2 !== 0 ? 'opacity-60' : ''}">
+    <a href="${routeForMatch(m)}" data-link class="flex items-center gap-4 ${i % 2 !== 0 ? 'opacity-60' : ''} no-underline text-inherit hover:opacity-100 transition-opacity">
     <span class="text-[10px] font-black text-primary uppercase italic">${escapeHtml(m.leagueLabel || m.sportGroup || 'SPORT')}</span>
     <span class="text-xs font-bold">${escapeHtml(m.homeAbbr || m.homeName.substring(0,3))} ${m.status === 'live' ? `${m.homeScore} - ${m.awayScore}` : 'VS'} ${escapeHtml(m.awayAbbr || m.awayName.substring(0,3))}</span>
     ${m.status === 'live' ? '<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>' : '<span class="text-[10px]">FINAL</span>'}
-    </div>
+    </a>
   `).join("") : `
     <div class="flex items-center gap-4">
     <span class="text-[10px] font-black text-primary uppercase italic">SYSTEM</span>
@@ -159,7 +159,7 @@ async function renderHomePage(container) {
           </span>
           <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${escapeHtml(match.leagueLabel || 'Premier League')} • ${match.status === 'live' ? 'In Progress' : 'Upcoming Showcase'}</span>
         </div>
-        <div class="flex items-end gap-6 mb-8 cursor-pointer hover:opacity-80 transition-opacity relative z-20" onclick="window.navigate('${routeForMatch(match)}')">
+        <a href="${routeForMatch(match)}" data-link class="flex items-end gap-6 mb-8 cursor-pointer hover:opacity-80 transition-opacity relative z-20 no-underline text-inherit">
           <h1 class="font-headline font-black text-6xl md:text-9xl tracking-tighter leading-[0.85] uppercase italic text-on-surface drop-shadow-2xl">
             ${escapeHtml(match.homeAbbr || match.homeName.substring(0,3))} <span class="text-primary">${match.homeScore || 0}-${match.awayScore || 0}</span> ${escapeHtml(match.awayAbbr || match.awayName.substring(0,3))}
           </h1>
@@ -167,7 +167,7 @@ async function renderHomePage(container) {
             <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">Elapsed</div>
             <div class="text-3xl font-black italic">${match.statusDetail || (match.status === 'live' ? "LIVE" : "0'")}</div>
           </div>
-        </div>
+        </a>
         <div class="flex gap-10 mb-12 relative z-20" id="scoreboard-stats-${idx}">
           <div class="glass-card p-4 rounded-lg flex items-center gap-4 border border-white/5 shadow-2xl">
             <div class="text-center">
@@ -182,7 +182,7 @@ async function renderHomePage(container) {
           </div>
         </div>
         <div class="flex flex-wrap gap-4 relative z-20">
-          <a href="${routeForMatch(match)}" data-link class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)] no-underline">
+          <a href="${routeForMatch(match)}" data-link class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)] no-underline" aria-label="Watch Live Now">
             <span class="material-symbols-outlined">play_circle</span> LIVE NOW
           </a>
           <a href="${routeForMatch(match)}" data-link class="bg-white/5 backdrop-blur-md border border-white/20 px-10 py-5 rounded-lg text-on-surface font-black uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-colors no-underline">
@@ -198,7 +198,7 @@ async function renderHomePage(container) {
 <div class="absolute bottom-12 left-8 md:left-20 z-30 flex flex-col gap-6">
   <div class="flex gap-4">
     ${window.heroMatchesList.map((m, idx) => `
-      <div class="group cursor-pointer opacity-${idx===0 ? '100' : '40'} hover:opacity-100 transition-opacity hero-nav-btn" onclick="window.setHeroSlide(${idx})">
+      <div class="group cursor-pointer opacity-${idx===0 ? '100' : '40'} hover:opacity-100 transition-opacity hero-nav-btn" onclick="window.setHeroSlide(${idx})" role="button" aria-label="Go to slide ${idx + 1}">
         <div class="w-16 h-1.5 ${idx===0 ? 'bg-primary' : 'bg-white/10'} relative overflow-hidden rounded-full hero-nav-bar">
           ${idx===0 ? '<div class="absolute inset-0 bg-white/30 animate-[progress_5s_linear_infinite] hero-progress"></div>' : ''}
         </div>
@@ -274,7 +274,7 @@ async function renderHomePage(container) {
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   ${liveMatches.slice(0, 3).map(m => `
-<div class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-6 group hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden">
+<a href="${routeForMatch(m)}" data-link class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-6 group hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden no-underline text-on-surface">
 <div class="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full pointer-events-none"></div>
 <div class="flex justify-between items-center relative">
 <div class="flex items-center gap-2">
@@ -300,7 +300,7 @@ async function renderHomePage(container) {
 <span class="text-sm font-black uppercase italic tracking-tighter text-center">${escapeHtml(m.awayAbbr || m.awayName.substring(0,6))}</span>
 </div>
 </div>
-</div>
+</a>
   `).join("")}
 </div>
 </section>
@@ -321,7 +321,7 @@ async function renderHomePage(container) {
 </div>
 </div>
 </div>
-<button class="bg-primary text-white px-12 py-5 rounded-lg font-black uppercase text-xs tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-[0_0_40px_rgba(204,22,22,0.3)] whitespace-nowrap">Claim Bonus</button>
+<button class="bg-primary text-white px-12 py-5 rounded-lg font-black uppercase text-xs tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-[0_0_40px_rgba(204,22,22,0.3)] whitespace-nowrap" aria-label="Claim DraftKings Bonus">Claim Bonus</button>
 </div>
 </div>
 </section>
@@ -334,7 +334,7 @@ async function renderHomePage(container) {
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
   ${upcomingMatches.slice(0, 4).map(m => `
-<div class="bg-surface-container p-8 rounded-lg border border-white/5 hover:border-primary transition-all duration-500 shadow-xl flex flex-col justify-between h-full group">
+<a href="${routeForMatch(m)}" data-link class="bg-surface-container p-8 rounded-lg border border-white/5 hover:border-primary transition-all duration-500 shadow-xl flex flex-col justify-between h-full group no-underline text-on-surface">
 <div>
 <div class="flex justify-between text-[10px] font-black text-on-surface-variant mb-10 uppercase tracking-[0.2em]">
 <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary"></span> ${escapeHtml(m.leagueLabel || m.sportGroup)}</span>
@@ -352,8 +352,8 @@ async function renderHomePage(container) {
 </div>
 </div>
 </div>
-<button class="w-full bg-white/5 group-hover:bg-primary group-hover:text-white py-4 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-white/10 group-hover:border-transparent">Notify Me</button>
-</div>
+<div class="w-full bg-white/5 group-hover:bg-primary group-hover:text-white py-4 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-white/10 group-hover:border-transparent text-center">Notify Me</div>
+</a>
   `).join("")}
 </div>
 </div>
@@ -402,7 +402,7 @@ async function renderHomePage(container) {
 <h5 class="text-white font-black italic text-3xl leading-none mb-1 tracking-tighter">GATORADE</h5>
 <p class="text-white/70 font-bold uppercase text-[10px] tracking-[0.2em]">Fuel Your Performance</p>
 </div>
-<button class="bg-white text-black w-fit px-6 py-2.5 rounded font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-transform">Shop Now</button>
+<button class="bg-white text-black w-fit px-6 py-2.5 rounded font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-transform" aria-label="Shop Gatorade Now">Shop Now</button>
 </div>
 <div class="absolute right-[-10%] bottom-[-20%] opacity-15 transform group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-[2s]">
 <span class="material-symbols-outlined text-[15rem]">bolt</span>
@@ -423,7 +423,7 @@ async function renderHomePage(container) {
   ${trendingNews.slice(0, 2).map((item) => `
 <article class="group cursor-pointer">
 <div class="relative aspect-[16/10] rounded-lg overflow-hidden mb-6 shadow-2xl border border-white/5">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="${escapeHtml(item.image || getSportImagePath('football'))}">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="${escapeHtml(item.image || getSportImagePath('football'))}" alt="${escapeHtml(item.title)}">
 <div class="absolute top-5 left-5 bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">Analysis</div>
 </div>
 <h5 class="text-2xl font-black uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors mb-3 italic">${escapeHtml(item.title)}</h5>
@@ -526,7 +526,7 @@ function renderTopLeaguesPage(container) {
       <div class="relative w-full h-[400px] bg-surface-container-high overflow-hidden rounded-xl group border border-white/5">
         <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
              src="${getSportImagePath('football')}" 
-             alt="Dynamic Arena Atmosphere"/>
+             alt="Dynamic Arena Atmosphere" aria-label="Dynamic Arena Atmosphere"/>
         <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
         <div class="absolute bottom-0 left-0 p-10 max-w-2xl text-left">
           <div class="inline-flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
@@ -736,7 +736,7 @@ async function renderMatchListingPage(container, title, subtitle, path, toneClas
       <!-- Premium Arena Banner -->
       <section class="mt-20">
         <div class="relative w-full aspect-[21/9] md:aspect-[4/1] rounded-lg overflow-hidden group border border-white/5 shadow-2xl">
-          <img src="${getSportImagePath('football')}" class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000">
+          <img src="${getSportImagePath('football')}" class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" alt="Sports Atmosphere">
           <div class="absolute inset-0 bg-gradient-to-r from-[#0E0E0E] via-[#0E0E0E]/80 to-transparent flex flex-col justify-center px-12">
             <span class="bg-primary text-white text-[9px] font-black px-3 py-1 uppercase tracking-[0.3em] mb-4 w-max rounded-sm">Stadia Elite</span>
             <h2 class="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-none mb-6 text-on-surface">THE MULTIVERSE<br>COMMUNITY HUB</h2>
@@ -771,7 +771,7 @@ async function renderLeaguePage(container, route) {
     <!-- League Hero Hub -->
     <section class="relative px-8 pt-16 pb-12 overflow-hidden bg-surface-container-low border-b border-white/5 group stadium-shadow">
       <div class="absolute inset-0 z-0 opacity-10 grayscale group-hover:grayscale-0 transition-all duration-700">
-         <img src="${escapeHtml(getLeagueImagePath(leagueKey, league.sportGroup))}" class="w-full h-full object-cover">
+         <img src="${escapeHtml(getLeagueImagePath(leagueKey, league.sportGroup))}" class="w-full h-full object-cover" alt="${escapeHtml(league.label)} Logo">
       </div>
       <div class="relative z-10 flex flex-col lg:flex-row gap-12 max-w-7xl mx-auto">
         <div class="lg:w-2/3 text-left">
@@ -936,7 +936,7 @@ async function renderMatchPage(container, route) {
       <!-- Match Hero (Stadium style) -->
       <section class="relative bg-surface-container-high border-b border-white/5 overflow-hidden stadium-shadow">
         <div class="absolute inset-0 opacity-10 grayscale mix-blend-overlay">
-           <img src=getSportImagePath('football') class="w-full h-full object-cover">
+           <img src=getSportImagePath('football') class="w-full h-full object-cover" alt="Football Arena Background">
         </div>
         <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#131313]/50 to-[#131313]"></div>
         
@@ -946,7 +946,7 @@ async function renderMatchPage(container, route) {
             <div class="flex-1 flex flex-col items-center md:items-end text-center md:text-right group">
                <div class="w-24 h-24 md:w-32 md:h-32 mb-6 bg-surface-container rounded-full p-5 shadow-2xl group-hover:scale-105 transition-transform duration-500 border border-white/5 relative">
                   <div class="absolute inset-0 bg-primary/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <img src="${escapeHtml(getTeamLogo(match.homeName, match.sportGroup))}" class="w-full h-full object-contain relative z-10">
+                  <img src="${escapeHtml(getTeamLogo(match.homeName, match.sportGroup))}" class="w-full h-full object-contain relative z-10" alt="${escapeHtml(match.homeName)} Logo">
                </div>
                <h2 class="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none mb-2">${escapeHtml(match.homeName)}</h2>
                <p class="text-[10px] font-black uppercase tracking-[0.4em] text-on-surface/40 italic">Sector Commander</p>
@@ -1079,7 +1079,7 @@ async function renderMatchPage(container, route) {
              </div>
              
              <div class="relative rounded-2xl overflow-hidden aspect-square flex flex-col justify-end p-8 border border-white/5 group">
-                <img src=getSportImagePath('football') class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700">
+                <img src=getSportImagePath('football') class="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" alt="Football Background">
                 <div class="relative z-10 space-y-4">
                    <h4 class="text-2xl font-black uppercase italic tracking-tighter leading-tight">STADIUM<br>ADVERTISING</h4>
                    <p class="text-[10px] font-bold uppercase tracking-widest opacity-60">Join the arena network as a premium partner.</p>
@@ -1112,7 +1112,7 @@ async function renderPlayersHubPage(container) {
     <div class="min-h-screen">
       <!-- Hero Slider Section (Lionel Messi as featured) -->
       <section class="relative h-[600px] w-full overflow-hidden stadium-shadow">
-        <img src='/bg-stadium-night-2.svg' class="w-full h-full object-cover">
+        <img src='/bg-stadium-night-2.svg' class="w-full h-full object-cover" alt="Stadium Night Atmosphere">
         <div class="absolute inset-0 bg-gradient-to-r from-[#131313] via-[#131313]/50 to-transparent"></div>
         <div class="absolute inset-0 flex items-center px-12 lg:px-24">
           <div class="max-w-2xl space-y-6 text-left">
@@ -1163,7 +1163,7 @@ async function renderPlayersHubPage(container) {
            ${Array.from({length: 8}).map((_, i) => `
               <div class="bg-surface-container-high border border-white/5 rounded-xl overflow-hidden group hover:border-primary/20 transition-all stadium-shadow text-left">
                  <div class="relative h-48 bg-surface-container overflow-hidden">
-                    <img src='/bg-stadium-day-1.svg' class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700">
+                    <img src='/bg-stadium-day-1.svg' class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" alt="Stadium Day View">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#131313] to-transparent opacity-60"></div>
                     <div class="absolute bottom-4 left-4">
                        <p class="text-[8px] font-black text-primary uppercase tracking-widest italic">Forward</p>
@@ -1214,7 +1214,7 @@ async function renderTeamsHubPage(container) {
       <!-- Teams Video/Hero Header -->
       <section class="relative h-[500px] overflow-hidden stadium-shadow bg-surface-container-low border-b border-white/5">
         <div class="absolute inset-0 opacity-20 grayscale mix-blend-overlay">
-           <img src='/bg-stadium-night-3.svg' class="w-full h-full object-cover">
+           <img src='/bg-stadium-night-3.svg' class="w-full h-full object-cover" alt="Football Stadium Night">
         </div>
         <div class="absolute inset-0 bg-gradient-to-b from-[#131313]/0 to-[#131313]"></div>
         <div class="relative z-10 h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto text-left">
@@ -1236,7 +1236,7 @@ async function renderTeamsHubPage(container) {
         <div class="flex flex-wrap items-center justify-between gap-8 max-w-7xl mx-auto">
            <div class="relative w-full max-w-md">
               <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface/40">search</span>
-              <input type="text" placeholder="LOCATE UNIT / TEAM..." class="w-full bg-surface-container-high border-none py-4 px-12 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl focus:ring-1 focus:ring-secondary transition-all">
+              <input type="text" placeholder="LOCATE UNIT / TEAM..." class="w-full bg-surface-container-high border-none py-4 px-12 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl focus:ring-1 focus:ring-secondary transition-all" aria-label="Locate Unit or Team">
            </div>
            <div class="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest opacity-40">
               <span class="text-secondary">ACTIVE SECTORS:</span>
@@ -1623,7 +1623,7 @@ async function renderLivePage(container) {
     heroHTML = `
       <section class="relative h-96 w-full overflow-hidden flex items-end bg-surface-container-low">
         <div class="relative w-full px-8 pb-12 z-10 max-w-7xl mx-auto">
-          <h1 class="text-6xl md:text-8xl font-black font-headline uppercase tracking-tighter leading-none text-on-surface opacity-20">
+          <div class="text-6xl md:text-8xl font-black font-headline uppercase tracking-tighter leading-none text-on-surface opacity-20" aria-hidden="true">
             Live Score<br/>Centre
           </h1>
           <p class="text-xs font-black uppercase tracking-[0.3em] opacity-40 mt-6">Scanning global sports frequencies for live signals...</p>
@@ -1834,7 +1834,7 @@ async function renderTrendingPage(container) {
     heroHTML = `
       <section class="relative w-full h-[400px] bg-surface-container-low flex items-center justify-center p-8">
          <div class="text-center">
-            <h1 class="text-6xl font-black italic uppercase tracking-tighter opacity-20">Trending Hub</h1>
+            <div class="text-6xl font-black italic uppercase tracking-tighter opacity-20" aria-hidden="true">Trending Hub</div>
             <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mt-4">Scanning Social Signals...</p>
          </div>
       </section>
@@ -1979,7 +1979,7 @@ async function renderUpcomingPage(container) {
     heroHTML = `
       <section class="relative h-[450px] overflow-hidden group bg-surface-container-low">
         <div class="relative z-20 h-full flex flex-col justify-end p-12 max-w-7xl mx-auto">
-          <h1 class="text-6xl md:text-8xl font-black font-headline tracking-tighter leading-none mb-4 uppercase italic opacity-10">UPCOMING SCHEDULE</h1>
+          <div class="text-6xl md:text-8xl font-black font-headline tracking-tighter leading-none mb-4 uppercase italic opacity-10" aria-hidden="true">UPCOMING SCHEDULE</div>
           <p class="text-xs font-black uppercase tracking-[0.4em] opacity-40">Syncing global event calendars...</p>
         </div>
       </section>
@@ -2164,7 +2164,7 @@ async function renderResultsPage(container) {
     heroHTML = `
       <section class="relative h-[400px] bg-surface-container-low flex items-center justify-center p-8">
          <div class="text-center">
-            <h1 class="text-6xl font-black italic uppercase tracking-tighter opacity-10">ARCHIVE HUB</h1>
+            <div class="text-6xl font-black italic uppercase tracking-tighter opacity-10" aria-hidden="true">ARCHIVE HUB</div>
             <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mt-4 italic">Scanning Recorded Broadcasts...</p>
          </div>
       </section>

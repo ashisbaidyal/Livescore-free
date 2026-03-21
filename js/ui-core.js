@@ -121,17 +121,33 @@ export function cycleThemeMode() {
   showToast(`Theme switched to ${state.themeMode}.`);
 }
 
-export function setSeo({ title, description, keywords, path, structuredData }) {
+export function setSeo({ title, description, keywords, path, structuredData, image }) {
   const mergedKeywords = Array.from(new Set([...GLOBAL_SEO_KEYWORDS, ...(keywords || [])].map((item) => String(item || "").trim()).filter(Boolean)));
+  const url = `${SEO_BASE.origin}${path}`;
+  const finalImage = image || `${SEO_BASE.origin}/og-image.jpg`;
+
   document.title = title;
+  
+  // Basic Meta
   setMetaByName("description", description);
   setMetaByName("keywords", mergedKeywords.join(", "));
+  
+  // Open Graph / Facebook
+  setMetaByProperty("og:type", "website");
   setMetaByProperty("og:title", title);
   setMetaByProperty("og:description", description);
-  setMetaByProperty("og:url", `${SEO_BASE.origin}${path}`);
+  setMetaByProperty("og:url", url);
+  setMetaByProperty("og:image", finalImage);
+  setMetaByProperty("og:site_name", "LiveScoreFree.online");
+  
+  // Twitter
+  setMetaByName("twitter:card", "summary_large_image");
+  setMetaByName("twitter:title", title);
+  setMetaByName("twitter:description", description);
+  setMetaByName("twitter:image", finalImage);
 
   const canonical = qs("#canonical-link");
-  if (canonical) canonical.setAttribute("href", `${SEO_BASE.origin}${path}`);
+  if (canonical) canonical.setAttribute("href", url);
   setStructuredData(structuredData || null);
 }
 

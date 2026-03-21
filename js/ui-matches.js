@@ -105,7 +105,7 @@ export function renderLivescoreFreeMatchCard(match) {
   const status = isLive ? (match.statusDetail || "LIVE") : (match.status === "final" ? "FINAL" : formatTime(match.date));
 
   return `
-    <div id="${matchId}" class="glass-card border border-white/5 p-8 rounded-2xl flex flex-col gap-8 group hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden" data-match-key="${match.sportGroup}:${match.slug}">
+    <a href="${route}" data-link id="${matchId}" class="glass-card border border-white/5 p-8 rounded-2xl flex flex-col gap-8 group hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden no-underline text-on-surface" data-match-key="${match.sportGroup}:${match.slug}">
       <div class="flex justify-between items-center relative">
         <div class="flex items-center gap-2">
           <span class="text-primary font-black italic text-[9px] tracking-[0.3em] font-headline uppercase">${escapeHtml(match.leagueLabel || match.sportGroup)}</span>
@@ -115,7 +115,7 @@ export function renderLivescoreFreeMatchCard(match) {
         ${statusBadge(match)}
       </div>
       
-      <a href="${route}" data-link class="flex justify-between items-center relative no-underline text-inherit transform group-hover:scale-[1.02] transition-transform duration-500">
+      <div class="flex justify-between items-center relative transform group-hover:scale-[1.02] transition-transform duration-500">
         <div class="flex flex-col items-center gap-4 w-1/3">
           <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center font-black italic overflow-hidden border border-white/5 shadow-2xl group-hover:border-primary/30 transition-colors">
             ${renderPmTeamLogo({ teamLogo: match.homeLogo, teamName: match.homeName, teamAbbr: match.homeAbbr, fallbackIcon: (match.homeName || "H")[0] })}
@@ -134,12 +134,12 @@ export function renderLivescoreFreeMatchCard(match) {
           </div>
           <span class="text-[10px] font-black uppercase italic tracking-tighter text-center truncate w-full font-headline">${escapeHtml(match.awayAbbr || match.awayName)}</span>
         </div>
-      </a>
+      </div>
 
-      <a href="${route}" data-link class="w-full py-4 kinetic-gradient rounded-xl text-white text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 no-underline opacity-90 hover:opacity-100 transition-all font-headline shadow-lg group-hover:shadow-primary/20">
+      <div class="w-full py-4 kinetic-gradient rounded-xl text-white text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 no-underline opacity-90 hover:opacity-100 transition-all font-headline shadow-lg group-hover:shadow-primary/20">
          <span class="material-symbols-outlined text-lg">play_circle</span> WATCH HD
-      </a>
-    </div>
+      </div>
+    </a>
   `;
 }
 
