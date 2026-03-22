@@ -445,7 +445,7 @@ async function fetchSportStandings(sport, league) {
                             <td class="px-4 py-3"><span class="text-xs font-black italic ${idx < 4 ? 'text-primary' : 'text-on-surface/40'}">${e.stats?.find(s => s.name === 'rank')?.value || idx+1}</span></td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
-                                    <img src="${e.team?.logos?.[0]?.href || '/public/logo.png'}" class="w-6 h-6 object-contain" onerror="this.src='/public/logo.png'">
+                                    <img src="${e.team?.logos?.[0]?.href || '/public/logo.png'}" class="w-6 h-6 object-contain" onerror="this.src='/public/logo.png'" alt="">
                                     <span class="text-[10px] font-black tracking-tight group-hover:text-primary transition-colors truncate max-w-[100px]">${e.team?.displayName || 'Team'}</span>
                                 </div>
                             </td>

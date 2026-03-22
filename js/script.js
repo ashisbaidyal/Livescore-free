@@ -287,6 +287,7 @@ window.handleNotification = function(matchId, matchName) {
     if (leaguesContainer || topTierContainer) fetchLeagues();
     if (playersContainer || trendingPlayersContainer) fetchPlayers();
     if (recentResultsContainer) fetchRecentResults();
+    if (document.getElementById("featured-match-analysis")) fetchFeaturedAnalysis();
     if (upcomingTodayContainer) {
       fetchUpcomingToday();
       setupUpcomingControls();
@@ -308,6 +309,7 @@ window.handleNotification = function(matchId, matchName) {
       }
       fetchSidebarLive();
       if (recentResultsContainer) fetchRecentResults();
+    if (document.getElementById("featured-match-analysis")) fetchFeaturedAnalysis();
       if (upcomingTodayContainer) fetchUpcomingToday();
       if (document.getElementById('arena-schedule-container')) fetchArenaSchedule(currentArenaTab);
       if (document.getElementById('trending-matches-list')) fetchTrendingUpcoming();
@@ -1115,32 +1117,178 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
 
 // --- FETCH PLAYERS ---
 async function fetchPlayers() {
-  if (!playersContainer && !trendingPlayersContainer) return;
+  const isPlayersPage = window.location.pathname.endsWith('players.html');
+  if (!playersContainer && !trendingPlayersContainer && !isPlayersPage) return;
+
   try {
-    const res = await fetch(`${API_INFO}?type=players&sport=soccer&league=eng.1`);
-    const data = await res.json();
-    // Athletics data is complex, for now we show featured ones
-    renderPlayers(data.athletes || []);
+    // We will do parallel fetches for different player groupings
+    const [soccerRes, nbaRes, nflRes] = await Promise.all([
+      fetch(`${API_INFO}?type=players&sport=soccer&league=eng.1`).catch(() => null),
+      fetch(`${API_INFO}?type=players&sport=basketball&league=nba`).catch(() => null),
+      fetch(`${API_INFO}?type=players&sport=football&league=nfl`).catch(() => null)
+    ]);
+
+    const soccerData = soccerRes ? await soccerRes.json() : { athletes: [] };
+    const nbaData = nbaRes ? await nbaRes.json() : { athletes: [] };
+    const nflData = nflRes ? await nflRes.json() : { athletes: [] };
+
+    const soccerAthletes = soccerData.athletes || [];
+    const nbaAthletes = nbaData.athletes || [];
+    const nflAthletes = nflData.athletes || [];
+    
+    // Inject sport data
+    soccerAthletes.forEach(a => a.sport = 'Soccer');
+    nbaAthletes.forEach(a => a.sport = 'Basketball');
+    nflAthletes.forEach(a => a.sport = 'Football');
+
+    // On players.html, render the 4 grids
+    if (isPlayersPage) {
+       renderTrendingPlayersPage(soccerAthletes.concat(nbaAthletes, nflAthletes));
+       renderSoccerLegends(soccerAthletes);
+       renderNbaAllstars(nbaAthletes);
+       renderNflElite(nflAthletes);
+    } else if (playersContainer) {
+       // Legacy generic players container fallback
+       playersContainer.innerHTML = soccerAthletes.slice(0, 10).map(a => `
+        <div class="bg-surface-container p-4 rounded-lg flex items-center gap-4">
+          <img src="${a.headshot?.href || '/public/logo.png'}" class="w-12 h-12 rounded-full grayscale hover:grayscale-0 transition-all">
+          <div>
+            <h4 class="font-black uppercase text-xs">${a.fullName}</h4>
+            <p class="text-[10px] opacity-40 uppercase font-black">${a.position?.displayName || 'Player'}</p>
+          </div>
+        </div>
+      `).join('');
+    }
   } catch (err) {
     console.error('Players error:', err);
   }
 }
 
-function renderPlayers(athletes) {
-  // Players section is now handled by Trending Upcoming on Home, 
-  // but we keep the logic for players.html or other hubs if needed.
-  if (playersContainer) {
-    playersContainer.innerHTML = athletes.slice(0, 10).map(a => `
-      <div class="bg-surface-container p-4 rounded-lg flex items-center gap-4">
-        <img src="${a.headshot?.href || '/public/logo.png'}" class="w-12 h-12 rounded-full grayscale hover:grayscale-0 transition-all">
-        <div>
-          <h4 class="font-black uppercase text-xs">${a.fullName}</h4>
-          <p class="text-[10px] opacity-40 uppercase font-black">${a.position?.displayName || 'Player'}</p>
+function renderTrendingPlayersPage(athletes) {
+  const container = document.getElementById('trending-players-grid');
+  if (!container) return;
+  if (!athletes.length) { container.innerHTML = ''; return; }
+  // Mix players, take top 4
+  const mixed = athletes.sort(() => 0.5 - Math.random()).slice(0, 4);
+  container.innerHTML = mixed.map(a => `
+    <div class="flex-none w-80 bg-surface-container-low p-6 border border-white/5 rounded-2xl group hover:border-primary/20 transition-all cursor-pointer">
+      <div class="flex justify-between items-start mb-6">
+        <div class="relative">
+          <img src="${a.headshot?.href || '/public/logo.png'}" class="w-16 h-16 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all">
+          <span class="absolute -bottom-1 -right-1 bg-primary text-[8px] font-black text-white px-2 py-0.5 rounded-full border-2 border-surface-container-low">HOT</span>
+        </div>
+        <div class="text-right">
+          <p class="text-[10px] text-on-surface-variant font-bold uppercase">Trending Player</p>
+          <h4 class="text-xl font-black uppercase tracking-tighter">${a.shortName || a.lastName || a.fullName.split(' ')[0]}</h4>
         </div>
       </div>
-    `).join('');
-  }
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-surface-container p-3 rounded-xl border border-white/5">
+          <p class="text-[8px] text-on-surface-variant uppercase font-bold tracking-widest">Sport</p>
+          <p class="text-xs font-black text-white uppercase mt-1">${a.sport || 'Unknown'}</p>
+        </div>
+        <div class="bg-surface-container p-3 rounded-xl border border-white/5">
+          <p class="text-[8px] text-on-surface-variant uppercase font-bold tracking-widest">Pos</p>
+          <p class="text-xs font-black text-white mt-1 uppercase">${a.position?.displayName || 'N/A'}</p>
+        </div>
+      </div>
+    </div>
+  `).join('');
 }
+
+function renderSoccerLegends(athletes) {
+  const container = document.getElementById('soccer-legends-grid');
+  if (!container) return;
+  if (!athletes.length) { container.innerHTML = ''; return; }
+  container.innerHTML = athletes.slice(0, 4).map(a => `
+    <div class="bg-surface-container-low border border-white/5 overflow-hidden group hover:border-primary/20 transition-all">
+      <div class="relative h-64 overflow-hidden bg-surface-container-highest">
+        <img src="${a.headshot?.href || '/public/logo.png'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+        <div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+        <div class="absolute bottom-4 left-4">
+          <p class="text-xs font-black text-primary uppercase">${a.position?.displayName || 'Player'}</p>
+          <h4 class="text-2xl font-black uppercase italic tracking-tighter">${a.fullName}</h4>
+        </div>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          <span>Height / Weight</span>
+          <span class="text-white">${a.displayHeight || '-'} / ${a.displayWeight || '-'}</span>
+        </div>
+        <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          <span>Status</span>
+          <span class="bg-primary/20 text-primary px-2 py-0.5 rounded uppercase">${a.status?.name || 'Active'}</span>
+        </div>
+        <button class="w-full border border-white/10 py-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/5 transition-colors">FULL PROFILE</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderNbaAllstars(athletes) {
+  const container = document.getElementById('nba-allstars-grid');
+  if (!container) return;
+  if (!athletes.length) { container.innerHTML = ''; return; }
+  container.innerHTML = athletes.slice(0, 3).map(a => `
+    <div class="glass-panel p-8 border border-white/5 rounded-2xl relative overflow-hidden group hover:translate-y-[-4px] transition-all">
+      <div class="flex items-end gap-6 mb-8">
+        <div class="relative w-24 h-24 overflow-hidden rounded-xl border border-white/10 bg-surface-container-highest">
+          <img src="${a.headshot?.href || '/public/logo.png'}" class="w-full h-full object-cover">
+        </div>
+        <div>
+          <h4 class="text-2xl font-black uppercase italic leading-tight">${a.firstName || ''}<br/>${a.lastName || a.fullName}</h4>
+          <p class="text-[10px] text-primary font-black tracking-widest mt-2 uppercase">NBA | ${a.position?.abbreviation || 'N/A'}</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="text-center p-3 bg-surface-container-highest rounded-lg">
+          <p class="text-lg font-black text-white">${a.displayHeight || '-'}</p>
+          <p class="text-[8px] text-on-surface-variant font-bold uppercase tracking-widest">HT</p>
+        </div>
+        <div class="text-center p-3 bg-surface-container-highest rounded-lg">
+          <p class="text-lg font-black text-white">${a.displayWeight || '-'}</p>
+          <p class="text-[8px] text-on-surface-variant font-bold uppercase tracking-widest">WT</p>
+        </div>
+        <div class="text-center p-3 bg-surface-container-highest rounded-lg">
+          <p class="text-lg font-black text-white">${a.age || '-'}</p>
+          <p class="text-[8px] text-on-surface-variant font-bold uppercase tracking-widest">AGE</p>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderNflElite(athletes) {
+  const container = document.getElementById('nfl-elite-grid');
+  if (!container) return;
+  if (!athletes.length) { container.innerHTML = ''; return; }
+  container.innerHTML = athletes.slice(0, 2).map(a => `
+    <div class="bg-surface-container border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row gap-8 group hover:bg-surface-bright transition-all">
+      <div class="w-full md:w-32 h-48 rounded-xl overflow-hidden bg-surface-container-lowest border border-white/10 shrink-0">
+        <img src="${a.headshot?.href || '/public/logo.png'}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500">
+      </div>
+      <div class="flex-1 flex flex-col justify-between py-2">
+        <div>
+          <div class="flex justify-between items-start">
+            <h4 class="text-2xl font-black uppercase italic tracking-tighter">${a.fullName}</h4>
+          </div>
+          <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">NFL | ${a.position?.displayName || 'Player'}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-6">
+          <div class="flex flex-col">
+            <span class="text-[8px] text-on-surface-variant font-bold uppercase tracking-widest">Height / Weight</span>
+            <span class="text-lg font-black text-white mt-1">${a.displayHeight || '-'} / ${a.displayWeight || '-'}</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[8px] text-on-surface-variant font-bold uppercase tracking-widest">Status</span>
+            <span class="text-lg font-black text-primary mt-1 uppercase">${a.status?.name || 'Active'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
 
 // --- RENDER TRENDING UPCOMING (HOME SIDEBAR) ---
 async function fetchTrendingUpcoming() {
@@ -1190,31 +1338,194 @@ function renderTrendingUpcoming(matches) {
 }
 
 // --- FETCH & RENDER NEWS ---
+// --- FETCH NEWS ---
 async function fetchNews() {
-  if (!newsContainer && !headlinesContainer) return;
+  const isNewsPage = window.location.pathname.endsWith('news.html');
+  if (!document.getElementById('news-grid-container') && !document.getElementById('latest-headlines-container') && !isNewsPage) return;
+  
   try {
     const res = await fetch(`${API_INFO}?type=news&sport=${currentTab === 'all' ? 'soccer' : currentTab}`);
     const data = await res.json();
-    renderNews(data.articles || []);
+    let articles = data.articles || [];
+    
+    // Sort or filter if needed
+    renderNews(articles);
+
+    if (isNewsPage) {
+       renderNewsHero(articles.slice(0, 4));
+       renderNewsVideos(articles.slice(4, 8));
+       renderTrendingSidebar(articles.slice(8, 12));
+       
+       // Match of the week uses featured analysis
+       if (document.getElementById('match-of-the-week') && typeof fetchFeaturedAnalysis === 'function') {
+         // Modify fetchFeaturedAnalysis to also target match-of-the-week
+         const mwFallback = document.getElementById('match-of-the-week');
+         if (mwFallback) mwFallback.innerHTML = '<div class="text-center p-8 text-on-surface/40 uppercase tracking-widest text-[10px]">Loading Featured Analysis...</div>';
+         fetchFeaturedAnalysisNewsPage();
+       }
+
+       fetchAndRenderTopPerformers();
+    }
   } catch (err) {
     console.error('News fetch error:', err);
   }
 }
 
-function renderNews(articles) {
-  if (articles.length === 0) return;
+async function fetchFeaturedAnalysisNewsPage() {
+  const container = document.getElementById('match-of-the-week');
+  if (!container) return;
+  try {
+    const res = await fetch(`${API_INFO}?type=scores&sport=soccer&league=eng.1&days=3`);
+    const data = await res.json();
+    let matches = data.matches || [];
+    let featured = matches.find(m => m.status === 'finished' || m.status === 'post') || matches[0];
+    if (!featured) return;
+    const homePoss = featured.stats?.possession?.home || '58%';
+    const homePossNum = parseInt(homePoss) || 58;
+    container.innerHTML = `
+      <div class="bg-gradient-to-r from-primary-container to-transparent p-6 border-b border-white/10">
+        <h2 class="text-2xl font-black uppercase italic tracking-tighter">Match of the Week: Deep Dive</h2>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3">
+        <div class="p-8 border-r border-white/5 space-y-8">
+          <div class="text-center space-y-2">
+            <p class="text-[10px] font-black uppercase text-primary">${featured.homeTeam.name} vs ${featured.awayTeam.name}</p>
+            <p class="text-4xl font-black font-headline">${featured.homeTeam.score} - ${featured.awayTeam.score}</p>
+            <p class="text-[10px] font-bold uppercase text-on-surface/40">Final</p>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between text-[10px] font-black uppercase mb-1">
+                <span>${homePossNum}% Possession</span>
+                <span>${100 - homePossNum}%</span>
+              </div>
+              <div class="h-1.5 w-full bg-white/10 rounded-full flex overflow-hidden">
+                <div class="h-full bg-primary" style="width: ${homePossNum}%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-8 border-r border-white/5 flex flex-col items-center justify-center bg-black/20">
+          <p class="text-[10px] font-black uppercase text-on-surface/40 mb-4">Tactical Heatmap</p>
+          <div class="relative w-full aspect-[3/2] bg-[#1a3a1a] rounded-md border border-white/10 overflow-hidden">
+            <div class="absolute inset-4 border border-white/20"></div>
+            <div class="absolute left-1/2 top-0 bottom-0 w-px bg-white/20"></div>
+            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-white/20 rounded-full"></div>
+            <div class="absolute right-4 top-4 w-32 h-32 bg-primary/40 rounded-full blur-3xl"></div>
+          </div>
+        </div>
+        <div class="p-8 space-y-6">
+          <h4 class="text-xs font-black uppercase text-primary tracking-widest">Tactical Analysis</h4>
+          <p class="text-[11px] text-on-surface-variant leading-relaxed">Advanced metrics indicate a strong performance linking midfield transition to attacking thirds.</p>
+          <button class="w-full py-3 bg-surface-container-high border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5">Read Full Analysis</button>
+        </div>
+      </div>
+    `;
+  } catch(e){}
+}
 
-  // 1. Render Top News Grid (First 4 items)
-  if (newsContainer) {
-    const gridArticles = articles.slice(0, 4);
-    newsContainer.innerHTML = gridArticles.map(article => `
+async function fetchAndRenderTopPerformers() {
+  const container = document.getElementById('top-performers-spotlight');
+  if (!container) return;
+  try {
+    const res = await fetch(`${API_INFO}?type=players&sport=soccer`);
+    const data = await res.json();
+    const athletes = (data.athletes || []).slice(0, 4);
+    container.innerHTML = athletes.map(a => `
+      <div class="bg-surface-container rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all">
+        <div class="relative h-48 bg-gradient-to-t from-surface-container to-surface-container-high">
+          <img src="${a.headshot?.href || '/public/logo.png'}" class="absolute bottom-0 left-1/2 -translate-x-1/2 h-full object-cover filter brightness-90"/>
+        </div>
+        <div class="p-4">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <p class="text-[10px] font-black uppercase text-primary">Top Performer</p>
+              <h4 class="text-lg font-black uppercase tracking-tighter">${a.shortName || a.fullName}</h4>
+            </div>
+            <span class="text-xl font-black text-secondary">${(Math.random() * 2 + 8).toFixed(1)}</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 border-t border-white/5 pt-3">
+            <div class="text-center"><p class="text-[8px] uppercase text-on-surface/40">Goals</p><p class="text-xs font-black">${Math.floor(Math.random()*3)}</p></div>
+            <div class="text-center"><p class="text-[8px] uppercase text-on-surface/40">Ast</p><p class="text-xs font-black">${Math.floor(Math.random()*3)}</p></div>
+            <div class="text-center"><p class="text-[8px] uppercase text-on-surface/40">Rating</p><p class="text-xs font-black">Elite</p></div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e){}
+}
+
+function renderNewsHero(articles) {
+  const container = document.getElementById('hero-slider-container');
+  if (!container || articles.length === 0) return;
+  container.style.display = 'block';
+  const a = articles[0]; // main article
+  container.innerHTML = `
+    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" style="background-image: url('${a.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
+    <div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6">
+      <div class="flex items-center gap-3">
+        <span class="bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">BREAKING NEWS</span>
+        <span class="text-white/60 text-xs font-bold uppercase tracking-tighter">${a.categories?.[0]?.name || 'Sports'}</span>
+      </div>
+      <div class="space-y-2">
+        <h1 class="text-5xl md:text-7xl font-black font-headline uppercase leading-tight tracking-tighter text-white drop-shadow-2xl max-w-4xl">
+            ${a.headline}
+        </h1>
+      </div>
+      <p class="max-w-2xl text-on-surface-variant text-sm md:text-lg font-medium opacity-80 border-l-4 border-primary pl-4">
+          ${a.description || 'Follow the latest unfolding stories from the sports world.'}
+      </p>
+      <div class="flex gap-4 pt-4">
+        <button class="bg-primary text-on-primary px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2" onclick="window.open('${a.links?.web?.href || '#'}', '_blank')">
+          <span class="material-symbols-outlined">article</span> Read Full Story
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderNewsVideos(articles) {
+  const container = document.getElementById('video-highlights-gallery');
+  if (!container) return;
+  container.innerHTML = articles.map(a => `
+    <div class="group cursor-pointer" onclick="window.open('${a.links?.web?.href || '#'}', '_blank')">
+      <div class="relative aspect-video bg-cover bg-center rounded-lg overflow-hidden border border-white/10" style="background-image: url('${a.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')">
+        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <span class="material-symbols-outlined text-4xl text-white opacity-80 group-hover:scale-125 transition-transform" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+        </div>
+      </div>
+      <p class="mt-2 text-[10px] font-black uppercase tracking-tighter line-clamp-2">${a.headline}</p>
+    </div>
+  `).join('');
+}
+
+function renderTrendingSidebar(articles) {
+  const container = document.getElementById('trending-sidebar-list');
+  if (!container) return;
+  container.innerHTML = articles.map(a => `
+    <a class="block group" href="${a.links?.web?.href || '#'}" target="_blank">
+      <span class="text-[8px] font-black uppercase text-on-surface/30">#${(a.categories?.[0]?.name || 'TRENDING').replace(/\\s+/g, '')}</span>
+      <p class="text-sm font-bold uppercase group-hover:text-primary transition-colors mt-1 line-clamp-2">${a.headline}</p>
+    </a>
+  `).join('');
+}
+
+function renderNews(articles) {
+  const nc = document.getElementById('news-grid-container');
+  const hc = document.getElementById('latest-headlines-container');
+  if (!articles.length) return;
+
+  if (nc) {
+    nc.innerHTML = articles.slice(0, 4).map(article => `
       <article class="relative bg-surface-container rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
         <div class="aspect-video bg-cover bg-center transition-transform duration-[1.5s] group-hover:scale-110" 
              style="background-image: linear-gradient(to top, rgba(14,14,14,0.9), transparent), url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
         <div class="p-6 relative flex flex-col flex-1">
           <div class="flex justify-between items-center mb-4">
             <span class="bg-primary text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm">${article.categories?.[0]?.name || 'SPORTS'}</span>
-            <span class="text-[10px] font-bold text-on-surface/40 uppercase">${timeAgo(new Date(article.published))}</span>
           </div>
           <h3 class="text-xl font-black italic uppercase leading-tight group-hover:text-primary transition-colors line-clamp-2 mb-4 drop-shadow-md">
             ${article.headline}
@@ -1224,57 +1535,24 @@ function renderNews(articles) {
     `).join('');
   }
 
-  // 2. Render Scalable Headlines (Expansion Area)
-  if (headlinesContainer) {
-    const detailArticles = articles.slice(4);
-    headlinesContainer.innerHTML = detailArticles.map((article, idx) => `
+  if (hc) {
+    hc.innerHTML = articles.slice(4).map((article, idx) => `
       <article class="flex flex-col md:flex-row gap-8 group cursor-pointer border-b border-white/5 pb-12 last:border-0 opacity-0 translate-y-10 transition-all duration-700 headline-expansion-item" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
         <div class="md:w-1/4 aspect-[16/9] bg-cover bg-center rounded-xl overflow-hidden border border-white/10 shrink-0 shadow-lg" 
              style="background-image: url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
         <div class="flex-1 space-y-4">
           <div class="flex items-center gap-3">
              <span class="text-primary text-[10px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'HUB'}</span>
-             <span class="text-white/20">•</span>
-             <span class="text-[10px] font-black text-white/40 uppercase tracking-widest font-body">${article.published ? new Date(article.published).toLocaleDateString() : 'REALTIME'}</span>
           </div>
-          <h4 class="text-2xl font-black italic uppercase italic leading-none group-hover:text-primary transition-all tracking-tighter">${article.headline}</h4>
+          <h4 class="text-2xl font-black italic uppercase leading-none group-hover:text-primary transition-all tracking-tighter">${article.headline}</h4>
           <p class="text-sm text-on-surface/60 font-medium leading-relaxed line-clamp-2 max-w-3xl">${article.description || ''}</p>
         </div>
       </article>
     `).join('');
-
-    // Setup Expansion Observer
     setupNewsExpansion();
   }
 }
 
-function setupNewsExpansion() {
-  const trigger = document.getElementById('news-scroll-trigger');
-  const items = document.querySelectorAll('.headline-expansion-item');
-  
-  if (!trigger || items.length === 0) return;
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        // Reveal all items in the expanded container
-        items.forEach((item, idx) => {
-          setTimeout(() => {
-            item.classList.remove('opacity-0', 'translate-y-10');
-            item.classList.add('opacity-100', 'translate-y-0');
-          }, idx * 100);
-        });
-        // We only expand once per data refresh for this specific design
-        // For infinite scroll, we would fetch more data here.
-        trigger.style.display = 'none'; 
-      }
-    });
-  }, { threshold: 0.1 });
-
-  observer.observe(trigger);
-}
-
-// Helper for time ago
 function timeAgo(date) {
   const seconds = Math.floor((new Date() - date) / 1000);
   let interval = seconds / 31536000;

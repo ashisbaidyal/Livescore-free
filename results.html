@@ -252,41 +252,8 @@
 </div>
 </div>
 <!-- Hero Results Slider -->
-<section class="relative h-[614px] w-full overflow-hidden bg-black group">
-<div aria-label="High energy soccer match celebration in a packed stadium" class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-60" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCGfDWcQ-49Ef4ktxHIFn9Q6c-Lw_iygz1-s21n762G5bzjIjw1OMtOmwbhgtso0J65PNSJRce0ZWt2JPvdsUb8f5bH_5YRHaSbGUeXBZdgw9j1S1b4cADnRfj-kJ9BZvlL3oVohvyAPdEfeEhM8qPBV1VgtaEgnl0h9PG10cl9-0aLW4Wle3KD0CTvbY7_6Ji94_KeUD7I96OwS59bvl8lNp2iroeRryL9a9RL0lHHHiHMjF4reG9agWwFZO7wqr7P9RHfvkixeSFr')"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
-<div class="relative h-full flex flex-col justify-end px-12 pb-16 max-w-7xl mx-auto w-full">
-<div class="flex items-center gap-3 mb-4">
-<span class="bg-primary-container text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">FINAL</span>
-<span class="text-on-surface-variant font-bold text-xs uppercase tracking-tighter">UEFA Champions League</span>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-<div class="flex flex-col items-start gap-2">
-<span class="display-lg text-6xl md:text-8xl font-black italic tracking-tighter text-white">RMA</span>
-<span class="text-on-surface font-bold text-xl uppercase tracking-widest">Real Madrid</span>
-</div>
-<div class="flex flex-col items-center gap-4">
-<div class="flex items-center gap-6">
-<span class="text-7xl md:text-9xl font-black text-primary">2</span>
-<span class="text-4xl text-neutral-600 font-thin italic">VS</span>
-<span class="text-7xl md:text-9xl font-black text-white">0</span>
-</div>
-<div class="flex flex-col items-center">
-<span class="text-secondary font-bold uppercase tracking-[0.2em] text-xs">Goal: Vinícius Jr. 83'</span>
-</div>
-</div>
-<div class="flex flex-col items-end gap-2 text-right">
-<span class="display-lg text-6xl md:text-8xl font-black italic tracking-tighter text-neutral-500">BVB</span>
-<span class="text-neutral-400 font-bold text-xl uppercase tracking-widest">Dortmund</span>
-</div>
-</div>
-</div>
-<!-- Slider Indicators -->
-<div class="absolute bottom-8 right-12 flex gap-2">
-<div class="w-12 h-1 bg-primary-container"></div>
-<div class="w-12 h-1 bg-white/20 hover:bg-white/40 cursor-pointer"></div>
-<div class="w-12 h-1 bg-white/20 hover:bg-white/40 cursor-pointer"></div>
-</div>
+<section class="relative w-full h-[716px] min-h-[600px] overflow-hidden group" id="hero-slider-container" style="display: none;">
+<!-- Dynamic hero injected here -->
 </section>
 <!-- League Filter Bar -->
 <section class="bg-surface sticky top-16 z-40 py-6 px-12 flex items-center gap-4 overflow-x-auto no-scrollbar border-b border-white/5">
@@ -312,102 +279,7 @@
 <button class="text-primary font-bold uppercase tracking-widest text-xs flex items-center gap-2 hover:underline">View All Schedule <span class="material-symbols-outlined text-sm">arrow_forward</span></button>
 </div>
 <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<!-- Match Card 1 -->
-<div class="bg-surface-container p-6 rounded-lg border-l-4 border-secondary flex flex-col justify-between group cursor-pointer transition-transform hover:translate-y-[-4px]">
-<div class="flex justify-between items-center mb-6">
-<span class="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-fixed-dim">LIVE 88'</span>
-<span class="text-[10px] font-bold text-neutral-500 uppercase">Anfield, Liverpool</span>
-</div>
-<div class="space-y-4 mb-8">
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">LIV</div>
-<span class="font-bold text-on-surface">Liverpool</span>
-</div>
-<span class="text-3xl font-black text-white">3</span>
-</div>
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">ARS</div>
-<span class="font-bold text-on-surface">Arsenal</span>
-</div>
-<span class="text-3xl font-black text-white">2</span>
-</div>
-</div>
-<button class="w-full py-2 bg-white/5 hover:bg-white/10 text-neutral-300 font-bold uppercase tracking-widest text-[10px] transition-colors">Match Center</button>
-</div>
-<!-- Match Card 2 -->
-<div class="bg-surface-container p-6 rounded-lg border-l-4 border-neutral-700 flex flex-col justify-between group cursor-pointer transition-transform hover:translate-y-[-4px]">
-<div class="flex justify-between items-center mb-6">
-<span class="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">FINAL / NBA</span>
-<span class="text-[10px] font-bold text-neutral-500 uppercase">TD Garden, Boston</span>
-</div>
-<div class="space-y-4 mb-8">
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">CEL</div>
-<span class="font-bold text-on-surface">Celtics</span>
-</div>
-<span class="text-3xl font-black text-white">116</span>
-</div>
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">DAL</div>
-<span class="font-bold text-neutral-500">Mavericks</span>
-</div>
-<span class="text-3xl font-black text-neutral-500">98</span>
-</div>
-</div>
-<button class="w-full py-2 bg-white/5 hover:bg-white/10 text-neutral-300 font-bold uppercase tracking-widest text-[10px] transition-colors">Match Center</button>
-</div>
-<!-- Match Card 3 -->
-<div class="bg-surface-container p-6 rounded-lg border-l-4 border-neutral-700 flex flex-col justify-between group cursor-pointer transition-transform hover:translate-y-[-4px]">
-<div class="flex justify-between items-center mb-6">
-<span class="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">FINAL / La Liga</span>
-<span class="text-[10px] font-bold text-neutral-500 uppercase">Camp Nou</span>
-</div>
-<div class="space-y-4 mb-8">
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">BAR</div>
-<span class="font-bold text-on-surface">Barcelona</span>
-</div>
-<span class="text-3xl font-black text-white">4</span>
-</div>
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">ATM</div>
-<span class="font-bold text-on-surface">Atletico</span>
-</div>
-<span class="text-3xl font-black text-white">1</span>
-</div>
-</div>
-<button class="w-full py-2 bg-white/5 hover:bg-white/10 text-neutral-300 font-bold uppercase tracking-widest text-[10px] transition-colors">Match Center</button>
-</div>
-<!-- Match Card 4 -->
-<div class="bg-surface-container p-6 rounded-lg border-l-4 border-neutral-700 flex flex-col justify-between group cursor-pointer transition-transform hover:translate-y-[-4px]">
-<div class="flex justify-between items-center mb-6">
-<span class="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">FINAL / NFL</span>
-<span class="text-[10px] font-bold text-neutral-500 uppercase">Arrowhead Stadium</span>
-</div>
-<div class="space-y-4 mb-8">
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">KC</div>
-<span class="font-bold text-on-surface">Chiefs</span>
-</div>
-<span class="text-3xl font-black text-white">28</span>
-</div>
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black italic">BUF</div>
-<span class="font-bold text-on-surface">Bills</span>
-</div>
-<span class="text-3xl font-black text-white">24</span>
-</div>
-</div>
-<button class="w-full py-2 bg-white/5 hover:bg-white/10 text-neutral-300 font-bold uppercase tracking-widest text-[10px] transition-colors">Match Center</button>
-</div>
+<!-- Dynamic match results injected here by script.js -->
 </div>
 <!-- Ad Placement: EA Sports -->
 <div class="relative w-full h-32 rounded-lg overflow-hidden flex items-center px-12 group cursor-pointer">
@@ -450,47 +322,8 @@
 </div>
 <!-- Featured Match Analysis -->
 <section class="bg-surface-container-low py-24 px-12">
-<div class="max-w-7xl mx-auto">
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-<div>
-<span class="text-primary font-black uppercase tracking-[0.3em] text-[10px]">DEEP DIVE ANALYSIS</span>
-<h2 class="text-6xl font-black italic uppercase tracking-tighter text-white mt-4 mb-6 leading-none">THE MANCHESTER DERBY: TACTICAL MASTERCLASS</h2>
-<p class="text-neutral-400 font-medium text-lg mb-8 leading-relaxed">Guardiola's high-line transition paralyzed United's counter-attacking threats early. The pivot play from Rodri remains the most critical metric in City's 3-1 comeback victory.</p>
-<div class="grid grid-cols-2 gap-8">
-<div class="space-y-4">
-<span class="text-[10px] font-black uppercase tracking-widest text-neutral-500">Possession</span>
-<div class="flex items-center gap-4">
-<div class="h-2 flex-1 bg-surface-container-high rounded-full overflow-hidden">
-<div class="h-full bg-primary w-[72%]"></div>
-</div>
-<span class="font-black text-xl text-white">72%</span>
-</div>
-</div>
-<div class="space-y-4">
-<span class="text-[10px] font-black uppercase tracking-widest text-neutral-500">Expected Goals (xG)</span>
-<div class="flex items-center gap-4">
-<div class="h-2 flex-1 bg-surface-container-high rounded-full overflow-hidden">
-<div class="h-full bg-secondary w-[88%]"></div>
-</div>
-<span class="font-black text-xl text-white">3.14</span>
-</div>
-</div>
-</div>
-</div>
-<div class="relative aspect-video rounded-lg overflow-hidden group cursor-pointer shadow-2xl">
-<div aria-label="Bird eye view of tactical soccer field positioning analysis" class="absolute inset-0 bg-cover bg-center" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDT59A-kzhkyBrVo3YsvUvAWvlSFJ1Zu6w-EsyPFuCT0it9bzM_aayPjF8xszyNa1lLDC4J4pDkVSkZaLVi2j99_zrc3KNZLHa_IKJebNWVctZZpgYHfdkaAYFdAQl5pT28cdvWgVAgDpj4_ugDm-5oTkadQqpFRr7VtJeaLfokXU2g-Fq0mmJCZ-pD-25NMJq_IYYMilMf6T2Jr-ghbPa-69ZA_OFfR-VSK-ylEwnNnHva9jzYIEm_1rYGuWQnGv8QhAeJ-hc4Pae7')"></div>
-<div class="absolute inset-0 bg-primary/20 mix-blend-overlay"></div>
-<div class="absolute inset-0 flex items-center justify-center">
-<div class="w-20 h-20 rounded-full glass-card flex items-center justify-center group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined text-4xl text-white" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-</div>
-</div>
-<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
-<span class="glass-card px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white">Watch Full Breakdwon</span>
-<span class="text-white font-bold text-xs">12:45 MIN</span>
-</div>
-</div>
-</div>
+<div id="featured-match-analysis" class="max-w-7xl mx-auto">
+<!-- Dynamic featured analysis injected here -->
 </div>
 </section>
 </main></div><footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">

@@ -249,47 +249,8 @@
 </div>
 </div>
 <!-- Kinetic Hero Results Slider -->
-<section class="relative w-full h-[700px] overflow-hidden group">
-<div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADPh8HZSpNcZC1RIO8M7FyiNP0Xis5T98TKjRJu9iOdrsiYtwJHfl_KuvCBAU5CKv7zgqiSQj5ZN0XSZV1eEc0bnGPQme1fv9RBmW4v2DhOcTzIiuvUxuuKMLJdOY-62MEDnxr1RKlFymUV34tlr9uekEfKkvcWWmBEuabgiKGa6p9TwQ4W-0MUdAjXdAyHtC7wRNVQsCiLu06jeK-dqqAQL1Yf1G5wGaJ1XUpeeGoLs3LL3tVfJ7mcadR7hSgcsojtSRfdEPJLD3q')"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
-<div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-transparent to-transparent"></div>
-<div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6">
-<div class="flex items-center gap-3">
-<span class="bg-secondary-container text-on-secondary-container px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">Final Result</span>
-<span class="text-white/60 text-xs font-bold uppercase tracking-tighter">UEFA Champions League Final</span>
-</div>
-<div class="space-y-2">
-<h1 class="text-6xl md:text-9xl font-black font-headline uppercase leading-none tracking-tighter text-glow-red">
-                    REAL MADRID <span class="text-primary-container">3 - 1</span> LIVERPOOL
-                </h1>
-<div class="flex gap-4 text-xs font-bold uppercase text-on-surface-variant/80">
-<span>Vinícius Jr (59', 83')</span>
-<span>•</span>
-<span>Benzema (21')</span>
-<span class="text-primary-container">/</span>
-<span>Salah (55')</span>
-</div>
-</div>
-<p class="max-w-2xl text-on-surface-variant text-sm md:text-lg font-medium opacity-80 border-l-4 border-primary-container pl-4">
-                The Kings of Europe extend their dominance. Real Madrid secures their 15th crown in a clinical display at the Stade de France.
-            </p>
-<div class="flex gap-4 pt-4">
-<button class="bg-primary text-on-primary px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2">
-<span class="material-symbols-outlined">play_arrow</span> Full Replay
-                </button>
-<button class="bg-surface-container-high/50 backdrop-blur-md border border-white/10 text-on-surface px-10 py-4 font-black uppercase text-xs tracking-widest hover:bg-surface-bright transition-colors">Match Stats</button>
-</div>
-</div>
-<!-- Slider Dots -->
-<div class="absolute bottom-12 right-12 flex items-center gap-4">
-<span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">01 / 04</span>
-<div class="flex gap-2">
-<div class="w-12 h-1 bg-primary"></div>
-<div class="w-8 h-1 bg-white/20 hover:bg-white/40 cursor-pointer transition-all"></div>
-<div class="w-8 h-1 bg-white/20 hover:bg-white/40 cursor-pointer transition-all"></div>
-<div class="w-8 h-1 bg-white/20 hover:bg-white/40 cursor-pointer transition-all"></div>
-</div>
-</div>
+<section class="relative w-full h-[700px] overflow-hidden group" id="hero-slider-container" style="display: none;">
+<!-- Dynamic hero injected here -->
 </section>
 <!-- Dynamic Filter Bar -->
 <div class="sticky top-16 z-40 glass-panel px-8 py-4 flex items-center justify-between border-b border-white/5">
@@ -313,234 +274,22 @@
 </div>
 
 <!-- Match of the Week Deep Dive -->
-<section class="mx-8 mb-12 bg-surface-container rounded-xl overflow-hidden border border-white/5">
-<div class="bg-gradient-to-r from-primary-container to-transparent p-6 border-b border-white/10">
-<h2 class="text-2xl font-black uppercase italic tracking-tighter">Match of the Week: Deep Dive</h2>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-3">
-<!-- Left: Stats -->
-<div class="p-8 border-r border-white/5 space-y-8">
-<div class="text-center space-y-2">
-<p class="text-[10px] font-black uppercase text-primary">Manchester City vs Arsenal</p>
-<p class="text-4xl font-black font-headline">5 - 0</p>
-<p class="text-[10px] font-bold uppercase text-on-surface/40">Etihad Stadium • Final</p>
-</div>
-<div class="space-y-4">
-<div>
-<div class="flex justify-between text-[10px] font-black uppercase mb-1">
-<span>68% Possession</span>
-<span>32%</span>
-</div>
-<div class="h-1.5 w-full bg-white/10 rounded-full flex overflow-hidden">
-<div class="h-full bg-primary" style="width: 68%"></div>
-</div>
-</div>
-<div>
-<div class="flex justify-between text-[10px] font-black uppercase mb-1">
-<span>18 Shots</span>
-<span>4</span>
-</div>
-<div class="h-1.5 w-full bg-white/10 rounded-full flex overflow-hidden">
-<div class="h-full bg-primary" style="width: 82%"></div>
-</div>
-</div>
-<div>
-<div class="flex justify-between text-[10px] font-black uppercase mb-1">
-<span>91% Pass Accuracy</span>
-<span>76%</span>
-</div>
-<div class="h-1.5 w-full bg-white/10 rounded-full flex overflow-hidden">
-<div class="h-full bg-primary" style="width: 91%"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- Center: Visual Heatmap Concept -->
-<div class="p-8 border-r border-white/5 flex flex-col items-center justify-center bg-black/20">
-<p class="text-[10px] font-black uppercase text-on-surface/40 mb-4">Tactical Heatmap: Man City Dominance</p>
-<div class="relative w-full aspect-[3/2] bg-[#1a3a1a] rounded-md border border-white/10 overflow-hidden">
-<!-- Soccer pitch markings simplified -->
-<div class="absolute inset-4 border border-white/20"></div>
-<div class="absolute left-1/2 top-0 bottom-0 w-px bg-white/20"></div>
-<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-white/20 rounded-full"></div>
-<!-- Heat spots -->
-<div class="absolute right-4 top-4 w-32 h-32 bg-primary/40 rounded-full blur-3xl"></div>
-<div class="absolute right-12 top-24 w-24 h-24 bg-primary/60 rounded-full blur-3xl"></div>
-<div class="absolute right-8 bottom-8 w-28 h-28 bg-primary/30 rounded-full blur-3xl"></div>
-</div>
-<p class="text-xs italic text-on-surface-variant/60 mt-4 text-center">Concentrated pressure in the final third led to 4 goals from open play.</p>
-</div>
-<!-- Right: Tactical Summary -->
-<div class="p-8 space-y-6">
-<h4 class="text-xs font-black uppercase text-primary tracking-widest">Tactical Analysis</h4>
-<div class="space-y-4">
-<div class="bg-white/5 p-4 rounded border-l-2 border-primary">
-<p class="text-xs font-bold uppercase mb-1">High Press Execution</p>
-<p class="text-[11px] text-on-surface-variant leading-relaxed">Guardiola's side forced 12 turnovers in the first 20 minutes, paralyzing Arsenal's buildup play.</p>
-</div>
-<div class="bg-white/5 p-4 rounded border-l-2 border-primary">
-<p class="text-xs font-bold uppercase mb-1">Clinical Finishing</p>
-<p class="text-[11px] text-on-surface-variant leading-relaxed">Haaland converted 3 out of 4 big chances, showcasing world-class positioning.</p>
-</div>
-</div>
-<button class="w-full py-3 bg-surface-container-high border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5">Read Full Analysis</button>
-</div>
-</div>
+<section class="mx-8 mb-12 bg-surface-container rounded-xl overflow-hidden border border-white/5" id="match-of-the-week">
+<!-- Dynamic match of the week injected here -->
 </section>
 <!-- Video Highlights Gallery -->
 <section class="px-8 mb-12">
-<div class="flex justify-between items-end mb-6">
-<div>
-<h3 class="text-primary font-headline font-bold text-xs uppercase tracking-[0.2em]">Video Highlights</h3>
-<h2 class="text-3xl font-black uppercase italic tracking-tighter">Cinematic Recaps</h2>
-</div>
-<button class="text-[10px] font-black uppercase text-on-surface/40 hover:text-primary transition-colors flex items-center gap-2">View All Gallery <span class="material-symbols-outlined text-sm">arrow_forward</span></button>
-</div>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-<div class="group cursor-pointer">
-<div class="relative aspect-video bg-cover bg-center rounded-lg overflow-hidden border border-white/10" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBNX4P27PsrfuNPFuhLlKi5skI53k9iF4GhlGUmTidhcmzWWXrQsmLHyOCAGstwH2th1UbTxu1g7ZsECQS1qZTf_NeZCvY7NdT0g2IBob-qsaOrLFVJjN0jXLfjKuEfSebkeAQ42SyQdlodAAveWJGLKDaibjbFKH9z1m61mwPGm7hpXgGI5W0KJ1_I_jyAmT3-KDIJHa6FEHBmH9TUyvI57EaKTrGfnMiQzf-NQvnbEMhWvdXaBXUVIDDzt6AxsqlieDuzoj5jN_g6')">
-<div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
-<div class="absolute inset-0 flex items-center justify-center">
-<span class="material-symbols-outlined text-4xl text-white opacity-80 group-hover:scale-125 transition-transform" style="font-variation-settings: 'FILL' 1;">play_circle</span>
-</div>
-<span class="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[8px] font-bold">04:22</span>
-</div>
-<p class="mt-2 text-[10px] font-black uppercase tracking-tighter line-clamp-2">Real Madrid vs Liverpool: Extended UCL Final Highlights</p>
-</div>
-<!-- Repeat item 2 -->
-<div class="group cursor-pointer">
-<div class="relative aspect-video bg-cover bg-center rounded-lg overflow-hidden border border-white/10" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBNZrgZba1M-hTcxGkYI4UMO9T6sIAUUG9-XuKo782BY41D-kDQyH0MDdU22dPftgvTSKrNrShN5B_QGK6nvkFxXUpa14xXAd-86q5pQGBLg728N43JD226DjsQV2CZRxJiIvUEBfZ94mjnfIEgCJKbMbcQH_M4ZZyOarLqRyElJwJuDuYnRjaMYgCGE0mxu10kP_bTcFLWwGyP5cfjFd2b214-8IxX7nqfuEtzWPY62tLUJvpbGfKGldns5MgV61MjeLTWrW01x2VS')">
-<div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
-<div class="absolute inset-0 flex items-center justify-center">
-<span class="material-symbols-outlined text-4xl text-white opacity-80 group-hover:scale-125 transition-transform" style="font-variation-settings: 'FILL' 1;">play_circle</span>
-</div>
-<span class="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[8px] font-bold">02:15</span>
-</div>
-<p class="mt-2 text-[10px] font-black uppercase tracking-tighter line-clamp-2">Celtics Clinch Game 7: Tatum's Historic 51pt Performance</p>
-</div>
-<!-- Repeat item 3 -->
-<div class="group cursor-pointer">
-<div class="relative aspect-video bg-cover bg-center rounded-lg overflow-hidden border border-white/10" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBNX4P27PsrfuNPFuhLlKi5skI53k9iF4GhlGUmTidhcmzWWXrQsmLHyOCAGstwH2th1UbTxu1g7ZsECQS1qZTf_NeZCvY7NdT0g2IBob-qsaOrLFVJjN0jXLfjKuEfSebkeAQ42SyQdlodAAveWJGLKDaibjbFKH9z1m61mwPGm7hpXgGI5W0KJ1_I_jyAmT3-KDIJHa6FEHBmH9TUyvI57EaKTrGfnMiQzf-NQvnbEMhWvdXaBXUVIDDzt6AxsqlieDuzoj5jN_g6')">
-<div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
-<div class="absolute inset-0 flex items-center justify-center">
-<span class="material-symbols-outlined text-4xl text-white opacity-80 group-hover:scale-125 transition-transform" style="font-variation-settings: 'FILL' 1;">play_circle</span>
-</div>
-<span class="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[8px] font-bold">03:45</span>
-</div>
-<p class="mt-2 text-[10px] font-black uppercase tracking-tighter line-clamp-2">Alcaraz vs Sinner: French Open Semi-Final Full Recap</p>
-</div>
-<!-- Repeat item 4 -->
-<div class="group cursor-pointer">
-<div class="relative aspect-video bg-cover bg-center rounded-lg overflow-hidden border border-white/10" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADPh8HZSpNcZC1RIO8M7FyiNP0Xis5T98TKjRJu9iOdrsiYtwJHfl_KuvCBAU5CKv7zgqiSQj5ZN0XSZV1eEc0bnGPQme1fv9RBmW4v2DhOcTzIiuvUxuuKMLJdOY-62MEDnxr1RKlFymUV34tlr9uekEfKkvcWWmBEuabgiKGa6p9TwQ4W-0MUdAjXdAyHtC7wRNVQsCiLu06jeK-dqqAQL1Yf1G5wGaJ1XUpeeGoLs3LL3tVfJ7mcadR7hSgcsojtSRfdEPJLD3q')">
-<div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
-<div class="absolute inset-0 flex items-center justify-center">
-<span class="material-symbols-outlined text-4xl text-white opacity-80 group-hover:scale-125 transition-transform" style="font-variation-settings: 'FILL' 1;">play_circle</span>
-</div>
-<span class="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[8px] font-bold">05:10</span>
-</div>
-<p class="mt-2 text-[10px] font-black uppercase tracking-tighter line-clamp-2">Top 10 Goals of the Season: Premier League Edition</p>
+<div id="video-highlights-gallery" class="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+<!-- Dynamic video highlights injected here -->
 </div>
 </div>
 </section>
 <!-- Top Performers Spotlight -->
 <section class="px-8 mb-12">
-<h2 class="text-3xl font-black uppercase italic tracking-tighter mb-8 border-b border-white/5 pb-4">Top Performers</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-<!-- Player Card 1 -->
-<div class="bg-surface-container rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all">
-<div class="relative h-48 bg-gradient-to-t from-surface-container to-surface-container-high">
-<img alt="Vinícius Júnior" class="absolute bottom-0 left-1/2 -translate-x-1/2 h-full object-cover filter brightness-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADPh8HZSpNcZC1RIO8M7FyiNP0Xis5T98TKjRJu9iOdrsiYtwJHfl_KuvCBAU5CKv7zgqiSQj5ZN0XSZV1eEc0bnGPQme1fv9RBmW4v2DhOcTzIiuvUxuuKMLJdOY-62MEDnxr1RKlFymUV34tlr9uekEfKkvcWWmBEuabgiKGa6p9TwQ4W-0MUdAjXdAyHtC7wRNVQsCiLu06jeK-dqqAQL1Yf1G5wGaJ1XUpeeGoLs3LL3tVfJ7mcadR7hSgcsojtSRfdEPJLD3q"/>
-</div>
-<div class="p-4">
-<div class="flex justify-between items-start mb-2">
-<div>
-<p class="text-[10px] font-black uppercase text-primary">Man of the Match</p>
-<h4 class="text-lg font-black uppercase tracking-tighter">Vinícius Jr</h4>
-</div>
-<span class="text-xl font-black text-secondary">9.8</span>
-</div>
-<div class="grid grid-cols-3 gap-2 border-t border-white/5 pt-3">
-<div class="text-center">
-<p class="text-[8px] uppercase text-on-surface/40">Goals</p>
-<p class="text-xs font-black">2</p>
-</div>
-<div class="text-center">
-<p class="text-[8px] uppercase text-on-surface/40">Dribbles</p>
-<p class="text-xs font-black">7</p>
-</div>
-<div class="text-center">
-<p class="text-[8px] uppercase text-on-surface/40">Sprints</p>
-<p class="text-xs font-black">34</p>
-</div>
-</div>
-</div>
-</div>
-<!-- Player Card 2 -->
-<div class="bg-surface-container rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all">
-<div class="relative h-48 bg-gradient-to-t from-surface-container to-surface-container-high">
-<div class="absolute inset-0 flex items-center justify-center opacity-20"><span class="material-symbols-outlined text-8xl">person</span></div>
-</div>
-<div class="p-4">
-<div class="flex justify-between items-start mb-2">
-<div>
-<p class="text-[10px] font-black uppercase text-on-surface/40">Star Performance</p>
-<h4 class="text-lg font-black uppercase tracking-tighter">Jayson Tatum</h4>
-</div>
-<span class="text-xl font-black text-secondary">9.5</span>
-</div>
-<div class="grid grid-cols-3 gap-2 border-t border-white/5 pt-3">
-<div class="text-center">
-<p class="text-[8px] uppercase text-on-surface/40">Points</p>
-<p class="text-xs font-black">34</p>
-</div>
-<div class="text-center">
-<p class="text-[8px] uppercase text-on-surface/40">Reb</p>
-<p class="text-xs font-black">11</p>
-</div>
-<div class="text-center">
-<p class="text-[8px] uppercase text-on-surface/40">AST</p>
-<p class="text-xs font-black">8</p>
-</div>
-</div>
-</div>
-</div>
-<!-- Gatorade Ad -->
-<div class="bg-[#f27022] rounded-lg overflow-hidden flex flex-col items-center justify-center p-6 text-black group cursor-pointer relative">
-<span class="absolute top-2 right-2 text-[8px] font-bold text-black/30 tracking-widest uppercase">Ad</span>
-<img alt="Gatorade" class="w-24 mb-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoXo666l38uYnVviGc0U1-KVeqwj40mdFjJ_mIpDWA42VTfOMempSTl-uyd-mNkEEb88we6abSnyOdccuOQ5afELRG1Iy9Z2Bdh0mYPR_wr-UBdpTjiRuhGaLhtgFkF5LfmjA3zK235wtdzZlS6JF_6O2ywj4IHTAhz4p4FCpm2V0EH0HjBugI8gdJQCKjUL5T-5MW4xogKRR39190Xslwz1v-0mXSaTmbA-8SOn_PPC_5ccL7iYQCa1OjN7taAitzh5oQv2NHTdv-"/>
-<p class="text-center font-black uppercase leading-tight text-lg mb-4 italic">REFUEL YOUR GAME. BECOME THE M.V.P.</p>
-<a href="https://ko-fi.com/livescorefree" target="_blank" class="block">
-<button class="bg-black text-white font-black text-[10px] px-8 py-2 rounded-full uppercase tracking-widest">Shop G-Series</button>
-</a>
-</div>
-<!-- Player Card 3 -->
-<div class="bg-surface-container rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all">
-<div class="relative h-48 bg-gradient-to-t from-surface-container to-surface-container-high">
-<div class="absolute inset-0 flex items-center justify-center opacity-20"><span class="material-symbols-outlined text-8xl">person</span></div>
-</div>
-<div class="p-4">
-<div class="flex justify-between items-start mb-2">
-<div>
-<p class="text-[10px] font-black uppercase text-on-surface/40">Breakout Star</p>
-<h4 class="text-lg font-black uppercase tracking-tighter">C. Alcaraz</h4>
-</div>
-<span class="text-xl font-black text-secondary">9.2</span>
-</div>
-<div class="grid grid-cols-3 gap-2 border-t border-white/5 pt-3">
-<div class="text-center">
-<p class="text-[8px] uppercase text-on-surface/40">Aces</p>
-<p class="text-xs font-black">12</p>
-</div>
-<div class="text-center">
-<p class="text-[8px] uppercase text-on-surface/40">Winners</p>
-<p class="text-xs font-black">45</p>
-</div>
-<div class="text-center">
-<p class="text-[8px] uppercase text-on-surface/40">Net Pts</p>
-<p class="text-xs font-black">82%</p>
-</div>
-</div>
-</div>
+<div id="top-performers-spotlight" class="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+<!-- Dynamic top performers injected here -->
 </div>
 </div>
 </section>
@@ -568,23 +317,8 @@
 <h3 class="text-xs font-black uppercase tracking-widest text-primary mb-6 flex items-center gap-2">
 <span class="material-symbols-outlined text-sm">trending_up</span> Trending Now
                 </h3>
-<div class="space-y-6">
-<a class="block group" href="news.html">
-<span class="text-[8px] font-black uppercase text-on-surface/30">#MBAPPE</span>
-<p class="text-sm font-bold uppercase group-hover:text-primary transition-colors mt-1">Real Madrid officially unveil Mbappe at the Bernabéu</p>
-</a>
-<a class="block group" href="news.html">
-<span class="text-[8px] font-black uppercase text-on-surface/30">#NBAFINALS</span>
-<p class="text-sm font-bold uppercase group-hover:text-primary transition-colors mt-1">Celtics Victory Parade: Date and Route announced</p>
-</a>
-<a class="block group" href="news.html">
-<span class="text-[8px] font-black uppercase text-on-surface/30">#USOPEN</span>
-<p class="text-sm font-bold uppercase group-hover:text-primary transition-colors mt-1">Tiger Woods confirms entry for next month's US Open</p>
-</a>
-<a class="block group" href="news.html">
-<span class="text-[8px] font-black uppercase text-on-surface/30">#NFLDRAFT</span>
-<p class="text-sm font-bold uppercase group-hover:text-primary transition-colors mt-1">Draft Grades: Who won the 2024 NFL Draft?</p>
-</a>
+<div class="space-y-6" id="trending-sidebar-list">
+<!-- Dynamic trending injected here -->
 </div>
 </div>
 <div class="bg-gradient-to-br from-[#131313] to-surface-container-high rounded-lg p-6 border border-white/10">
