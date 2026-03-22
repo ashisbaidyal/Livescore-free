@@ -182,9 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const matchId = urlParams.get('id');
   const sportParam = urlParams.get('sport');
-  if (sportParam) currentTab = sportParam;
+  
+  // Explicitly default to 'all' to show all sports by default
+  currentTab = sportParam || 'all';
+  
   const sport = currentTab;
-  const league = urlParams.get('league') || 'eng.1';
+  const league = urlParams.get('league') || (sport === 'soccer' ? 'eng.1' : sport === 'basketball' ? 'nba' : sport === 'football' ? 'nfl' : 'eng.1');
 
   if (matchId) {
     if (path.includes('upcoming_match_detail.html')) {
@@ -1824,7 +1827,7 @@ function renderMatches(matches) {
           <div class="flex justify-between items-center relative">
             <div class="flex items-center gap-2">
               <span class="${isLive ? 'text-primary' : 'text-on-surface/50'} font-black italic text-[10px] tracking-widest truncate max-w-[150px]">
-                ${match.league || 'Event'}
+                ${currentTab === 'all' ? `<span class="bg-white/10 px-1.5 py-0.5 rounded text-[8px] mr-1.5 text-on-surface/60">${match.sport.toUpperCase()}</span>` : ''}${match.league || 'Event'}
               </span>
             </div>
             ${statusLabel}

@@ -56,18 +56,43 @@ export async function onRequest(context) {
   const targetSports = SPORT_MAPPING[sportParam] || [sportParam];
   let endpoints = [];
 
-  targetSports.forEach(s => {
-    const leagues = LEAGUE_MAP[s] || [];
-    leagues.forEach(l => {
-      endpoints.push({
-        url: `https://site.api.espn.com/apis/site/v2/sports/${s}/${l}/scoreboard`,
-        sport: s,
-        league: l
+  if (sportParam === 'all') {
+    // Pick top 1-2 leagues from each sport to ensure variety within subrequest limits
+    const majorLeagues = {
+      "soccer": ["eng.1", "esp.1", "ger.1"],
+      "basketball": ["nba"],
+      "football": ["nfl"],
+      "cricket": ["8039", "8040"],
+      "tennis": ["atp"],
+      "hockey": ["nhl"],
+      "baseball": ["mlb"],
+      "mma": ["ufc"]
+    };
+
+    targetSports.forEach(s => {
+      const leagues = majorLeagues[s] || (LEAGUE_MAP[s] || []).slice(0, 1);
+      leagues.forEach(l => {
+        endpoints.push({
+          url: `https://site.api.espn.com/apis/site/v2/sports/${s}/${l}/scoreboard`,
+          sport: s,
+          league: l
+        });
       });
     });
-  });
+  } else {
+    targetSports.forEach(s => {
+      const leagues = LEAGUE_MAP[s] || [];
+      leagues.forEach(l => {
+        endpoints.push({
+          url: `https://site.api.espn.com/apis/site/v2/sports/${s}/${l}/scoreboard`,
+          sport: s,
+          league: l
+        });
+      });
+    });
+  }
 
-  // If "all" or specific sport has no common mapping, try a default or hit more
+  // If specific sport has no common mapping, try a default or hit more
   if (endpoints.length === 0) {
       endpoints.push({
           url: `https://site.api.espn.com/apis/site/v2/sports/${targetSports[0]}/${targetSports[0]}/scoreboard`,
@@ -77,8 +102,8 @@ export async function onRequest(context) {
   }
 
   try {
-    // Limit to 10 endpoints to avoid Cloudflare subrequest limits (50) and timeout
-    const limitedEndpoints = endpoints.slice(0, 15);
+    // Limit to 20 endpoints to avoid Cloudflare subrequest limits (50) and timeout
+    const limitedEndpoints = endpoints.slice(0, 20);
     const fetchPromises = limitedEndpoints.map(ep => 
       fetch(ep.url + "?limit=50")
         .then(res => res.json())
