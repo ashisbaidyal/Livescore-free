@@ -23,6 +23,10 @@ const matchesContainer = document.getElementById('matches-container');
 const sidebarLiveContainer = document.getElementById('sidebar-live-container');
 const tickerContainer = document.getElementById('ticker-container');
 const newsContainer = document.getElementById('news-container');
+const heroSliderContainer = document.getElementById('hero-slider-container');
+const leaguesContainer = document.getElementById('leagues-container');
+const playersContainer = document.getElementById('players-container');
+const trendingPlayersContainer = document.getElementById('trending-players-container');
 const API_INFO = '/api/info';
 
 // Specific Match Detail Elements
@@ -180,8 +184,221 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
       fetchNews();
     }, 300000); // 5m for news
+
+    // Additional Hubs
+    if (heroSliderContainer) fetchHeroData();
+    if (leaguesContainer) fetchLeagues();
+    if (playersContainer || trendingPlayersContainer) fetchPlayers();
+
+    // Auto Refresh for Hubs
+    setInterval(() => {
+      if (heroSliderContainer) fetchHeroData();
+    }, 60000); // 1m for hero
+
+    setInterval(() => {
+      if (playersContainer || trendingPlayersContainer) fetchPlayers();
+    }, 600000); // 10m for players
   }
 });
+
+// --- FETCH TOP HERO DATA ---
+async function fetchHeroData() {
+  if (!heroSliderContainer) return;
+  try {
+    const res = await fetch(`${API_LIVE}?sport=all`);
+    const data = await res.json();
+    const matches = (data.matches || []).filter(m => m.status === 'live').slice(0, 3);
+    renderHeroSlider(matches);
+  } catch (err) {
+    console.error('Hero Slider error:', err);
+  }
+}
+
+function renderHeroSlider(matches) {
+  if (!heroSliderContainer || matches.length === 0) return;
+  
+  let currentSlide = 0;
+  const slides = matches.map((match, idx) => `
+    <div class="absolute inset-0 z-10 transition-opacity duration-1000 ${idx === 0 ? 'opacity-100' : 'opacity-0'}" id="hero-slide-${idx}">
+      <div class="absolute inset-0 bg-cover bg-center" style="background-image: linear-gradient(to top, rgba(19, 19, 19, 0.9) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${match.homeTeam.logo}'); filter: brightness(0.4) blur(4px);"></div>
+      <div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
+            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE NOW
+          </span>
+          <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${match.league}</span>
+        </div>
+        <div class="flex items-end gap-6 mb-8">
+          <h1 class="font-headline font-black text-6xl md:text-9xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
+            ${match.homeTeam.name.slice(0,3)} <span class="text-primary">${match.homeTeam.score}-${match.awayTeam.score}</span> ${match.awayTeam.name.slice(0,3)}
+          </h1>
+          <div class="mb-2 hidden sm:block">
+            <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">Elapsed</div>
+            <div class="text-3xl font-black italic">${match.time}'</div>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-4">
+          <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)]">
+            Match Center
+          </a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  heroSliderContainer.innerHTML = `
+    <div class="relative w-full h-full">
+      ${slides}
+    </div>
+  `;
+
+  // Auto-advance logic
+  if (matches.length > 1) {
+    setInterval(() => {
+      document.getElementById(`hero-slide-${currentSlide}`).classList.replace('opacity-100', 'opacity-0');
+      currentSlide = (currentSlide + 1) % matches.length;
+      document.getElementById(`hero-slide-${currentSlide}`).classList.replace('opacity-0', 'opacity-100');
+    }, 8000);
+  }
+}
+
+// --- FETCH LEAGUES ---
+async function fetchLeagues() {
+  if (!leaguesContainer) return;
+  try {
+    // We'll also fetch standings for the "Top Tier" section here
+    const res = await fetch(`${API_INFO}?type=standings&sport=soccer&league=eng.1`);
+    const data = await res.json();
+    renderLeagues(data.standings?.[0]?.entries || []);
+  } catch (err) {
+    console.error('Leagues error:', err);
+    renderLeagues();
+  }
+}
+
+function renderLeagues(standings = []) {
+  if (!leaguesContainer) return;
+  
+  const topLeagues = [
+    { name: 'Premier League', slug: 'eng.1', country: 'England', sport: 'soccer', icon: 'sports_soccer' },
+    { name: 'NBA', slug: 'nba', country: 'USA', sport: 'basketball', icon: 'sports_basketball' },
+    { name: 'NFL', slug: 'nfl', country: 'USA', sport: 'american-football', icon: 'sports_football' },
+    { name: 'LALIGA', slug: 'esp.1', country: 'Spain', sport: 'soccer', icon: 'sports_soccer' }
+  ];
+
+  leaguesContainer.innerHTML = `
+    <section>
+      <div class="flex items-end justify-between mb-8 border-l-4 border-primary pl-4">
+        <div>
+          <h2 class="text-3xl font-black italic uppercase tracking-tighter">Elite Leagues</h2>
+          <p class="text-xs font-bold text-on-surface opacity-40 uppercase tracking-widest">Live Multi-Sport Data</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        ${topLeagues.map(l => `
+          <div class="bg-surface-container-high border border-white/5 rounded p-5 hover:bg-surface-container-highest transition-colors group relative overflow-hidden">
+            <div class="flex justify-between items-start mb-6">
+              <div class="w-12 h-12 bg-white/5 rounded flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-3xl">${l.icon}</span>
+              </div>
+            </div>
+            <h3 class="text-lg font-black uppercase tracking-tight mb-1">${l.name}</h3>
+            <p class="text-[10px] text-on-surface/40 font-bold uppercase tracking-widest mb-6">${l.country} • ${l.sport}</p>
+            <button onclick="switchTab('${l.sport}')" class="w-full py-3 bg-white/5 group-hover:bg-primary group-hover:text-on-primary transition-all text-[10px] font-black uppercase tracking-widest rounded">View Hub</button>
+          </div>
+        `).join('')}
+      </div>
+
+      ${standings.length > 0 ? `
+      <div class="flex items-end justify-between mb-8 border-l-4 border-primary pl-4">
+        <div>
+          <h2 class="text-3xl font-black italic uppercase tracking-tighter">Live Standings</h2>
+          <p class="text-xs font-bold text-on-surface opacity-40 uppercase tracking-widest">Premier League Table</p>
+        </div>
+      </div>
+      <div class="bg-surface-container border border-white/5 rounded-xl overflow-hidden">
+        <table class="w-full text-left text-[10px] uppercase font-black">
+          <thead class="bg-white/5 border-b border-white/5">
+            <tr>
+              <th class="px-6 py-4">Pos</th>
+              <th class="px-6 py-4">Club</th>
+              <th class="px-6 py-4">PL</th>
+              <th class="px-6 py-4">GD</th>
+              <th class="px-6 py-4">PTS</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            ${standings.slice(0, 10).map(e => `
+              <tr class="hover:bg-white/5 transition-colors">
+                <td class="px-6 py-4 text-on-surface/40">${e.stats.find(s=>s.name==='rank')?.value || '-'}</td>
+                <td class="px-6 py-4 flex items-center gap-3">
+                  <img src="${e.team.logos?.[0]?.href}" class="w-4 h-4 object-contain">
+                  <span>${e.team.displayName}</span>
+                </td>
+                <td class="px-6 py-4">${e.stats.find(s=>s.name==='gamesPlayed')?.value || '0'}</td>
+                <td class="px-6 py-4 ${e.stats.find(s=>s.name==='pointDifferential')?.value >= 0 ? 'text-primary' : 'text-on-surface/40'}">${e.stats.find(s=>s.name==='pointDifferential')?.displayValue || '0'}</td>
+                <td class="px-6 py-4 text-primary">${e.stats.find(s=>s.name==='points')?.value || '0'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      ` : ''}
+    </section>
+  `;
+}
+
+// --- FETCH PLAYERS ---
+async function fetchPlayers() {
+  if (!playersContainer && !trendingPlayersContainer) return;
+  try {
+    const res = await fetch(`${API_INFO}?type=players&sport=soccer&league=eng.1`);
+    const data = await res.json();
+    // Athletics data is complex, for now we show featured ones
+    renderPlayers(data.athletes || []);
+  } catch (err) {
+    console.error('Players error:', err);
+  }
+}
+
+function renderPlayers(athletes) {
+  if (trendingPlayersContainer) {
+    trendingPlayersContainer.innerHTML = `
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+          <h3 class="text-lg font-black uppercase tracking-widest">Trending Now</h3>
+        </div>
+      </div>
+      <div class="flex gap-6 overflow-x-auto pb-8 no-scrollbar">
+        ${athletes.slice(0, 5).map(a => `
+          <div class="flex-none w-80 bg-surface-container-low p-6 border border-white/5 rounded-2xl group hover:border-primary/20 transition-all cursor-pointer">
+            <div class="flex justify-between items-start mb-6">
+              <div class="relative">
+                <img src="${a.headshot?.href || 'https://livescorefree.online/logo.png'}" class="w-16 h-16 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all">
+                <span class="absolute -bottom-1 -right-1 bg-primary text-[8px] font-black text-white px-2 py-0.5 rounded-full border-2 border-surface-container-low uppercase">TRENDING</span>
+              </div>
+              <div class="text-right">
+                <p class="text-[10px] text-on-surface-variant font-bold uppercase">${a.position?.abbreviation || 'Player'}</p>
+                <h4 class="text-xl font-black uppercase tracking-tighter">${a.lastName || a.fullName}</h4>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-surface-container p-3 rounded-xl border border-white/5 text-center">
+                <p class="text-[8px] text-on-surface-variant uppercase font-bold tracking-widest">Age</p>
+                <p class="text-lg font-black text-white">${a.age || 'N/A'}</p>
+              </div>
+              <div class="bg-surface-container p-3 rounded-xl border border-white/5 text-center">
+                <p class="text-[8px] text-on-surface-variant uppercase font-bold tracking-widest">Weight</p>
+                <p class="text-lg font-black text-white">${a.displayWeight || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+}
 
 // --- FETCH NEWS ---
 async function fetchNews() {
