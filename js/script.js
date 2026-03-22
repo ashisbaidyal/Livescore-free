@@ -57,7 +57,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. Header Scroll Behavior (Hide on scroll down, show on scroll up)
   const header = document.getElementById('main-header');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebarOverlay = document.getElementById('sidebar-overlay');
   let lastScrollTop = 0;
+  
+  // Toggle Sidebar Function
+  const toggleSidebar = (show) => {
+    if (show) {
+      sidebar.classList.remove('-translate-x-full');
+      sidebar.classList.add('translate-x-0');
+      sidebarOverlay.classList.remove('hidden');
+      setTimeout(() => {
+        sidebarOverlay.classList.remove('opacity-0');
+        sidebarOverlay.classList.add('opacity-100');
+      }, 10);
+    } else {
+      sidebar.classList.remove('translate-x-0');
+      sidebar.classList.add('-translate-x-full');
+      sidebarOverlay.classList.remove('opacity-100');
+      sidebarOverlay.classList.add('opacity-0');
+      setTimeout(() => {
+        sidebarOverlay.classList.add('hidden');
+      }, 300);
+    }
+  };
+
+  if (sidebarToggle && sidebar && sidebarOverlay) {
+    sidebarToggle.addEventListener('click', () => toggleSidebar(true));
+    sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
+  }
   
   if (header) {
     window.addEventListener('scroll', () => {
@@ -65,6 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (scrollTop > lastScrollTop && scrollTop > 100) {
         // Scrolling down
         header.style.transform = 'translateY(-100%)';
+        // Auto-close sidebar on scroll if open
+        if (sidebar && sidebar.classList.contains('translate-x-0')) toggleSidebar(false);
       } else {
         // Scrolling up
         header.style.transform = 'translateY(0)';
@@ -72,6 +103,41 @@ document.addEventListener('DOMContentLoaded', () => {
       lastScrollTop = Math.max(0, scrollTop);
     }, { passive: true });
   }
+
+  // 4. Sidebar Item "Team Profile" Animation
+  const navItems = document.querySelectorAll('aside nav a');
+  navItems.forEach(item => {
+    item.addEventListener('mouseenter', () => {
+      item.style.transform = 'translateX(8px)';
+      item.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+      const icon = item.querySelector('.material-symbols-outlined');
+      if (icon) {
+        icon.style.transform = 'scale(1.2) rotate(5deg)';
+        icon.style.color = '#FF1E1E';
+      }
+    });
+    item.addEventListener('mouseleave', () => {
+      if (!item.classList.contains('text-primary')) {
+        item.style.transform = 'translateX(0)';
+        item.style.backgroundColor = 'transparent';
+        const icon = item.querySelector('.material-symbols-outlined');
+        if (icon) {
+          icon.style.transform = 'scale(1) rotate(0deg)';
+          icon.style.color = '';
+        }
+      } else {
+        item.style.transform = 'translateX(0)';
+      }
+    });
+
+    // Touch support for mobile "auto" animation feel
+    item.addEventListener('touchstart', () => {
+      item.style.backgroundColor = 'rgba(204, 22, 22, 0.1)';
+    }, { passive: true });
+    item.addEventListener('touchend', () => {
+      item.style.backgroundColor = '';
+    }, { passive: true });
+  });
 
   // Check for dynamic match detail first
   const urlParams = new URLSearchParams(window.location.search);

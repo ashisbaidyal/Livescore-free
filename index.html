@@ -123,8 +123,11 @@
 <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
 <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
 <div class="flex items-center gap-4">
+<button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full transition-all">menu</button>
+<a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
 <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
 <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
+</a>
 </div>
 <div class="hidden lg:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter" id="top-nav-links">
 <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
@@ -147,8 +150,10 @@
 </div>
 </div>
 </nav>
+<!-- Sidebar Overlay -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
 <div class="flex pt-16 min-h-screen">
-<aside class="hidden lg:flex flex-col pt-8 pb-10 h-[calc(100vh-64px)] w-64 border-r border-white/5 bg-[#0E0E0E] sticky top-16 shrink-0 overflow-y-auto no-scrollbar">
+<aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto no-scrollbar">
 <nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
 <!-- Main Navigation -->
 <div class="px-6 mb-8 space-y-1">
