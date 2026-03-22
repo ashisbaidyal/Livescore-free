@@ -441,6 +441,10 @@
         <div class="w-12 h-[2px] bg-primary"></div>
         <h3 class="text-3xl font-black tracking-tighter uppercase leading-none italic">Arena Scheduled Events</h3>
       </div>
+      <div class="flex gap-4">
+        <button id="arena-prev" onclick="slideArena('left')" class="material-symbols-outlined w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-primary hover:border-primary transition-all active:scale-95">chevron_left</button>
+        <button id="arena-next" onclick="slideArena('right')" class="material-symbols-outlined w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-primary hover:border-primary transition-all active:scale-95">chevron_right</button>
+      </div>
     </div>
     <div id="arena-schedule-container" class="flex gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-10">
       <div class="bg-surface-container border border-white/5 p-8 rounded-lg animate-pulse min-w-[300px] h-64"></div>

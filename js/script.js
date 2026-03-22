@@ -1,7 +1,7 @@
 // --- CONSTANTS ---
 // Navigation Functions (Consolidated below)
 
-const API_LIVE = '/api/live'; 
+const API_LIVE = '/api/live';
 const API_MATCH = '/api/match';
 const SPORTS = [
   { id: 'all', name: 'All' },
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- HEADER & NAVIGATION LOGIC ---
   const path = window.location.pathname;
   const fileName = path.split('/').pop() || 'index.html';
-  
+
   // 1. Highlight Active Sidebar Link (Universal Matcher)
   const sidebarLinks = document.querySelectorAll('aside nav a');
   sidebarLinks.forEach(link => {
@@ -57,16 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (href) {
       const cleanHref = href.replace('.html', '').replace('/', '') || 'index';
       const cleanFileName = fileName.replace('.html', '').replace('/', '') || 'index';
-      
+
       if (cleanHref === cleanFileName) {
         link.classList.remove('text-on-surface/60', 'border-transparent');
         link.classList.add('text-primary', 'bg-white/5', 'border-primary');
-        
+
         const textSpan = link.querySelector('span:not(.material-symbols-outlined)');
-        if(textSpan) textSpan.classList.add('translate-x-2');
-        
+        if (textSpan) textSpan.classList.add('translate-x-2');
+
         const iconSpan = link.querySelector('.material-symbols-outlined');
-        if(iconSpan) iconSpan.classList.add('scale-110', 'rotate-6', 'text-primary');
+        if (iconSpan) iconSpan.classList.add('scale-110', 'rotate-6', 'text-primary');
       }
     }
   });
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebarToggle = document.getElementById('sidebar-toggle');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
   let lastScrollTop = 0;
-  
+
   // Toggle Sidebar Function
   const toggleSidebar = (show) => {
     const mainContent = document.querySelector('main');
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
   }
-  
+
   if (header) {
     window.addEventListener('scroll', () => {
       let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -150,17 +150,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // 4. Sidebar animations and touch states are now handled natively via Tailwind CSS classes (hover:, active:, group-hover:, etc.)
   // No JS required for sidebar visual feedback anymore.
 
-  // Check for dynamic match detail first
+  // Check for dynamic match detail (Live or Upcoming)
   const urlParams = new URLSearchParams(window.location.search);
   const matchId = urlParams.get('id');
   const sportParam = urlParams.get('sport');
   if (sportParam) currentTab = sportParam;
   const sport = currentTab;
   const league = urlParams.get('league') || 'eng.1';
-  
-  if (matchId && homeTeamName) {
-    fetchMatchDetail(matchId, sport, league);
-    startAutoRefresh(() => fetchMatchDetail(matchId, sport, league));
+
+  if (matchId) {
+    if (path.includes('upcoming_match_detail.html')) {
+      fetchUpcomingMatchDetail(matchId, sport, league);
+      // No auto-refresh for upcoming details unless status is close to live
+    } else if (homeTeamName) {
+      fetchMatchDetail(matchId, sport, league);
+      startAutoRefresh(() => fetchMatchDetail(matchId, sport, league));
+    }
     // Also fetch sidebar live scores
     fetchMatches(null, true);
     return;
@@ -169,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle Hub Pages (Home, Live, Upcoming, Trending, Results)
   if (matchesContainer || sidebarLiveContainer || newsContainer) {
     if (tabsContainer) renderTabs();
-    
+
     // Determine page filter: 
     // Homepage and Live hubs now strictly show 'live' matches regardless of tab selection.
     currentPageFilter = 'live';
@@ -212,14 +217,34 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- ARENA SCHEDULED EVENTS (CAROUSEL) ---
+window.slideArena = function (direction) {
+  const container = document.getElementById('arena-schedule-container');
+  if (!container) return;
+  const scrollAmount = 350; // min-w of card + gap
+  if (direction === 'left') {
+    if (container.scrollLeft <= 0) {
+      container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    }
+  } else {
+    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+      container.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  }
+}
+
 async function fetchArenaSchedule() {
   const container = document.getElementById('arena-schedule-container');
   if (!container) return;
-  
+
   try {
-    const res = await fetch(`${API_LIVE}?sport=all`);
+    // Fetch upcoming matches for 'all' sports
+    const res = await fetch(`${API_LIVE}?status=upcoming`);
     const data = await res.json();
-    const upcoming = (data.matches || []).filter(m => m.status === 'upcoming');
+    const upcoming = data.matches || [];
     renderArenaSchedule(upcoming);
   } catch (err) {
     console.error('Arena Fetch Error:', err);
@@ -228,10 +253,18 @@ async function fetchArenaSchedule() {
 
 function renderArenaSchedule(matches) {
   const container = document.getElementById('arena-schedule-container');
-  if (!container || matches.length === 0) return;
+  if (!container) return;
+
+  if (matches.length === 0) {
+    container.innerHTML = `
+      <div class="bg-surface-container border border-white/5 p-12 rounded-2xl flex items-center justify-center w-full min-h-[360px]">
+        <p class="text-on-surface/30 font-black uppercase tracking-[0.3em] text-xs">No Scheduled Events Found</p>
+      </div>
+    `;
+    return;
+  }
 
   container.innerHTML = matches.map(match => {
-    // Determine color based on league (matching the user image style)
     let dotColor = 'bg-primary';
     if (match.leagueSlug?.includes('esp.1')) dotColor = 'bg-yellow-500';
     if (match.leagueSlug?.includes('nba')) dotColor = 'bg-orange-500';
@@ -239,7 +272,8 @@ function renderArenaSchedule(matches) {
     if (match.leagueSlug?.includes('nfl')) dotColor = 'bg-red-600';
 
     return `
-      <div class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[360px] group min-w-[320px] snap-center">
+      <a href="/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" 
+         class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[360px] group min-w-[320px] snap-center shrink-0">
         <div>
           <div class="flex justify-between text-[10px] font-black text-on-surface-variant mb-12 uppercase tracking-[0.2em]">
             <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full ${dotColor}"></span> ${match.league || 'UPCOMING'}</span>
@@ -248,7 +282,7 @@ function renderArenaSchedule(matches) {
           <div class="flex items-center justify-between mb-12 px-2">
             <div class="flex flex-col items-center gap-4">
               <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase">
-                ${match.homeTeam.name.slice(0,3)}
+                <img src="${match.homeTeam.logo}" class="w-12 h-12 object-contain" onerror="this.src='/public/logo.png'">
               </div>
               <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-24 text-center">${match.homeTeam.name}</span>
             </div>
@@ -259,17 +293,18 @@ function renderArenaSchedule(matches) {
 
             <div class="flex flex-col items-center gap-4">
               <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase">
-                ${match.awayTeam.name.slice(0,3)}
+                <img src="${match.awayTeam.logo}" class="w-12 h-12 object-contain" onerror="this.src='/public/logo.png'">
               </div>
               <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-24 text-center">${match.awayTeam.name}</span>
             </div>
           </div>
         </div>
-        <button onclick="alert('Notification set for ${match.homeTeam.name} vs ${match.awayTeam.name}')" class="w-full bg-white/5 hover:bg-primary py-5 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all border border-white/10 hover:border-transparent hover:shadow-[0_0_30px_rgba(204,22,22,0.4)]">Notify Me</button>
-      </div>
+        <button class="w-full py-4 bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest group-hover:bg-primary transition-colors">Notify Me</button>
+      </a>
     `;
   }).join('');
 }
+
 
 function setupArenaControls() {
   const container = document.getElementById('arena-schedule-container');
@@ -304,7 +339,7 @@ async function fetchHeroData(statusFilter = null) {
     const res = await fetch(`${API_LIVE}?sport=all`);
     const data = await res.json();
     let matches = data.matches || [];
-    
+
     if (statusFilter) {
       matches = matches.filter(m => m.status === statusFilter);
     } else {
@@ -321,14 +356,14 @@ async function fetchHeroData(statusFilter = null) {
 
 function renderHeroSlider(matches, statusFilter) {
   if (!heroSliderContainer) return;
-  
+
   if (matches.length === 0) {
     // Show a static fallback or clean empty state
     heroSliderContainer.style.display = 'none';
     return;
   }
   heroSliderContainer.style.display = 'block';
-  
+
   let currentSlide = 0;
   const slides = matches.map((match, idx) => {
     const ctaText = match.status === 'live' ? 'Watch 4K Stream' : match.status === 'finished' ? 'Watch Highlights' : 'Set Reminder';
@@ -348,7 +383,7 @@ function renderHeroSlider(matches, statusFilter) {
         </div>
         <div class="flex items-end gap-6 mb-8">
           <h1 class="font-headline font-black text-6xl md:text-9xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
-            ${match.homeTeam.name.slice(0,3)} <span class="text-primary">${match.homeTeam.score}-${match.awayTeam.score}</span> ${match.awayTeam.name.slice(0,3)}
+            ${match.homeTeam.name.slice(0, 3)} <span class="text-primary">${match.homeTeam.score}-${match.awayTeam.score}</span> ${match.awayTeam.name.slice(0, 3)}
           </h1>
           <div class="mb-2 hidden sm:block">
             <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">${match.status === 'upcoming' ? 'Kickoff' : 'Elapsed'}</div>
@@ -365,7 +400,8 @@ function renderHeroSlider(matches, statusFilter) {
         </div>
       </div>
     </div>
-  `; }).join('');
+  `;
+  }).join('');
 
   heroSliderContainer.innerHTML = `
     <div class="relative w-full h-full">
@@ -399,7 +435,7 @@ async function fetchLeagues() {
 
 function renderLeagues(standings = []) {
   if (!leaguesContainer) return;
-  
+
   const topLeagues = [
     { name: 'Premier League', slug: 'eng.1', country: 'England', sport: 'soccer', icon: 'sports_soccer' },
     { name: 'NBA', slug: 'nba', country: 'USA', sport: 'basketball', icon: 'sports_basketball' },
@@ -451,14 +487,14 @@ function renderLeagues(standings = []) {
           <tbody class="divide-y divide-white/5">
             ${standings.slice(0, 10).map(e => `
               <tr class="hover:bg-white/5 transition-colors">
-                <td class="px-6 py-4 text-on-surface/40">${e.stats.find(s=>s.name==='rank')?.value || '-'}</td>
+                <td class="px-6 py-4 text-on-surface/40">${e.stats.find(s => s.name === 'rank')?.value || '-'}</td>
                 <td class="px-6 py-4 flex items-center gap-3">
                   <img src="${e.team.logos?.[0]?.href}" class="w-4 h-4 object-contain">
                   <span>${e.team.displayName}</span>
                 </td>
-                <td class="px-6 py-4">${e.stats.find(s=>s.name==='gamesPlayed')?.value || '0'}</td>
-                <td class="px-6 py-4 ${e.stats.find(s=>s.name==='pointDifferential')?.value >= 0 ? 'text-primary' : 'text-on-surface/40'}">${e.stats.find(s=>s.name==='pointDifferential')?.displayValue || '0'}</td>
-                <td class="px-6 py-4 text-primary">${e.stats.find(s=>s.name==='points')?.value || '0'}</td>
+                <td class="px-6 py-4">${e.stats.find(s => s.name === 'gamesPlayed')?.value || '0'}</td>
+                <td class="px-6 py-4 ${e.stats.find(s => s.name === 'pointDifferential')?.value >= 0 ? 'text-primary' : 'text-on-surface/40'}">${e.stats.find(s => s.name === 'pointDifferential')?.displayValue || '0'}</td>
+                <td class="px-6 py-4 text-primary">${e.stats.find(s => s.name === 'points')?.value || '0'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -535,7 +571,7 @@ async function fetchNews() {
 
 function renderNews(articles) {
   if (!newsContainer || articles.length === 0) return;
-  
+
   newsContainer.innerHTML = articles.map(article => `
     <article class="flex flex-col md:flex-row gap-6 group cursor-pointer" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
       <div class="md:w-1/3 aspect-[4/3] bg-cover bg-center rounded-lg overflow-hidden border border-white/10" 
@@ -562,7 +598,7 @@ async function fetchSidebarLive() {
     const data = await res.json();
     const liveMatches = (data.matches || []).filter(m => m.status === 'live').slice(0, 5);
     renderSidebarLive(liveMatches);
-    
+
     if (tickerContainer) {
       const allLive = (data.matches || []).filter(m => m.status === 'live');
       renderTicker(allLive);
@@ -590,10 +626,10 @@ function renderTabs() {
     <button 
       onclick="switchTab('${sport.id}')"
       class="flex items-center gap-2 px-4 py-2 rounded font-black text-[10px] uppercase tracking-widest transition-all
-      ${currentTab === sport.id 
-        ? 'bg-primary text-white' 
-        : 'bg-white/5 text-on-surface/60 hover:bg-white/10 hover:text-white'
-      }"
+      ${currentTab === sport.id
+      ? 'bg-primary text-white'
+      : 'bg-white/5 text-on-surface/60 hover:bg-white/10 hover:text-white'
+    }"
     >
       ${sport.name}
     </button>
@@ -601,16 +637,16 @@ function renderTabs() {
 }
 
 // --- TAB SWITCHING (No reload for better UX) ---
-window.switchTab = function(tabId) {
+window.switchTab = function (tabId) {
   currentTab = tabId;
-  
+
   // Update URL search params without reload for persistence
   const url = new URL(window.location);
   url.searchParams.set('sport', tabId);
   window.history.pushState({}, '', url);
 
   renderTabs();
-  
+
   if (matchesContainer) {
     matchesContainer.innerHTML = Array(3).fill(`
       <div class="bg-surface-container border border-white/5 p-6 rounded-lg animate-pulse h-48"></div>
@@ -626,13 +662,13 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
     const res = await fetch(`${API_LIVE}?sport=${currentTab}`);
     const data = await res.json();
     let matches = data.matches || [];
-    
+
     // Always render sidebar live scores if container exists
     if (sidebarLiveContainer) {
       const liveMatches = matches.filter(m => m.status === 'live').slice(0, 5);
       renderSidebarLive(liveMatches);
     }
-    
+
     // Always render ticker if container exists
     if (tickerContainer) {
       const liveMatches = matches.filter(m => m.status === 'live');
@@ -645,7 +681,7 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
     if (statusFilter) {
       matches = matches.filter(m => m.status === statusFilter);
     }
-    
+
     renderMatches(matches);
   } catch (err) {
     console.error('Failed to fetch matches:', err);
@@ -693,7 +729,7 @@ function renderSidebarLive(matches) {
 // --- RENDER TICKER ---
 function renderTicker(matches) {
   if (!tickerContainer) return;
-  
+
   if (matches.length === 0) {
     tickerContainer.innerHTML = `
       <div class="flex items-center gap-4 opacity-50">
@@ -705,7 +741,7 @@ function renderTicker(matches) {
 
   // Double the matches to ensure smooth continuous scroll
   const displayMatches = [...matches, ...matches];
-  
+
   tickerContainer.innerHTML = displayMatches.map(match => `
     <div class="flex items-center gap-4">
       <span class="text-[10px] font-black text-primary uppercase italic">${match.leagueSlug || 'LIVE'}</span>
@@ -742,14 +778,14 @@ function renderMatches(matches) {
   matchesContainer.innerHTML = matches.map(match => {
     const isLive = match.status === 'live';
     const isFinished = match.status === 'finished';
-    
-    const statusLabel = isLive 
+
+    const statusLabel = isLive
       ? `<span class="flex items-center gap-1.5 bg-primary text-white px-2.5 py-1 rounded-sm text-[9px] font-black italic">
           <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE
-         </span>` 
-      : isFinished 
-      ? `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">FINAL</span>`
-      : `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">UPCOMING</span>`;
+         </span>`
+      : isFinished
+        ? `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">FINAL</span>`
+        : `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">UPCOMING</span>`;
 
     return `
       <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="block group h-full">
@@ -778,10 +814,10 @@ function renderMatches(matches) {
             </div>
             
             <div class="flex flex-col items-center justify-center">
-              ${isLive || isFinished 
-                ? `<span class="text-4xl font-black italic ${isLive ? 'text-primary' : 'text-on-surface/50'}">${match.homeTeam.score} - ${match.awayTeam.score}</span>`
-                : `<span class="text-4xl font-black italic text-on-surface/20">VS</span>`
-              }
+              ${isLive || isFinished
+        ? `<span class="text-4xl font-black italic ${isLive ? 'text-primary' : 'text-on-surface/50'}">${match.homeTeam.score} - ${match.awayTeam.score}</span>`
+        : `<span class="text-4xl font-black italic text-on-surface/20">VS</span>`
+      }
               <span class="text-[10px] font-black text-on-surface-variant mt-2 tracking-widest uppercase truncate max-w-[80px]">
                 ${match.time}
               </span>
@@ -855,6 +891,54 @@ function renderMatchDetail(data) {
         `).join('')}
       </div>
     `;
+  }
+}
+
+// --- FETCH UPCOMING MATCH DETAIL ---
+async function fetchUpcomingMatchDetail(id, sport = 'soccer', league = 'eng.1') {
+  try {
+    const res = await fetch(`${API_MATCH}?id=${id}&sport=${sport}&league=${league}&status=upcoming`);
+    const data = await res.json();
+    renderUpcomingMatchDetail(data);
+  } catch (err) {
+    console.error('Failed to fetch upcoming match detail:', err);
+  }
+}
+
+function renderUpcomingMatchDetail(data) {
+  if (!homeTeamName) return;
+
+  const hName = document.getElementById('home-team-name');
+  const aName = document.getElementById('away-team-name');
+  const hLogo = document.getElementById('home-team-logo');
+  const aLogo = document.getElementById('away-team-logo');
+  const mTime = document.getElementById('match-time');
+  const mDate = document.getElementById('match-date');
+  const sName = document.getElementById('stadium-name');
+  const lName = document.getElementById('league-name');
+  const h2hContainer = document.getElementById('h2h-container');
+
+  if (hName) hName.textContent = data.homeTeam.name || 'TBD';
+  if (aName) aName.textContent = data.awayTeam.name || 'TBD';
+  if (hLogo) hLogo.src = data.homeTeam.logo || '/public/logo.png';
+  if (aLogo) aLogo.src = data.awayTeam.logo || '/public/logo.png';
+  if (mTime) mTime.textContent = data.time || '00:00';
+  if (mDate) mDate.textContent = data.date || 'Scheduled Event';
+  if (sName) sName.textContent = data.venue || 'TBD Stadium';
+  if (lName) lName.textContent = data.league || 'Upcoming Event';
+
+  if (h2hContainer && data.h2h) {
+    h2hContainer.innerHTML = data.h2h.map(match => `
+      <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5">
+        <span class="text-[10px] font-black opacity-40 italic uppercase tracking-widest">${match.date}</span>
+        <div class="flex items-center gap-4 flex-1 justify-center">
+            <span class="text-xs font-black uppercase tracking-tighter">${match.home}</span>
+            <span class="text-primary font-black italic px-3 py-1 bg-white/5 rounded">${match.score}</span>
+            <span class="text-xs font-black uppercase tracking-tighter">${match.away}</span>
+        </div>
+        <span class="text-[10px] font-black text-primary uppercase italic tracking-widest ml-4">${match.result}</span>
+      </div>
+    `).join('');
   }
 }
 

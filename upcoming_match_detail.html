@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Upcoming Match Detail | LivescoreFree.online</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#CC1616",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                    },
+                    fontFamily: { "body": ["Lexend"] }
+                },
+            },
+        }
+    </script>
+<style>
+    .glass-panel { background: rgba(32, 31, 31, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    .digital-glow { text-shadow: 0 0 20px rgba(204, 22, 22, 0.5); }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #CC1616; }
+</style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
+<nav class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl">
+    <div class="flex justify-between items-center px-6 h-16 max-w-7xl mx-auto">
+        <a href="index.html" class="flex items-center gap-4">
+            <span class="material-symbols-outlined text-primary">broadcast_on_personal</span>
+            <div class="text-2xl font-black italic tracking-tighter text-primary">LIVESCOREFREE</div>
+        </a>
+    </div>
+</nav>
+
+<main class="pt-24 pb-20 px-6 max-w-7xl mx-auto">
+    <!-- Hero Match Header -->
+    <section class="glass-panel rounded-3xl p-12 mb-12 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-5 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+        
+        <div class="flex flex-col items-center">
+            <div class="bg-primary/20 text-primary px-6 py-2 rounded-full text-[10px] font-black tracking-[0.3em] uppercase mb-12 border border-primary/30">
+                Scheduled Match
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 items-center w-full gap-8">
+                <!-- Home Team -->
+                <div class="flex flex-col items-center md:items-end text-center md:text-right order-2 md:order-1">
+                    <img id="home-team-logo" src="/public/logo.png" class="w-32 h-32 object-contain mb-6 drop-shadow-2xl">
+                    <h1 id="home-team-name" class="text-4xl font-black italic uppercase tracking-tighter">Loading...</h1>
+                </div>
+
+                <!-- Match Time -->
+                <div class="flex flex-col items-center order-1 md:order-2 mb-8 md:mb-0">
+                    <div class="text-6xl font-black text-on-surface/10 mb-4 italic">VS</div>
+                    <div class="bg-white/5 border border-white/10 px-8 py-4 rounded-2xl flex flex-col items-center">
+                        <span id="match-time" class="text-3xl font-black text-primary digital-glow">00:00</span>
+                        <span id="match-date" class="text-[9px] font-bold text-on-surface/40 uppercase tracking-[0.3em] mt-2">Loading...</span>
+                    </div>
+                </div>
+
+                <!-- Away Team -->
+                <div class="flex flex-col items-center md:items-start text-center md:text-left order-3">
+                    <img id="away-team-logo" src="/public/logo.png" class="w-32 h-32 object-contain mb-6 drop-shadow-2xl">
+                    <h1 id="away-team-name" class="text-4xl font-black italic uppercase tracking-tighter">Loading...</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <!-- Match Info -->
+        <div class="lg:col-span-2 space-y-12">
+            <div class="bg-surface-container p-8 rounded-2xl border border-white/5">
+                <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-8 italic">Match Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="flex items-center gap-4">
+                        <span class="material-symbols-outlined text-on-surface/20">stadium</span>
+                        <div>
+                            <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-widest">Stadium</div>
+                            <div id="stadium-name" class="text-sm font-bold">TBD</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="material-symbols-outlined text-on-surface/20">public</span>
+                        <div>
+                            <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-widest">League</div>
+                            <div id="league-name" class="text-sm font-bold">Upcoming Event</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-surface-container p-8 rounded-2xl border border-white/5">
+                <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-8 italic">Head to Head</h3>
+                <div id="h2h-container" class="space-y-6">
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-30">Previous encounters loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-12">
+            <div class="bg-primary/5 border border-primary/20 p-8 rounded-2xl">
+                <h4 class="text-lg font-black italic uppercase mb-4">Set Reminder</h4>
+                <p class="text-on-surface/60 text-xs leading-relaxed mb-6 font-medium">Don't miss the kick-off! Subscribe for real-time notifications when this match starts.</p>
+                <button class="w-full py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-xl shadow-2xl hover:scale-[1.02] transition-transform">Notify Me</button>
+            </div>
+
+            <div class="bg-surface-container p-8 rounded-2xl border border-white/5">
+                <h4 class="text-xs font-black uppercase tracking-[0.3em] mb-8 italic">Win Probability</h4>
+                <div class="space-y-6">
+                    <div class="flex justify-between items-end mb-2 font-black italic text-xs">
+                        <span>HOME</span>
+                        <span>DRAW</span>
+                        <span>AWAY</span>
+                    </div>
+                    <div class="h-4 w-full bg-white/5 rounded-full overflow-hidden flex shadow-inner">
+                        <div class="h-full bg-primary border-r border-white/10" style="width: 45%"></div>
+                        <div class="h-full bg-white/10 border-r border-white/10" style="width: 25%"></div>
+                        <div class="h-full bg-on-surface" style="width: 30%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="js/script.js"></script>
+</body>
+</html>
