@@ -1208,7 +1208,12 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
       
       if (sidebarOnly) return;
       // All matches from upcoming API are already upcoming — render directly
-      renderMatches(matches);
+      window._lastUpcomingMatches = matches;
+      if (isUpcomingPage) {
+        renderUpcomingScheduleCenter(matches);
+      } else {
+        renderMatches(matches);
+      }
     } else {
       // Normal path for other pages
       if (sidebarLiveContainer) {
@@ -1405,6 +1410,194 @@ function renderMatches(matches) {
     `;
   }).join('');
 }
+
+// --- RENDER UPCOMING SCHEDULE CENTRE (ROW-BASED & COUNTDOWN) ---
+let upcomingCountdownInterval;
+
+function renderUpcomingScheduleCenter(matches) {
+  const matchesContainer = document.getElementById('matches-container');
+  const dateTabsContainer = document.getElementById('date-tabs');
+  const countdownTimer = document.getElementById('countdown-timer');
+  const countdownHomeLogo = document.getElementById('countdown-home-logo');
+  const countdownAwayLogo = document.getElementById('countdown-away-logo');
+  const countdownMatchName = document.getElementById('countdown-match-name');
+  const countdownMatchLeague = document.getElementById('countdown-match-league');
+
+  if (!matchesContainer) return;
+
+  if (matches.length === 0) {
+    matchesContainer.innerHTML = `
+      <div class="col-span-full py-20 flex flex-col items-center justify-center bg-surface-container-low rounded-2xl border border-white/5">
+        <span class="material-symbols-outlined text-6xl text-white/10 mb-4">calendar_off</span>
+        <h3 class="text-2xl font-black italic uppercase tracking-tighter text-white/40 mb-2">No Upcoming Fixtures</h3>
+        <p class="text-xs font-bold text-white/20 uppercase tracking-widest">There are no scheduled matches in this category for the next 7 days.</p>
+      </div>
+    `;
+    if (countdownTimer) countdownTimer.textContent = '--:--:--';
+    if (countdownMatchName) countdownMatchName.textContent = 'No upcoming fixtures';
+    if (countdownMatchLeague) countdownMatchLeague.textContent = '—';
+    if (countdownHomeLogo) countdownHomeLogo.innerHTML = '<span class="text-xs font-black text-on-surface/30">—</span>';
+    if (countdownAwayLogo) countdownAwayLogo.innerHTML = '<span class="text-xs font-black text-on-surface/30">—</span>';
+    if (dateTabsContainer) dateTabsContainer.innerHTML = '';
+    return;
+  }
+
+  // 1. Next Match Countdown Logic
+  const nextMatch = matches[0];
+  if (nextMatch) {
+    if (countdownHomeLogo) countdownHomeLogo.innerHTML = `<img src="${nextMatch.homeTeam.logo}" class="w-6 h-6 object-contain" onerror="this.src='/public/logo.png'">`;
+    if (countdownAwayLogo) countdownAwayLogo.innerHTML = `<img src="${nextMatch.awayTeam.logo}" class="w-6 h-6 object-contain" onerror="this.src='/public/logo.png'">`;
+    if (countdownMatchName) countdownMatchName.textContent = `${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}`;
+    if (countdownMatchLeague) countdownMatchLeague.textContent = nextMatch.league || 'UPCOMING MATCH';
+
+    if (countdownTimer) {
+      clearInterval(upcomingCountdownInterval);
+      const targetTime = new Date(nextMatch.date).getTime();
+      
+      const updateCountdown = () => {
+        const now = new Date().getTime();
+        const diff = targetTime - now;
+        
+        if (diff <= 0) {
+          countdownTimer.textContent = '00:00:00';
+          countdownTimer.classList.add('text-primary');
+          clearInterval(upcomingCountdownInterval);
+          return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        if (days > 0) {
+          countdownTimer.textContent = `${days}D ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+          countdownTimer.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+      };
+      
+      updateCountdown();
+      upcomingCountdownInterval = setInterval(updateCountdown, 1000);
+    }
+  }
+
+  // 2. Group matches by Date
+  const groupedDates = {};
+  matches.forEach(m => {
+    try {
+      const d = new Date(m.date);
+      // Create a date key like "2024-12-15"
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!groupedDates[dateKey]) groupedDates[dateKey] = {
+        label: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        dateObj: d,
+        matches: []
+      };
+      groupedDates[dateKey].matches.push(m);
+    } catch(e) {}
+  });
+
+  const uniqueDateKeys = Object.keys(groupedDates).sort();
+
+  // 3. Render Date Tabs
+  if (dateTabsContainer) {
+    window.currentDateFilter = window.currentDateFilter || uniqueDateKeys[0];
+    // If the selected date is no longer in the list (e.g. scrolled past), reset to first
+    if (!groupedDates[window.currentDateFilter]) {
+      window.currentDateFilter = uniqueDateKeys[0];
+    }
+    
+    dateTabsContainer.innerHTML = uniqueDateKeys.map(key => {
+      const isSelected = key === window.currentDateFilter;
+      const g = groupedDates[key];
+      // Highlight "Today"
+      const todayKey = new Date().toISOString().split('T')[0];
+      const displayLabel = key === todayKey ? 'Today' : g.label;
+      
+      return `
+        <button onclick="filterUpcomingByDate('${key}')" class="flex-none px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${isSelected ? 'bg-primary text-white shadow-[0_0_15px_rgba(204,22,22,0.4)]' : 'bg-[#1C1B1B] text-white/50 border border-white/5 hover:bg-white/5'}">
+          ${displayLabel}
+        </button>
+      `;
+    }).join('');
+  }
+
+  // 4. Render Row-Based Match Cards for selected date
+  const matchesToShow = (groupedDates[window.currentDateFilter] || { matches: [] }).matches;
+  
+  if (matchesToShow.length === 0) {
+    matchesContainer.innerHTML = `
+      <div class="py-12 text-center">
+        <p class="text-[10px] font-black uppercase tracking-widest text-white/30">No matches found for selected date.</p>
+      </div>
+    `;
+    return;
+  }
+
+  matchesContainer.innerHTML = matchesToShow.map(match => {
+    const d = new Date(match.date);
+    const timeStr = isNaN(d) ? match.time : d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    return `
+      <a href="/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="flex flex-col md:flex-row items-center gap-6 bg-surface-container hover:bg-surface-container-highest border border-white/5 hover:border-primary/30 rounded-2xl p-6 transition-all duration-300 group shadow-lg">
+        <!-- Date/Time Block -->
+        <div class="flex flex-row md:flex-col items-center md:items-start justify-between md:justify-center w-full md:w-40 shrink-0 border-b md:border-b-0 md:border-r border-white/5 pb-4 md:pb-0 md:pr-6">
+          <div class="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1 line-clamp-1">${match.league || 'SPORTS EVENT'}</div>
+          <div class="text-2xl font-black italic tracking-tighter">${timeStr}</div>
+          <div class="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-1">${match.venue || 'TBD Venue'}</div>
+        </div>
+
+        <!-- Teams Block -->
+        <div class="flex items-center justify-between w-full flex-1 min-w-0">
+          <!-- Home -->
+          <div class="flex items-center gap-4 flex-1">
+            <div class="w-12 h-12 bg-[#131313] rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/20 transition-colors p-2 shrink-0">
+              <img src="${match.homeTeam.logo}" class="w-full h-full object-contain" onerror="this.src='/public/logo.png'">
+            </div>
+            <div class="text-base font-black uppercase tracking-tight truncate">${match.homeTeam.name}</div>
+          </div>
+          
+          <!-- VS Badge -->
+          <div class="mx-6 px-3 py-1 bg-[#131313] rounded text-[9px] font-black italic text-white/20 border border-white/5 group-hover:border-primary/20 group-hover:text-primary transition-colors shrink-0">
+            VS
+          </div>
+
+          <!-- Away -->
+          <div class="flex items-center gap-4 flex-1 justify-end">
+            <div class="text-base font-black uppercase tracking-tight truncate text-right">${match.awayTeam.name}</div>
+            <div class="w-12 h-12 bg-[#131313] rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/20 transition-colors p-2 shrink-0">
+              <img src="${match.awayTeam.logo}" class="w-full h-full object-contain" onerror="this.src='/public/logo.png'">
+            </div>
+          </div>
+        </div>
+
+        <!-- Action / Broadcast -->
+        <div class="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-white/5 shrink-0 pl-0 md:pl-6">
+          <div class="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-white/40">
+            <span class="material-symbols-outlined text-[14px]">tv</span>
+            <span class="truncate max-w-[100px]">${match.broadcast || 'LiveScoreFree'}</span>
+          </div>
+          <button onclick="event.preventDefault(); handleNotification('${match.id}', '${match.homeTeam.name} vs ${match.awayTeam.name}')" class="w-10 h-10 rounded-full bg-white/5 hover:bg-primary border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all">
+            <span class="material-symbols-outlined text-lg">notifications</span>
+          </button>
+        </div>
+      </a>
+    `;
+  }).join('');
+}
+
+window.filterUpcomingByDate = function(dateKey) {
+  window.currentDateFilter = dateKey;
+  // Re-render from the cached matches rather than refetching perfectly
+  // We can just call renderUpcomingScheduleCenter with the currently cached `window._lastUpcomingMatches` if we saved it
+  if (window._lastUpcomingMatches) {
+    renderUpcomingScheduleCenter(window._lastUpcomingMatches);
+  }
+};
+
+// We need to modify the place that receives matches to cache them
+const oldFetchMatches = window.fetchMatches;
 
 // --- RENDER MATCH DETAILS ---
 let activeLineupTab = 'home';
