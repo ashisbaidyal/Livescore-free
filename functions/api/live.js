@@ -57,20 +57,9 @@ export async function onRequest(context) {
   let endpoints = [];
 
   if (sportParam === 'all') {
-    // Pick top 1-2 leagues from each sport to ensure variety within subrequest limits
-    const majorLeagues = {
-      "soccer": ["eng.1", "esp.1", "ger.1"],
-      "basketball": ["nba"],
-      "football": ["nfl"],
-      "cricket": ["8039", "8040"],
-      "tennis": ["atp"],
-      "hockey": ["nhl"],
-      "baseball": ["mlb"],
-      "mma": ["ufc"]
-    };
-
+    // Collect top 5 leagues from each sport to maximize live coverage variety
     targetSports.forEach(s => {
-      const leagues = majorLeagues[s] || (LEAGUE_MAP[s] || []).slice(0, 1);
+      const leagues = (LEAGUE_MAP[s] || []).slice(0, 5);
       leagues.forEach(l => {
         endpoints.push({
           url: `https://site.api.espn.com/apis/site/v2/sports/${s}/${l}/scoreboard`,
@@ -102,8 +91,8 @@ export async function onRequest(context) {
   }
 
   try {
-    // Limit to 20 endpoints to avoid Cloudflare subrequest limits (50) and timeout
-    const limitedEndpoints = endpoints.slice(0, 20);
+    // Limit to 45 endpoints to avoid Cloudflare subrequest limits (50)
+    const limitedEndpoints = endpoints.slice(0, 45);
     const fetchPromises = limitedEndpoints.map(ep => 
       fetch(ep.url + "?limit=50")
         .then(res => res.json())
