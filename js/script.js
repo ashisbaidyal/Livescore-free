@@ -34,19 +34,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
   const fileName = path.split('/').pop() || 'index.html';
   
-  // 1. Highlight Active Sidebar Link
+  // 1. Highlight Active Sidebar Link (Universal Matcher)
   const sidebarLinks = document.querySelectorAll('aside nav a');
   sidebarLinks.forEach(link => {
     const href = link.getAttribute('href');
-    if (href && (fileName === href || (fileName === 'index.html' && href === '/'))) {
-      link.classList.remove('text-on-surface/60', 'border-transparent');
-      link.classList.add('text-primary', 'bg-white/5', 'border-primary');
+    if (href) {
+      const cleanHref = href.replace('.html', '').replace('/', '') || 'index';
+      const cleanFileName = fileName.replace('.html', '').replace('/', '') || 'index';
       
-      const textSpan = link.querySelector('span:not(.material-symbols-outlined)');
-      if(textSpan) textSpan.classList.add('translate-x-2');
-      
-      const iconSpan = link.querySelector('.material-symbols-outlined');
-      if(iconSpan) iconSpan.classList.add('scale-110', 'rotate-6', 'text-primary');
+      if (cleanHref === cleanFileName) {
+        link.classList.remove('text-on-surface/60', 'border-transparent');
+        link.classList.add('text-primary', 'bg-white/5', 'border-primary');
+        
+        const textSpan = link.querySelector('span:not(.material-symbols-outlined)');
+        if(textSpan) textSpan.classList.add('translate-x-2');
+        
+        const iconSpan = link.querySelector('.material-symbols-outlined');
+        if(iconSpan) iconSpan.classList.add('scale-110', 'rotate-6', 'text-primary');
+      }
     }
   });
 
@@ -54,9 +59,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const topNavLinks = document.querySelectorAll('#top-nav-links a');
   topNavLinks.forEach(link => {
     const href = link.getAttribute('href');
-    if (href && (fileName === href || (fileName === 'index.html' && href === '/'))) {
-      link.classList.remove('text-on-surface/60');
-      link.classList.add('text-primary', 'border-b-2', 'border-primary', 'pb-1');
+    if (href) {
+      const cleanHref = href.replace('.html', '').replace('/', '') || 'index';
+      const cleanFileName = fileName.replace('.html', '').replace('/', '') || 'index';
+
+      if (cleanHref === cleanFileName) {
+        link.classList.remove('text-on-surface/60');
+        link.classList.add('text-primary', 'border-b-2', 'border-primary', 'pb-1');
+      }
     }
   });
 
