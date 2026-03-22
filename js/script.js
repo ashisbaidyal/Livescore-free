@@ -39,9 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
   sidebarLinks.forEach(link => {
     const href = link.getAttribute('href');
     if (href && (fileName === href || (fileName === 'index.html' && href === '/'))) {
-      link.classList.remove('text-on-surface/60');
-      link.classList.add('text-primary', 'bg-white/5', 'border-l-2', 'border-primary', 'pl-5');
-      link.style.paddingLeft = '1.25rem';
+      link.classList.remove('text-on-surface/60', 'border-transparent');
+      link.classList.add('text-primary', 'bg-white/5', 'border-primary');
+      
+      const textSpan = link.querySelector('span:not(.material-symbols-outlined)');
+      if(textSpan) textSpan.classList.add('translate-x-2');
+      
+      const iconSpan = link.querySelector('.material-symbols-outlined');
+      if(iconSpan) iconSpan.classList.add('scale-110', 'rotate-6', 'text-primary');
     }
   });
 
@@ -116,40 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   }
 
-  // 4. Sidebar Item "Team Profile" Animation
-  const navItems = document.querySelectorAll('aside nav a');
-  navItems.forEach(item => {
-    item.addEventListener('mouseenter', () => {
-      item.style.transform = 'translateX(8px)';
-      item.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-      const icon = item.querySelector('.material-symbols-outlined');
-      if (icon) {
-        icon.style.transform = 'scale(1.2) rotate(5deg)';
-        icon.style.color = '#FF1E1E';
-      }
-    });
-    item.addEventListener('mouseleave', () => {
-      if (!item.classList.contains('text-primary')) {
-        item.style.transform = 'translateX(0)';
-        item.style.backgroundColor = 'transparent';
-        const icon = item.querySelector('.material-symbols-outlined');
-        if (icon) {
-          icon.style.transform = 'scale(1) rotate(0deg)';
-          icon.style.color = '';
-        }
-      } else {
-        item.style.transform = 'translateX(0)';
-      }
-    });
-
-    // Touch support for mobile "auto" animation feel
-    item.addEventListener('touchstart', () => {
-      item.style.backgroundColor = 'rgba(204, 22, 22, 0.1)';
-    }, { passive: true });
-    item.addEventListener('touchend', () => {
-      item.style.backgroundColor = '';
-    }, { passive: true });
-  });
+  // 4. Sidebar animations and touch states are now handled natively via Tailwind CSS classes (hover:, active:, group-hover:, etc.)
+  // No JS required for sidebar visual feedback anymore.
 
   // Check for dynamic match detail first
   const urlParams = new URLSearchParams(window.location.search);
