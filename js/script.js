@@ -1,8 +1,5 @@
 // --- CONSTANTS ---
-// Navigation Functions
-function switchTab(sport) {
-  window.location.href = `/?sport=${sport}`;
-}
+// Navigation Functions (Consolidated below)
 
 const API_LIVE = '/api/live'; 
 const API_MATCH = '/api/match';
@@ -173,15 +170,26 @@ document.addEventListener('DOMContentLoaded', () => {
   if (matchesContainer || sidebarLiveContainer || newsContainer) {
     if (tabsContainer) renderTabs();
     
-    // Determine page filter: Homepage now strictly defaults to 'live' matches as requested.
+    // Determine page filter: 
+    // 1. Default for 'all' is always 'live' across all pages unless specifically on upcoming/results.
+    // 2. Specific sport filters ('soccer', 'nba' etc) should show 'all' scoreboards.
     currentPageFilter = 'live';
-    if (path.includes('live.html')) currentPageFilter = 'live';
     if (path.includes('upcoming.html')) currentPageFilter = 'upcoming';
     if (path.includes('results.html')) currentPageFilter = 'finished';
-    
-    // If on homepage (no specific file in path or index.html), strictly show live.
-    const isHomePage = fileName === 'index.html' || fileName === '';
-    if (isHomePage) currentPageFilter = 'live';
+
+    // Apply the "Specific Sport = All Scoreboards" rule if not on a dedicated page
+    const isDedicatedPage = path.includes('live.html') || path.includes('upcoming.html') || path.includes('results.html');
+    if (!isDedicatedPage) {
+      if (currentTab === 'all') {
+        currentPageFilter = 'live';
+      } else {
+        currentPageFilter = null; // Show all scoreboards for this sport
+      }
+    } else if (path.includes('live.html')) {
+      // On live.html, if it's 'all', show live. If it's specific, show all for that sport?
+      // User says "In all pages... specific sports as filter sports type all scoreboard"
+      if (currentTab !== 'all') currentPageFilter = null;
+    }
 
     // Initial fetches
     fetchMatches(currentPageFilter);
@@ -607,9 +615,24 @@ function renderTabs() {
   `).join('');
 }
 
-// --- TAB SWITCHING ---
+// --- TAB SWITCHING (No reload for better UX) ---
 window.switchTab = function(tabId) {
   currentTab = tabId;
+  
+  // Re-evaluate logical filter
+  const path = window.location.pathname;
+  const isDedicatedPage = path.includes('live.html') || path.includes('upcoming.html') || path.includes('results.html');
+  if (!isDedicatedPage) {
+    currentPageFilter = (tabId === 'all') ? 'live' : null;
+  } else if (path.includes('live.html')) {
+    currentPageFilter = (tabId === 'all') ? 'live' : null;
+  }
+  
+  // Update URL search params without reload for persistence
+  const url = new URL(window.location);
+  url.searchParams.set('sport', tabId);
+  window.history.pushState({}, '', url);
+
   renderTabs();
   
   if (matchesContainer) {
