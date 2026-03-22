@@ -33,7 +33,7 @@ const LEAGUE_MAP = {
 
 // Map UI tabs to ESPN sport slugs
 const SPORT_MAPPING = {
-  "all": ["soccer", "basketball", "cricket", "tennis", "football", "baseball", "mma", "hockey"],
+  "all": ["soccer", "basketball", "cricket", "tennis", "football", "baseball", "mma", "hockey", "racing", "golf"],
   "soccer": ["soccer"],
   "football": ["soccer"], // In some UIs, football means soccer
   "american-football": ["football"],
