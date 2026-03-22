@@ -21,6 +21,12 @@ let currentTab = 'all';
 let currentArenaTab = 'all'; // Filter for the Arena section
 let currentPageFilter = 'live'; // Added globally to track page-specific selection (live, upcoming, finished)
 let autoRefreshTimer = null;
+let activeMatchTimer = {
+  baseMs: 0,
+  syncTime: 0,
+  isRunning: false,
+  sport: 'soccer'
+};
 
 // --- DOM ELEMENTS ---
 const tabsContainer = document.getElementById('sports-tabs');
@@ -1139,7 +1145,9 @@ function renderMatchDetail(data) {
   const awayScore = document.getElementById('away-score');
   if (homeScore) homeScore.textContent = data.homeTeam.score || '0';
   if (awayScore) awayScore.textContent = data.awayTeam.score || '0';
-  if (matchClock) matchClock.textContent = data.time || '00:00';
+  
+  // Sync the High-Precision Kinetic Clock
+  syncKineticClock(data.time, data.sport || 'soccer', data.status || 'live');
 
   // Render Hero Scorers
   if (homeEvents && awayEvents && data.timeline) {
@@ -1194,9 +1202,18 @@ function renderMatchDetail(data) {
     const goals = data.timeline.filter(e => e.type === 'goal');
     
     homeEvents.innerHTML = goals.filter(g => g.side === 'home').map(g => `
-      <div class="flex items-center space-x-2">
-        <span class="text-primary font-medium text-sm lg:text-base">${g.player.split('at')[0]}</span>
-        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+      <div class="flex items-center space-x-2 mb-1">
+        <span class="text-primary font-bold text-xs uppercase tracking-tighter">${g.player}</span>
+        <span class="text-[10px] text-on-surface/40 font-black italic">${g.time}</span>
+        <span class="material-symbols-outlined text-xs text-primary" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+      </div>
+    `).join('');
+
+    awayEvents.innerHTML = goals.filter(g => g.side === 'away').map(g => `
+      <div class="flex items-center space-x-2 mb-1">
+        <span class="material-symbols-outlined text-xs text-primary" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+        <span class="text-[10px] text-on-surface/40 font-black italic">${g.time}</span>
+        <span class="text-primary font-bold text-xs uppercase tracking-tighter">${g.player}</span>
       </div>
     `).join('');
 
@@ -1572,3 +1589,61 @@ function startAutoRefresh(callback) {
     callback();
   }, 15000);
 }
+
+// --- HIGH-PRECISION KINETIC CLOCK ---
+function syncKineticClock(apiTime, sport, status) {
+  if (status !== 'live') {
+    activeMatchTimer.isRunning = false;
+    if (matchClock) matchClock.textContent = apiTime || '00:00';
+    return;
+  }
+
+  let totalMs = 0;
+  if (apiTime) {
+    // Handle formats: "89'", "89:00", "2:14", "Q4 2:14", "HT", "FT"
+    if (apiTime.toUpperCase() === 'HT' || apiTime.toUpperCase() === 'FT' || apiTime.toUpperCase().includes('HALF')) {
+       activeMatchTimer.isRunning = false;
+       if (matchClock) matchClock.textContent = apiTime;
+       return;
+    }
+
+    const cleanTime = apiTime.replace(/'/g, '').replace(/[a-zA-Z]/g, '').trim();
+    if (cleanTime.includes(':')) {
+      const parts = cleanTime.split(':');
+      const mins = parseInt(parts[0]) || 0;
+      const secs = parseInt(parts[1]) || 0;
+      totalMs = (mins * 60 + secs) * 1000;
+    } else {
+      const mins = parseInt(cleanTime) || 0;
+      totalMs = mins * 60 * 1000;
+    }
+  }
+
+  activeMatchTimer.baseMs = totalMs;
+  activeMatchTimer.syncTime = Date.now();
+  activeMatchTimer.isRunning = true;
+  activeMatchTimer.sport = sport;
+}
+
+function startKineticClock() {
+  setInterval(() => {
+    if (!activeMatchTimer.isRunning || !matchClock) return;
+
+    const elapsed = Date.now() - activeMatchTimer.syncTime;
+    let currentMs = activeMatchTimer.baseMs + elapsed;
+
+    // Format: MM:SS:CC (Centiseconds)
+    const mins = Math.floor(currentMs / 60000);
+    const secs = Math.floor((currentMs % 60000) / 1000);
+    const cents = Math.floor((currentMs % 1000) / 10);
+
+    const mm = mins.toString().padStart(2, '0');
+    const ss = secs.toString().padStart(2, '0');
+    const cc = cents.toString().padStart(2, '0');
+
+    matchClock.innerHTML = `${mm}:${ss}<span class="text-primary/40 text-sm ml-1 font-mono">${cc}</span>`;
+  }, 33); // ~30fps
+}
+
+// Start the global loop
+startKineticClock();
