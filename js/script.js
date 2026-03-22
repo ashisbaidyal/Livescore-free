@@ -3,10 +3,15 @@ const API_LIVE = '/api/live';
 const API_MATCH = '/api/match';
 const SPORTS = [
   { id: 'all', name: 'All' },
-  { id: 'football', name: 'Football' },
-  { id: 'cricket', name: 'Cricket' },
+  { id: 'football', name: 'Soccer' },
   { id: 'basketball', name: 'Basketball' },
-  { id: 'tennis', name: 'Tennis' }
+  { id: 'cricket', name: 'Cricket' },
+  { id: 'tennis', name: 'Tennis' },
+  { id: 'american-football', name: 'NFL' },
+  { id: 'hockey', name: 'Hockey' },
+  { id: 'baseball', name: 'Baseball' },
+  { id: 'mma', name: 'MMA' },
+  { id: 'racing', name: 'Racing' }
 ];
 
 let currentTab = 'all';
@@ -16,6 +21,7 @@ let autoRefreshTimer = null;
 const tabsContainer = document.getElementById('sports-tabs');
 const matchesContainer = document.getElementById('matches-container');
 const sidebarLiveContainer = document.getElementById('sidebar-live-container');
+const tickerContainer = document.getElementById('ticker-container');
 
 // Specific Match Detail Elements
 const homeTeamName = document.getElementById('home-team-name');
@@ -135,12 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // No JS required for sidebar visual feedback anymore.
 
   // Check for dynamic match detail first
-  const urlParams = new URLSearchParams(window.location.search);
-  const matchId = urlParams.get('id');
+  const sport = urlParams.get('sport') || 'soccer';
+  const league = urlParams.get('league') || 'eng.1';
   
   if (matchId && homeTeamName) {
-    fetchMatchDetail(matchId);
-    startAutoRefresh(() => fetchMatchDetail(matchId));
+    fetchMatchDetail(matchId, sport, league);
+    startAutoRefresh(() => fetchMatchDetail(matchId, sport, league));
     // Also fetch sidebar live scores
     fetchMatches(null, true);
     return;
@@ -210,6 +216,11 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
       const liveMatches = matches.filter(m => m.status === 'live').slice(0, 5);
       renderSidebarLive(liveMatches);
     }
+    
+    // Always render ticker if container exists
+    if (tickerContainer) {
+      renderTicker(matches.filter(m => m.status === 'live'));
+    }
 
     if (sidebarOnly) return;
 
@@ -242,7 +253,7 @@ function renderSidebarLive(matches) {
   }
 
   sidebarLiveContainer.innerHTML = matches.map(match => `
-    <a href="/match.html?id=${match.id}" class="flex flex-col gap-2 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group">
+    <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="flex flex-col gap-2 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group">
       <div class="flex justify-between items-center">
         <span class="text-[8px] font-black text-primary uppercase italic tracking-tighter">${match.league || 'LIVE'}</span>
         <span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
@@ -267,10 +278,35 @@ function renderSidebarLive(matches) {
   `).join('');
 }
 
+// --- RENDER TICKER ---
+function renderTicker(matches) {
+  if (!tickerContainer) return;
+  
+  if (matches.length === 0) {
+    tickerContainer.innerHTML = `
+      <div class="flex items-center gap-4 opacity-50">
+        <span class="text-[10px] font-black uppercase italic tracking-widest">LiveScoreFree Realtime Stream Active • No Live Events Currently</span>
+      </div>
+    `;
+    return;
+  }
+
+  // Double the matches to ensure smooth continuous scroll
+  const displayMatches = [...matches, ...matches];
+  
+  tickerContainer.innerHTML = displayMatches.map(match => `
+    <div class="flex items-center gap-4">
+      <span class="text-[10px] font-black text-primary uppercase italic">${match.leagueSlug || 'LIVE'}</span>
+      <span class="text-xs font-bold uppercase">${match.homeTeam.name} ${match.homeTeam.score} - ${match.awayTeam.score} ${match.awayTeam.name}</span>
+      <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+    </div>
+  `).join('');
+}
+
 // --- FETCH & UPDATE MATCH DETAIL ---
-async function fetchMatchDetail(id) {
+async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
   try {
-    const res = await fetch(`${API_MATCH}?id=${id}`);
+    const res = await fetch(`${API_MATCH}?id=${id}&sport=${sport}&league=${league}`);
     const data = await res.json();
     renderMatchDetail(data);
   } catch (err) {
@@ -304,7 +340,7 @@ function renderMatches(matches) {
       : `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">UPCOMING</span>`;
 
     return `
-      <a href="/match.html?id=${match.id}" class="block group h-full">
+      <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="block group h-full">
         <div class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-6  
                     hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden h-full">
           
