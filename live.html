@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
@@ -134,6 +134,7 @@
 <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
 <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="live.html">live score</a>
 <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">upcoming matches</a>
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="results.html">results</a>
 <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="trending.html">trending</a>
 <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="news.html">news</a>
 <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="leagues.html">top league</a>
@@ -141,9 +142,9 @@
 <div class="flex items-center gap-6">
 <div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
 <span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
-<span class="text-[10px] font-black tracking-widest uppercase">1.2M LIVE NOW</span>
+<span id="live-count-text" class="text-[10px] font-black tracking-widest uppercase">LIVE NOW</span>
 </div>
-<button class="material-symbols-outlined text-on-surface hover:text-primary transition-all">search</button>
+<button onclick="openSearchModal()" class="material-symbols-outlined text-on-surface hover:text-primary transition-all">search</button>
 <button class="material-symbols-outlined text-on-surface hover:text-primary transition-all relative">
                     notifications
                     <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
@@ -176,7 +177,7 @@
 </a>
 <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary active:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary active:border-primary hover:bg-white/5 active:bg-white/5" href="index.html">
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-active:scale-110 group-hover:rotate-6 group-active:rotate-6 transition-transform group-hover:text-primary group-active:text-primary">shield</span>
-<span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 group-active:translate-x-2 transition-transform">Team Profile</span>
+<span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 group-active:translate-x-2 transition-transform">Results</span>
 </a>
 </div>
 <!-- Players Section -->
@@ -505,7 +506,7 @@
 <div class="flex flex-col items-center md:items-start gap-4">
 <div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">LIVESCOREFREE</div>
 <p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">
-                    © 2024 LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.
+                    © 2025 LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.
                 </p>
 </div>
 <div class="flex gap-6">
@@ -516,6 +517,20 @@
 </div>
 </div>
 </footer>
+<!-- Search Modal -->
+<div id="search-modal" class="fixed inset-0 z-[200] hidden">
+<div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeSearchModal()"></div>
+<div class="relative max-w-2xl mx-auto mt-24 px-6">
+<div class="bg-surface-container border border-white/10 rounded-2xl p-6 shadow-2xl">
+<div class="flex items-center gap-4 mb-6">
+<span class="material-symbols-outlined text-primary text-2xl">search</span>
+<input id="search-input" type="text" placeholder="Search matches, teams, leagues..." class="flex-1 bg-transparent text-xl font-bold outline-none placeholder:text-on-surface/30 text-on-surface" autofocus>
+<button onclick="closeSearchModal()" class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">close</button>
+</div>
+<div id="search-results" class="max-h-96 overflow-y-auto space-y-2"></div>
+</div>
+</div>
+</div>
 <script src="js/script.js"></script>
 </body>
 </html>

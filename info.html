@@ -4,15 +4,23 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>LivescoreFree.online | Information</title>
+    <meta name="description" content="Legal policies, help center, and resources for LivescoreFree.online.">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .glass-card { background: rgba(42, 42, 42, 0.6); backdrop-filter: blur(12px); border-top: 1px solid rgba(255, 255, 255, 0.1); }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #0E0E0E; }
-        ::-webkit-scrollbar-thumb { background: #CC1616; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0E0E0E; } ::-webkit-scrollbar-thumb { background: #CC1616; }
+        .pulse-red { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(204, 22, 22, 0); } 100% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0); } }
+        .info-content h2 { font-size: 1.25rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #CC1616; margin-top: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .info-content h3 { font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1.5rem; margin-bottom: 0.5rem; color: white; }
+        .info-content p { color: rgba(229,226,225,0.6); line-height: 1.8; margin-bottom: 1rem; font-size: 0.875rem; }
+        .info-content ul { list-style: none; padding: 0; margin: 0.5rem 0; }
+        .info-content ul li { padding: 0.5rem 0 0.5rem 1.5rem; position: relative; color: rgba(229,226,225,0.6); font-size: 0.875rem; line-height: 1.6; }
+        .info-content ul li::before { content: ''; position: absolute; left: 0; top: 1rem; width: 6px; height: 6px; background: #CC1616; border-radius: 50%; }
+        .info-content a { color: #CC1616; text-decoration: underline; text-underline-offset: 2px; }
+        .info-content strong { color: #e5e2e1; }
     </style>
     <script id="tailwind-config">
         tailwind.config = {
@@ -20,35 +28,178 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#CC1616",
-                        "surface": "#131313",
-                        "surface-container": "#201f1f",
-                        "on-surface": "#e5e2e1"
+                        "on-primary": "#690003", "secondary-container": "#1fa64a", "surface-container-low": "#1c1b1b",
+                        "secondary": "#62df7b", "surface": "#131313", "on-primary-container": "#FFE5E5",
+                        "background": "#131313", "on-surface-variant": "#8B0000", "error": "#FF0000",
+                        "surface-container-highest": "#353534", "primary": "#CC1616",
+                        "primary-container": "#cc1616", "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1", "surface-container-high": "#2a2a2a",
+                        "surface-container": "#201f1f", "on-primary-fixed": "#410001"
                     },
-                    fontFamily: { "body": ["Lexend"] }
+                    fontFamily: { "headline": ["Lexend"], "body": ["Lexend"], "label": ["Lexend"] },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
                 }
             }
         }
     </script>
 </head>
 <body class="bg-[#0e0e0e] text-on-surface font-body overflow-x-hidden">
-    <!-- Header Injected by script.js -->
-    <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl"></nav>
+    <!-- TopNavBar -->
+    <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
+    <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
+    <div class="flex items-center gap-4">
+    <button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full transition-all">menu</button>
+    <a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+    <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
+    <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
+    </a>
+    </div>
+    <div class="hidden lg:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter" id="top-nav-links">
+    <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
+    <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="live.html">live score</a>
+    <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">upcoming matches</a>
+    <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="results.html">results</a>
+    <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="trending.html">trending</a>
+    <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="news.html">news</a>
+    <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="leagues.html">top league</a>
+    </div>
+    <div class="flex items-center gap-6">
+    <div id="live-counter-pill" class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+    <span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
+    <span id="live-count-text" class="text-[10px] font-black tracking-widest uppercase">LIVE NOW</span>
+    </div>
+    <button onclick="openSearchModal()" class="material-symbols-outlined text-on-surface hover:text-primary transition-all">search</button>
+    </div>
+    </div>
+    </nav>
 
-    <main class="pt-32 pb-20 min-h-screen px-6 md:px-12 max-w-4xl mx-auto">
+    <!-- Sidebar -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
+    <div class="flex pt-16 min-h-screen">
+    <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto">
+    <nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
+    <div class="px-6 mb-8 space-y-1">
+    <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="leagues.html"><span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">public</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">All Leagues</span></a>
+    <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="leagues.html"><span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">leaderboard</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Standings</span></a>
+    <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="upcoming.html"><span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">calendar_month</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Fixtures</span></a>
+    <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="leagues.html"><span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">groups</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Teams Hub</span></a>
+    <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="results.html"><span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">scoreboard</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Results</span></a>
+    </div>
+    <div class="px-6 mb-8">
+    <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Players</div>
+    <div class="space-y-1">
+    <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="players.html"><span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">group</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Players Hub</span></a>
+    </div>
+    </div>
+    <div class="px-6 mb-8">
+    <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Today's Live Scores</div>
+    <div id="sidebar-live-container" class="space-y-3">
+    <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+    </div>
+    </div>
+    <div class="px-6 mb-8">
+    <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Quick Links</div>
+    <div class="space-y-1">
+    <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="info.html?p=privacy"><span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">policy</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Privacy Policy</span></a>
+    <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="info.html?p=advertise"><span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">campaign</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Advertise</span></a>
+    <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="https://ko-fi.com/livescorefree" target="_blank"><span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">favorite</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Support Us</span></a>
+    </div>
+    </div>
+    </nav>
+    </aside>
+
+    <main class="flex-1 w-full">
+    <div class="pt-20 pb-20 min-h-screen px-6 md:px-12 max-w-4xl mx-auto">
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-[10px] font-black text-on-surface/30 uppercase tracking-widest mb-8">
+            <a href="index.html" class="hover:text-primary transition-colors">Home</a>
+            <span class="material-symbols-outlined text-xs">chevron_right</span>
+            <span id="info-breadcrumb" class="text-primary">Information</span>
+        </div>
+
         <div class="mb-12">
             <span id="info-badge" class="text-primary text-[10px] font-black uppercase tracking-[0.4em] mb-4 block">Information</span>
             <h1 id="info-title" class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-6">PAGE TITLE</h1>
-            <p id="info-subtitle" class="text-sm font-bold text-white/40 uppercase tracking-[0.2em]">Last updated: March 22, 2026</p>
+            <p id="info-subtitle" class="text-sm font-bold text-white/40 uppercase tracking-[0.2em]">Effective: March 22, 2025</p>
         </div>
 
-        <div id="info-content" class="prose prose-invert max-w-none space-y-8 text-on-surface-variant font-medium leading-relaxed">
-            <!-- Content Injected Here -->
+        <!-- Page Navigation -->
+        <div class="flex flex-wrap gap-2 mb-12 border-b border-white/5 pb-6">
+            <a href="info.html?p=privacy" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Privacy</a>
+            <a href="info.html?p=terms" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Terms</a>
+            <a href="info.html?p=dmca" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">DMCA</a>
+            <a href="info.html?p=help" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Help</a>
+            <a href="info.html?p=data-sources" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Data Sources</a>
+            <a href="info.html?p=advertise" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Advertise</a>
+            <a href="info.html?p=transparency" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Transparency</a>
+        </div>
+
+        <div id="info-content" class="info-content max-w-none">
             <div class="p-12 border border-white/5 rounded-2xl bg-white/5 animate-pulse"></div>
         </div>
+    </div>
     </main>
+    </div>
 
-    <footer id="main-footer"></footer>
+    <!-- Search Modal -->
+    <div id="search-modal" class="fixed inset-0 z-[200] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeSearchModal()"></div>
+    <div class="relative max-w-2xl mx-auto mt-24 px-6">
+    <div class="bg-surface-container border border-white/10 rounded-2xl p-6 shadow-2xl">
+    <div class="flex items-center gap-4 mb-6">
+    <span class="material-symbols-outlined text-primary text-2xl">search</span>
+    <input id="search-input" type="text" placeholder="Search matches, teams, leagues..." class="flex-1 bg-transparent text-xl font-bold outline-none placeholder:text-on-surface/30 text-on-surface" autofocus>
+    <button onclick="closeSearchModal()" class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">close</button>
+    </div>
+    <div id="search-results" class="max-h-96 overflow-y-auto space-y-2"></div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 font-['Lexend'] relative z-20">
+    <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+    <div class="flex flex-col gap-6">
+    <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Quick Links</h5>
+    <ul class="flex flex-col gap-4">
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=soccer">Football</a></li>
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=basketball">Basketball</a></li>
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=tennis">Tennis</a></li>
+    </ul>
+    </div>
+    <div class="flex flex-col gap-6">
+    <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Legal</h5>
+    <ul class="flex flex-col gap-4">
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=privacy">Privacy Policy</a></li>
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=terms">Terms of Service</a></li>
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=dmca">DMCA Policy</a></li>
+    </ul>
+    </div>
+    <div class="flex flex-col gap-6">
+    <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Resources</h5>
+    <ul class="flex flex-col gap-4">
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=data-sources">Data Sources</a></li>
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=help">Help Center</a></li>
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=advertise">Advertise With Us</a></li>
+    </ul>
+    </div>
+    <div class="flex flex-col gap-6">
+    <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Support</h5>
+    <ul class="flex flex-col gap-4">
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="https://ko-fi.com/livescorefree" target="_blank">Support on Ko-fi</a></li>
+    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=transparency">Donation Transparency</a></li>
+    </ul>
+    </div>
+    </div>
+    <div class="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+    <div class="flex flex-col items-center md:items-start gap-4">
+    <div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">LIVESCOREFREE</div>
+    <p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">© <span class="copyright-year">2025</span> LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.</p>
+    </div>
+    </div>
+    </div>
+    </footer>
 
     <script src="js/script.js"></script>
     <script>
@@ -57,42 +208,277 @@
             const type = params.get('p') || 'privacy';
             
             const title = document.getElementById('info-title');
+            const badge = document.getElementById('info-badge');
+            const breadcrumb = document.getElementById('info-breadcrumb');
             const content = document.getElementById('info-content');
             
+            // Highlight active page link
+            document.querySelectorAll('.info-page-link').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href.includes(`p=${type}`)) {
+                    link.classList.remove('bg-white/5');
+                    link.classList.add('bg-primary', 'text-white');
+                }
+            });
+
             const pages = {
                 'privacy': {
                     title: 'Privacy Policy',
-                    html: `<h3>1. Data Collection</h3><p>We do not store personal player data. All match statistics are served via public APIs.</p><h3>2. Cookies</h3><p>We use essential cookies for session management and preference storage.</p>`
+                    html: `
+                        <h2>1. Introduction</h2>
+                        <p>LivescoreFree.online ("we", "us", "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you visit our website. By using our services, you consent to the practices described in this policy.</p>
+                        
+                        <h2>2. Information We Collect</h2>
+                        <h3>2.1 Automatically Collected Data</h3>
+                        <p>When you visit our website, we automatically collect certain technical information:</p>
+                        <ul>
+                            <li>Browser type and version</li>
+                            <li>Operating system</li>
+                            <li>Referring URL and pages visited</li>
+                            <li>Date and time of access</li>
+                            <li>Anonymized IP address for analytics</li>
+                        </ul>
+                        <h3>2.2 Data We Do NOT Collect</h3>
+                        <ul>
+                            <li>Personal player statistics or user-specific game data</li>
+                            <li>Financial or payment information</li>
+                            <li>Social Security numbers or government IDs</li>
+                            <li>Personally identifiable information unless voluntarily provided (e.g., through our contact form)</li>
+                        </ul>
+
+                        <h2>3. Cookies & Tracking</h2>
+                        <p>We use essential cookies for session management and user preference storage (such as your preferred sport filter). We also use Google Analytics to understand traffic patterns. You can disable cookies in your browser settings, though this may affect site functionality.</p>
+
+                        <h2>4. Third-Party Services</h2>
+                        <p>Our website integrates with public ESPN APIs to deliver real-time sports data. We do not share, sell, or transmit your personal data to ESPN or any third party. Advertising partners may use cookies to serve relevant ads.</p>
+
+                        <h2>5. Data Security</h2>
+                        <p>We implement industry-standard security measures including HTTPS encryption, secure CDN delivery via Cloudflare, and regular security audits to protect your data.</p>
+
+                        <h2>6. Children's Privacy</h2>
+                        <p>Our service is not directed to children under 13. We do not knowingly collect information from children under 13. If you believe we have collected such information, please contact us immediately.</p>
+
+                        <h2>7. Your Rights</h2>
+                        <ul>
+                            <li>Right to access any personal data we hold about you</li>
+                            <li>Right to request deletion of your data</li>
+                            <li>Right to opt out of analytics tracking</li>
+                            <li>Right to withdraw consent at any time</li>
+                        </ul>
+
+                        <h2>8. Contact</h2>
+                        <p>For privacy-related inquiries, please contact us at <a href="mailto:livescorefree.online@gmail.com">livescorefree.online@gmail.com</a>.</p>
+
+                        <h2>9. Changes to This Policy</h2>
+                        <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date. Continued use of the website after changes constitutes acceptance.</p>
+                    `
                 },
                 'terms': {
                     title: 'Terms of Service',
-                    html: `<h3>1. Use of Content</h3><p>The information provided on LivescoreFree.online is for entertainment purposes only.</p><h3>2. Liability</h3><p>We are not responsible for any betting losses or external link content.</p>`
+                    html: `
+                        <h2>1. Acceptance of Terms</h2>
+                        <p>By accessing LivescoreFree.online, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any part of these terms, you may not use our service.</p>
+
+                        <h2>2. Description of Service</h2>
+                        <p>LivescoreFree.online provides real-time sports scores, statistics, standings, and news aggregated from publicly available APIs. Our service is provided "as is" for informational and entertainment purposes only.</p>
+
+                        <h2>3. Use of Content</h2>
+                        <ul>
+                            <li>All match data, scores, and statistics are sourced from public sports APIs and are provided for informational purposes</li>
+                            <li>Content may not be reproduced, distributed, or used commercially without prior written consent</li>
+                            <li>Team logos and names are trademarks of their respective owners</li>
+                            <li>Articles and news content link to their original sources and are not hosted by us</li>
+                        </ul>
+
+                        <h2>4. User Conduct</h2>
+                        <p>Users agree not to:</p>
+                        <ul>
+                            <li>Use the service for any unlawful purpose</li>
+                            <li>Attempt to scrape, crawl, or harvest data without authorization</li>
+                            <li>Interfere with or disrupt the service or servers</li>
+                            <li>Impersonate any person or entity</li>
+                            <li>Upload malicious code or viruses</li>
+                        </ul>
+
+                        <h2>5. Disclaimer & Limitation of Liability</h2>
+                        <p>LivescoreFree.online is <strong>not a gambling or betting service</strong>. We do not accept wagers or facilitate betting transactions. Any promotional content related to betting platforms is clearly marked as advertising.</p>
+                        <p>We are <strong>not responsible</strong> for: betting losses, inaccuracies in real-time data due to API delays, actions taken based on information from our platform, or content on third-party websites linked from our platform.</p>
+
+                        <h2>6. Intellectual Property</h2>
+                        <p>The design, logos, and original content of LivescoreFree.online are our intellectual property. ESPN, NFL, NBA, and other league names are trademarks of their respective organizations.</p>
+
+                        <h2>7. Termination</h2>
+                        <p>We reserve the right to terminate or suspend access to our service at any time, without notice, for conduct that we believe violates these Terms or is harmful to other users.</p>
+
+                        <h2>8. Governing Law</h2>
+                        <p>These terms shall be governed by and construed in accordance with applicable laws, without regard to conflict of law principles.</p>
+
+                        <h2>9. Contact</h2>
+                        <p>For questions about these terms, contact us at <a href="mailto:livescorefree.online@gmail.com">livescorefree.online@gmail.com</a>.</p>
+                    `
                 },
                 'dmca': {
                     title: 'DMCA Policy',
-                    html: `<h3>DMCA Notice</h3><p>LivescoreFree.online is a technology platform that links to public data. We do not host copyrighted video content. If you believe your rights are violated, please contact our support team at livescorefree.online@gmail.com.</p>`
+                    html: `
+                        <h2>Digital Millennium Copyright Act Notice</h2>
+                        <p>LivescoreFree.online respects the intellectual property rights of others and expects its users to do the same. We operate as a technology platform that aggregates publicly available sports data through authorized APIs.</p>
+
+                        <h2>What We Host</h2>
+                        <ul>
+                            <li>Real-time scores and statistics from public APIs (ESPN)</li>
+                            <li>News article links (linking to original sources, not hosting)</li>
+                            <li>Team logos served directly from ESPN CDN (not re-hosted)</li>
+                        </ul>
+
+                        <h2>What We Do NOT Host</h2>
+                        <ul>
+                            <li>Copyrighted video content or live streams</li>
+                            <li>Full-text news articles (we only show headlines with links)</li>
+                            <li>User-uploaded content</li>
+                        </ul>
+
+                        <h2>Filing a DMCA Complaint</h2>
+                        <p>If you believe material on our site infringes your copyright, please send a written notice containing:</p>
+                        <ul>
+                            <li>A physical or electronic signature of the copyright owner</li>
+                            <li>Identification of the copyrighted work claimed to be infringed</li>
+                            <li>Identification of the material to be removed, with enough detail for us to locate it</li>
+                            <li>Your contact information (name, address, email, phone)</li>
+                            <li>A statement of good faith belief that the use is not authorized</li>
+                            <li>A statement under penalty of perjury that the information is accurate</li>
+                        </ul>
+
+                        <h2>Contact for DMCA Notices</h2>
+                        <p>Send DMCA takedown requests to: <a href="mailto:livescorefree.online@gmail.com">livescorefree.online@gmail.com</a></p>
+                        <p>We will respond to valid DMCA notices within 48 business hours.</p>
+                    `
                 },
                 'help': {
                     title: 'Help Center',
-                    html: `<h3>FAQ</h3><p><strong>How often are scores updated?</strong> Scores are updated every 30-60 seconds via our kinetic broadcast engine.</p>`
+                    html: `
+                        <h2>Frequently Asked Questions</h2>
+
+                        <h3>How often are scores updated?</h3>
+                        <p>Live scores are updated every 15 seconds via our real-time data pipeline. The ticker at the top of every page shows the most current live scores automatically.</p>
+
+                        <h3>Which sports do you cover?</h3>
+                        <p>We cover 10+ sports including Soccer (Football), Basketball (NBA, WNBA), American Football (NFL), Cricket, Tennis, Hockey (NHL), Baseball (MLB), MMA (UFC), Racing (F1, NASCAR), and Golf (PGA).</p>
+
+                        <h3>Why is a match showing "Loading..."?</h3>
+                        <p>If a match page shows a loading state, it could be due to: the match hasn't started yet, a temporary API delay, or the match ID is invalid. Try refreshing the page or navigating back to the Live Scores page.</p>
+
+                        <h3>Can I set reminders for upcoming matches?</h3>
+                        <p>Yes! On the Upcoming Matches page, click "SET REMINDER" on any match card. You'll receive a browser notification when the match is about to begin (if you've enabled notifications).</p>
+
+                        <h3>How do I search for a specific team or match?</h3>
+                        <p>Click the search icon (🔍) in the top navigation bar to open the search modal. You can search by team name, league, or sport in real-time.</p>
+
+                        <h3>Is this a betting service?</h3>
+                        <p>No. LivescoreFree.online is a free sports information platform. We display match odds for informational purposes only and do not facilitate betting transactions.</p>
+
+                        <h3>How can I support this project?</h3>
+                        <p>You can support us via <a href="https://ko-fi.com/livescorefree" target="_blank">Ko-fi</a> or by spreading the word. Every contribution helps keep the platform ad-light and running.</p>
+
+                        <h3>I found a bug. How do I report it?</h3>
+                        <p>Please email us at <a href="mailto:livescorefree.online@gmail.com">livescorefree.online@gmail.com</a> with details about the issue, including your browser, device, and steps to reproduce. Screenshots are appreciated!</p>
+                    `
                 },
                 'data-sources': {
                     title: 'Data Sources',
-                    html: `<p>Our data is primarily sourced from official ESPN APIs and global sports data providers to ensure accuracy and real-time delivery.</p>`
+                    html: `
+                        <h2>Our Data Pipeline</h2>
+                        <p>LivescoreFree.online aggregates sports data from trusted, publicly available sources to deliver accurate real-time information across all supported sports.</p>
+
+                        <h2>Primary Data Source</h2>
+                        <h3>ESPN Public API</h3>
+                        <p>Our primary data source is the ESPN public API ecosystem, which provides:</p>
+                        <ul>
+                            <li><strong>Live Scoreboards</strong> — Real-time scores updated every 15 seconds across 50+ leagues</li>
+                            <li><strong>Match Summaries</strong> — Detailed match statistics, lineups, and play-by-play data</li>
+                            <li><strong>Standings</strong> — Current league tables and rankings</li>
+                            <li><strong>News</strong> — Latest headlines and articles from ESPN editorial</li>
+                            <li><strong>Player Data</strong> — Active rosters and athlete profiles</li>
+                            <li><strong>Team Data</strong> — Team profiles, logos, and historical data</li>
+                        </ul>
+
+                        <h2>Data Accuracy</h2>
+                        <p>While we strive for maximum accuracy, real-time sports data may occasionally experience delays of 15-60 seconds. We recommend cross-referencing with official league sources for critical decisions.</p>
+
+                        <h2>Coverage</h2>
+                        <p>We cover 10+ sports across 50+ leagues globally, including: Premier League, La Liga, Bundesliga, Serie A, Ligue 1, UEFA Champions League, NBA, NFL, MLB, NHL, UFC, ATP/WTA Tennis, IPL Cricket, F1, PGA Golf, and many more.</p>
+
+                        <h2>API Transparency</h2>
+                        <p>Our backend Cloudflare Workers proxy requests to ESPN's public API endpoints. No data is modified, fabricated, or cached beyond ESPN's own caching headers (15 seconds). We do not store historical match data.</p>
+                    `
                 },
                 'advertise': {
                     title: 'Advertise With Us',
-                    html: `<p>Interested in reaching millions of sports fans? Contact our ad operations team at livescorefree.online@gmail.com</p>`
+                    html: `
+                        <h2>Reach Millions of Sports Fans</h2>
+                        <p>LivescoreFree.online serves sports enthusiasts worldwide with real-time coverage across 10+ sports and 50+ leagues. Our audience is highly engaged, passionate, and actively following live events.</p>
+
+                        <h2>Audience Demographics</h2>
+                        <ul>
+                            <li><strong>Global Reach</strong> — Visitors from 100+ countries</li>
+                            <li><strong>High Engagement</strong> — Average session duration of 5+ minutes</li>
+                            <li><strong>Peak Traffic</strong> — Significant spikes during major sporting events</li>
+                            <li><strong>Sports-Focused</strong> — 100% sports-related audience</li>
+                        </ul>
+
+                        <h2>Ad Placements Available</h2>
+                        <ul>
+                            <li><strong>Premium Banner</strong> — Full-width banner on the homepage visible to all visitors</li>
+                            <li><strong>In-Feed Ads</strong> — Native-style ads between match cards and news articles</li>
+                            <li><strong>Sidebar Promotions</strong> — Persistent sidebar visibility on desktop</li>
+                            <li><strong>Sponsored Content</strong> — Branded content sections with your messaging</li>
+                        </ul>
+
+                        <h2>Pricing</h2>
+                        <p>We offer flexible pricing models including CPM, flat-rate monthly, and event-based sponsorships. Contact us for a custom media kit with current rates.</p>
+
+                        <h2>Contact Our Ad Team</h2>
+                        <p>Email: <a href="mailto:livescorefree.online@gmail.com">livescorefree.online@gmail.com</a></p>
+                        <p>Subject Line: "Advertising Inquiry — [Your Company Name]"</p>
+                        <p>We typically respond within 24 hours on business days.</p>
+                    `
                 },
                 'transparency': {
                     title: 'Donation Transparency',
-                    html: `<p>100% of community donations go directly toward server costs and maintaining the ad-free experience for all users.</p>`
+                    html: `
+                        <h2>How We Use Your Support</h2>
+                        <p>LivescoreFree.online is an independent, community-funded project. We believe in full transparency about how donations are used.</p>
+
+                        <h2>Donation Allocation</h2>
+                        <ul>
+                            <li><strong>Server & Hosting (60%)</strong> — Cloudflare Workers, CDN, and edge computing costs to serve real-time data globally with ultra-low latency</li>
+                            <li><strong>Development (25%)</strong> — New features, bug fixes, and performance optimizations to improve the user experience</li>
+                            <li><strong>Operations (10%)</strong> — Domain registration, security certificates, monitoring tools</li>
+                            <li><strong>Community (5%)</strong> — Support costs, documentation, and user outreach</li>
+                        </ul>
+
+                        <h2>Our Promise</h2>
+                        <ul>
+                            <li>100% of community donations go toward keeping the platform free and operational</li>
+                            <li>The core experience will always remain free and accessible</li>
+                            <li>We will never sell your personal data to fund operations</li>
+                            <li>We minimize ad placements to maintain a clean user experience</li>
+                        </ul>
+
+                        <h2>How to Support</h2>
+                        <p>You can support LivescoreFree via our <a href="https://ko-fi.com/livescorefree" target="_blank">Ko-fi page</a>. Every contribution, no matter how small, helps us maintain and improve the platform.</p>
+
+                        <h2>Thank You</h2>
+                        <p>We are grateful to everyone who has contributed to keeping LivescoreFree online. Your support makes it possible to deliver ad-light, real-time sports coverage to fans worldwide.</p>
+                    `
                 }
             };
 
             const page = pages[type] || pages['privacy'];
             if (title) title.textContent = page.title;
+            if (badge) badge.textContent = page.title;
+            if (breadcrumb) breadcrumb.textContent = page.title;
             if (content) content.innerHTML = page.html;
+            document.title = `LivescoreFree.online | ${page.title}`;
         });
     </script>
 </body>

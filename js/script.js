@@ -188,13 +188,60 @@ document.addEventListener('DOMContentLoaded', () => {
   if (matchId) {
     if (path.includes('upcoming_match_detail.html')) {
       fetchUpcomingMatchDetail(matchId, sport, league);
-      // No auto-refresh for upcoming details unless status is close to live
     } else if (homeTeamName) {
       fetchMatchDetail(matchId, sport, league);
       startAutoRefresh(() => fetchMatchDetail(matchId, sport, league));
     }
-    // Also fetch sidebar live scores
     fetchMatches(null, true);
+    return;
+  }
+
+  // Empty state for match.html without ?id — show live matches to pick from
+  if (path.includes('match.html') && !matchId) {
+    const mainContent = document.querySelector('main') || document.querySelector('.flex-1');
+    if (mainContent) {
+      mainContent.innerHTML = `
+        <div class="py-20 px-6 max-w-4xl mx-auto text-center">
+          <span class="material-symbols-outlined text-6xl text-primary mb-6 block animate-pulse">sports_score</span>
+          <h2 class="text-4xl font-black italic uppercase tracking-tighter mb-4">Select a Match</h2>
+          <p class="text-sm font-bold text-on-surface/40 uppercase tracking-widest mb-12">Choose a match from the live scores below for full details</p>
+          <div id="empty-state-matches" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div class="h-48 bg-white/5 rounded-xl animate-pulse"></div>
+            <div class="h-48 bg-white/5 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+      `;
+      // Fetch live matches for selection
+      fetch(`${API_LIVE}?sport=all`)
+        .then(r => r.json())
+        .then(data => {
+          const matches = (data.matches || []).filter(m => m.status === 'live' || m.status === 'finished').slice(0, 6);
+          const container = document.getElementById('empty-state-matches');
+          if (container && matches.length > 0) {
+            container.innerHTML = matches.map(m => `
+              <a href="/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" class="block bg-surface-container p-6 rounded-xl border border-white/5 hover:border-primary/30 transition-all group">
+                <div class="flex justify-between items-center mb-4">
+                  <span class="text-[10px] font-black text-on-surface/40 uppercase tracking-widest">${m.league || 'Match'}</span>
+                  ${m.status === 'live' ? '<span class="flex items-center gap-1 bg-primary text-white px-2 py-0.5 text-[9px] font-black rounded"><span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE</span>' : '<span class="text-[9px] font-black text-on-surface/40 uppercase">FINAL</span>'}
+                </div>
+                <div class="flex justify-between items-center gap-4">
+                  <div class="flex items-center gap-3 flex-1">
+                    <img src="${m.homeTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+                    <span class="text-sm font-black uppercase truncate">${m.homeTeam.name}</span>
+                  </div>
+                  <span class="text-2xl font-black italic ${m.status === 'live' ? 'text-primary' : 'text-on-surface/50'}">${m.homeTeam.score} - ${m.awayTeam.score}</span>
+                  <div class="flex items-center gap-3 flex-1 justify-end">
+                    <span class="text-sm font-black uppercase truncate text-right">${m.awayTeam.name}</span>
+                    <img src="${m.awayTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+                  </div>
+                </div>
+              </a>
+            `).join('');
+          } else if (container) {
+            container.innerHTML = '<div class="col-span-full py-8 text-center text-on-surface/30 text-[10px] font-black uppercase tracking-widest">No live matches right now. Check back soon!</div>';
+          }
+        }).catch(() => {});
+    }
     return;
   }
 
@@ -915,11 +962,20 @@ async function fetchSidebarLive() {
   try {
     const res = await fetch(`${API_LIVE}?sport=all`);
     const data = await res.json();
-    const liveMatches = (data.matches || []).filter(m => m.status === 'live').slice(0, 5);
+    const allLive = (data.matches || []).filter(m => m.status === 'live');
+    const liveMatches = allLive.slice(0, 5);
     renderSidebarLive(liveMatches);
 
+    // Update dynamic live counter
+    const liveCountText = document.getElementById('live-count-text');
+    if (liveCountText) {
+      liveCountText.textContent = allLive.length > 0 ? `${allLive.length} LIVE NOW` : 'NO LIVE GAMES';
+    }
+
+    // Cache all matches for search
+    window._cachedMatches = data.matches || [];
+
     if (tickerContainer) {
-      const allLive = (data.matches || []).filter(m => m.status === 'live');
       renderTicker(allLive);
       updatePageTitle(allLive);
     }
@@ -1706,3 +1762,118 @@ function startKineticClock() {
 
 // Start the global loop
 startKineticClock();
+
+// --- GLOBAL SEARCH MODAL ---
+window.openSearchModal = function() {
+  const modal = document.getElementById('search-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    const input = document.getElementById('search-input');
+    if (input) { input.focus(); input.value = ''; }
+    document.getElementById('search-results').innerHTML = `
+      <div class="py-8 text-center text-on-surface/30 text-[10px] font-black uppercase tracking-widest">
+        Type to search matches, teams, and leagues...
+      </div>
+    `;
+    // Listen for typing
+    if (input && !input._searchBound) {
+      input._searchBound = true;
+      input.addEventListener('input', debounceSearch);
+    }
+  }
+}
+
+window.closeSearchModal = function() {
+  const modal = document.getElementById('search-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+// Keyboard shortcut: Ctrl+K or / to open search
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey && e.key === 'k') || (e.key === '/' && !['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))) {
+    e.preventDefault();
+    openSearchModal();
+  }
+  if (e.key === 'Escape') closeSearchModal();
+});
+
+let _searchTimer = null;
+function debounceSearch(e) {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(() => performSearch(e.target.value), 300);
+}
+
+async function performSearch(query) {
+  const resultsContainer = document.getElementById('search-results');
+  if (!resultsContainer) return;
+  if (!query || query.length < 2) {
+    resultsContainer.innerHTML = `<div class="py-8 text-center text-on-surface/30 text-[10px] font-black uppercase tracking-widest">Type at least 2 characters...</div>`;
+    return;
+  }
+
+  const q = query.toLowerCase();
+  const matches = (window._cachedMatches || []).filter(m =>
+    (m.homeTeam.name || '').toLowerCase().includes(q) ||
+    (m.awayTeam.name || '').toLowerCase().includes(q) ||
+    (m.league || '').toLowerCase().includes(q) ||
+    (m.name || '').toLowerCase().includes(q) ||
+    (m.sport || '').toLowerCase().includes(q)
+  );
+
+  if (matches.length === 0) {
+    resultsContainer.innerHTML = `<div class="py-8 text-center text-on-surface/30 text-[10px] font-black uppercase tracking-widest">No matches found for "${query}"</div>`;
+    return;
+  }
+
+  resultsContainer.innerHTML = matches.slice(0, 10).map(m => {
+    const isLive = m.status === 'live';
+    const isFinished = m.status === 'finished';
+    const detailUrl = (isLive || isFinished)
+      ? `/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}`
+      : `/upcoming_match_detail.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}`;
+    return `
+      <a href="${detailUrl}" class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-primary/20 transition-all group border border-transparent hover:border-primary/30">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <img src="${m.homeTeam.logo}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-black uppercase truncate group-hover:text-primary transition-colors">${m.homeTeam.name} vs ${m.awayTeam.name}</div>
+            <div class="text-[9px] font-bold text-on-surface/40 uppercase tracking-widest">${m.league || m.sport}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          ${isLive ? `<span class="text-sm font-black text-primary">${m.homeTeam.score} - ${m.awayTeam.score}</span><span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>` : isFinished ? `<span class="text-sm font-black text-on-surface/50">${m.homeTeam.score} - ${m.awayTeam.score}</span>` : `<span class="text-[10px] font-black text-on-surface/40 uppercase">${m.time || 'Upcoming'}</span>`}
+        </div>
+      </a>
+    `;
+  }).join('');
+}
+
+// --- SCROLL REVEAL ANIMATIONS ---
+function initScrollReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('section, .glass-card, article').forEach(el => {
+    if (!el.closest('#main-header') && !el.closest('aside') && !el.closest('footer')) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+      observer.observe(el);
+    }
+  });
+}
+
+// Init scroll reveal after a brief delay to let content render
+setTimeout(initScrollReveal, 500);
+
+// --- DYNAMIC COPYRIGHT YEAR ---
+document.querySelectorAll('.copyright-year').forEach(el => {
+  el.textContent = new Date().getFullYear();
+});
