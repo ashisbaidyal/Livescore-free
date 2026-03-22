@@ -22,6 +22,8 @@ const tabsContainer = document.getElementById('sports-tabs');
 const matchesContainer = document.getElementById('matches-container');
 const sidebarLiveContainer = document.getElementById('sidebar-live-container');
 const tickerContainer = document.getElementById('ticker-container');
+const newsContainer = document.getElementById('news-container');
+const API_INFO = '/api/info';
 
 // Specific Match Detail Elements
 const homeTeamName = document.getElementById('home-team-name');
@@ -141,6 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // No JS required for sidebar visual feedback anymore.
 
   // Check for dynamic match detail first
+  const urlParams = new URLSearchParams(window.location.search);
+  const matchId = urlParams.get('id');
   const sport = urlParams.get('sport') || 'soccer';
   const league = urlParams.get('league') || 'eng.1';
   
@@ -153,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Handle Hub Pages (Home, Live, Upcoming, Trending, Results)
-  if (matchesContainer || sidebarLiveContainer) {
+  if (matchesContainer || sidebarLiveContainer || newsContainer) {
     if (tabsContainer) renderTabs();
     
     // Determine page filter
@@ -162,16 +166,84 @@ document.addEventListener('DOMContentLoaded', () => {
     if (path.includes('upcoming.html')) statusFilter = 'upcoming';
     if (path.includes('results.html')) statusFilter = 'finished';
 
+    // Initial fetches
     fetchMatches(statusFilter);
-    startAutoRefresh(() => fetchMatches(statusFilter));
-  }
+    fetchSidebarLive();
+    fetchNews();
 
-  // News Hub logic (placeholder for now)
-  const newsContainer = document.getElementById('news-container');
-  if (newsContainer) {
-    newsContainer.innerHTML = '<div class="col-span-full py-20 text-center opacity-50 font-black uppercase tracking-widest text-xs">Loading Kinetic News Stream...</div>';
+    // "Silent" Auto Refresh logic
+    setInterval(() => {
+      fetchMatches(statusFilter);
+      fetchSidebarLive();
+    }, 10000); // 10s for scores
+
+    setInterval(() => {
+      fetchNews();
+    }, 300000); // 5m for news
   }
 });
+
+// --- FETCH NEWS ---
+async function fetchNews() {
+  if (!newsContainer) return;
+  try {
+    const res = await fetch(`${API_INFO}?type=news&sport=${currentTab === 'all' ? 'soccer' : currentTab}`);
+    const data = await res.json();
+    renderNews(data.articles || []);
+  } catch (err) {
+    console.error('News fetch error:', err);
+  }
+}
+
+function renderNews(articles) {
+  if (!newsContainer || articles.length === 0) return;
+  
+  newsContainer.innerHTML = articles.map(article => `
+    <article class="flex flex-col md:flex-row gap-6 group cursor-pointer" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
+      <div class="md:w-1/3 aspect-[4/3] bg-cover bg-center rounded-lg overflow-hidden border border-white/10" 
+           style="background-image: url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
+      <div class="md:w-2/3 space-y-3">
+        <span class="text-primary text-[10px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'Sports'}</span>
+        <h3 class="text-2xl font-black uppercase leading-none group-hover:text-primary transition-colors">${article.headline}</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed line-clamp-2">${article.description || ''}</p>
+        <div class="flex items-center gap-4 text-[10px] font-bold text-on-surface/40 uppercase">
+          <span>${new Date(article.published).toLocaleTimeString()}</span>
+          <span>•</span>
+          <span>By ${article.byline || 'ESPN'}</span>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+
+// --- FETCH SIDEBAR LIVE ONLY ---
+async function fetchSidebarLive() {
+  if (!sidebarLiveContainer) return;
+  try {
+    const res = await fetch(`${API_LIVE}?sport=all`);
+    const data = await res.json();
+    const liveMatches = (data.matches || []).filter(m => m.status === 'live').slice(0, 5);
+    renderSidebarLive(liveMatches);
+    
+    if (tickerContainer) {
+      const allLive = (data.matches || []).filter(m => m.status === 'live');
+      renderTicker(allLive);
+      updatePageTitle(allLive);
+    }
+  } catch (err) {
+    console.error('Sidebar fetch error:', err);
+  }
+}
+
+// --- UPDATE PAGE TITLE WITH LIVE SCORES ---
+function updatePageTitle(liveMatches) {
+  if (liveMatches.length > 0) {
+    const m = liveMatches[0];
+    document.title = `(${m.homeTeam.score}-${m.awayTeam.score}) ${m.homeTeam.name} vs ${m.awayTeam.name} | LiveScoreFree`;
+  } else {
+    document.title = 'LivescoreFree.online | Real-Time Sports Multiverse';
+  }
+}
 
 // --- RENDER TABS ---
 function renderTabs() {
@@ -219,7 +291,9 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
     
     // Always render ticker if container exists
     if (tickerContainer) {
-      renderTicker(matches.filter(m => m.status === 'live'));
+      const liveMatches = matches.filter(m => m.status === 'live');
+      renderTicker(liveMatches);
+      updatePageTitle(liveMatches);
     }
 
     if (sidebarOnly) return;
