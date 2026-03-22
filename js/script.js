@@ -64,10 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Toggle Sidebar Function
   const toggleSidebar = (show) => {
+    const mainContent = document.querySelector('main');
     if (show) {
       sidebar.classList.remove('-translate-x-full');
       sidebar.classList.add('translate-x-0');
       sidebarOverlay.classList.remove('hidden');
+      if (mainContent && window.innerWidth >= 1024) {
+        mainContent.style.marginLeft = '256px';
+        mainContent.style.transition = 'margin-left 0.3s ease';
+      }
       setTimeout(() => {
         sidebarOverlay.classList.remove('opacity-0');
         sidebarOverlay.classList.add('opacity-100');
@@ -75,6 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       sidebar.classList.remove('translate-x-0');
       sidebar.classList.add('-translate-x-full');
+      if (mainContent) {
+        mainContent.style.marginLeft = '0';
+      }
       sidebarOverlay.classList.remove('opacity-100');
       sidebarOverlay.classList.add('opacity-0');
       setTimeout(() => {
@@ -84,18 +92,22 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (sidebarToggle && sidebar && sidebarOverlay) {
-    sidebarToggle.addEventListener('click', () => toggleSidebar(true));
+    sidebarToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = !sidebar.classList.contains('-translate-x-full');
+      toggleSidebar(!isOpen);
+    });
     sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
   }
   
   if (header) {
     window.addEventListener('scroll', () => {
       let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      if (scrollTop > lastScrollTop && scrollTop > 100) {
+      if (scrollTop > lastScrollTop && scrollTop > 50) {
         // Scrolling down
         header.style.transform = 'translateY(-100%)';
         // Auto-close sidebar on scroll if open
-        if (sidebar && sidebar.classList.contains('translate-x-0')) toggleSidebar(false);
+        if (sidebar && !sidebar.classList.contains('-translate-x-full')) toggleSidebar(false);
       } else {
         // Scrolling up
         header.style.transform = 'translateY(0)';
