@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LivescoreFree.online | Team Profile</title>
+<meta name="description" content="Dedicated team profile page for the LivescoreFree theme, including club identity, venue, record, and connected navigation."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          primary: "#CC1616",
+          surface: "#131313",
+          "on-surface": "#e5e2e1",
+          "surface-container-lowest": "#0e0e0e",
+          "surface-container-low": "#1c1b1b",
+          "surface-container": "#201f1f",
+          "surface-container-high": "#2a2a2a",
+          "surface-container-highest": "#353534"
+        },
+        fontFamily: {
+          body: ["Lexend"]
+        }
+      }
+    }
+  };
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0E0E0E; }
+  ::-webkit-scrollbar-thumb { background: #CC1616; }
+  .pulse-red { animation: pulse-red 2s infinite; }
+  .glass-card { background: rgba(42, 42, 42, 0.72); backdrop-filter: blur(12px); }
+  @keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(204, 22, 22, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0); }
+  }
+</style>
+<link rel="manifest" href="/manifest.webmanifest"/>
+<meta name="theme-color" content="#0e0e0e"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="stylesheet" href="/css/runtime-enhancements.css"/></head>
+<body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
+<nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
+  <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
+    <div class="flex items-center gap-4">
+      <button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full transition-all">menu</button>
+      <a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+        <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
+        <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
+      </a>
+    </div>
+    <div class="hidden lg:flex gap-8 items-center font-bold uppercase tracking-tighter" id="top-nav-links">
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="live.html">Live</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">Upcoming</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="results.html">Results</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="trending.html">Trending</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="news.html">News</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="teams.html">Teams</a>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+        <span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
+        <span id="live-count-text" class="text-[10px] font-black tracking-widest uppercase">LIVE NOW</span>
+      </div>
+      <button onclick="openSearchModal()" class="material-symbols-outlined text-on-surface hover:text-primary transition-all">search</button>
+    </div>
+  </div>
+</nav>
+
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
+
+<div class="flex pt-16 min-h-screen">
+  <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto">
+    <nav class="flex flex-col gap-1 font-medium text-xs">
+      <div class="px-6 mb-8 space-y-1">
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="teams.html"><span class="material-symbols-outlined text-lg">groups</span><span class="font-black uppercase tracking-widest text-[10px]">Teams Hub</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="team.html"><span class="material-symbols-outlined text-lg">shield</span><span class="font-black uppercase tracking-widest text-[10px]">Team Profile</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="standings.html"><span class="material-symbols-outlined text-lg">leaderboard</span><span class="font-black uppercase tracking-widest text-[10px]">Standings</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="player.html"><span class="material-symbols-outlined text-lg">person</span><span class="font-black uppercase tracking-widest text-[10px]">Player Profile</span></a>
+      </div>
+      <div class="px-6 mb-8">
+        <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Live Feed</div>
+        <div id="sidebar-live-container" class="space-y-3">
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="flex-1 w-full bg-surface min-h-screen">
+    <section class="relative overflow-hidden border-b border-white/5">
+      <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517927033932-b3d18e61fb3a?auto=format&fit=crop&q=80&w=1600')] bg-cover bg-center opacity-25"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-black/20"></div>
+      <div class="relative max-w-7xl mx-auto px-8 py-16 lg:py-20">
+        <div class="flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-12">
+          <div id="team-logo-shell" class="w-32 h-32 lg:w-40 lg:h-40 rounded-3xl border border-white/10 glass-card flex items-center justify-center p-6">
+            <img id="team-logo" src="/public/logo.png" alt="" class="w-full h-full object-contain"/>
+          </div>
+          <div class="flex-1">
+            <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
+              <span class="material-symbols-outlined text-primary text-sm">shield</span>
+              <span id="team-kicker" class="text-[10px] font-black uppercase tracking-[0.3em]">Team Profile</span>
+            </div>
+            <h1 id="team-name" class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">Team Profile</h1>
+            <p id="team-summary" class="max-w-3xl text-sm md:text-base text-on-surface/65 leading-relaxed">Track team identity, venue, record, and schedule context in a dedicated profile view powered by the live feed.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-8 py-10 grid gap-8 xl:grid-cols-[1fr_320px]">
+      <div class="space-y-8">
+        <div id="team-meta-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="h-32 rounded-3xl bg-white/5 animate-pulse"></div>
+          <div class="h-32 rounded-3xl bg-white/5 animate-pulse"></div>
+          <div class="h-32 rounded-3xl bg-white/5 animate-pulse"></div>
+          <div class="h-32 rounded-3xl bg-white/5 animate-pulse"></div>
+        </div>
+
+        <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div class="glass-card rounded-3xl border border-white/5 p-6 lg:p-8">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Profile Summary</div>
+                <h2 class="text-3xl font-black italic uppercase tracking-tighter">Competitive Snapshot</h2>
+              </div>
+              <span class="material-symbols-outlined text-primary text-3xl">analytics</span>
+            </div>
+            <div id="team-story" class="space-y-4 text-sm text-on-surface/70 leading-relaxed">
+              <p>Loading team profile details.</p>
+            </div>
+          </div>
+
+          <div class="glass-card rounded-3xl border border-white/5 p-6 lg:p-8">
+            <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Profile Signals</div>
+            <div id="team-signals" class="grid gap-4">
+              <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
+              <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
+              <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="space-y-6">
+        <div class="glass-card rounded-3xl border border-white/5 p-6">
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Navigate</div>
+          <div class="grid gap-3" id="team-links">
+            <a href="teams.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+              <div class="text-xs font-black uppercase tracking-widest">Back To Teams Hub</div>
+              <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Browse more teams</div>
+            </a>
+            <a href="standings.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+              <div class="text-xs font-black uppercase tracking-widest">Check Standings</div>
+              <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Move from profile to table</div>
+            </a>
+            <a href="upcoming.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+              <div class="text-xs font-black uppercase tracking-widest">Upcoming Fixtures</div>
+              <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Find scheduled action</div>
+            </a>
+          </div>
+        </div>
+        <div class="glass-card rounded-3xl border border-white/5 p-6">
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Theme Note</div>
+          <p class="text-sm text-on-surface/65 leading-relaxed">Use this profile to move quickly between team context, standings, and upcoming fixtures.</p>
+        </div>
+      </aside>
+    </section>
+
+    <footer class="border-t border-white/10 bg-[#0E0E0E] px-8 py-10">
+      <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div>
+          <div class="text-2xl font-black italic tracking-tighter text-primary">LIVESCOREFREE</div>
+          <p class="text-[10px] uppercase tracking-[0.3em] text-on-surface/35 mt-2">(c) 2026 team profile</p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/45">
+          <a href="teams.html" class="hover:text-primary transition-colors">Teams</a>
+          <a href="standings.html" class="hover:text-primary transition-colors">Standings</a>
+          <a href="player.html" class="hover:text-primary transition-colors">Player</a>
+          <a href="live.html" class="hover:text-primary transition-colors">Live</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<div id="search-modal" class="fixed inset-0 z-[200] hidden">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeSearchModal()"></div>
+  <div class="relative max-w-2xl mx-auto mt-24 px-6">
+    <div class="bg-surface-container border border-white/10 rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center gap-4 mb-6">
+        <span class="material-symbols-outlined text-primary text-2xl">search</span>
+        <input id="search-input" type="text" placeholder="Search matches, teams, leagues..." class="flex-1 bg-transparent text-xl font-bold outline-none placeholder:text-on-surface/30 text-on-surface"/>
+        <button onclick="closeSearchModal()" class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">close</button>
+      </div>
+      <div id="search-results" class="max-h-96 overflow-y-auto space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/script.js"></script>
+<script>
+  function safeUpper(value) {
+    return String(value || "").toUpperCase();
+  }
+
+  function readParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      id: params.get("id") || "",
+      name: params.get("name") || "Featured Team",
+      sport: params.get("sport") || "soccer",
+      league: params.get("league") || "eng.1",
+      logo: params.get("logo") || "/icons/icon-192.png",
+      record: params.get("record") || "Live feed",
+      venue: params.get("venue") || "Venue not listed"
+    };
+  }
+
+  function normalizeTeamPayload(data, fallback) {
+    const team = data?.team || {};
+    const colorValue = team.color || team.alternateColor || "CC1616";
+    const color = colorValue.startsWith("#") ? colorValue : `#${colorValue}`;
+    return {
+      team: {
+        id: team.id || fallback.id,
+        name: team.name || fallback.name,
+        sport: team.sport || fallback.sport,
+        league: team.league || fallback.league,
+        logo: team.logo || fallback.logo,
+        record: team.record || fallback.record,
+        venue: team.venue || fallback.venue,
+        location: team.location || team.shortName || fallback.name,
+        abbreviation: team.abbreviation || "",
+        color
+      },
+      roster: data?.roster || [],
+      injuries: data?.injuries || [],
+      schedule: data?.schedule || []
+    };
+  }
+
+  function renderTeam(profile) {
+    const team = profile.team;
+    const nextMatch = profile.schedule.find((match) => match.status === "upcoming") || profile.schedule[0] || null;
+    const rosterPreview = profile.roster.slice(0, 4);
+
+    document.title = `${team.name} | Team Profile | LivescoreFree.online`;
+    document.getElementById("team-name").textContent = team.name;
+    document.getElementById("team-kicker").textContent = `${safeUpper(team.sport)} / ${safeUpper(team.league)}`;
+    document.getElementById("team-logo").src = team.logo;
+    document.getElementById("team-logo").alt = team.name;
+    document.getElementById("team-summary").textContent = `${team.name} is connected to the live ESPN feed for identity, roster, and schedule context inside the current site theme.`;
+    document.getElementById("team-logo-shell").style.borderColor = `${team.color}55`;
+
+    const metaGrid = document.getElementById("team-meta-grid");
+    metaGrid.innerHTML = [
+      { label: "League", value: safeUpper(team.league) },
+      { label: "Record", value: team.record || "Record pending" },
+      { label: "Venue", value: team.venue || "Venue pending" },
+      { label: "Roster", value: `${profile.roster.length || 0} active entries` }
+    ].map((item) => `
+      <div class="glass-card rounded-3xl border border-white/5 p-5">
+        <div class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-3">${item.label}</div>
+        <div class="text-xl font-black italic leading-tight">${item.value}</div>
+      </div>
+    `).join("");
+
+    document.getElementById("team-story").innerHTML = `
+      <p><span class="text-white font-black">${team.name}</span> is currently tracked in <span class="text-white font-black">${safeUpper(team.league)}</span> under the <span class="text-white font-black">${safeUpper(team.sport)}</span> feed.</p>
+      <p>${team.venue ? `Home venue: <span class="text-white font-black">${team.venue}</span>.` : "Venue data is not available in the current response."}</p>
+      <p>${nextMatch ? `Next schedule item: <a class="text-primary font-black" href="${buildMatchUrl(nextMatch)}">${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}</a>.` : "No upcoming schedule item was returned for this team."}</p>
+      ${rosterPreview.length ? `<div class="pt-2"><div class="text-[10px] font-black uppercase tracking-[0.25em] text-primary mb-3">Roster Preview</div>${rosterPreview.map((athlete) => `<div class="flex items-center justify-between border-t border-white/5 py-3"><span class="font-black uppercase">${athlete.fullName}</span><span class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">${athlete.position?.displayName || athlete.jersey || "Athlete"}</span></div>`).join("")}</div>` : ""}
+    `;
+
+    document.getElementById("team-signals").innerHTML = [
+      { label: "Identity", value: team.abbreviation || team.location || team.name },
+      { label: "Injuries", value: profile.injuries.length ? `${profile.injuries.length} listed` : "No active report" },
+      { label: "Next Match", value: nextMatch ? `${nextMatch.homeTeam.abbreviation || nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.abbreviation || nextMatch.awayTeam.name}` : "Schedule pending" }
+    ].map((item) => `
+      <div class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4">
+        <div class="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface/40 mb-2">${item.label}</div>
+        <div class="font-black uppercase tracking-tight">${item.value}</div>
+      </div>
+    `).join("");
+
+    document.getElementById("team-links").innerHTML = `
+      <a href="teams.html?league=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Back To Teams Hub</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Browse more teams</div>
+      </a>
+      <a href="standings.html?sport=${encodeURIComponent(team.sport)}&league=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Check Standings</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Review league position</div>
+      </a>
+      <a href="upcoming.html?sport=${encodeURIComponent(team.sport)}&l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Upcoming Fixtures</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Move from profile to schedule</div>
+      </a>
+    `;
+  }
+
+  async function hydrateTeamProfile() {
+    const fallback = readParams();
+    let profile = normalizeTeamPayload({
+      team: {
+        id: fallback.id,
+        name: fallback.name,
+        sport: fallback.sport,
+        league: fallback.league,
+        logo: fallback.logo,
+        record: fallback.record,
+        venue: fallback.venue,
+        location: fallback.name,
+        color: "#CC1616"
+      },
+      roster: [],
+      injuries: [],
+      schedule: []
+    }, fallback);
+
+    try {
+      const query = new URLSearchParams({
+        type: "team",
+        sport: fallback.sport,
+        league: fallback.league
+      });
+      if (fallback.id) query.set("id", fallback.id);
+      if (fallback.name) query.set("name", fallback.name);
+
+      const response = await fetch(`/api/info?${query.toString()}`);
+      const data = await response.json();
+      if (data.team) {
+        profile = normalizeTeamPayload(data, fallback);
+      }
+    } catch (error) {
+      console.error("Team profile hydrate failed:", error);
+    }
+
+    renderTeam(profile);
+  }
+
+  document.addEventListener("DOMContentLoaded", hydrateTeamProfile);
+</script>
+</body>
+</html>

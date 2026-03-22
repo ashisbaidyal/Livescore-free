@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LivescoreFree.online | Standings Centre</title>
+<meta name="description" content="Track league tables, wins, losses, points, and movement across major competitions inside the LivescoreFree standings centre."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          primary: "#CC1616",
+          surface: "#131313",
+          "on-surface": "#e5e2e1",
+          "surface-container-lowest": "#0e0e0e",
+          "surface-container-low": "#1c1b1b",
+          "surface-container": "#201f1f",
+          "surface-container-high": "#2a2a2a",
+          "surface-container-highest": "#353534"
+        },
+        fontFamily: {
+          body: ["Lexend"]
+        }
+      }
+    }
+  };
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0E0E0E; }
+  ::-webkit-scrollbar-thumb { background: #CC1616; }
+  .pulse-red { animation: pulse-red 2s infinite; }
+  .glass-card { background: rgba(42, 42, 42, 0.72); backdrop-filter: blur(12px); }
+  @keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(204, 22, 22, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0); }
+  }
+</style>
+<link rel="manifest" href="/manifest.webmanifest"/>
+<meta name="theme-color" content="#0e0e0e"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="stylesheet" href="/css/runtime-enhancements.css"/></head>
+<body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
+<nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
+  <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
+    <div class="flex items-center gap-4">
+      <button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full transition-all">menu</button>
+      <a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+        <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
+        <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
+      </a>
+    </div>
+    <div class="hidden lg:flex gap-8 items-center font-bold uppercase tracking-tighter" id="top-nav-links">
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="live.html">Live</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">Upcoming</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="results.html">Results</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="trending.html">Trending</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="news.html">News</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="leagues.html">Leagues</a>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+        <span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
+        <span id="live-count-text" class="text-[10px] font-black tracking-widest uppercase">LIVE NOW</span>
+      </div>
+      <button onclick="openSearchModal()" class="material-symbols-outlined text-on-surface hover:text-primary transition-all">search</button>
+    </div>
+  </div>
+</nav>
+
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
+
+<div class="flex pt-16 min-h-screen">
+  <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto">
+    <nav class="flex flex-col gap-1 font-medium text-xs">
+      <div class="px-6 mb-8 space-y-1">
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="leagues.html"><span class="material-symbols-outlined text-lg">public</span><span class="font-black uppercase tracking-widest text-[10px]">All Leagues</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="standings.html"><span class="material-symbols-outlined text-lg">leaderboard</span><span class="font-black uppercase tracking-widest text-[10px]">Standings</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="upcoming.html"><span class="material-symbols-outlined text-lg">calendar_month</span><span class="font-black uppercase tracking-widest text-[10px]">Fixtures</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="teams.html"><span class="material-symbols-outlined text-lg">groups</span><span class="font-black uppercase tracking-widest text-[10px]">Teams Hub</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="team.html"><span class="material-symbols-outlined text-lg">shield</span><span class="font-black uppercase tracking-widest text-[10px]">Team Profile</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="player.html"><span class="material-symbols-outlined text-lg">person</span><span class="font-black uppercase tracking-widest text-[10px]">Player Profile</span></a>
+      </div>
+      <div class="px-6 mb-8">
+        <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Live Feed</div>
+        <div id="sidebar-live-container" class="space-y-3">
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+        </div>
+      </div>
+      <div class="px-6">
+        <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Quick Links</div>
+        <div class="space-y-1">
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="info.html?p=privacy"><span class="material-symbols-outlined text-lg">policy</span><span class="font-black uppercase tracking-widest text-[10px]">Privacy</span></a>
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="info.html?p=terms"><span class="material-symbols-outlined text-lg">gavel</span><span class="font-black uppercase tracking-widest text-[10px]">Terms</span></a>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="flex-1 w-full bg-surface relative min-h-screen">
+    <section class="relative overflow-hidden border-b border-white/5">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(204,22,22,0.18),_transparent_45%)]"></div>
+      <div class="absolute inset-0 bg-[linear-gradient(135deg,_rgba(255,255,255,0.03),_transparent_55%)]"></div>
+      <div class="max-w-7xl mx-auto px-8 pt-16 pb-12 relative">
+        <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
+          <span class="material-symbols-outlined text-primary text-sm">monitoring</span>
+          <span class="text-[10px] font-black uppercase tracking-[0.3em]">Table Signal Centre</span>
+        </div>
+        <div class="grid gap-10 lg:grid-cols-[1.5fr_0.8fr] items-end">
+          <div>
+            <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">League <span class="text-primary">Standings</span></h1>
+            <p class="max-w-2xl text-sm md:text-base text-on-surface/65 leading-relaxed">A dedicated standings destination was missing from the live theme. This page now tracks table position, form direction, and points pressure across major competitions.</p>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="glass-card rounded-2xl border border-white/5 p-4">
+              <div class="text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-2">Tracked</div>
+              <div class="text-3xl font-black italic">4</div>
+              <div class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">Core leagues</div>
+            </div>
+            <div class="glass-card rounded-2xl border border-white/5 p-4">
+              <div class="text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-2">Update</div>
+              <div class="text-3xl font-black italic">Live</div>
+              <div class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">API driven</div>
+            </div>
+            <div class="glass-card rounded-2xl border border-white/5 p-4">
+              <div class="text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-2">Theme</div>
+              <div class="text-3xl font-black italic">Kept</div>
+              <div class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">No edits elsewhere</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-8 py-10">
+      <div class="flex flex-wrap gap-3 mb-8" id="league-tabs"></div>
+      <div class="grid gap-8 xl:grid-cols-[1fr_320px]">
+        <div class="glass-card rounded-3xl border border-white/5 overflow-hidden">
+          <div class="flex items-center justify-between p-6 border-b border-white/5">
+            <div>
+              <h2 id="standings-title" class="text-2xl font-black italic uppercase tracking-tighter">Loading Standings</h2>
+              <p id="standings-subtitle" class="text-[10px] text-on-surface/40 uppercase tracking-[0.3em] mt-2">Fetching league table</p>
+            </div>
+            <span class="material-symbols-outlined text-primary text-3xl">table_chart</span>
+          </div>
+          <div id="standings-content" class="p-6">
+            <div class="h-80 rounded-2xl bg-white/5 animate-pulse"></div>
+          </div>
+        </div>
+        <aside class="space-y-6">
+          <div class="glass-card rounded-3xl border border-white/5 p-6">
+            <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">How To Read</div>
+            <div class="space-y-4 text-sm text-on-surface/65 leading-relaxed">
+              <p><span class="text-white font-black">W/D/L</span> surfaces core form pressure.</p>
+              <p><span class="text-white font-black">Pts</span> shows total table control.</p>
+              <p><span class="text-white font-black">Diff</span> reflects scoring margin when the feed provides it.</p>
+            </div>
+          </div>
+          <div class="glass-card rounded-3xl border border-white/5 p-6">
+            <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Fast Links</div>
+            <div class="grid gap-3">
+              <a href="leagues.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+                <div class="text-xs font-black uppercase tracking-widest">Leagues Hub</div>
+                <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Broader competition coverage</div>
+              </a>
+              <a href="upcoming.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+                <div class="text-xs font-black uppercase tracking-widest">Upcoming Fixtures</div>
+                <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Jump from table to schedule</div>
+              </a>
+              <a href="teams.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+                <div class="text-xs font-black uppercase tracking-widest">Teams Hub</div>
+                <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Review clubs and franchises</div>
+              </a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <footer class="border-t border-white/10 bg-[#0E0E0E] px-8 py-10">
+      <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div>
+          <div class="text-2xl font-black italic tracking-tighter text-primary">LIVESCOREFREE</div>
+          <p class="text-[10px] uppercase tracking-[0.3em] text-on-surface/35 mt-2">(c) 2026 standings centre</p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/45">
+          <a href="leagues.html" class="hover:text-primary transition-colors">Leagues</a>
+          <a href="teams.html" class="hover:text-primary transition-colors">Teams</a>
+          <a href="player.html" class="hover:text-primary transition-colors">Player</a>
+          <a href="info.html?p=data-sources" class="hover:text-primary transition-colors">Data Sources</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<div id="search-modal" class="fixed inset-0 z-[200] hidden">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeSearchModal()"></div>
+  <div class="relative max-w-2xl mx-auto mt-24 px-6">
+    <div class="bg-surface-container border border-white/10 rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center gap-4 mb-6">
+        <span class="material-symbols-outlined text-primary text-2xl">search</span>
+        <input id="search-input" type="text" placeholder="Search matches, teams, leagues..." class="flex-1 bg-transparent text-xl font-bold outline-none placeholder:text-on-surface/30 text-on-surface"/>
+        <button onclick="closeSearchModal()" class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">close</button>
+      </div>
+      <div id="search-results" class="max-h-96 overflow-y-auto space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/script.js"></script>
+<script>
+  const standingsParams = new URLSearchParams(window.location.search);
+  const standingsFeeds = [
+    { key: "eng.1", sport: "soccer", league: "eng.1", label: "Premier League", accent: "Football" },
+    { key: "esp.1", sport: "soccer", league: "esp.1", label: "La Liga", accent: "Football" },
+    { key: "nba", sport: "basketball", league: "nba", label: "NBA", accent: "Basketball" },
+    { key: "nfl", sport: "football", league: "nfl", label: "NFL", accent: "American Football" }
+  ];
+
+  const standingsCache = {};
+  let activeStandingsKey = standingsFeeds.find((item) => item.key === (standingsParams.get("league") || ""))?.key || "eng.1";
+
+  function getStat(entry, names) {
+    const stats = entry.stats || [];
+    const stat = stats.find((item) => names.includes(String(item.name || "").toLowerCase()));
+    return stat ? stat.displayValue || stat.value || "-" : "-";
+  }
+
+  function normalizeEntries(raw) {
+    return raw.map((entry, index) => ({
+      rank: getStat(entry, ["rank", "playoffseed"]) || index + 1,
+      id: entry.team?.id || "",
+      name: entry.team?.displayName || entry.team?.shortDisplayName || "Team",
+      logo: entry.team?.logos?.[0]?.href || "/icons/icon-192.png",
+      wins: getStat(entry, ["wins", "win"]),
+      draws: getStat(entry, ["ties", "draws", "tie"]),
+      losses: getStat(entry, ["losses", "loss"]),
+      points: getStat(entry, ["points", "pts"]),
+      diff: getStat(entry, ["pointdifferential", "differential", "plusminus", "pointdifference"]),
+      sport: standingsFeeds.find((item) => item.key === activeStandingsKey)?.sport || "soccer",
+      league: activeStandingsKey
+    }));
+  }
+
+  function renderTabs() {
+    const tabs = document.getElementById("league-tabs");
+    tabs.innerHTML = standingsFeeds.map((feed) => `
+      <button data-key="${feed.key}" class="league-tab px-5 py-3 rounded-full border text-[10px] font-black uppercase tracking-[0.25em] transition-all ${feed.key === activeStandingsKey ? "border-primary bg-primary text-white" : "border-white/10 bg-white/5 text-on-surface/55 hover:border-primary/40 hover:text-white"}">
+        ${feed.label}
+      </button>
+    `).join("");
+
+    tabs.querySelectorAll(".league-tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeStandingsKey = button.dataset.key;
+        const url = new URL(window.location.href);
+        url.searchParams.set("league", activeStandingsKey);
+        window.history.replaceState({}, "", url);
+        renderTabs();
+        loadStandings(activeStandingsKey);
+      });
+    });
+  }
+
+  function renderStandingsTable(feed, entries) {
+    const title = document.getElementById("standings-title");
+    const subtitle = document.getElementById("standings-subtitle");
+    const content = document.getElementById("standings-content");
+
+    title.textContent = feed.label;
+    subtitle.textContent = `${feed.accent.toUpperCase()} TABLE FEED`;
+
+    if (!entries.length) {
+      content.innerHTML = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-20 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No standings available in the current feed</div>';
+      return;
+    }
+
+    content.innerHTML = `
+      <div class="overflow-x-auto rounded-2xl border border-white/5">
+        <table class="min-w-full text-sm">
+          <thead class="bg-white/5 text-[10px] uppercase tracking-[0.25em] text-on-surface/45">
+            <tr>
+              <th class="px-4 py-4 text-left">#</th>
+              <th class="px-4 py-4 text-left">Team</th>
+              <th class="px-4 py-4 text-center">W</th>
+              <th class="px-4 py-4 text-center">D</th>
+              <th class="px-4 py-4 text-center">L</th>
+              <th class="px-4 py-4 text-center">Pts</th>
+              <th class="px-4 py-4 text-center">Diff</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${entries.slice(0, 12).map((entry) => `
+              <tr class="border-t border-white/5 hover:bg-white/5 transition-colors cursor-pointer" onclick="window.location.href='team.html?id=${encodeURIComponent(entry.id)}&name=${encodeURIComponent(entry.name)}&sport=${encodeURIComponent(entry.sport)}&league=${encodeURIComponent(entry.league)}'">
+                <td class="px-4 py-4 font-black text-primary">${entry.rank}</td>
+                <td class="px-4 py-4">
+                  <div class="flex items-center gap-3">
+                    <img src="${entry.logo}" alt="${entry.name}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'"/>
+                    <span class="font-black uppercase tracking-tight">${entry.name}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-4 text-center font-bold">${entry.wins}</td>
+                <td class="px-4 py-4 text-center font-bold">${entry.draws}</td>
+                <td class="px-4 py-4 text-center font-bold">${entry.losses}</td>
+                <td class="px-4 py-4 text-center font-black">${entry.points}</td>
+                <td class="px-4 py-4 text-center text-on-surface/65">${entry.diff}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  async function loadStandings(key) {
+    const feed = standingsFeeds.find((item) => item.key === key);
+    const content = document.getElementById("standings-content");
+
+    if (standingsCache[key]) {
+      renderStandingsTable(feed, standingsCache[key]);
+      return;
+    }
+
+    content.innerHTML = '<div class="h-80 rounded-2xl bg-white/5 animate-pulse"></div>';
+
+    try {
+      const response = await fetch(`/api/info?type=standings&sport=${feed.sport}&league=${feed.league}`);
+      const data = await response.json();
+      const rawEntries = data.entries || data.standings?.[0]?.entries || data.children?.[0]?.standings?.entries || [];
+      const entries = normalizeEntries(rawEntries);
+      standingsCache[key] = entries;
+      renderStandingsTable(feed, entries);
+    } catch (error) {
+      content.innerHTML = '<div class="rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-20 text-center text-[10px] font-black uppercase tracking-[0.3em] text-red-200">Failed to load standings feed</div>';
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderTabs();
+    loadStandings(activeStandingsKey);
+  });
+</script>
+</body>
+</html>

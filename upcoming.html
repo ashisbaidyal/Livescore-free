@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
@@ -112,7 +112,11 @@
             100% { transform: translateX(0%); }
         }
     </style>
-</head>
+<link rel="manifest" href="/manifest.webmanifest"/>
+<meta name="theme-color" content="#0e0e0e"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="stylesheet" href="/css/runtime-enhancements.css"/></head>
 <body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
 <!-- TopNavBar Shell -->
 <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
@@ -270,13 +274,13 @@
         <span id="countdown-timer" class="text-3xl md:text-4xl font-black font-mono tracking-tight text-on-surface">--:--:--</span>
       </div>
       <div class="flex items-center gap-3 shrink-0">
-        <div id="countdown-home-logo" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/10 overflow-hidden"><span class="text-xs font-black text-on-surface/30">Ã¢â‚¬â€</span></div>
+        <div id="countdown-home-logo" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/10 overflow-hidden"><span class="text-xs font-black text-on-surface/30">â€”</span></div>
         <span class="text-[10px] font-black text-on-surface/40 uppercase">vs</span>
-        <div id="countdown-away-logo" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/10 overflow-hidden"><span class="text-xs font-black text-on-surface/30">Ã¢â‚¬â€</span></div>
+        <div id="countdown-away-logo" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/10 overflow-hidden"><span class="text-xs font-black text-on-surface/30">â€”</span></div>
       </div>
       <div class="flex-1 min-w-0 hidden sm:block">
         <p id="countdown-match-name" class="text-sm font-black uppercase tracking-tight truncate">Loading next fixture...</p>
-        <p id="countdown-match-league" class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest truncate">Ã¢â‚¬â€</p>
+        <p id="countdown-match-league" class="text-[10px] font-bold text-on-surface/40 uppercase tracking-widest truncate">â€”</p>
       </div>
     </div>
   </div>
@@ -307,17 +311,17 @@
       </h3>
       <div id="trending-series-container" class="space-y-4">
         <div class="p-4 bg-surface-container-lowest border-l-2 border-secondary hover:translate-x-1 transition-transform cursor-pointer">
-          <p class="text-[10px] uppercase font-bold text-secondary mb-1">Playoffs Ã¢â‚¬Â¢ Game 7</p>
+          <p class="text-[10px] uppercase font-bold text-secondary mb-1">Playoffs â€¢ Game 7</p>
           <p class="font-bold text-sm">Nuggets vs Timberwolves</p>
           <p class="text-[10px] opacity-40 mt-1 uppercase">Series tied 3-3</p>
         </div>
         <div class="p-4 bg-surface-container-lowest border-l-2 border-primary-container hover:translate-x-1 transition-transform cursor-pointer">
-          <p class="text-[10px] uppercase font-bold text-primary mb-1">UCL Ã¢â‚¬Â¢ Semi-Finals</p>
+          <p class="text-[10px] uppercase font-bold text-primary mb-1">UCL â€¢ Semi-Finals</p>
           <p class="font-bold text-sm">Dortmund vs PSG</p>
           <p class="text-[10px] opacity-40 mt-1 uppercase">Agg: 1-0</p>
         </div>
         <div class="p-4 bg-surface-container-lowest border-l-2 border-outline-variant hover:translate-x-1 transition-transform cursor-pointer">
-          <p class="text-[10px] uppercase font-bold opacity-60 mb-1">F1 Ã¢â‚¬Â¢ Miami GP</p>
+          <p class="text-[10px] uppercase font-bold opacity-60 mb-1">F1 â€¢ Miami GP</p>
           <p class="font-bold text-sm">Qualifying Rounds</p>
           <p class="text-[10px] opacity-40 mt-1 uppercase">Live in 12h</p>
         </div>
@@ -396,7 +400,7 @@
 <div class="flex flex-col items-center md:items-start gap-4">
 <div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">LIVESCOREFREE</div>
 <p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">
-                    Ã‚Â© 2025 LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.
+                    Â© 2025 LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.
                 </p>
 </div>
 <div class="flex gap-6">

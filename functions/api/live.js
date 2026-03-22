@@ -1,156 +1,74 @@
-const LEAGUE_MAP = {
-  // Football (Soccer)
-  "soccer": [
-    "eng.1", "esp.1", "ger.1", "ita.1", "fra.1", 
-    "uefa.champions", "uefa.europa", "uefa.europa.conf",
-    "usa.1", "mex.1", "fifa.world", "eng.fa", "eng.league_cup",
-    "esp.copa_del_rey", "ger.dfb_pokal", "ita.coppa_italia", "fra.coupe_de_france",
-    "fifa.africa.nations", "fifa.asia.asian_cup", "fifa.copa_america"
-  ],
-  // American Football
-  "football": ["nfl", "college-football", "cfl", "ufl", "xfl"],
-  // Basketball
-  "basketball": [
-    "nba", "wnba", "mens-college-basketball", "womens-college-basketball", 
-    "fiba", "nba-development", "euroleague"
-  ],
-  // Cricket
-  "cricket": ["8039", "8040", "8048", "19430", "intl", "ipl"],
-  // Tennis
-  "tennis": ["atp", "wta"],
-  // Hockey
-  "hockey": ["nhl", "mens-college-hockey", "womens-college-hockey", "hockey-world-cup"],
-  // Baseball
-  "baseball": ["mlb", "college-baseball", "world-baseball-classic"],
-  // MMA
-  "mma": ["ufc", "bellator", "pfl", "cage-warriors"],
-  // Racing
-  "racing": ["f1", "nascar-premier", "irl", "motogp"],
-  // Others
-  "golf": ["pga", "lpga", "champions-tour", "liv"],
-  "rugby": ["271937", "267979", "180659"]
-};
+import {
+  SPORT_LEAGUES,
+  dedupeById,
+  fetchJson,
+  getTargetSports,
+  jsonResponse,
+  normalizeLeagueParam,
+  normalizeScoreboardEvent,
+  normalizeSportParam,
+  siteApiUrl
+} from "./_shared.js";
 
-// Map UI tabs to ESPN sport slugs
-const SPORT_MAPPING = {
-  "all": ["soccer", "basketball", "cricket", "tennis", "football", "baseball", "mma", "hockey", "racing", "golf"],
-  "soccer": ["soccer"],
-  "football": ["soccer"], // In some UIs, football means soccer
-  "american-football": ["football"],
-  "basketball": ["basketball"],
-  "cricket": ["cricket"],
-  "tennis": ["tennis"],
-  "hockey": ["hockey"],
-  "baseball": ["baseball"],
-  "mma": ["mma"],
-  "racing": ["racing"],
-  "golf": ["golf"],
-  "rugby": ["rugby"]
-};
+function buildEndpoints(sportParam, leagueParam) {
+  const targetSports = getTargetSports(sportParam, leagueParam);
+  const normalizedLeague = normalizeLeagueParam(leagueParam);
+
+  if (normalizedLeague) {
+    const sport = normalizeSportParam(sportParam, normalizedLeague);
+    return [{ sport, league: normalizedLeague }];
+  }
+
+  if (sportParam === "all") {
+    return targetSports.flatMap((sport) =>
+      (SPORT_LEAGUES[sport] || []).slice(0, sport === "soccer" ? 5 : 2).map((league) => ({ sport, league }))
+    );
+  }
+
+  return targetSports.flatMap((sport) =>
+    (SPORT_LEAGUES[sport] || [normalizeLeagueParam("", sport)]).slice(0, 6).map((league) => ({ sport, league }))
+  );
+}
 
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
-  const sportParam = url.searchParams.get('sport') || 'all';
-  
-  const targetSports = SPORT_MAPPING[sportParam] || [sportParam];
-  let endpoints = [];
-
-  if (sportParam === 'all') {
-    // Collect top 5 leagues from each sport to maximize live coverage variety
-    targetSports.forEach(s => {
-      const leagues = (LEAGUE_MAP[s] || []).slice(0, 5);
-      leagues.forEach(l => {
-        endpoints.push({
-          url: `https://site.api.espn.com/apis/site/v2/sports/${s}/${l}/scoreboard`,
-          sport: s,
-          league: l
-        });
-      });
-    });
-  } else {
-    targetSports.forEach(s => {
-      const leagues = LEAGUE_MAP[s] || [];
-      leagues.forEach(l => {
-        endpoints.push({
-          url: `https://site.api.espn.com/apis/site/v2/sports/${s}/${l}/scoreboard`,
-          sport: s,
-          league: l
-        });
-      });
-    });
-  }
-
-  // If specific sport has no common mapping, try a default or hit more
-  if (endpoints.length === 0) {
-      endpoints.push({
-          url: `https://site.api.espn.com/apis/site/v2/sports/${targetSports[0]}/${targetSports[0]}/scoreboard`,
-          sport: targetSports[0],
-          league: targetSports[0]
-      });
-  }
+  const sportParam = String(url.searchParams.get("sport") || url.searchParams.get("s") || "all").toLowerCase();
+  const leagueParam = url.searchParams.get("league") || url.searchParams.get("l") || "";
 
   try {
-    // Limit to 45 endpoints to avoid Cloudflare subrequest limits (50)
-    const limitedEndpoints = endpoints.slice(0, 45);
-    const fetchPromises = limitedEndpoints.map(ep => 
-      fetch(ep.url + "?limit=50")
-        .then(res => res.json())
-        .then(data => ({ data, sport: ep.sport, leagueSlug: ep.league }))
-        .catch(() => null)
+    const endpoints = buildEndpoints(sportParam, leagueParam).slice(0, 36);
+    const results = await Promise.all(
+      endpoints.map(async ({ sport, league }) => {
+        try {
+          const data = await fetchJson(siteApiUrl(sport, league, "scoreboard", { limit: 50 }));
+          const leagueName = data.leagues?.[0]?.name || league.toUpperCase();
+          return (data.events || []).map((event) => normalizeScoreboardEvent(event, sport, league, leagueName));
+        } catch (error) {
+          return [];
+        }
+      })
     );
-    
-    const results = await Promise.all(fetchPromises);
-    
-    let allMatches = [];
-    results.filter(Boolean).forEach(res => {
-      const { data, sport, leagueSlug } = res;
-      if (!data.events) return;
-      
-      data.events.forEach(event => {
-        const comp = event.competitions[0];
-        const home = comp.competitors.find(c => c.homeAway === 'home');
-        const away = comp.competitors.find(c => c.homeAway === 'away');
-        
-        allMatches.push({
-          id: event.id,
-          date: event.date,
-          name: event.name,
-          sport: sport,
-          leagueSlug: leagueSlug,
-          league: data.leagues?.[0]?.name || 'Sports Event',
-          status: event.status.type.state === 'in' ? 'live' : event.status.type.state === 'post' ? 'finished' : 'upcoming',
-          time: event.status.type.shortDetail,
-          homeTeam: {
-            name: home?.team?.shortDisplayName || home?.team?.name,
-            logo: home?.team?.logo || '/public/logo.png',
-            score: home?.score || '0'
-          },
-          awayTeam: {
-            name: away?.team?.shortDisplayName || away?.team?.name,
-            logo: away?.team?.logo || '/public/logo.png',
-            score: away?.score || '0'
-          },
-          highlightUrl: event.links?.find(l => l.shortText === 'Highlights' || l.shortText === 'Recap')?.href || ''
-        });
-      });
+
+    const matches = dedupeById(results.flat()).sort((left, right) => {
+      const statusOrder = { live: 0, upcoming: 1, finished: 2 };
+      const statusDiff = (statusOrder[left.status] ?? 9) - (statusOrder[right.status] ?? 9);
+      if (statusDiff !== 0) return statusDiff;
+      return new Date(left.date) - new Date(right.date);
     });
 
-    // Sort by date or status
-    allMatches.sort((a, b) => {
-        if (a.status === 'live' && b.status !== 'live') return -1;
-        if (a.status !== 'live' && b.status === 'live') return 1;
-        return new Date(a.date) - new Date(b.date);
-    });
-
-    return new Response(JSON.stringify({ matches: allMatches }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=15, s-maxage=15',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    return jsonResponse(
+      {
+        matches,
+        meta: {
+          sport: sportParam,
+          league: normalizeLeagueParam(leagueParam),
+          endpoints: endpoints.length
+        }
+      },
+      15
+    );
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return jsonResponse({ error: error.message, matches: [] }, 15, 500);
   }
 }

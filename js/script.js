@@ -1,11 +1,15 @@
 // --- CONSTANTS ---
 // Navigation Functions (Consolidated below)
 
-const FALLBACK_HERO_IMAGE = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=1600';
-const FALLBACK_LOGO = 'https://raw.githubusercontent.com/ashisbaidya/Livescore-free/main/logo.png';
+const FALLBACK_HERO_IMAGE = '/icons/hero-fallback.svg';
+const FALLBACK_LOGO = '/icons/icon-192.png';
 const API_LIVE = '/api/live';
 const API_MATCH = '/api/match';
 const API_UPCOMING = '/api/upcoming';
+const API_INFO = '/api/info';
+const API_NEWS = API_INFO;
+const PWA_MANIFEST = '/manifest.webmanifest';
+const SERVICE_WORKER_PATH = '/sw.js';
 const SPORTS = [
   { id: 'all', name: 'All' },
   { id: 'soccer', name: 'Soccer' },
@@ -19,11 +23,45 @@ const SPORTS = [
   { id: 'racing', name: 'Racing' },
   { id: 'golf', name: 'Golf' }
 ];
+const SPORT_ALIASES = {
+  'american-football': 'football',
+  football: 'football'
+};
+const LEAGUE_ALIASES = {
+  mls: 'usa.1',
+  'saudi-pro-league': 'ksa.1',
+  'j-league': 'jpn.1',
+  'liga-mx': 'mex.1',
+  eredivisie: 'ned.1',
+  epl: 'eng.1',
+  laliga: 'esp.1',
+  bundesliga: 'ger.1',
+  'serie-a': 'ita.1',
+  'ligue-1': 'fra.1',
+  'champions-league': 'uefa.champions',
+  'europa-league': 'uefa.europa',
+  'conference-league': 'uefa.europa.conf'
+};
+const TEAM_PROFILE_SPORT_BY_LEAGUE = {
+  nfl: 'football',
+  'college-football': 'football',
+  nba: 'basketball',
+  wnba: 'basketball',
+  nhl: 'hockey',
+  mlb: 'baseball',
+  atp: 'tennis',
+  wta: 'tennis',
+  ufc: 'mma',
+  f1: 'racing'
+};
 
 let currentTab = 'all';
+let currentLeagueFilter = '';
 let currentArenaTab = 'all'; // Filter for the Arena section
 let currentPageFilter = 'live'; // Added globally to track page-specific selection (live, upcoming, finished)
 let autoRefreshTimer = null;
+let deferredInstallPrompt = null;
+let notificationPermissionState = typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;
 let activeMatchTimer = {
   baseMs: 0,
   syncTime: 0,
@@ -41,6 +79,7 @@ const headlinesContainer = document.getElementById('latest-headlines-container')
 const heroSliderContainer = document.getElementById('hero-slider-container');
 const leaguesContainer = document.getElementById('leagues-container');
 const playersContainer = document.getElementById('players-container');
+const trendingPlayersContainer = document.getElementById('trending-players-grid');
 const trendingUpcomingContainer = document.getElementById('trending-upcoming-container');
 const trendingMatchesList = document.getElementById('trending-matches-list');
 const recentResultsContainer = document.getElementById('recent-results-container');
@@ -51,7 +90,6 @@ const upcomingNext = document.getElementById('upcoming-next');
 const topTierContainer = document.getElementById('top-tier-container');
 const combatSportsContainer = document.getElementById('combat-sports-container');
 const europeanSoccerContainer = document.getElementById('european-soccer-container');
-const API_INFO = '/api/info';
 
 // Specific Match Detail Elements
 const homeTeamName = document.getElementById('home-team-name');
@@ -74,8 +112,382 @@ const betDrawContainer = document.getElementById('bet-draw-container');
 const matchLeagueInfo = document.getElementById('match-league-info');
 const statsDots = document.getElementById('stats-dots');
 
+function normalizeLeagueSlug(value = '') {
+  return LEAGUE_ALIASES[String(value || '').toLowerCase()] || String(value || '');
+}
+
+function normalizeSportSlug(value = '', league = '') {
+  const sport = String(value || 'all').toLowerCase();
+  if (sport === 'all') return 'all';
+  if (SPORT_ALIASES[sport]) return SPORT_ALIASES[sport];
+  if (sport === 'football' && league && !['nfl', 'college-football', 'cfl', 'ufl', 'xfl'].includes(normalizeLeagueSlug(league))) {
+    return 'soccer';
+  }
+  return sport;
+}
+
+function getDefaultLeagueForSport(sport = 'soccer') {
+  const normalizedSport = normalizeSportSlug(sport);
+  if (normalizedSport === 'basketball') return 'nba';
+  if (normalizedSport === 'football') return 'nfl';
+  if (normalizedSport === 'hockey') return 'nhl';
+  if (normalizedSport === 'baseball') return 'mlb';
+  if (normalizedSport === 'tennis') return 'atp';
+  if (normalizedSport === 'mma') return 'ufc';
+  if (normalizedSport === 'racing') return 'f1';
+  return 'eng.1';
+}
+
+function buildMatchUrl(match) {
+  const isUpcoming = match.status === 'upcoming';
+  const base = isUpcoming ? '/upcoming_match_detail.html' : '/match.html';
+  return `${base}?id=${encodeURIComponent(match.id)}&sport=${encodeURIComponent(match.sport)}&league=${encodeURIComponent(match.leagueSlug)}`;
+}
+
+function buildTeamProfileUrl(team, sport = '', league = '') {
+  const resolvedLeague = normalizeLeagueSlug(league) || normalizeLeagueSlug(team?.league || '') || getDefaultLeagueForSport(sport);
+  const resolvedSport = normalizeSportSlug(sport || TEAM_PROFILE_SPORT_BY_LEAGUE[resolvedLeague] || team?.sport || '', resolvedLeague);
+  const params = new URLSearchParams();
+  if (team?.id) params.set('id', team.id);
+  if (team?.name) params.set('name', team.name);
+  if (resolvedSport) params.set('sport', resolvedSport);
+  if (resolvedLeague) params.set('league', resolvedLeague);
+  if (team?.logo) params.set('logo', team.logo);
+  if (team?.record) params.set('record', team.record);
+  if (team?.venue) params.set('venue', team.venue);
+  return `/team.html?${params.toString()}`;
+}
+
+function buildPlayerProfileUrl(athlete, sport = '', league = '') {
+  const resolvedLeague = normalizeLeagueSlug(league) || normalizeLeagueSlug(athlete?.league || '') || getDefaultLeagueForSport(sport);
+  const resolvedSport = normalizeSportSlug(sport || athlete?.sport || TEAM_PROFILE_SPORT_BY_LEAGUE[resolvedLeague] || '', resolvedLeague);
+  const params = new URLSearchParams();
+  if (athlete?.id) params.set('id', athlete.id);
+  if (athlete?.fullName) params.set('name', athlete.fullName);
+  if (resolvedSport) params.set('sport', resolvedSport);
+  if (resolvedLeague) params.set('league', resolvedLeague);
+  if (athlete?.team?.name) params.set('team', athlete.team.name);
+  if (athlete?.position?.displayName || athlete?.position?.name) params.set('role', athlete.position?.displayName || athlete.position?.name);
+  return `/player.html?${params.toString()}`;
+}
+
+function buildApiUrl(path, params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, value);
+    }
+  });
+  const suffix = query.toString();
+  return suffix ? `${path}?${suffix}` : path;
+}
+
+function buildSportHubUrl(sport = '', league = '') {
+  const params = new URLSearchParams();
+  const normalizedSport = normalizeSportSlug(sport, league);
+  const normalizedLeague = normalizeLeagueSlug(league);
+  if (normalizedSport) params.set('s', normalizedSport);
+  if (normalizedLeague) params.set('l', normalizedLeague);
+  return `/sport.html?${params.toString()}`;
+}
+
+function getCurrentFeedParams(overrides = {}) {
+  return {
+    sport: overrides.sport ?? currentTab ?? 'all',
+    league: overrides.league ?? currentLeagueFilter ?? ''
+  };
+}
+
+function getCachedMatches() {
+  return [
+    ...(window._cachedUpcomingMatches || []),
+    ...(window._cachedMatches || []),
+    ...(window._cachedLiveMatches || [])
+  ];
+}
+
+function findCachedMatch(matchId = '') {
+  return getCachedMatches().find((match) => String(match.id) === String(matchId)) || null;
+}
+
+function showRuntimeToast(message, tone = 'success') {
+  const existing = document.querySelector('.lsf-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'lsf-toast';
+  toast.dataset.tone = tone;
+  toast.innerHTML = `<span class="material-symbols-outlined text-sm">${tone === 'error' ? 'error' : 'check_circle'}</span><span>${message}</span>`;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 220ms ease';
+    setTimeout(() => toast.remove(), 240);
+  }, 2600);
+}
+
+function applyFallbackImage(srcValue) {
+  if (!srcValue) return FALLBACK_LOGO;
+  if (String(srcValue).includes('/public/logo.png')) return FALLBACK_LOGO;
+  if (String(srcValue).includes('/public/hero-fallback.jpg')) return FALLBACK_HERO_IMAGE;
+  return srcValue;
+}
+
+function patchLegacyImages(root = document) {
+  root.querySelectorAll('img').forEach((img) => {
+    img.src = applyFallbackImage(img.getAttribute('src') || img.src);
+  });
+}
+
+function ensureHeadEnhancements() {
+  if (!document.querySelector('link[href="/css/runtime-enhancements.css"]')) {
+    const styleLink = document.createElement('link');
+    styleLink.rel = 'stylesheet';
+    styleLink.href = '/css/runtime-enhancements.css';
+    document.head.appendChild(styleLink);
+  }
+
+  if (!document.querySelector(`link[href="${PWA_MANIFEST}"]`)) {
+    const manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    manifestLink.href = PWA_MANIFEST;
+    document.head.appendChild(manifestLink);
+  }
+
+  if (!document.querySelector('meta[name="theme-color"]')) {
+    const meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    meta.content = '#0e0e0e';
+    document.head.appendChild(meta);
+  }
+}
+
+function hydrateNavigationLinks() {
+  document.querySelectorAll('a').forEach((link) => {
+    const text = (link.textContent || '').trim().toLowerCase();
+    if (!text) return;
+
+    if (text.includes('standings')) link.setAttribute('href', 'standings.html');
+    if (text.includes('teams hub')) link.setAttribute('href', 'teams.html');
+    if (text.includes('team profile')) link.setAttribute('href', 'team.html');
+    if (text.includes('player profile')) link.setAttribute('href', 'player.html');
+    if (text === 'results') link.setAttribute('href', 'results.html');
+  });
+}
+
+function registerGlobalImageFallbacks() {
+  document.addEventListener(
+    'error',
+    (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLImageElement)) return;
+      const nextSrc = applyFallbackImage(target.getAttribute('src') || target.src);
+      if (target.src !== nextSrc) {
+        target.src = nextSrc;
+        return;
+      }
+      if (target.src !== new URL(FALLBACK_LOGO, window.location.origin).toString()) {
+        target.src = FALLBACK_LOGO;
+      }
+    },
+    true
+  );
+}
+
+registerGlobalImageFallbacks();
+
+function appendHeaderActions() {
+  const header = document.getElementById('main-header');
+  if (!header || document.getElementById('lsf-action-cluster')) return;
+  const actionHost = header.querySelector('.flex.items-center.gap-6:last-child') || header.querySelector('.flex.items-center.gap-6');
+  if (!actionHost) return;
+
+  const cluster = document.createElement('div');
+  cluster.id = 'lsf-action-cluster';
+  cluster.className = 'lsf-action-cluster';
+  cluster.innerHTML = `
+    <button id="lsf-notify-toggle" class="lsf-notify-button" type="button">Enable Alerts</button>
+    <button id="lsf-install-button" class="lsf-pwa-button" type="button" hidden>Install App</button>
+  `;
+  actionHost.prepend(cluster);
+}
+
+function appendInstallBanner() {
+  if (document.getElementById('lsf-install-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'lsf-install-banner';
+  banner.className = 'lsf-install-banner';
+  banner.hidden = true;
+  banner.innerHTML = `
+    <div>
+      <div class="lsf-install-banner-title">Install LivescoreFree</div>
+      <div class="lsf-install-banner-copy">Save the realtime score hub to your home screen for app-like navigation, offline access, and faster updates.</div>
+    </div>
+    <button id="lsf-install-banner-button" class="lsf-pwa-button" type="button">Download</button>
+  `;
+  document.body.appendChild(banner);
+
+  const fab = document.createElement('button');
+  fab.id = 'lsf-install-fab';
+  fab.className = 'lsf-pwa-fab';
+  fab.type = 'button';
+  fab.hidden = true;
+  fab.textContent = 'Install';
+  document.body.appendChild(fab);
+}
+
+function scheduleStoredReminder(reminder) {
+  if (!reminder?.matchId || !reminder?.notifyAt) return;
+  const delay = reminder.notifyAt - Date.now();
+  if (delay <= 0 || delay > 86400000) return;
+
+  window.setTimeout(async () => {
+    const url = reminder.url || '/upcoming.html';
+    const title = reminder.title || 'Match Reminder';
+    try {
+      if (navigator.serviceWorker?.ready) {
+        const registration = await navigator.serviceWorker.ready;
+        if (Notification.permission === 'granted') {
+          registration.showNotification(title, {
+            body: reminder.body || 'Your saved reminder is ready.',
+            icon: FALLBACK_LOGO,
+            badge: FALLBACK_LOGO,
+            data: { url }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Reminder notification failed:', error);
+    }
+  }, delay);
+}
+
+function bootstrapSavedReminders() {
+  try {
+    const reminders = JSON.parse(localStorage.getItem('lsf-reminders') || '[]');
+    reminders
+      .filter((reminder) => reminder.notifyAt > Date.now())
+      .slice(0, 20)
+      .forEach(scheduleStoredReminder);
+  } catch (error) {
+    console.error('Reminder bootstrap failed:', error);
+  }
+}
+
+function persistReminder(reminder) {
+  try {
+    const current = JSON.parse(localStorage.getItem('lsf-reminders') || '[]');
+    const next = current.filter((entry) => entry.matchId !== reminder.matchId);
+    next.push(reminder);
+    localStorage.setItem('lsf-reminders', JSON.stringify(next.slice(-30)));
+  } catch (error) {
+    console.error('Reminder persistence failed:', error);
+  }
+}
+
+async function requestNotificationPermission() {
+  if (typeof Notification === 'undefined') {
+    showRuntimeToast('Notifications unsupported', 'error');
+    return 'unsupported';
+  }
+  if (Notification.permission === 'granted') return 'granted';
+  const permission = await Notification.requestPermission();
+  notificationPermissionState = permission;
+  updateNotificationButton(permission);
+  return permission;
+}
+
+function updateNotificationButton(permission = notificationPermissionState) {
+  const button = document.getElementById('lsf-notify-toggle');
+  if (!button) return;
+  if (permission === 'granted') {
+    button.textContent = 'Alerts Enabled';
+    button.setAttribute('aria-pressed', 'true');
+  } else if (permission === 'denied') {
+    button.textContent = 'Alerts Blocked';
+  } else {
+    button.textContent = 'Enable Alerts';
+  }
+}
+
+function updateInstallUi() {
+  const installButton = document.getElementById('lsf-install-button');
+  const banner = document.getElementById('lsf-install-banner');
+  const bannerButton = document.getElementById('lsf-install-banner-button');
+  const fab = document.getElementById('lsf-install-fab');
+  const canInstall = Boolean(deferredInstallPrompt);
+
+  if (installButton) installButton.hidden = !canInstall;
+  if (banner) banner.hidden = !canInstall;
+  if (bannerButton) bannerButton.hidden = !canInstall;
+  if (fab) fab.hidden = !canInstall;
+}
+
+async function promptInstall() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice.catch(() => null);
+  deferredInstallPrompt = null;
+  updateInstallUi();
+}
+
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    await navigator.serviceWorker.register(SERVICE_WORKER_PATH);
+  } catch (error) {
+    console.error('Service worker registration failed:', error);
+  }
+}
+
+function setupAppShell() {
+  appendHeaderActions();
+  appendInstallBanner();
+  updateNotificationButton();
+  updateInstallUi();
+
+  const installButton = document.getElementById('lsf-install-button');
+  const installBannerButton = document.getElementById('lsf-install-banner-button');
+  const installFab = document.getElementById('lsf-install-fab');
+  const notifyButton = document.getElementById('lsf-notify-toggle');
+
+  [installButton, installBannerButton, installFab].filter(Boolean).forEach((button) => {
+    button.addEventListener('click', promptInstall);
+  });
+
+  if (notifyButton && !notifyButton.dataset.bound) {
+    notifyButton.dataset.bound = 'true';
+    notifyButton.addEventListener('click', async () => {
+      const permission = await requestNotificationPermission();
+      if (permission === 'granted') {
+        showRuntimeToast('Browser alerts enabled');
+      }
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    updateInstallUi();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    updateInstallUi();
+    showRuntimeToast('App installed');
+  });
+}
+
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
+  ensureHeadEnhancements();
+  hydrateNavigationLinks();
+  patchLegacyImages();
+  setupAppShell();
+  registerServiceWorker();
+  bootstrapSavedReminders();
+
   // --- HEADER & NAVIGATION LOGIC ---
   const path = window.location.pathname;
   const fileName = path.split('/').pop() || 'index.html';
@@ -183,13 +595,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check for dynamic match detail (Live or Upcoming)
   const urlParams = new URLSearchParams(window.location.search);
   const matchId = urlParams.get('id');
-  const sportParam = urlParams.get('sport');
+  const leagueParam = urlParams.get('league') || urlParams.get('l') || '';
+  const sportParam = urlParams.get('sport') || urlParams.get('s') || '';
   
   // Explicitly default to 'all' to show all sports by default
-  currentTab = sportParam || 'all';
+  currentTab = normalizeSportSlug(sportParam || 'all', leagueParam);
+  currentLeagueFilter = normalizeLeagueSlug(leagueParam || '');
   
   const sport = currentTab;
-  const league = urlParams.get('league') || (sport === 'soccer' ? 'eng.1' : sport === 'basketball' ? 'nba' : sport === 'football' ? 'nfl' : 'eng.1');
+  const league = currentLeagueFilter || getDefaultLeagueForSport(sport);
 
   if (matchId) {
     if (path.includes('upcoming_match_detail.html')) {
@@ -325,22 +739,43 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- NOTIFICATION HANDLER ---
-window.handleNotification = function(matchId, matchName) {
-  const toast = document.getElementById('notification-toast') || document.createElement('div');
-  if (!document.getElementById('notification-toast')) {
-    toast.id = 'notification-toast';
-    toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] bg-primary text-white px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-3 animate-bounce';
-    document.body.appendChild(toast);
+window.handleNotification = async function(subject, detail) {
+  if (detail === 'success' || detail === 'error') {
+    showRuntimeToast(subject, detail);
+    return;
   }
-  toast.innerHTML = `<span class="material-symbols-outlined text-sm">check_circle</span> Reminder Set for ${matchName}!`;
-  toast.style.display = 'flex';
-  toast.style.opacity = '1';
-  
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => { toast.style.display = 'none'; }, 500);
-  }, 3000);
+
+  const matchId = String(subject || '');
+  if (!matchId) {
+    showRuntimeToast('Reminder unavailable', 'error');
+    return;
+  }
+
+  const match = findCachedMatch(matchId);
+  const title = match
+    ? `${match.homeTeam.name} vs ${match.awayTeam.name}`
+    : (detail ? decodeURIComponent(detail) : 'Match Reminder');
+  const permission = await requestNotificationPermission();
+
+  if (permission !== 'granted') {
+    showRuntimeToast('Allow alerts to save reminders', 'error');
+    return;
+  }
+
+  const kickoffMs = match?.date ? new Date(match.date).getTime() : NaN;
+  const reminder = {
+    matchId,
+    title: `${title} starting soon`,
+    body: match
+      ? `${match.league || match.sport} at ${match.time || 'scheduled time'}`
+      : 'Saved match reminder from LivescoreFree.',
+    notifyAt: Number.isFinite(kickoffMs) ? Math.max(Date.now() + 5000, kickoffMs - 15 * 60 * 1000) : Date.now() + 5000,
+    url: match ? buildMatchUrl(match) : '/upcoming.html'
+  };
+
+  persistReminder(reminder);
+  scheduleStoredReminder(reminder);
+  showRuntimeToast(`Reminder saved for ${title}`);
 };
 
 // --- ARENA SCHEDULED EVENTS (CAROUSEL) ---
@@ -613,7 +1048,7 @@ function renderArenaSchedule(matches) {
         <!-- Footer: Notify Button -->
         <div class="space-y-4">
           <div class="w-full h-px bg-white/5"></div>
-          <button onclick="handleNotification('${match.id}', '${match.homeTeam.name} vs ${match.awayTeam.name}')" 
+          <button onclick="handleNotification('${match.id}', '${encodeURIComponent(`${match.homeTeam.name} vs ${match.awayTeam.name}`)}')" 
                   class="w-full py-4 bg-white/5 hover:bg-primary rounded-xl text-[10px] font-black uppercase tracking-widest text-on-surface/40 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2">
             NOTIFY ME
           </button>
@@ -724,7 +1159,7 @@ function renderHeroSlider(matches, statusFilter) {
   const slides = matches.map((match, idx) => {
     const ctaText = match.status === 'live' ? 'Watch 4K Stream' : match.status === 'finished' ? 'Watch Highlights' : 'Set Reminder';
     const ctaIcon = match.status === 'live' ? 'play_circle' : match.status === 'finished' ? 'video_library' : 'notifications';
-    const link = match.highlightUrl && match.status === 'finished' ? match.highlightUrl : `/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}`;
+    const link = match.highlightUrl && match.status === 'finished' ? match.highlightUrl : buildMatchUrl(match);
     const target = match.highlightUrl && match.status === 'finished' ? '_blank' : '_self';
 
     return `
@@ -803,8 +1238,10 @@ function renderIndexHeroHub(liveMatches, upMatches, newsList) {
     } catch(e) { return 'TBD'; }
   }
 
-  const featuredLink = featuredMatch.status === 'finished' ? (featuredMatch.highlightUrl || `/match.html?id=${featuredMatch.id}&sport=${featuredMatch.sport}&league=${featuredMatch.leagueSlug}`) : `/match.html?id=${featuredMatch.id}&sport=${featuredMatch.sport}&league=${featuredMatch.leagueSlug}`;
-  const upLink = nextUpMatch ? `/upcoming_match_detail.html?id=${nextUpMatch.id}&sport=${nextUpMatch.sport}&league=${nextUpMatch.leagueSlug}` : '#';
+  const featuredLink = featuredMatch.status === 'finished'
+    ? (featuredMatch.highlightUrl || buildMatchUrl(featuredMatch))
+    : buildMatchUrl(featuredMatch);
+  const upLink = nextUpMatch ? buildMatchUrl(nextUpMatch) : '#';
   const ctaText = featuredMatch.status === 'live' ? 'Watch 4K Stream' : featuredMatch.status === 'finished' ? 'Watch Highlights' : 'Set Reminder';
   const ctaIcon = featuredMatch.status === 'live' ? 'play_circle' : featuredMatch.status === 'finished' ? 'video_library' : 'notifications';
 
@@ -1002,7 +1439,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
             <h3 class="text-lg font-black uppercase tracking-tight mb-1 group-hover:text-primary transition-colors">${l.name}</h3>
             <p class="text-[10px] text-on-surface/40 font-bold uppercase tracking-widest mb-6">${l.country} • ${l.sport}</p>
           </div>
-          <button onclick="switchTab('${l.sport}')" class="w-full py-3 bg-white/5 group-hover:bg-primary group-hover:text-on-primary transition-all text-[10px] font-black uppercase tracking-widest rounded">View Hub</button>
+          <button onclick="window.location.href='${buildSportHubUrl(l.sport, l.slug)}'" class="w-full py-3 bg-white/5 group-hover:bg-primary group-hover:text-on-primary transition-all text-[10px] font-black uppercase tracking-widest rounded">View Hub</button>
         </div>
       `;
     }).join('');
@@ -1030,7 +1467,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
             </div>
             <h3 class="text-3xl font-black uppercase tracking-tighter leading-none mb-2">${isLive ? 'MAIN EVENT LIVE' : meta.title}</h3>
             <p class="text-[10px] font-bold text-on-surface/40 uppercase tracking-[0.2em] mb-6">${isLive ? 'STREAMING NOW AT 120FPS' : 'FIGHT NIGHT CARDS'}</p>
-            <button onclick="switchTab('mma')" class="self-start px-8 py-3 ${isLive ? 'kinetic-gradient' : 'bg-white/5 border border-white/10'} text-[10px] font-black uppercase tracking-widest rounded-full hover:scale-105 transition-all">Explore Hub</button>
+            <button onclick="window.location.href='${buildSportHubUrl('mma', l.slug)}'" class="self-start px-8 py-3 ${isLive ? 'kinetic-gradient' : 'bg-white/5 border border-white/10'} text-[10px] font-black uppercase tracking-widest rounded-full hover:scale-105 transition-all">Explore Hub</button>
           </div>
           ${isLive ? '<div class="absolute top-6 right-8 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_15px_rgba(204,22,22,0.8)]"></div>' : ''}
         </div>
@@ -1047,7 +1484,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
      europeanSoccerContainer.innerHTML = euroLeagues.map(l => {
         const isLive = checkLive(l.slug);
         return `
-        <div class="bg-surface-container-high border ${isLive ? 'border-primary/50' : 'border-white/5'} p-6 rounded-xl text-center hover:bg-surface-container-highest hover:border-primary/30 transition-all cursor-pointer group relative" onclick="switchTab('soccer')">
+        <div class="bg-surface-container-high border ${isLive ? 'border-primary/50' : 'border-white/5'} p-6 rounded-xl text-center hover:bg-surface-container-highest hover:border-primary/30 transition-all cursor-pointer group relative" onclick="window.location.href='${buildSportHubUrl('soccer', l.slug)}'">
           ${isLive ? '<span class="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(204,22,22,0.5)]"></span>' : ''}
           <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform h-12 w-12">
             <span class="material-symbols-outlined text-2xl text-on-surface/40 group-hover:text-primary">${l.icon}</span>
@@ -1161,9 +1598,9 @@ async function fetchPlayers() {
     const nflAthletes = nflData.athletes || [];
     
     // Inject sport data
-    soccerAthletes.forEach(a => a.sport = 'Soccer');
-    nbaAthletes.forEach(a => a.sport = 'Basketball');
-    nflAthletes.forEach(a => a.sport = 'Football');
+    soccerAthletes.forEach(a => { a.sport = 'soccer'; a.league = 'eng.1'; });
+    nbaAthletes.forEach(a => { a.sport = 'basketball'; a.league = 'nba'; });
+    nflAthletes.forEach(a => { a.sport = 'football'; a.league = 'nfl'; });
 
     // On players.html, render the 4 grids
     if (isPlayersPage) {
@@ -1174,13 +1611,13 @@ async function fetchPlayers() {
     } else if (playersContainer) {
        // Legacy generic players container fallback
        playersContainer.innerHTML = soccerAthletes.slice(0, 10).map(a => `
-        <div class="bg-surface-container p-4 rounded-lg flex items-center gap-4">
+        <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="bg-surface-container p-4 rounded-lg flex items-center gap-4 border border-white/5 hover:border-primary/30 transition-all">
           <img src="${a.headshot?.href || '/public/logo.png'}" class="w-12 h-12 rounded-full grayscale hover:grayscale-0 transition-all">
           <div>
             <h4 class="font-black uppercase text-xs">${a.fullName}</h4>
             <p class="text-[10px] opacity-40 uppercase font-black">${a.position?.displayName || 'Player'}</p>
           </div>
-        </div>
+        </a>
       `).join('');
     }
   } catch (err) {
@@ -1192,10 +1629,9 @@ function renderTrendingPlayersPage(athletes) {
   const container = document.getElementById('trending-players-grid');
   if (!container) return;
   if (!athletes.length) { container.innerHTML = ''; return; }
-  // Mix players, take top 4
-  const mixed = athletes.sort(() => 0.5 - Math.random()).slice(0, 4);
+  const mixed = athletes.slice(0, 4);
   container.innerHTML = mixed.map(a => `
-    <div class="flex-none w-80 bg-surface-container-low p-6 border border-white/5 rounded-2xl group hover:border-primary/20 transition-all cursor-pointer">
+    <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="flex-none w-80 bg-surface-container-low p-6 border border-white/5 rounded-2xl group hover:border-primary/20 transition-all cursor-pointer block">
       <div class="flex justify-between items-start mb-6">
         <div class="relative">
           <img src="${a.headshot?.href || '/public/logo.png'}" class="w-16 h-16 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all">
@@ -1209,14 +1645,14 @@ function renderTrendingPlayersPage(athletes) {
       <div class="grid grid-cols-2 gap-4">
         <div class="bg-surface-container p-3 rounded-xl border border-white/5">
           <p class="text-[8px] text-on-surface-variant uppercase font-bold tracking-widest">Sport</p>
-          <p class="text-xs font-black text-white uppercase mt-1">${a.sport || 'Unknown'}</p>
+          <p class="text-xs font-black text-white uppercase mt-1">${(a.sport || 'Unknown').toUpperCase()}</p>
         </div>
         <div class="bg-surface-container p-3 rounded-xl border border-white/5">
           <p class="text-[8px] text-on-surface-variant uppercase font-bold tracking-widest">Pos</p>
           <p class="text-xs font-black text-white mt-1 uppercase">${a.position?.displayName || 'N/A'}</p>
         </div>
       </div>
-    </div>
+    </a>
   `).join('');
 }
 
@@ -1225,7 +1661,7 @@ function renderSoccerLegends(athletes) {
   if (!container) return;
   if (!athletes.length) { container.innerHTML = ''; return; }
   container.innerHTML = athletes.slice(0, 4).map(a => `
-    <div class="bg-surface-container-low border border-white/5 overflow-hidden group hover:border-primary/20 transition-all">
+    <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="bg-surface-container-low border border-white/5 overflow-hidden group hover:border-primary/20 transition-all block">
       <div class="relative h-64 overflow-hidden bg-surface-container-highest">
         <img src="${a.headshot?.href || '/public/logo.png'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
         <div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
@@ -1243,9 +1679,9 @@ function renderSoccerLegends(athletes) {
           <span>Status</span>
           <span class="bg-primary/20 text-primary px-2 py-0.5 rounded uppercase">${a.status?.name || 'Active'}</span>
         </div>
-        <button class="w-full border border-white/10 py-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/5 transition-colors">FULL PROFILE</button>
+        <div class="w-full border border-white/10 py-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/5 transition-colors text-center">Full Profile</div>
       </div>
-    </div>
+    </a>
   `).join('');
 }
 
@@ -1254,7 +1690,7 @@ function renderNbaAllstars(athletes) {
   if (!container) return;
   if (!athletes.length) { container.innerHTML = ''; return; }
   container.innerHTML = athletes.slice(0, 3).map(a => `
-    <div class="glass-panel p-8 border border-white/5 rounded-2xl relative overflow-hidden group hover:translate-y-[-4px] transition-all">
+    <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="glass-panel p-8 border border-white/5 rounded-2xl relative overflow-hidden group hover:translate-y-[-4px] transition-all block">
       <div class="flex items-end gap-6 mb-8">
         <div class="relative w-24 h-24 overflow-hidden rounded-xl border border-white/10 bg-surface-container-highest">
           <img src="${a.headshot?.href || '/public/logo.png'}" class="w-full h-full object-cover">
@@ -1278,7 +1714,7 @@ function renderNbaAllstars(athletes) {
           <p class="text-[8px] text-on-surface-variant font-bold uppercase tracking-widest">AGE</p>
         </div>
       </div>
-    </div>
+    </a>
   `).join('');
 }
 
@@ -1287,7 +1723,7 @@ function renderNflElite(athletes) {
   if (!container) return;
   if (!athletes.length) { container.innerHTML = ''; return; }
   container.innerHTML = athletes.slice(0, 2).map(a => `
-    <div class="bg-surface-container border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row gap-8 group hover:bg-surface-bright transition-all">
+    <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="bg-surface-container border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row gap-8 group hover:bg-surface-bright transition-all">
       <div class="w-full md:w-32 h-48 rounded-xl overflow-hidden bg-surface-container-lowest border border-white/10 shrink-0">
         <img src="${a.headshot?.href || '/public/logo.png'}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500">
       </div>
@@ -1309,7 +1745,7 @@ function renderNflElite(athletes) {
           </div>
         </div>
       </div>
-    </div>
+    </a>
   `).join('');
 }
 
@@ -1321,9 +1757,14 @@ async function fetchTrendingUpcoming() {
 
   try {
     // Always fetch from upcoming API to ensure we have scheduled matches
-    const res = await fetch(`${API_UPCOMING}?sport=all&days=3`);
+    const res = await fetch(buildApiUrl(API_UPCOMING, {
+      sport: currentTab || 'all',
+      league: currentLeagueFilter || undefined,
+      days: 3
+    }));
     const data = await res.json();
     let matches = data.matches || [];
+    window._cachedUpcomingMatches = matches;
     
     // Sort chronologically and take next 3
     matches.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -1344,7 +1785,7 @@ function renderTrendingUpcoming(matches) {
   }
 
   trendingList.innerHTML = matches.map(match => `
-    <a href="/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="flex items-center gap-6 p-5 bg-white/5 rounded-2xl hover:bg-white/10 transition-all group border border-white/5 hover:border-primary/20">
+    <a href="${buildMatchUrl(match)}" class="flex items-center gap-6 p-5 bg-white/5 rounded-2xl hover:bg-white/10 transition-all group border border-white/5 hover:border-primary/20">
       <div class="flex flex-col items-center gap-2 shrink-0">
         <img src="${match.homeTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" onerror="this.src='/public/logo.png'">
         <img src="${match.awayTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" onerror="this.src='/public/logo.png'">
@@ -1399,49 +1840,63 @@ async function fetchFeaturedAnalysisNewsPage() {
   const container = document.getElementById('match-of-the-week');
   if (!container) return;
   try {
-    const res = await fetch(`${API_INFO}?type=scores&sport=soccer&league=eng.1&days=3`);
+    const res = await fetch(buildApiUrl(API_LIVE, {
+      sport: 'soccer',
+      league: 'eng.1'
+    }));
     const data = await res.json();
     let matches = data.matches || [];
     let featured = matches.find(m => m.status === 'finished' || m.status === 'post') || matches[0];
     if (!featured) return;
-    const homePoss = featured.stats?.possession?.home || '58%';
-    const homePossNum = parseInt(homePoss) || 58;
     container.innerHTML = `
       <div class="bg-gradient-to-r from-primary-container to-transparent p-6 border-b border-white/10">
-        <h2 class="text-2xl font-black uppercase italic tracking-tighter">Match of the Week: Deep Dive</h2>
+        <h2 class="text-2xl font-black uppercase italic tracking-tighter">Match Of The Week</h2>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-3">
         <div class="p-8 border-r border-white/5 space-y-8">
           <div class="text-center space-y-2">
             <p class="text-[10px] font-black uppercase text-primary">${featured.homeTeam.name} vs ${featured.awayTeam.name}</p>
             <p class="text-4xl font-black font-headline">${featured.homeTeam.score} - ${featured.awayTeam.score}</p>
-            <p class="text-[10px] font-bold uppercase text-on-surface/40">Final</p>
+            <p class="text-[10px] font-bold uppercase text-on-surface/40">${featured.statusText || featured.time || 'Match Centre'}</p>
           </div>
           <div class="space-y-4">
-            <div>
-              <div class="flex justify-between text-[10px] font-black uppercase mb-1">
-                <span>${homePossNum}% Possession</span>
-                <span>${100 - homePossNum}%</span>
-              </div>
-              <div class="h-1.5 w-full bg-white/10 rounded-full flex overflow-hidden">
-                <div class="h-full bg-primary" style="width: ${homePossNum}%"></div>
-              </div>
+            <div class="rounded-2xl bg-white/5 border border-white/5 px-4 py-4">
+              <div class="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface/40 mb-2">League</div>
+              <div class="font-black uppercase">${featured.league || 'Featured fixture'}</div>
+            </div>
+            <div class="rounded-2xl bg-white/5 border border-white/5 px-4 py-4">
+              <div class="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface/40 mb-2">Venue</div>
+              <div class="font-black uppercase">${featured.venue || 'Venue pending'}</div>
             </div>
           </div>
         </div>
         <div class="p-8 border-r border-white/5 flex flex-col items-center justify-center bg-black/20">
-          <p class="text-[10px] font-black uppercase text-on-surface/40 mb-4">Tactical Heatmap</p>
-          <div class="relative w-full aspect-[3/2] bg-[#1a3a1a] rounded-md border border-white/10 overflow-hidden">
-            <div class="absolute inset-4 border border-white/20"></div>
-            <div class="absolute left-1/2 top-0 bottom-0 w-px bg-white/20"></div>
-            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-white/20 rounded-full"></div>
-            <div class="absolute right-4 top-4 w-32 h-32 bg-primary/40 rounded-full blur-3xl"></div>
+          <p class="text-[10px] font-black uppercase text-on-surface/40 mb-4">Team Records</p>
+          <div class="grid gap-4 w-full">
+            <div class="rounded-2xl border border-white/5 bg-white/5 px-5 py-4">
+              <div class="flex items-center gap-3">
+                <img src="${featured.homeTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
+                <div>
+                  <div class="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/40">${featured.homeTeam.name}</div>
+                  <div class="text-lg font-black">${featured.homeTeam.record || 'Record unavailable'}</div>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-white/5 bg-white/5 px-5 py-4">
+              <div class="flex items-center gap-3">
+                <img src="${featured.awayTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
+                <div>
+                  <div class="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/40">${featured.awayTeam.name}</div>
+                  <div class="text-lg font-black">${featured.awayTeam.record || 'Record unavailable'}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="p-8 space-y-6">
-          <h4 class="text-xs font-black uppercase text-primary tracking-widest">Tactical Analysis</h4>
-          <p class="text-[11px] text-on-surface-variant leading-relaxed">Advanced metrics indicate a strong performance linking midfield transition to attacking thirds.</p>
-          <button class="w-full py-3 bg-surface-container-high border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5">Read Full Analysis</button>
+          <h4 class="text-xs font-black uppercase text-primary tracking-widest">Realtime Snapshot</h4>
+          <p class="text-[11px] text-on-surface-variant leading-relaxed">${featured.status === 'live' ? 'This fixture is active now in the live feed.' : 'This matchup is coming directly from the current ESPN feed.'}</p>
+          <a href="${buildMatchUrl(featured)}" class="block w-full py-3 text-center bg-surface-container-high border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">Open Match Centre</a>
         </div>
       </div>
     `;
@@ -1456,7 +1911,7 @@ async function fetchAndRenderTopPerformers() {
     const data = await res.json();
     const athletes = (data.athletes || []).slice(0, 4);
     container.innerHTML = athletes.map(a => `
-      <div class="bg-surface-container rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all">
+      <a href="${buildPlayerProfileUrl({ ...a, sport: 'soccer', league: 'eng.1' }, 'soccer', 'eng.1')}" class="bg-surface-container rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all block">
         <div class="relative h-48 bg-gradient-to-t from-surface-container to-surface-container-high">
           <img src="${a.headshot?.href || '/public/logo.png'}" class="absolute bottom-0 left-1/2 -translate-x-1/2 h-full object-cover filter brightness-90"/>
         </div>
@@ -1466,15 +1921,15 @@ async function fetchAndRenderTopPerformers() {
               <p class="text-[10px] font-black uppercase text-primary">Top Performer</p>
               <h4 class="text-lg font-black uppercase tracking-tighter">${a.shortName || a.fullName}</h4>
             </div>
-            <span class="text-xl font-black text-secondary">${(Math.random() * 2 + 8).toFixed(1)}</span>
+            <span class="text-xl font-black text-secondary">${a.jersey || '--'}</span>
           </div>
           <div class="grid grid-cols-3 gap-2 border-t border-white/5 pt-3">
-            <div class="text-center"><p class="text-[8px] uppercase text-on-surface/40">Goals</p><p class="text-xs font-black">${Math.floor(Math.random()*3)}</p></div>
-            <div class="text-center"><p class="text-[8px] uppercase text-on-surface/40">Ast</p><p class="text-xs font-black">${Math.floor(Math.random()*3)}</p></div>
-            <div class="text-center"><p class="text-[8px] uppercase text-on-surface/40">Rating</p><p class="text-xs font-black">Elite</p></div>
+            <div class="text-center"><p class="text-[8px] uppercase text-on-surface/40">Team</p><p class="text-xs font-black">${a.team?.abbreviation || a.team?.name || 'Club'}</p></div>
+            <div class="text-center"><p class="text-[8px] uppercase text-on-surface/40">Pos</p><p class="text-xs font-black">${a.position?.abbreviation || a.position?.displayName || 'N/A'}</p></div>
+            <div class="text-center"><p class="text-[8px] uppercase text-on-surface/40">Status</p><p class="text-xs font-black">${a.status?.name || 'Active'}</p></div>
           </div>
         </div>
-      </div>
+      </a>
     `).join('');
   } catch(e){}
 }
@@ -1596,7 +2051,10 @@ function timeAgo(date) {
 async function fetchSidebarLive() {
   if (!sidebarLiveContainer) return;
   try {
-    const res = await fetch(`${API_LIVE}?sport=all`);
+    const res = await fetch(buildApiUrl(API_LIVE, {
+      sport: currentTab || 'all',
+      league: currentLeagueFilter || undefined
+    }));
     const data = await res.json();
     const allLive = (data.matches || []).filter(m => m.status === 'live');
     const liveMatches = allLive.slice(0, 5);
@@ -1610,6 +2068,7 @@ async function fetchSidebarLive() {
 
     // Cache all matches for search
     window._cachedMatches = data.matches || [];
+    window._cachedLiveMatches = allLive;
 
     if (tickerContainer) {
       renderTicker(allLive);
@@ -1649,11 +2108,14 @@ function renderTabs() {
 
 // --- TAB SWITCHING (No reload for better UX) ---
 window.switchTab = function (tabId) {
-  currentTab = tabId;
+  currentTab = normalizeSportSlug(tabId);
+  currentLeagueFilter = '';
 
   // Update URL search params without reload for persistence
   const url = new URL(window.location);
-  url.searchParams.set('sport', tabId);
+  url.searchParams.set('sport', currentTab);
+  url.searchParams.delete('league');
+  url.searchParams.delete('l');
   window.history.pushState({}, '', url);
 
   renderTabs();
@@ -1664,34 +2126,53 @@ window.switchTab = function (tabId) {
     `).join('');
   }
 
+  if (window.location.pathname.includes('upcoming') && typeof window.fetchScheduleCentre === 'function') {
+    window.fetchScheduleCentre();
+    return;
+  }
+
   fetchMatches(currentPageFilter);
 }
 
 // --- FETCH & UPDATE HOME DATA ---
 async function fetchMatches(statusFilter = null, sidebarOnly = false) {
   const isUpcomingPage = window.location.pathname.includes('upcoming');
+  const feedParams = getCurrentFeedParams();
   
   try {
     // On upcoming page, use dedicated upcoming API for real fixture data
     let apiUrl;
     if (isUpcomingPage && statusFilter === 'upcoming') {
-      apiUrl = `${API_UPCOMING}?sport=${currentTab}&days=7`;
+      apiUrl = buildApiUrl(API_UPCOMING, {
+        sport: feedParams.sport,
+        league: feedParams.league,
+        days: 7
+      });
     } else {
-      apiUrl = `${API_LIVE}?sport=${currentTab}`;
+      apiUrl = buildApiUrl(API_LIVE, {
+        sport: feedParams.sport,
+        league: feedParams.league
+      });
     }
     
     const res = await fetch(apiUrl);
     const data = await res.json();
     let matches = data.matches || [];
+    window._cachedMatches = matches;
 
     // On upcoming page with upcoming API, sidebar/ticker need live data separately
-      if (isUpcomingPage && statusFilter === 'upcoming') {
+    if (isUpcomingPage && statusFilter === 'upcoming') {
+      window._cachedUpcomingMatches = matches;
       // Fetch live data for sidebar/ticker only
       if (sidebarLiveContainer || tickerContainer) {
         try {
-          const liveRes = await fetch(`${API_LIVE}?sport=${currentTab}`);
+          const liveRes = await fetch(buildApiUrl(API_LIVE, {
+            sport: feedParams.sport,
+            league: feedParams.league
+          }));
           const liveData = await liveRes.json();
           const liveMatches = (liveData.matches || []).filter(m => m.status === 'live');
+          window._cachedLiveMatches = liveMatches;
           if (sidebarLiveContainer) renderSidebarLive(liveMatches.slice(0, 5));
           if (tickerContainer) { renderTicker(liveMatches); updatePageTitle(liveMatches); }
         } catch(e) { /* sidebar fetch failed silently */ }
@@ -2263,7 +2744,10 @@ function renderUpcomingMatchDetail(data) {
 async function fetchRecentResults() {
   if (!recentResultsContainer) return;
   try {
-    const res = await fetch(`${API_LIVE}?sport=all`);
+    const res = await fetch(buildApiUrl(API_LIVE, {
+      sport: currentTab || 'all',
+      league: currentLeagueFilter || undefined
+    }));
     const data = await res.json();
     const finished = (data.matches || []).filter(m => m.status === 'finished');
     // Sort by date descending (most recent first)
@@ -2282,7 +2766,7 @@ function renderRecentResults(matches) {
   }
 
   recentResultsContainer.innerHTML = matches.map(match => `
-    <div class="bg-surface-container p-4 rounded-lg border border-white/5 hover:border-primary/30 transition-all cursor-pointer group" onclick="window.location.href='/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}'">
+    <div class="bg-surface-container p-4 rounded-lg border border-white/5 hover:border-primary/30 transition-all cursor-pointer group" onclick="window.location.href='${buildMatchUrl(match)}'">
       <div class="flex justify-between text-[10px] font-black text-on-surface/40 mb-3 uppercase tracking-widest">
         <span>${match.leagueSlug?.split('.')[0]?.toUpperCase() || 'SPORTS'}</span>
         <span class="text-primary font-black italic">FINAL</span>
@@ -2303,9 +2787,14 @@ function renderRecentResults(matches) {
 async function fetchUpcomingToday() {
   if (!upcomingTodayContainer) return;
   try {
-    const res = await fetch(`${API_LIVE}?sport=all`);
+    const res = await fetch(buildApiUrl(API_UPCOMING, {
+      sport: currentTab || 'all',
+      league: currentLeagueFilter || undefined,
+      days: 1
+    }));
     const data = await res.json();
     const upcoming = (data.matches || []).filter(m => m.status === 'upcoming');
+    window._cachedUpcomingMatches = upcoming;
     // Sort by date ascending (soonest first)
     upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
     renderUpcomingToday(upcoming.slice(0, 8));
@@ -2322,7 +2811,7 @@ function renderUpcomingToday(matches) {
   }
 
   upcomingTodayContainer.innerHTML = matches.map(match => `
-    <div class="flex-none w-72 bg-surface p-6 rounded-xl border-l-4 border-white/10 shadow-2xl group cursor-pointer hover:bg-surface-container transition-all hover:border-primary" onclick="window.location.href='/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}'">
+    <div class="flex-none w-72 bg-surface p-6 rounded-xl border-l-4 border-white/10 shadow-2xl group cursor-pointer hover:bg-surface-container transition-all hover:border-primary" onclick="window.location.href='${buildMatchUrl(match)}'">
       <div class="text-[10px] font-black text-on-surface/40 group-hover:text-primary tracking-widest uppercase mb-4 transition-colors">${match.sport.toUpperCase()} / ${match.time}</div>
       <div class="space-y-4 mb-6">
         <div class="flex items-center space-x-3">
@@ -2338,7 +2827,7 @@ function renderUpcomingToday(matches) {
           <span class="font-bold uppercase tracking-tight text-sm truncate">${match.awayTeam.name}</span>
         </div>
       </div>
-      <button class="w-full py-2 border border-white/10 text-[10px] font-black tracking-widest uppercase group-hover:bg-primary group-hover:text-on-primary transition-all">SET REMINDER</button>
+      <button onclick="event.stopPropagation(); handleNotification('${match.id}', '${encodeURIComponent(`${match.homeTeam.name} vs ${match.awayTeam.name}`)}')" class="w-full py-2 border border-white/10 text-[10px] font-black tracking-widest uppercase group-hover:bg-primary group-hover:text-on-primary transition-all">SET REMINDER</button>
     </div>
   `).join('');
 }
@@ -2627,9 +3116,14 @@ if (window.location.pathname.includes('upcoming')) {
 
     try {
       const sport = currentTab || 'all';
-      const res = await fetch(`${API_UPCOMING}?sport=${sport}&days=${selectedDateOffset + 1}`);
+      const res = await fetch(buildApiUrl(API_UPCOMING, {
+        sport,
+        league: currentLeagueFilter || undefined,
+        days: selectedDateOffset + 1
+      }));
       const data = await res.json();
       let matches = data.matches || [];
+      window._cachedUpcomingMatches = data.matches || [];
 
       // Filter to only the selected date
       const target = new Date(); target.setDate(target.getDate() + selectedDateOffset);
@@ -2679,7 +3173,7 @@ if (window.location.pathname.includes('upcoming')) {
           } catch(e) { kickoff = m.time || '--:--'; }
 
           html += `
-            <a href="/upcoming_match_detail.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" 
+            <a href="${buildMatchUrl(m)}" 
                class="flex items-center gap-4 md:gap-6 p-4 md:p-5 bg-[#111111] border border-white/5 rounded-xl hover:border-primary/30 hover:bg-[#151515] transition-all group cursor-pointer">
               <!-- Time -->
               <div class="shrink-0 w-14 text-center">
@@ -2703,7 +3197,7 @@ if (window.location.pathname.includes('upcoming')) {
               <!-- Broadcast + Notify -->
               <div class="hidden md:flex items-center gap-4 shrink-0">
                 <span class="text-[9px] font-bold text-on-surface/30 uppercase tracking-wider">${m.broadcast || m.league || 'ESPN'}</span>
-                <button onclick="event.preventDefault(); event.stopPropagation(); handleNotification('${m.id}','${m.homeTeam.name} vs ${m.awayTeam.name}')" 
+                <button onclick="event.preventDefault(); event.stopPropagation(); handleNotification('${m.id}','${encodeURIComponent(`${m.homeTeam.name} vs ${m.awayTeam.name}`)}')" 
                         class="flex items-center gap-1.5 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-white hover:border-primary transition-all">
                   <span class="material-symbols-outlined text-xs">notifications</span> Notify Me
                 </button>
@@ -2745,7 +3239,7 @@ if (window.location.pathname.includes('upcoming')) {
     if (homeLogo) homeLogo.innerHTML = `<img src="${match.homeTeam.logo}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">`;
     if (awayLogo) awayLogo.innerHTML = `<img src="${match.awayTeam.logo}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">`;
     if (matchName) matchName.textContent = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
-    if (matchLeague) matchLeague.textContent = `${match.league || match.sport} • ${match.venue || ''}`;
+    if (matchLeague) matchLeague.textContent = `${match.league || match.sport}${match.venue ? ` | ${match.venue}` : ''}`;
 
     if (countdownInterval) clearInterval(countdownInterval);
     const matchDate = new Date(match.date);
@@ -2772,6 +3266,7 @@ if (window.location.pathname.includes('upcoming')) {
     }
     originalRenderMatches(matches);
   };
+  window.fetchScheduleCentre = fetchScheduleCentre;
 
   // Init
   renderDateTabs();
@@ -2785,9 +3280,9 @@ if (window.location.pathname.includes('upcoming')) {
 async function fetchLeaguesHero() {
   if (!heroSliderContainer || !window.location.pathname.includes('leagues.html')) return;
   try {
-    const res = await fetch(`${API_NEWS}?sport=all`);
+    const res = await fetch(buildApiUrl(API_INFO, { type: 'news', sport: 'all' }));
     const data = await res.json();
-    const featured = (data.news || []).slice(0, 3);
+    const featured = (data.articles || []).slice(0, 3);
     
     if (featured.length > 0) {
       heroSliderContainer.innerHTML = featured.map((item, i) => `
@@ -2848,65 +3343,3 @@ function setupNewsletter() {
   });
 }
 
-// --- SEARCH LOGIC ---
-const searchInput = document.getElementById('search-input');
-const searchResults = document.getElementById('search-results');
-
-if (searchInput) {
-  searchInput.addEventListener('input', async (e) => {
-    const query = e.target.value.toLowerCase().trim();
-    if (query.length < 2) {
-      if (searchResults) searchResults.innerHTML = '';
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_LIVE}?sport=all`);
-      const data = await res.json();
-      const matches = (data.matches || []).filter(m => 
-        m.homeTeam.name.toLowerCase().includes(query) || 
-        m.awayTeam.name.toLowerCase().includes(query) || 
-        (m.league && m.league.toLowerCase().includes(query))
-      );
-
-      if (matches.length > 0 && searchResults) {
-        searchResults.innerHTML = matches.map(m => `
-          <a href="/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 hover:border-primary/50 transition-all group">
-            <div class="flex items-center gap-4">
-              <div class="flex -space-x-2">
-                <img src="${m.homeTeam.logo}" class="w-8 h-8 rounded-full bg-black/20 p-1 border border-white/10" onerror="this.src='${FALLBACK_LOGO}'">
-                <img src="${m.awayTeam.logo}" class="w-8 h-8 rounded-full bg-black/20 p-1 border border-white/10" onerror="this.src='${FALLBACK_LOGO}'">
-              </div>
-              <div>
-                <div class="text-xs font-black uppercase text-on-surface">${m.homeTeam.name} vs ${m.awayTeam.name}</div>
-                <div class="text-[9px] font-bold text-on-surface/40 uppercase tracking-widest">${m.league || m.sport}</div>
-              </div>
-            </div>
-            <span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-          </a>
-        `).join('');
-      } else if (searchResults) {
-        searchResults.innerHTML = '<div class="text-center py-8 text-[10px] font-black uppercase tracking-widest text-on-surface/20">No matching signals found.</div>';
-      }
-    } catch (err) {
-      console.error('Search Error:', err);
-    }
-  });
-}
-
-window.openSearchModal = function() {
-  const modal = document.getElementById('search-modal');
-  if (modal) {
-    modal.classList.remove('hidden');
-    if (searchInput) searchInput.focus();
-  }
-};
-
-window.closeSearchModal = function() {
-  const modal = document.getElementById('search-modal');
-  if (modal) {
-    modal.classList.add('hidden');
-    if (searchInput) searchInput.value = '';
-    if (searchResults) searchResults.innerHTML = '';
-  }
-};
