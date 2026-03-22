@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (path.includes('results.html')) currentPageFilter = 'finished';
 
     // Initial fetches
+    if (window.location.pathname.includes('upcoming.html')) currentArenaTab = currentTab;
     fetchMatches(currentPageFilter);
     fetchSidebarLive();
     fetchNews();
@@ -281,6 +282,15 @@ window.switchArenaTab = function(tabId) {
     `;
   }
   fetchArenaSchedule(tabId);
+
+  // Sync with main matches grid if on upcoming page
+  if (window.location.pathname.includes('upcoming.html')) {
+    currentTab = tabId;
+    if (matchesContainer) {
+      matchesContainer.innerHTML = '<div class="col-span-full py-20 flex justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>';
+      fetchMatches('upcoming');
+    }
+  }
 }
 
 function renderArenaSchedule(matches) {
