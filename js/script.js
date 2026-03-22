@@ -156,7 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check for dynamic match detail first
   const urlParams = new URLSearchParams(window.location.search);
   const matchId = urlParams.get('id');
-  const sport = urlParams.get('sport') || 'soccer';
+  const sportParam = urlParams.get('sport');
+  if (sportParam) currentTab = sportParam;
+  const sport = currentTab;
   const league = urlParams.get('league') || 'eng.1';
   
   if (matchId && homeTeamName) {
