@@ -181,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentPageFilter = 'live';
     if (path.includes('upcoming.html')) currentPageFilter = 'upcoming';
     if (path.includes('results.html')) currentPageFilter = 'finished';
+    if (path.includes('trending.html')) currentPageFilter = null; // Show all (live, upcoming, results)
 
     // Initial fetches
     if (window.location.pathname.includes('upcoming.html')) currentArenaTab = currentTab;
