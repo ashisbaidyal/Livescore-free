@@ -628,6 +628,30 @@ function setupArenaControls() {
 async function fetchHeroData(statusFilter = null) {
   if (!heroSliderContainer) return;
   try {
+    const isIndexPage = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
+    
+    if (isIndexPage) {
+      // 1. Fetch live matches for featured match
+      const liveRes = await fetch(`${API_LIVE}?sport=all`);
+      const liveData = await liveRes.json();
+      let liveMatches = (liveData.matches || []).filter(m => m.status === 'live');
+      if (liveMatches.length === 0) liveMatches = (liveData.matches || []).slice(0, 3);
+      
+      // 2. Fetch upcoming matches for "Next Major Event"
+      const upRes = await fetch(`${API_UPCOMING}?sport=all&days=3`);
+      const upData = await upRes.json();
+      let upMatches = upData.matches || [];
+      upMatches.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+      // 3. Fetch news for "Breaking Now"
+      const newsRes = await fetch(`${API_INFO}?type=news&sport=all`);
+      const newsData = await newsRes.json();
+      let newsList = newsData.articles || [];
+
+      renderIndexHeroHub(liveMatches, upMatches, newsList);
+      return;
+    }
+
     const res = await fetch(`${API_LIVE}?sport=all`);
     const data = await res.json();
     let matches = data.matches || [];
@@ -724,6 +748,161 @@ function renderHeroSlider(matches, statusFilter) {
     }, 8000);
   }
 }
+
+function renderIndexHeroHub(liveMatches, upMatches, newsList) {
+  if (!heroSliderContainer) return;
+
+  const featuredMatch = liveMatches[0] || upMatches[0];
+  const nextUpMatch = upMatches.find(m => m.id !== featuredMatch?.id) || upMatches[0];
+  const newsItem = newsList[0];
+
+  if (!featuredMatch) {
+    heroSliderContainer.style.display = 'none';
+    return;
+  }
+
+  heroSliderContainer.style.display = 'block';
+
+  const homePoss = featuredMatch.stats?.possession?.home || '50%';
+  const awayPoss = featuredMatch.stats?.possession?.away || '50%';
+  const homeShots = featuredMatch.stats?.shots?.home || '0';
+  const awayShots = featuredMatch.stats?.shots?.away || '0';
+
+  const formatUpcomingDate = (dateStr) => {
+    try {
+      const d = new Date(dateStr);
+      let hours = d.getHours();
+      let minutes = d.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    } catch(e) { return 'TBD'; }
+  }
+
+  const featuredLink = featuredMatch.status === 'finished' ? (featuredMatch.highlightUrl || `/match.html?id=${featuredMatch.id}&sport=${featuredMatch.sport}&league=${featuredMatch.leagueSlug}`) : `/match.html?id=${featuredMatch.id}&sport=${featuredMatch.sport}&league=${featuredMatch.leagueSlug}`;
+  const upLink = nextUpMatch ? `/upcoming_match_detail.html?id=${nextUpMatch.id}&sport=${nextUpMatch.sport}&league=${nextUpMatch.leagueSlug}` : '#';
+  const ctaText = featuredMatch.status === 'live' ? 'Watch 4K Stream' : featuredMatch.status === 'finished' ? 'Watch Highlights' : 'Set Reminder';
+  const ctaIcon = featuredMatch.status === 'live' ? 'play_circle' : featuredMatch.status === 'finished' ? 'video_library' : 'notifications';
+
+  heroSliderContainer.innerHTML = `
+<!-- Multi-Slide Hub Container -->
+<div class="relative w-full h-full">
+  <div class="absolute inset-0 z-10">
+    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" style="background-image: linear-gradient(to top, rgb(19, 19, 19) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${featuredMatch.homeTeam.logo}');"></div>
+    <div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
+          <span class="w-2 h-2 bg-white rounded-full ${featuredMatch.status === 'live' ? 'animate-pulse' : ''}"></span> ${featuredMatch.status === 'live' ? 'FEATURED LIVE' : (featuredMatch.status === 'finished' ? 'FINISHED EVENT' : 'UPCOMING MATCH')}
+        </span>
+        <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${featuredMatch.league || 'Game of the Week'}</span>
+      </div>
+      <div class="flex items-end gap-6 mb-8">
+        <h1 class="font-headline font-black text-6xl md:text-9xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
+          ${featuredMatch.homeTeam.name.slice(0, 3)} <span class="text-primary">${featuredMatch.homeTeam.score}-${featuredMatch.awayTeam.score}</span> ${featuredMatch.awayTeam.name.slice(0, 3)}
+        </h1>
+        <div class="mb-2 hidden sm:block">
+          <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">${featuredMatch.status === 'live' ? 'Elapsed' : (featuredMatch.status==='finished'?'Final':'Kickoff')}</div>
+          <div class="text-3xl font-black italic">${featuredMatch.time || 'SCHEDULED'}</div>
+        </div>
+      </div>
+      
+      ${featuredMatch.status === 'live' ? `
+      <div class="flex gap-10 mb-12">
+        <div class="glass-card p-4 rounded-lg flex items-center gap-4 border border-white/5">
+          <div class="text-center">
+            <div class="text-[10px] font-black text-on-surface/40 uppercase">Possession</div>
+            <div class="text-xl font-black italic">${homePoss} - ${awayPoss}</div>
+          </div>
+          <div class="w-[1px] h-8 bg-white/10"></div>
+          <div class="text-center">
+            <div class="text-[10px] font-black text-on-surface/40 uppercase">Shots (On)</div>
+            <div class="text-xl font-black italic">${homeShots} - ${awayShots}</div>
+          </div>
+        </div>
+      </div>` : '<div class="mb-12"></div>'}
+
+      <div class="flex flex-wrap gap-4">
+        <a href="${featuredLink}" class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)] relative z-20">
+          <span class="material-symbols-outlined">${ctaIcon}</span> ${ctaText}
+        </a>
+        <a href="${featuredLink}" class="bg-white/5 backdrop-blur-md border border-white/20 px-10 py-5 rounded-lg text-on-surface font-black uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-colors relative z-20">
+          Full Match Center
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide Navigation Controls -->
+  <div class="absolute bottom-12 left-8 md:left-20 z-30 flex flex-col gap-6 hidden sm:flex">
+    <div class="flex gap-4">
+      <a href="/live.html" class="group cursor-pointer">
+        <div class="w-16 h-1.5 bg-primary relative overflow-hidden rounded-full">
+          <div class="absolute inset-0 bg-white/30 animate-[progress_5s_linear_infinite]"></div>
+        </div>
+        <span class="text-[9px] font-black uppercase mt-2 block tracking-widest text-primary">LIVE NOW</span>
+      </a>
+      <a href="/upcoming.html" class="group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
+        <div class="w-16 h-1.5 bg-white/10 rounded-full"></div>
+        <span class="text-[9px] font-black uppercase mt-2 block tracking-widest text-on-surface">COUNTDOWN</span>
+      </a>
+      <a href="/leagues.html" class="group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
+        <div class="w-16 h-1.5 bg-white/10 rounded-full"></div>
+        <span class="text-[9px] font-black uppercase mt-2 block tracking-widest text-on-surface">SPORTS HUB</span>
+      </a>
+      <a href="/news.html" class="group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
+        <div class="w-16 h-1.5 bg-white/10 rounded-full"></div>
+        <span class="text-[9px] font-black uppercase mt-2 block tracking-widest text-on-surface">LATEST NEWS</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Side Widgets -->
+  <div class="absolute right-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 z-30 pointer-events-auto">
+    <!-- Upcoming Highlight -->
+    ${nextUpMatch ? `
+    <a href="${upLink}" class="glass-card block p-6 rounded-2xl border-l-4 border-white/20 w-80 shadow-2xl group hover:border-primary transition-all cursor-pointer bg-surface/30 backdrop-blur-md relative z-40">
+      <div class="flex justify-between items-start mb-4">
+        <div class="text-[10px] font-black uppercase tracking-widest text-on-surface/40">Next Major Event</div>
+        <div class="bg-white/10 px-2 py-0.5 rounded text-[9px] font-black">${formatUpcomingDate(nextUpMatch.date)}</div>
+      </div>
+      <div class="text-xl font-black italic uppercase leading-none mb-1">${nextUpMatch.homeTeam?.name || ''} vs ${nextUpMatch.awayTeam?.name || ''}</div>
+      <div class="text-[10px] font-bold text-primary tracking-widest uppercase">${nextUpMatch.league || ''}</div>
+    </a>
+    ` : ''}
+
+    <!-- Quick Access -->
+    <div class="glass-card p-6 rounded-2xl border border-white/5 w-80 shadow-2xl bg-surface/30 backdrop-blur-md relative z-40">
+      <div class="text-[10px] font-black uppercase tracking-widest text-on-surface/40 mb-4">The Multiverse Quick-Jump</div>
+      <div class="grid grid-cols-4 gap-3">
+        <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=soccer">
+          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_soccer</span>
+        </a>
+        <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=basketball&l=nba">
+          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_basketball</span>
+        </a>
+        <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=football&l=nfl">
+          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_football</span>
+        </a>
+        <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=mma">
+          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_mma</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Breaking News -->
+    ${newsItem ? `
+    <a href="/news.html" class="glass-card block p-5 rounded-2xl border border-white/5 w-80 shadow-2xl overflow-hidden relative group bg-surface/30 backdrop-blur-md relative z-40">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+        <span class="text-[10px] font-black uppercase tracking-widest">Breaking Now</span>
+      </div>
+      <p class="text-[11px] font-bold leading-tight uppercase opacity-80 group-hover:text-primary transition-colors line-clamp-2">${newsItem.headline}</p>
+      <span class="inline-block mt-3 text-[9px] font-black uppercase tracking-widest border-b border-primary text-primary pb-0.5">Read More</span>
+    </a>
+    ` : ''}
+  </div>
+</div>
+  `;
+}
+
 
 // --- FETCH LEAGUES ---
 async function fetchLeagues() {
