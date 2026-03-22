@@ -20,6 +20,7 @@ const SPORTS = [
 ];
 
 let currentTab = 'all';
+let currentPageFilter = 'live'; // Added globally to track page-specific selection (live, upcoming, finished)
 let autoRefreshTimer = null;
 
 // --- DOM ELEMENTS ---
@@ -169,20 +170,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (matchesContainer || sidebarLiveContainer || newsContainer) {
     if (tabsContainer) renderTabs();
     
-    // Determine page filter
-    let statusFilter = null;
-    if (path.includes('live.html')) statusFilter = 'live';
-    if (path.includes('upcoming.html')) statusFilter = 'upcoming';
-    if (path.includes('results.html')) statusFilter = 'finished';
+    // Determine page filter: Homepage now strictly defaults to 'live' matches as requested.
+    currentPageFilter = 'live';
+    if (path.includes('live.html')) currentPageFilter = 'live';
+    if (path.includes('upcoming.html')) currentPageFilter = 'upcoming';
+    if (path.includes('results.html')) currentPageFilter = 'finished';
+    
+    // If on homepage (no specific file in path or index.html), strictly show live.
+    const isHomePage = fileName === 'index.html' || fileName === '';
+    if (isHomePage) currentPageFilter = 'live';
 
     // Initial fetches
-    fetchMatches(statusFilter);
+    fetchMatches(currentPageFilter);
     fetchSidebarLive();
     fetchNews();
 
     // "Silent" Auto Refresh logic
     setInterval(() => {
-      fetchMatches(statusFilter);
+      fetchMatches(currentPageFilter);
       fetchSidebarLive();
     }, 10000); // 10s for scores
 
@@ -611,7 +616,7 @@ window.switchTab = function(tabId) {
     `).join('');
   }
 
-  fetchMatches();
+  fetchMatches(currentPageFilter);
 }
 
 // --- FETCH & UPDATE HOME DATA ---
