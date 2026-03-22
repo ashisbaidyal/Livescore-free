@@ -538,63 +538,75 @@ function renderArenaSchedule(matches) {
     if (match.leagueSlug?.includes('eng.1')) dotColor = 'bg-blue-500';
     if (match.leagueSlug?.includes('nfl')) dotColor = 'bg-red-600';
 
-    // Parse date for friendly display
+    // Friendly date/time logic
     let friendlyDate = match.time || '';
-    let dayLabel = '';
+    let dayLabel = 'TODAY';
     try {
       const d = new Date(match.date);
-      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      dayLabel = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
-      friendlyDate = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const now = new Date();
+      if (d.getDate() !== now.getDate()) {
+        dayLabel = 'TOMORROW';
+      }
+      friendlyDate = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     } catch(e) {}
 
+    const homeAbbr = match.homeTeam.abbreviation || match.homeTeam.name.substring(0, 3).toUpperCase();
+    const awayAbbr = match.awayTeam.abbreviation || match.awayTeam.name.substring(0, 3).toUpperCase();
+
     return `
-      <a href="/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" 
-         class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[420px] group min-w-[320px] snap-center shrink-0">
+      <div class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-white/10 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[450px] group min-w-[320px] snap-center shrink-0">
         <div>
-          <div class="flex justify-between text-[10px] font-black text-on-surface-variant mb-12 uppercase tracking-[0.2em]">
-            <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full ${dotColor}"></span> ${match.league || 'UPCOMING'}</span>
-            <span class="text-primary font-mono">${friendlyDate}</span>
-          </div>
-          <div class="flex items-center justify-between mb-8 px-2">
-            <div class="flex flex-col items-center gap-4 w-1/3">
-              <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase relative overflow-hidden">
-                <img src="${match.homeTeam.logo}" class="w-12 h-12 object-contain relative z-10" onerror="this.src='/public/logo.png'">
-                <div class="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </div>
-              <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-full text-center">${match.homeTeam.name}</span>
-            </div>
-            
-            <div class="flex flex-col items-center justify-center">
-              <span class="text-3xl font-black text-primary italic tracking-tighter transform group-hover:scale-125 transition-transform duration-700">VS</span>
-              <span class="text-[8px] font-black uppercase opacity-20 mt-2 tracking-[0.3em]">${dayLabel || match.date?.split(',')[0] || ''}</span>
-            </div>
-
-            <div class="flex flex-col items-center gap-4 w-1/3">
-              <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase relative overflow-hidden">
-                <img src="${match.awayTeam.logo}" class="w-12 h-12 object-contain relative z-10" onerror="this.src='/public/logo.png'">
-                <div class="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </div>
-              <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-full text-center">${match.awayTeam.name}</span>
-            </div>
+          <!-- Top Row: League & Time -->
+          <div class="flex justify-between items-center mb-12">
+            <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-on-surface/60">
+              <span class="w-2 h-2 rounded-full ${dotColor}"></span>
+              ${match.league || 'UPCOMING'}
+            </span>
+            <span class="text-[10px] font-black uppercase tracking-widest text-on-surface/40">
+              ${friendlyDate} ${dayLabel}
+            </span>
           </div>
 
-          <!-- Predictions/Form (Kinetic Sub-data) -->
-          <div class="flex justify-center gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
-            <div class="px-2 py-0.5 rounded border border-white/10 text-[8px] font-black uppercase italic">${match.venue || 'TBD Venue'}</div>
+          <!-- Middle Row: Team Circles & VS -->
+          <div class="flex items-center justify-between mb-8 px-4">
+            <!-- Home Team Circle -->
+            <div class="flex flex-col items-center gap-4">
+              <div class="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center relative group-hover:border-primary/50 transition-colors shadow-inner">
+                <span class="text-xl font-black tracking-tighter uppercase text-on-surface/80">${homeAbbr}</span>
+                <img src="${match.homeTeam.logo}" class="absolute w-12 h-12 object-contain opacity-10 group-hover:opacity-20 transition-opacity" onerror="this.style.display='none'">
+              </div>
+            </div>
+
+            <!-- VS Element -->
+            <div class="flex flex-col items-center">
+              <span class="text-3xl font-black text-primary italic tracking-tight transform group-hover:scale-110 transition-transform duration-700">VS</span>
+            </div>
+
+            <!-- Away Team Circle -->
+            <div class="flex flex-col items-center gap-4">
+              <div class="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center relative group-hover:border-primary/50 transition-colors shadow-inner">
+                <span class="text-xl font-black tracking-tighter uppercase text-on-surface/80">${awayAbbr}</span>
+                <img src="${match.awayTeam.logo}" class="absolute w-12 h-12 object-contain opacity-10 group-hover:opacity-20 transition-opacity" onerror="this.style.display='none'">
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Labels: Full Names -->
+          <div class="flex justify-between px-2 text-center">
+            <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/30 truncate w-32">${match.homeTeam.name}</span>
+            <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/30 truncate w-32">${match.awayTeam.name}</span>
           </div>
         </div>
-        
-        <div class="space-y-3">
-          <div class="w-full bg-white/5 h-[1px]"></div>
+
+        <!-- Footer: Notify Button -->
+        <div class="space-y-4">
+          <div class="w-full h-px bg-white/5"></div>
           <button onclick="handleNotification('${match.id}', '${match.homeTeam.name} vs ${match.awayTeam.name}')" 
-                  class="w-full py-4 bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest group-hover:bg-primary transition-all active:scale-95 flex items-center justify-center gap-2 relative overflow-hidden">
-            <span class="material-symbols-outlined text-sm">notifications</span>
-            Notify Me
+                  class="w-full py-4 bg-white/5 hover:bg-primary rounded-xl text-[10px] font-black uppercase tracking-widest text-on-surface/40 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2">
+            NOTIFY ME
           </button>
         </div>
-      </a>
+      </div>
     `;
   }).join('');
 }

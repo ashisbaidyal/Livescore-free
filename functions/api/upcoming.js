@@ -61,7 +61,7 @@ export async function onRequest(context) {
       "football": ["nfl"],
       "hockey": ["nhl"],
       "baseball": ["mlb"],
-      "cricket": ["ipl", "8039"],
+      "cricket": ["8039", "8040"], // ICC, IPL
       "tennis": ["atp"],
       "mma": ["ufc"]
     };
@@ -138,12 +138,16 @@ export async function onRequest(context) {
           venue: comp.venue?.fullName || '',
           broadcast: comp.broadcasts?.[0]?.names?.join(', ') || '',
           homeTeam: {
-            name: home?.team?.shortDisplayName || home?.team?.name || 'TBD',
+            name: home?.team?.name || 'TBD',
+            shortName: home?.team?.shortDisplayName || home?.team?.name || 'TBD',
+            abbreviation: home?.team?.abbreviation || (home?.team?.name || 'TBD').substring(0, 3).toUpperCase(),
             logo: home?.team?.logo || '/public/logo.png',
             score: '—'
           },
           awayTeam: {
-            name: away?.team?.shortDisplayName || away?.team?.name || 'TBD',
+            name: away?.team?.name || 'TBD',
+            shortName: away?.team?.shortDisplayName || away?.team?.name || 'TBD',
+            abbreviation: away?.team?.abbreviation || (away?.team?.name || 'TBD').substring(0, 3).toUpperCase(),
             logo: away?.team?.logo || '/public/logo.png',
             score: '—'
           }
