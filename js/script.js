@@ -384,28 +384,34 @@ async function fetchHeroData(statusFilter = null) {
     const data = await res.json();
     let matches = data.matches || [];
 
-    if (statusFilter) {
+    if (statusFilter === 'live') {
+      // Strictly live for pages that request it (like Leagues or when user wants strict Live)
+      matches = matches.filter(m => m.status === 'live');
+    } else if (statusFilter) {
       matches = matches.filter(m => m.status === statusFilter);
     } else {
-      // On Home/Trending, prioritize Live, then upcoming
+      // On Home/Trending, prioritize Live. 
+      // Removed upcoming fallback to satisfy "hide when live not available" request
       matches = matches.filter(m => m.status === 'live');
-      if (matches.length === 0) matches = (data.matches || []).filter(m => m.status === 'upcoming');
     }
 
     renderHeroSlider(matches.slice(0, 3), statusFilter);
   } catch (err) {
     console.error('Hero Slider error:', err);
+    if (heroSliderContainer) heroSliderContainer.style.display = 'none';
   }
 }
 
 function renderHeroSlider(matches, statusFilter) {
   if (!heroSliderContainer) return;
 
-  if (matches.length === 0) {
+  if (!matches || matches.length === 0) {
     // Show a static fallback or clean empty state
     heroSliderContainer.style.display = 'none';
     return;
   }
+  
+  // Explicitly show the container as we have matches
   heroSliderContainer.style.display = 'block';
 
   let currentSlide = 0;
