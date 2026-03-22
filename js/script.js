@@ -499,52 +499,74 @@ function renderHeroSlider(matches, statusFilter) {
 async function fetchLeagues() {
   if (!leaguesContainer && !topTierContainer) return;
   try {
-    // Fetch live matches first for status badges
+    // 1. Fetch live matches for ALL sports to identify ongoing leagues
     const liveRes = await fetch(`${API_LIVE}?sport=all`);
     const liveData = await liveRes.json();
     const liveMatches = liveData.matches || [];
 
-    // Fetch standings for key leagues
-    const [eplRes, laligaRes] = await Promise.all([
-      fetch(`${API_INFO}?type=standings&sport=soccer&league=eng.1`),
-      fetch(`${API_INFO}?type=standings&sport=soccer&league=esp.1`)
-    ]);
+    // 2. Define our target leagues for the directory
+    // These are elite leagues we want to show even if not live
+    const eliteLeagues = [
+      { name: 'Premier League', slug: 'eng.1', country: 'England', sport: 'soccer', icon: 'sports_soccer', category: 'top' },
+      { name: 'NBA', slug: 'nba', country: 'USA', sport: 'basketball', icon: 'sports_basketball', category: 'top' },
+      { name: 'NFL', slug: 'nfl', country: 'USA', sport: 'american-football', icon: 'sports_football', category: 'top' },
+      { name: 'LALIGA', slug: 'esp.1', country: 'Spain', sport: 'soccer', icon: 'sports_soccer', category: 'top' },
+      { name: 'ICC Cricket', slug: 'icc-world-cup', country: 'Global', sport: 'cricket', icon: 'sports_cricket', category: 'top' },
+      { name: 'NHL', slug: 'nhl', country: 'USA/Canada', sport: 'hockey', icon: 'sports_hockey', category: 'top' },
+      { name: 'Serie A', slug: 'ita.1', country: 'Italy', sport: 'soccer', icon: 'sports_soccer', category: 'euro' },
+      { name: 'Bundesliga', slug: 'ger.1', country: 'Germany', sport: 'soccer', icon: 'sports_soccer', category: 'euro' },
+      { name: 'Ligue 1', slug: 'fra.1', country: 'France', sport: 'soccer', icon: 'sports_soccer', category: 'euro' },
+      { name: 'Eredivisie', slug: 'ned.1', country: 'Netherlands', sport: 'soccer', icon: 'sports_soccer', category: 'euro' },
+      { name: 'Super Lig', slug: 'tur.1', country: 'Turkey', sport: 'soccer', icon: 'sports_soccer', category: 'euro' },
+      { name: 'UFC', slug: 'ufc', country: 'Global', sport: 'mma', icon: 'sports_mma', category: 'combat' },
+      { name: 'Boxing', slug: 'boxing', country: 'Global', sport: 'mma', icon: 'sports_mma', category: 'combat' }
+    ];
 
-    const eplData = await eplRes.json();
-    const laligaData = await laligaRes.json();
-
-    const allStandings = {
-      'eng.1': (eplData.standings?.[0]?.entries || eplData.children?.[0]?.standings?.entries || []),
-      'esp.1': (laligaData.standings?.[0]?.entries || laligaData.children?.[0]?.standings?.entries || [])
-    };
+    // 3. Fetch standings for active soccer leagues (parallelized)
+    const activeStandingsLeagues = ['eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1'];
+    const standingsPromises = activeStandingsLeagues.map(slug => 
+      fetch(`${API_INFO}?type=standings&sport=soccer&league=${slug}`).then(r => r.json().catch(() => ({})))
+    );
     
-    renderLeaguesHub(allStandings, liveMatches);
+    const standingsResults = await Promise.all(standingsPromises);
+    const standingsMap = {};
+    activeStandingsLeagues.forEach((slug, i) => {
+      const data = standingsResults[i];
+      standingsMap[slug] = (data.standings?.[0]?.entries || data.children?.[0]?.standings?.entries || []);
+    });
+
+    renderLeaguesHub(eliteLeagues, standingsMap, liveMatches);
   } catch (err) {
     console.error('Leagues error:', err);
+    // Fallback rendering even on error
+    renderLeaguesHub([], {}, []);
   }
 }
 
-function renderLeaguesHub(standingsMap, liveMatches) {
-  // 1. Top Tier (Elite)
+function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
+  // Helper to check if a league is currently live
+  const checkLive = (slug) => liveMatches.some(m => (m.leagueSlug === slug || m.leagueSearchValue === slug) && m.status === 'live');
+
+  // 1. Top Tier (Elite) - Priority to Live
   if (topTierContainer) {
-    const topLeagues = [
-      { name: 'Premier League', slug: 'eng.1', country: 'England', sport: 'soccer', icon: 'sports_soccer' },
-      { name: 'NBA', slug: 'nba', country: 'USA', sport: 'basketball', icon: 'sports_basketball' },
-      { name: 'NFL', slug: 'nfl', country: 'USA', sport: 'american-football', icon: 'sports_football' },
-      { name: 'LALIGA', slug: 'esp.1', country: 'Spain', sport: 'soccer', icon: 'sports_soccer' }
-    ];
+    const topLeagues = eliteLeagues.filter(l => l.category === 'top');
+    // Sort: Live leagues first
+    topLeagues.sort((a, b) => (checkLive(b.slug) ? 1 : 0) - (checkLive(a.slug) ? 1 : 0));
+
     topTierContainer.innerHTML = topLeagues.map(l => {
-      const isLive = liveMatches.some(m => m.leagueSlug === l.slug && m.status === 'live');
+      const isLive = checkLive(l.slug);
       return `
-        <div class="bg-surface-container-high border border-white/5 rounded p-5 hover:bg-surface-container-highest transition-colors group relative overflow-hidden">
+        <div class="bg-surface-container-high border ${isLive ? 'border-primary/50' : 'border-white/5'} rounded p-5 hover:bg-surface-container-highest transition-all group relative overflow-hidden h-full flex flex-col">
           <div class="flex justify-between items-start mb-6">
-            <div class="w-12 h-12 bg-white/5 rounded flex items-center justify-center">
-              <span class="material-symbols-outlined text-primary text-3xl">${l.icon}</span>
+            <div class="w-12 h-12 bg-white/5 rounded flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+              <span class="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform">${l.icon}</span>
             </div>
-            ${isLive ? '<div class="bg-secondary-container/20 text-secondary-container border border-secondary-container/30 px-2 py-0.5 rounded text-[9px] font-bold uppercase animate-pulse">Live Now</div>' : ''}
+            ${isLive ? '<div class="bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest animate-pulse">Live Now</div>' : ''}
           </div>
-          <h3 class="text-lg font-black uppercase tracking-tight mb-1">${l.name}</h3>
-          <p class="text-[10px] text-on-surface/40 font-bold uppercase tracking-widest mb-6">${l.country} • ${l.sport}</p>
+          <div class="flex-1">
+            <h3 class="text-lg font-black uppercase tracking-tight mb-1 group-hover:text-primary transition-colors">${l.name}</h3>
+            <p class="text-[10px] text-on-surface/40 font-bold uppercase tracking-widest mb-6">${l.country} • ${l.sport}</p>
+          </div>
           <button onclick="switchTab('${l.sport}')" class="w-full py-3 bg-white/5 group-hover:bg-primary group-hover:text-on-primary transition-all text-[10px] font-black uppercase tracking-widest rounded">View Hub</button>
         </div>
       `;
@@ -553,24 +575,29 @@ function renderLeaguesHub(standingsMap, liveMatches) {
 
   // 2. Combat Sports
   if (combatSportsContainer) {
-    const combatLeagues = [
-      { id: 'ufc', name: 'UFC', sport: 'mma', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvIyeKN8pU6Tv8l7j-RmQf1mq1YYkRNanPO1kQCTkfpqO1lnOXuSXrM1XtkhkolcZdhEQS_PmMYnlFeWJFN7mnloZTh5Ma37GUcum0oXBwzOPT1dOb1NzKoEbQCIqJwLILR8GSq3XEkvk0bb5iUu5SRjqqNa7LiEsFgaTh6sCpPyjm97xrCouooxKwVn_5v4A8rEfd35QrTnsB3tXr4X7sBhD0favzvQsyRibEZUQ48Y_Zkq1Jop3gjDYtR4ex2BmQWkhgcDR589xC' },
-      { id: 'boxing', name: 'Boxing', sport: 'mma', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDch9QidtmtgyAuKOhBwokTeBFsRbDLkH0wFQjZhtJLDO9QCp6s4LrnaeRYyVXfjZbefQVmOHoMq1wSdEnhGjfTdwC8mUQGZwhyug-EnBbdPSaiIUbN9-cs51DDEzNE_B6liCVR92OWeoEHj86EllurkqqM_w2DjPnkcOYojy7BbXRQV7wpvYR8gZQqUCEQMtlIzBgQXByX4rqtAKsAW5xeNAp5h-sxvkwucT08VJYZzbUttb0wrkNwvi2OPZZLFsvKTmzj30BGI6ZL' }
-    ];
+    const combatLeagues = eliteLeagues.filter(l => l.category === 'combat');
+    // For combat, we often use specific hero-style blocks
+    const combatMetadata = {
+        'ufc': { img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvIyeKN8pU6Tv8l7j-RmQf1mq1YYkRNanPO1kQCTkfpqO1lnOXuSXrM1XtkhkolcZdhEQS_PmMYnlFeWJFN7mnloZTh5Ma37GUcum0oXBwzOPT1dOb1NzKoEbQCIqJwLILR8GSq3XEkvk0bb5iUu5SRjqqNa7LiEsFgaTh6sCpPyjm97xrCouooxKwVn_5v4A8rEfd35QrTnsB3tXr4X7sBhD0favzvQsyRibEZUQ48Y_Zkq1Jop3gjDYtR4ex2BmQWkhgcDR589xC', title: 'Ultimate Fighting' },
+        'boxing': { img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDch9QidtmtgyAuKOhBwokTeBFsRbDLkH0wFQjZhtJLDO9QCp6s4LrnaeRYyVXfjZbefQVmOHoMq1wSdEnhGjfTdwC8mUQGZwhyug-EnBbdPSaiIUbN9-cs51DDEzNE_B6liCVR92OWeoEHj86EllurkqqM_w2DjPnkcOYojy7BbXRQV7wpvYR8gZQqUCEQMtlIzBgQXByX4rqtAKsAW5xeNAp5h-sxvkwucT08VJYZzbUttb0wrkNwvi2OPZZLFsvKTmzj30BGI6ZL', title: 'World Class Boxing' }
+    };
+
     combatSportsContainer.innerHTML = combatLeagues.map(l => {
-        const isLive = liveMatches.some(m => m.sport === l.sport && m.status === 'live');
+        const isLive = checkLive(l.slug);
+        const meta = combatMetadata[l.slug] || { img: '', title: l.name };
         return `
-        <div class="h-64 relative bg-surface-container-high rounded overflow-hidden group">
-          <img class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" src="${l.img}" onerror="this.src='/public/hero-fallback.jpg'">
-          <div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest to-transparent"></div>
+        <div class="h-64 relative bg-surface-container-high rounded-xl overflow-hidden group border ${isLive ? 'border-primary/50' : 'border-white/5'}">
+          <img class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" src="${meta.img}" onerror="this.src='/public/hero-fallback.jpg'">
+          <div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest/80 to-transparent"></div>
           <div class="relative h-full p-8 flex flex-col justify-center max-w-xs">
-            <div class="w-16 h-8 bg-white/10 backdrop-blur flex items-center justify-center mb-4">
-              <span class="font-black italic text-sm ${l.name === 'WBC' ? 'text-[#FFD700]' : ''}">${l.name}</span>
+            <div class="inline-flex h-8 bg-white/10 backdrop-blur px-4 items-center justify-center mb-4 rounded border border-white/10">
+              <span class="font-black italic text-xs uppercase tracking-widest group-hover:text-primary transition-colors">${l.name}</span>
             </div>
-            <h3 class="text-2xl font-black uppercase tracking-tighter leading-none mb-2">${isLive ? 'MAIN EVENT LIVE' : 'Fight Night Schedule'}</h3>
-            <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-6">${isLive ? 'WATCH NOW IN 4K' : 'SATURDAY • LIVE PPV'}</p>
-            <button onclick="switchTab('${l.sport}')" class="self-start px-6 py-2 kinetic-gradient text-[10px] font-black uppercase tracking-widest rounded">View ${l.name}</button>
+            <h3 class="text-3xl font-black uppercase tracking-tighter leading-none mb-2">${isLive ? 'MAIN EVENT LIVE' : meta.title}</h3>
+            <p class="text-[10px] font-bold text-on-surface/40 uppercase tracking-[0.2em] mb-6">${isLive ? 'STREAMING NOW AT 120FPS' : 'FIGHT NIGHT CARDS'}</p>
+            <button onclick="switchTab('mma')" class="self-start px-8 py-3 ${isLive ? 'kinetic-gradient' : 'bg-white/5 border border-white/10'} text-[10px] font-black uppercase tracking-widest rounded-full hover:scale-105 transition-all">Explore Hub</button>
           </div>
+          ${isLive ? '<div class="absolute top-6 right-8 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_15px_rgba(204,22,22,0.8)]"></div>' : ''}
         </div>
         `;
     }).join('');
@@ -578,72 +605,100 @@ function renderLeaguesHub(standingsMap, liveMatches) {
 
   // 3. European Soccer
   if (europeanSoccerContainer) {
-     const euroLeagues = [
-        { name: 'Serie A', country: 'Italy', slug: 'ita.1' },
-        { name: 'Bundesliga', country: 'Germany', slug: 'ger.1' },
-        { name: 'Ligue 1', country: 'France', slug: 'fra.1' },
-        { name: 'Eredivisie', country: 'Netherlands', slug: 'ned.1' },
-        { name: 'Primeira Liga', country: 'Portugal', slug: 'por.1' },
-        { name: 'Super Lig', country: 'Turkey', slug: 'tur.1' }
-     ];
+     const euroLeagues = eliteLeagues.filter(l => l.category === 'euro');
+     // Sort: Live leagues first
+     euroLeagues.sort((a, b) => (checkLive(b.slug) ? 1 : 0) - (checkLive(a.slug) ? 1 : 0));
+
      europeanSoccerContainer.innerHTML = euroLeagues.map(l => {
-        const isLive = liveMatches.some(m => m.leagueSlug === l.slug && m.status === 'live');
+        const isLive = checkLive(l.slug);
         return `
-        <div class="bg-surface-container border border-white/5 p-4 rounded text-center hover:border-primary/50 transition-all cursor-pointer group relative" onclick="switchTab('soccer')">
-          ${isLive ? '<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse"></span>' : ''}
-          <span class="material-symbols-outlined text-2xl text-on-surface/40 group-hover:text-primary mb-3">sports_soccer</span>
-          <h4 class="text-xs font-black uppercase tracking-tight">${l.name}</h4>
-          <p class="text-[9px] font-bold text-on-surface/30 uppercase mt-1">${l.country}</p>
+        <div class="bg-surface-container-high border ${isLive ? 'border-primary/50' : 'border-white/5'} p-6 rounded-xl text-center hover:bg-surface-container-highest hover:border-primary/30 transition-all cursor-pointer group relative" onclick="switchTab('soccer')">
+          ${isLive ? '<span class="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(204,22,22,0.5)]"></span>' : ''}
+          <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform h-12 w-12">
+            <span class="material-symbols-outlined text-2xl text-on-surface/40 group-hover:text-primary">${l.icon}</span>
+          </div>
+          <h4 class="text-xs font-black uppercase tracking-tight group-hover:text-primary transition-colors">${l.name}</h4>
+          <p class="text-[9px] font-bold text-on-surface/30 uppercase mt-1 tracking-widest">${l.country}</p>
         </div>
         `;
      }).join('');
   }
 
-  // 4. Standings Section (Tabbed between EPL and LaLiga)
+  // 4. Standings Section (Tabbed between EPL, LaLiga, Serie A, etc.)
   const standingsTableContainer = document.getElementById('standings-table-container');
   if (standingsTableContainer) {
-    const activeLeague = window.currentStandingsLeague || (standingsMap['eng.1'].length > 0 ? 'eng.1' : 'esp.1');
+    const leaguesToDisplay = ['eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1'];
+    const activeLeague = window.currentStandingsLeague || (standingsMap['eng.1']?.length > 0 ? 'eng.1' : 'esp.1');
     const standings = standingsMap[activeLeague] || [];
-    const leagueName = activeLeague === 'eng.1' ? 'Premier League' : 'LaLiga EA Sports';
+    
+    const leagueNames = {
+      'eng.1': 'Premier League',
+      'esp.1': 'LaLiga EA Sports',
+      'ita.1': 'Serie A',
+      'ger.1': 'Bundesliga',
+      'fra.1': 'Ligue 1'
+    };
 
     standingsTableContainer.innerHTML = `
-      <div class="flex items-end justify-between mb-8 border-l-4 border-primary pl-4">
+      <div class="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 border-l-4 border-primary pl-6 gap-6">
         <div>
-          <h2 class="text-3xl font-black italic uppercase tracking-tighter">Live Standings</h2>
-          <p class="text-xs font-bold text-on-surface opacity-40 uppercase tracking-widest">${leagueName} Table</p>
+          <h2 class="text-4xl font-black italic uppercase tracking-tighter leading-none mb-2">Live Standings</h2>
+          <p class="text-[11px] font-black text-on-surface/40 uppercase tracking-[0.3em]">${leagueNames[activeLeague] || 'League'} Grid</p>
         </div>
-        <div class="flex gap-4">
-           <button onclick="window.currentStandingsLeague='eng.1'; fetchLeagues()" class="text-[10px] font-black ${activeLeague === 'eng.1' ? 'text-primary' : 'text-on-surface/40'} uppercase tracking-widest hover:text-primary transition-colors">EPL</button>
-           <button onclick="window.currentStandingsLeague='esp.1'; fetchLeagues()" class="text-[10px] font-black ${activeLeague === 'esp.1' ? 'text-primary' : 'text-on-surface/40'} uppercase tracking-widest hover:text-primary transition-colors">LaLiga</button>
-           <button onclick="fetchLeagues()" class="text-[10px] font-black text-on-surface/20 uppercase tracking-widest hover:text-primary transition-colors ml-4">Refresh</button>
+        <div class="flex flex-wrap gap-3">
+           ${leaguesToDisplay.map(slug => `
+             <button onclick="window.currentStandingsLeague='${slug}'; fetchLeagues()" 
+               class="px-5 py-2.5 text-[10px] font-black rounded-lg transition-all duration-300 border 
+               ${activeLeague === slug ? 'bg-primary text-on-primary border-primary shadow-lg shadow-primary/20' : 'bg-white/5 text-on-surface/40 border-white/5 hover:border-primary/50'} uppercase tracking-widest">
+               ${slug.split('.')[0].toUpperCase()}
+             </button>
+           `).join('')}
+           <button onclick="fetchLeagues()" class="px-5 py-2.5 text-[10px] font-black bg-white/5 text-on-surface/20 border border-white/5 rounded-lg uppercase tracking-widest hover:text-primary hover:border-primary/50 transition-all">
+             <span class="material-symbols-outlined text-[14px] align-middle mr-1">refresh</span> Refresh
+           </button>
         </div>
       </div>
-      <div class="bg-surface-container border border-white/5 rounded-xl overflow-hidden">
-        <table class="w-full text-left text-[10px] uppercase font-black">
-          <thead class="bg-white/5 border-b border-white/5">
-            <tr>
-              <th class="px-6 py-4">Pos</th>
-              <th class="px-6 py-4">Club</th>
-              <th class="px-6 py-4">PL</th>
-              <th class="px-6 py-4">GD</th>
-              <th class="px-6 py-4">PTS</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-white/5">
-            ${standings.slice(0, 10).map(e => `
-              <tr class="hover:bg-white/5 transition-colors">
-                <td class="px-6 py-4 text-on-surface/40">${e.stats.find(s => s.name === 'rank')?.value || '-'}</td>
-                <td class="px-6 py-4 flex items-center gap-3">
-                  <img src="${e.team.logos?.[0]?.href}" class="w-4 h-4 object-contain" onerror="this.src='/public/logo.png'">
-                  <span class="truncate max-w-[120px]">${e.team.displayName}</span>
-                </td>
-                <td class="px-6 py-4">${e.stats.find(s => s.name === 'gamesPlayed')?.value || '0'}</td>
-                <td class="px-6 py-4 ${e.stats.find(s => s.name === 'pointDifferential')?.value >= 0 ? 'text-primary' : 'text-on-surface/40'}">${e.stats.find(s => s.name === 'pointDifferential')?.displayValue || '0'}</td>
-                <td class="px-6 py-4 text-primary">${e.stats.find(s => s.name === 'points')?.value || '0'}</td>
+      <div class="bg-surface-container-high border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative group">
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-[11px] uppercase font-black border-collapse">
+            <thead>
+              <tr class="bg-white/5 border-b border-white/10">
+                <th class="px-8 py-5 text-on-surface/40 font-black tracking-widest">RANK</th>
+                <th class="px-8 py-5 text-on-surface/40 font-black tracking-widest">CLUB</th>
+                <th class="px-8 py-5 text-on-surface/40 font-black tracking-widest text-center">MP</th>
+                <th class="px-8 py-5 text-on-surface/40 font-black tracking-widest text-center">GD</th>
+                <th class="px-8 py-5 text-on-surface/40 font-black tracking-widest text-right">PTS</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              ${standings.slice(0, 10).map((e, idx) => {
+                const gd = e.stats.find(s => s.name === 'pointDifferential')?.value || 0;
+                return `
+                <tr class="hover:bg-white/10 transition-all duration-300 group/row cursor-default">
+                  <td class="px-8 py-6">
+                    <span class="text-sm font-black italic ${idx < 4 ? 'text-primary' : 'text-on-surface/40'}">${e.stats.find(s => s.name === 'rank')?.value || '-'}</span>
+                  </td>
+                  <td class="px-8 py-6">
+                    <div class="flex items-center gap-4">
+                      <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center p-2 group-hover/row:bg-primary/20 transition-all duration-500 transform group-hover/row:scale-110 group-hover/row:rotate-6">
+                        <img src="${e.team.logos?.[0]?.href}" class="w-full h-full object-contain" onerror="this.src='/public/logo.png'">
+                      </div>
+                      <span class="text-xs font-black tracking-tight group-hover/row:text-primary transition-colors">${e.team.displayName}</span>
+                    </div>
+                  </td>
+                  <td class="px-8 py-6 text-center font-body text-on-surface/60">${e.stats.find(s => s.name === 'gamesPlayed')?.value || '0'}</td>
+                  <td class="px-8 py-6 text-center font-body ${gd >= 0 ? 'text-primary' : 'text-error'} font-bold">${gd > 0 ? '+' : ''}${gd}</td>
+                  <td class="px-8 py-6 text-right">
+                    <span class="text-lg font-black text-primary">${e.stats.find(s => s.name === 'points')?.value || '0'}</span>
+                  </td>
+                </tr>
+                `;
+              }).join('')}
+              ${standings.length === 0 ? '<tr><td colspan="5" class="px-8 py-20 text-center text-on-surface/20 italic tracking-widest">No sector data currently available. Signal lost.</td></tr>' : ''}
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
   }
