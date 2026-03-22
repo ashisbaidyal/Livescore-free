@@ -657,7 +657,7 @@ function renderTabs() {
   tabsContainer.innerHTML = SPORTS.map(sport => `
     <button 
       onclick="switchTab('${sport.id}')"
-      class="flex items-center gap-2 px-4 py-2 rounded font-black text-[10px] uppercase tracking-widest transition-all
+      class="flex-none px-6 py-2 rounded font-black text-[10px] uppercase tracking-widest transition-all
       ${currentTab === sport.id
       ? 'bg-primary text-white'
       : 'bg-white/5 text-on-surface/60 hover:bg-white/10 hover:text-white'
