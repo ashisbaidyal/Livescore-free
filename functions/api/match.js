@@ -85,11 +85,12 @@ export async function onRequest(context) {
       const plays = data.plays || data.header?.competitions?.[0]?.details || [];
       if (plays) {
           // Focus on goals and key events
-          plays.slice(-15).reverse().forEach(play => {
+          plays.slice(-30).reverse().forEach(play => {
               const text = play.text || play.athletesInvolved?.[0]?.displayName || '';
               const type = play.type?.text?.toLowerCase() || play.type?.name?.toLowerCase() || '';
               const isGoal = type.includes('goal');
               const isCard = type.includes('card');
+              const isSub = type.includes('substitution');
               
               const teamId = play.team?.id;
               let side = 'neutral';
@@ -98,7 +99,7 @@ export async function onRequest(context) {
 
               timeline.push({
                   time: play.clock?.displayValue || play.clock?.value || '0\'',
-                  type: isGoal ? 'goal' : (isCard ? 'card' : 'event'),
+                  type: isGoal ? 'goal' : (isCard ? 'card' : (isSub ? 'substitution' : 'event')),
                   player: text,
                   side: side
               });

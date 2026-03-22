@@ -1048,9 +1048,32 @@ function renderMatchDetail(data) {
   awayTeamName.textContent = data.awayTeam.name || 'Away Team';
   homeTeamLogo.src = data.homeTeam.logo || '/public/logo.png';
   awayTeamLogo.src = data.awayTeam.logo || '/public/logo.png';
-  homeScore.textContent = data.homeTeam.score !== undefined ? data.homeTeam.score : '0';
-  awayScore.textContent = data.awayTeam.score !== undefined ? data.awayTeam.score : '0';
-  matchClock.textContent = data.time || 'LIVE';
+  
+  const homeScore = document.getElementById('home-score');
+  const awayScore = document.getElementById('away-score');
+  if (homeScore) homeScore.textContent = data.homeTeam.score || '0';
+  if (awayScore) awayScore.textContent = data.awayTeam.score || '0';
+  if (matchClock) matchClock.textContent = data.time || '00:00';
+
+  // Render Hero Scorers
+  if (homeEvents && awayEvents && data.timeline) {
+      const homeGoals = data.timeline.filter(e => e.side === 'home' && e.type === 'goal');
+      const awayGoals = data.timeline.filter(e => e.side === 'away' && e.type === 'goal');
+
+      homeEvents.innerHTML = homeGoals.map(g => `
+          <div class="flex items-center space-x-2">
+              <span class="text-[10px] font-black italic text-white/40">${g.player} ${g.time}</span>
+              <span class="text-[10px]">⚽</span>
+          </div>
+      `).join('');
+
+      awayEvents.innerHTML = awayGoals.map(g => `
+          <div class="flex items-center space-x-2">
+              <span class="text-[10px]">⚽</span>
+              <span class="text-[10px] font-black italic text-white/40">${g.player} ${g.time}</span>
+          </div>
+      `).join('');
+  }
 
   if (leagueInfo) leagueInfo.textContent = data.league || 'Sports Event';
   
@@ -1186,9 +1209,24 @@ function renderMatchDetail(data) {
                     const isAway = event.side === 'away';
                     const isGoal = event.type === 'goal';
                     const isCard = event.type === 'card';
-                    const icon = isGoal ? '⚽' : (isCard ? (event.player.toLowerCase().includes('red') ? '🟥' : '🟨') : '•');
+                    const isSub = event.type === 'substitution';
+                    
+                    let icon = '•';
+                    if (isGoal) icon = '⚽';
+                    else if (isCard) icon = event.player.toLowerCase().includes('red') ? '🟥' : '🟨';
+                    else if (isSub) icon = '🔄';
+
+                    // Half-time logic: detect if we crossed 45'
+                    const showHT = idx > 0 && reversedTimeline[idx-1].time.includes('45') && !event.time.includes('45');
                     
                     return `
+                        ${showHT ? `
+                            <div class="relative z-10 flex flex-col items-center my-12">
+                                <span class="material-symbols-outlined text-white/40 text-2xl mb-2">whistle</span>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-white/60">Half time</span>
+                            </div>
+                        ` : ''}
+                        
                         <div class="flex items-center w-full">
                             <!-- Left Side (Home) -->
                             <div class="w-1/2 pr-8 text-right flex flex-col items-end">
@@ -1228,10 +1266,13 @@ function renderMatchDetail(data) {
             <!-- Half Time / Full Time Marker -->
             <div class="relative z-10 flex flex-col items-center mt-12">
                 <div class="w-0.5 h-12 bg-white/10 mb-2"></div>
-                <span class="material-symbols-outlined text-white/40 text-2xl mb-2">sports_score</span>
-                <span class="text-[10px] font-black uppercase tracking-widest text-white/60">
-                    ${data.status === 'live' ? 'In Progress' : 'Full Time'}
-                </span>
+                ${data.status === 'live' ? `
+                    <div class="w-2 h-2 rounded-full bg-primary animate-pulse mb-2"></div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-white/60 italic">In Progress</span>
+                ` : `
+                    <span class="material-symbols-outlined text-white/40 text-2xl mb-2">sports_score</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-white/60">Full Time</span>
+                `}
             </div>
         </div>
       </div>
