@@ -277,7 +277,10 @@ window.handleNotification = function(matchId, matchName) {
 
 // Initial calls ...
     if (window.location.pathname.includes('upcoming.html')) currentArenaTab = currentTab;
-    fetchMatches(currentPageFilter);
+    // Skip fetchMatches on upcoming page — Schedule Centre module handles it
+    if (!window.location.pathname.includes('upcoming')) {
+      fetchMatches(currentPageFilter);
+    }
     fetchSidebarLive();
     fetchNews();
     if (heroSliderContainer) fetchHeroData(currentPageFilter);
@@ -296,7 +299,10 @@ window.handleNotification = function(matchId, matchName) {
 
     // "Silent" Auto Refresh logic
     setInterval(() => {
-      fetchMatches(currentPageFilter);
+      // Skip fetchMatches auto-refresh on upcoming page — Schedule Centre handles it
+      if (!window.location.pathname.includes('upcoming')) {
+        fetchMatches(currentPageFilter);
+      }
       fetchSidebarLive();
       if (recentResultsContainer) fetchRecentResults();
       if (upcomingTodayContainer) fetchUpcomingToday();
