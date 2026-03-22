@@ -343,14 +343,127 @@ async function fetchArenaSchedule(sport = currentArenaTab) {
   if (!container) return;
   
   try {
-    // Fetch upcoming matches for selected sport
-    const res = await fetch(`${API_LIVE}?status=upcoming&sport=${sport}`);
+    const res = await fetch(`${API_LIVE}?sport=${sport === 'all' ? 'all' : sport}`);
     const data = await res.json();
-    const upcoming = data.matches || [];
+    const allMatches = data.matches || [];
+    
+    // Filter for upcoming matches first
+    let upcoming = allMatches.filter(m => m.status === 'upcoming');
+    
+    // If no upcoming, show live matches as "happening now" cards
+    if (upcoming.length === 0) {
+      const live = allMatches.filter(m => m.status === 'live');
+      if (live.length > 0) {
+        renderArenaLiveFallback(live);
+        return;
+      }
+      // If no live either, show recent finished as "recent results"
+      const finished = allMatches.filter(m => m.status === 'finished').slice(0, 6);
+      if (finished.length > 0) {
+        renderArenaFinishedFallback(finished);
+        return;
+      }
+    }
+    
     renderArenaSchedule(upcoming);
   } catch (err) {
     console.error('Arena Fetch Error:', err);
+    const container = document.getElementById('arena-schedule-container');
+    if (container) {
+      container.innerHTML = `
+        <div class="bg-surface-container border border-white/5 p-12 rounded-2xl flex items-center justify-center w-full min-h-[200px]">
+          <p class="text-on-surface/30 font-black uppercase tracking-[0.3em] text-xs">Unable to load events</p>
+        </div>
+      `;
+    }
   }
+}
+
+// Fallback: show live matches in Arena section when no upcoming
+function renderArenaLiveFallback(matches) {
+  const container = document.getElementById('arena-schedule-container');
+  if (!container) return;
+  container.innerHTML = matches.slice(0, 8).map(m => `
+    <a href="/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" 
+       class="bg-[#111111] p-6 rounded-2xl border border-primary/20 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[300px] group min-w-[280px] snap-center shrink-0 relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-red-400 to-primary animate-pulse"></div>
+      <div>
+        <div class="flex justify-between text-[10px] font-black mb-8 uppercase tracking-[0.2em]">
+          <span class="text-on-surface/40">${m.league || 'LIVE'}</span>
+          <span class="flex items-center gap-1.5 text-primary"><span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span> LIVE</span>
+        </div>
+        <div class="flex items-center justify-between mb-6 px-2">
+          <div class="flex flex-col items-center gap-3 w-2/5">
+            <div class="w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-colors">
+              <img src="${m.homeTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-widest opacity-60 truncate w-full text-center">${m.homeTeam.name}</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <span class="text-3xl font-black text-primary italic tracking-tight">${m.homeTeam.score} - ${m.awayTeam.score}</span>
+            <span class="text-[9px] font-bold text-primary/60 mt-1">${m.time || ''}</span>
+          </div>
+          <div class="flex flex-col items-center gap-3 w-2/5">
+            <div class="w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-colors">
+              <img src="${m.awayTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-widest opacity-60 truncate w-full text-center">${m.awayTeam.name}</span>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <div class="w-full bg-white/5 h-[1px]"></div>
+        <div class="w-full py-3 bg-primary/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white transition-all">
+          <span class="material-symbols-outlined text-sm">sports_score</span>
+          Match Center
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+// Fallback: show recent results in Arena section when no upcoming or live
+function renderArenaFinishedFallback(matches) {
+  const container = document.getElementById('arena-schedule-container');
+  if (!container) return;
+  container.innerHTML = matches.slice(0, 8).map(m => {
+    const homeWin = Number(m.homeTeam.score) > Number(m.awayTeam.score);
+    const awayWin = Number(m.awayTeam.score) > Number(m.homeTeam.score);
+    return `
+    <a href="/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" 
+       class="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[300px] group min-w-[280px] snap-center shrink-0">
+      <div>
+        <div class="flex justify-between text-[10px] font-black mb-8 uppercase tracking-[0.2em]">
+          <span class="text-on-surface/40">${m.league || 'RESULT'}</span>
+          <span class="text-on-surface/30 italic">FINAL</span>
+        </div>
+        <div class="flex items-center justify-between mb-6 px-2">
+          <div class="flex flex-col items-center gap-3 w-2/5">
+            <div class="w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-colors">
+              <img src="${m.homeTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-widest ${homeWin ? 'text-primary' : 'opacity-40'} truncate w-full text-center">${m.homeTeam.name}</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <span class="text-3xl font-black text-on-surface/80 italic tracking-tight">${m.homeTeam.score} - ${m.awayTeam.score}</span>
+          </div>
+          <div class="flex flex-col items-center gap-3 w-2/5">
+            <div class="w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-colors">
+              <img src="${m.awayTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-widest ${awayWin ? 'text-primary' : 'opacity-40'} truncate w-full text-center">${m.awayTeam.name}</span>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <div class="w-full bg-white/5 h-[1px]"></div>
+        <div class="w-full py-3 bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest text-on-surface/40 flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white transition-all">
+          <span class="material-symbols-outlined text-sm">sports_score</span>
+          View Details
+        </div>
+      </div>
+    </a>
+  `;}).join('');
 }
 
 function renderArenaTabs() {
