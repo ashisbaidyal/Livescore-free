@@ -1586,7 +1586,7 @@ function renderContactPage(container) {
            <span class="text-[10px] font-black text-primary uppercase tracking-widest mb-6 block italic">Signal Channel 01</span>
            <h3 class="text-2xl font-black italic uppercase tracking-tighter mb-4">BROADCAST SUPPORT</h3>
            <p class="text-xs font-black text-on-surface/40 uppercase tracking-widest leading-relaxed mb-10 italic">Reporting feed disruptions or tactical errors in the match data stream.</p>
-           <a href="mailto:support@livescoreFree.online" class="text-primary text-xs font-black uppercase tracking-widest border-b border-primary/20 pb-1 hover:text-white transition-all no-underline">support@livescoreFree.online</a>
+           <a href="mailto:livescorefree.online@gmail.com" class="text-primary text-xs font-black uppercase tracking-widest border-b border-primary/20 pb-1 hover:text-white transition-all no-underline">livescorefree.online@gmail.com</a>
         </div>
 
         

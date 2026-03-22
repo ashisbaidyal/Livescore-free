@@ -209,7 +209,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (path.includes('results.html')) currentPageFilter = 'finished';
     if (path.includes('trending.html')) currentPageFilter = null; // Show all (live, upcoming, results)
 
-    // Initial fetches
+    // --- NOTIFICATION HANDLER ---
+window.handleNotification = function(matchId, matchName) {
+  // Simple toast implementation
+  const toast = document.createElement('div');
+  toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] bg-primary text-white px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-3 animate-bounce';
+  toast.innerHTML = `
+    <span class="material-symbols-outlined text-sm">check_circle</span>
+    Reminder Set for ${matchName}!
+  `;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => toast.remove(), 500);
+  }, 3000);
+};
+
+// Initial calls ...
     if (window.location.pathname.includes('upcoming.html')) currentArenaTab = currentTab;
     fetchMatches(currentPageFilter);
     fetchSidebarLive();
@@ -349,33 +367,49 @@ function renderArenaSchedule(matches) {
 
     return `
       <a href="/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" 
-         class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[360px] group min-w-[320px] snap-center shrink-0">
+         class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[420px] group min-w-[320px] snap-center shrink-0">
         <div>
           <div class="flex justify-between text-[10px] font-black text-on-surface-variant mb-12 uppercase tracking-[0.2em]">
             <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full ${dotColor}"></span> ${match.league || 'UPCOMING'}</span>
-            <span class="text-primary">${match.time}</span>
+            <span class="text-primary font-mono">${match.time}</span>
           </div>
-          <div class="flex items-center justify-between mb-12 px-2">
-            <div class="flex flex-col items-center gap-4">
-              <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase">
-                <img src="${match.homeTeam.logo}" class="w-12 h-12 object-contain" onerror="this.src='/public/logo.png'">
+          <div class="flex items-center justify-between mb-8 px-2">
+            <div class="flex flex-col items-center gap-4 w-1/3">
+              <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase relative overflow-hidden">
+                <img src="${match.homeTeam.logo}" class="w-12 h-12 object-contain relative z-10" onerror="this.src='/public/logo.png'">
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
-              <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-24 text-center">${match.homeTeam.name}</span>
+              <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-full text-center">${match.homeTeam.name}</span>
             </div>
             
-            <div class="flex flex-col items-center">
+            <div class="flex flex-col items-center justify-center">
               <span class="text-3xl font-black text-primary italic tracking-tighter transform group-hover:scale-125 transition-transform duration-700">VS</span>
+              <span class="text-[8px] font-black uppercase opacity-20 mt-2 tracking-[0.3em]">${match.date?.split(',')[0] || ''}</span>
             </div>
 
-            <div class="flex flex-col items-center gap-4">
-              <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase">
-                <img src="${match.awayTeam.logo}" class="w-12 h-12 object-contain" onerror="this.src='/public/logo.png'">
+            <div class="flex flex-col items-center gap-4 w-1/3">
+              <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase relative overflow-hidden">
+                <img src="${match.awayTeam.logo}" class="w-12 h-12 object-contain relative z-10" onerror="this.src='/public/logo.png'">
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
-              <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-24 text-center">${match.awayTeam.name}</span>
+              <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-full text-center">${match.awayTeam.name}</span>
             </div>
           </div>
+
+          <!-- Predictions/Form (Kinetic Sub-data) -->
+          <div class="flex justify-center gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
+            <div class="px-2 py-0.5 rounded border border-white/10 text-[8px] font-black uppercase italic">${match.venue || 'TBD Venue'}</div>
+          </div>
         </div>
-        <button class="w-full py-4 bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest group-hover:bg-primary transition-colors">Notify Me</button>
+        
+        <div class="space-y-3">
+          <div class="w-full bg-white/5 h-[1px]"></div>
+          <button onclick="handleNotification('${match.id}', '${match.homeTeam.name} vs ${match.awayTeam.name}')" 
+                  class="w-full py-4 bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest group-hover:bg-primary transition-all active:scale-95 flex items-center justify-center gap-2 relative overflow-hidden">
+            <span class="material-symbols-outlined text-sm">notifications</span>
+            Notify Me
+          </button>
+        </div>
       </a>
     `;
   }).join('');
@@ -419,15 +453,23 @@ async function fetchHeroData(statusFilter = null) {
     if (statusFilter === 'live') {
       // Strictly live for pages that request it (like Leagues or when user wants strict Live)
       matches = matches.filter(m => m.status === 'live');
+    } else if (statusFilter === 'upcoming') {
+      matches = matches.filter(m => m.status === 'upcoming');
+      // Sort upcoming by date (soonest first)
+      matches.sort((a,b) => new Date(a.date) - new Date(b.date));
     } else if (statusFilter) {
       matches = matches.filter(m => m.status === statusFilter);
     } else {
       // On Home/Trending, prioritize Live. 
-      // Removed upcoming fallback to satisfy "hide when live not available" request
-      matches = matches.filter(m => m.status === 'live');
+      matches = (data.matches || []).filter(m => m.status === 'live');
     }
 
-    renderHeroSlider(matches.slice(0, 3), statusFilter);
+    // Fallback: If no matches for statusFilter, and we really need A hero, maybe show any
+    if (matches.length === 0 && !statusFilter) {
+        matches = (data.matches || []).slice(0, 3);
+    }
+
+    renderHeroSlider(matches.slice(0, 5), statusFilter);
   } catch (err) {
     console.error('Hero Slider error:', err);
     if (heroSliderContainer) heroSliderContainer.style.display = 'none';
@@ -1071,8 +1113,12 @@ function renderMatches(matches) {
         ? `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">FINAL</span>`
         : `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">UPCOMING</span>`;
 
+    const detailUrl = (!isLive && !isFinished) 
+      ? `/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}`
+      : `/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}`;
+
     return `
-      <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="block group h-full">
+      <a href="${detailUrl}" class="block group h-full">
         <div class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-6  
                     hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden h-full">
           
