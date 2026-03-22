@@ -32,7 +32,8 @@ const headlinesContainer = document.getElementById('latest-headlines-container')
 const heroSliderContainer = document.getElementById('hero-slider-container');
 const leaguesContainer = document.getElementById('leagues-container');
 const playersContainer = document.getElementById('players-container');
-const trendingPlayersContainer = document.getElementById('trending-players-container');
+const trendingUpcomingContainer = document.getElementById('trending-upcoming-container');
+const trendingMatchesList = document.getElementById('trending-matches-list');
 const recentResultsContainer = document.getElementById('recent-results-container');
 const upcomingTodayContainer = document.getElementById('upcoming-today-container');
 const upcomingPrev = document.getElementById('upcoming-prev');
@@ -662,47 +663,51 @@ async function fetchPlayers() {
 }
 
 function renderPlayers(athletes) {
-  if (trendingPlayersContainer) {
-    trendingPlayersContainer.innerHTML = `
-      <div class="flex items-center justify-between mb-8">
-        <div class="flex items-center gap-3">
-          <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
-          <h3 class="text-lg font-black uppercase tracking-widest">Trending Now</h3>
+  // Players section is now handled by Trending Upcoming on Home, 
+  // but we keep the logic for players.html or other hubs if needed.
+  if (playersContainer) {
+    playersContainer.innerHTML = athletes.slice(0, 10).map(a => `
+      <div class="bg-surface-container p-4 rounded-lg flex items-center gap-4">
+        <img src="${a.headshot?.href || '/public/logo.png'}" class="w-12 h-12 rounded-full grayscale hover:grayscale-0 transition-all">
+        <div>
+          <h4 class="font-black uppercase text-xs">${a.fullName}</h4>
+          <p class="text-[10px] opacity-40 uppercase font-black">${a.position?.displayName || 'Player'}</p>
         </div>
       </div>
-      <div class="flex gap-6 overflow-x-auto pb-8 no-scrollbar">
-        ${athletes.slice(0, 5).map(a => `
-          <div class="flex-none w-80 bg-surface-container-low p-6 border border-white/5 rounded-2xl group hover:border-primary/20 transition-all cursor-pointer">
-            <div class="flex justify-between items-start mb-6">
-              <div class="relative">
-                <img src="${a.headshot?.href || 'https://livescorefree.online/logo.png'}" class="w-16 h-16 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all">
-                <span class="absolute -bottom-1 -right-1 bg-primary text-[8px] font-black text-white px-2 py-0.5 rounded-full border-2 border-surface-container-low uppercase">TRENDING</span>
-              </div>
-              <div class="text-right">
-                <p class="text-[10px] text-on-surface-variant font-bold uppercase">${a.position?.abbreviation || 'Player'}</p>
-                <h4 class="text-xl font-black uppercase tracking-tighter">${a.lastName || a.fullName}</h4>
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-surface-container p-3 rounded-xl border border-white/5 text-center">
-                <p class="text-[8px] text-on-surface-variant uppercase font-bold tracking-widest">Age</p>
-                <p class="text-lg font-black text-white">${a.age || 'N/A'}</p>
-              </div>
-              <div class="bg-surface-container p-3 rounded-xl border border-white/5 text-center">
-                <p class="text-[8px] text-on-surface-variant uppercase font-bold tracking-widest">Weight</p>
-                <p class="text-lg font-black text-white">${a.displayWeight || 'N/A'}</p>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    `).join('');
   }
 }
 
-// --- FETCH NEWS ---
+// --- RENDER TRENDING UPCOMING (HOME SIDEBAR) ---
+function renderTrendingUpcoming(matches) {
+  if (!trendingMatchesList) return;
+
+  if (matches.length === 0) {
+    trendingMatchesList.innerHTML = '<p class="text-[10px] font-black uppercase tracking-widest opacity-20 py-10">No upcoming matches discovered</p>';
+    return;
+  }
+
+  trendingMatchesList.innerHTML = matches.map(match => `
+    <a href="/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="flex items-center gap-6 p-5 bg-white/5 rounded-2xl hover:bg-white/10 transition-all group border border-white/5 hover:border-primary/20">
+      <div class="flex flex-col items-center gap-2 shrink-0">
+        <img src="${match.homeTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all">
+        <img src="${match.awayTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all">
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-1 line-clamp-1">${match.league}</div>
+        <h4 class="text-xs font-bold uppercase truncate mb-1">${match.homeTeam.name} VS ${match.awayTeam.name}</h4>
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[10px] text-on-surface/40">schedule</span>
+          <span class="text-[10px] font-black text-on-surface/40 uppercase tracking-widest">${match.time}</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+// --- FETCH & RENDER NEWS ---
 async function fetchNews() {
-  if (!newsContainer) return;
+  if (!newsContainer && !headlinesContainer) return;
   try {
     const res = await fetch(`${API_INFO}?type=news&sport=${currentTab === 'all' ? 'soccer' : currentTab}`);
     const data = await res.json();
@@ -715,73 +720,90 @@ async function fetchNews() {
 function renderNews(articles) {
   if (articles.length === 0) return;
 
-  // 1. Render Top News in Grid (First 3-6 depending on layout)
+  // 1. Render Top News Grid (First 4 items)
   if (newsContainer) {
-    const gridArticles = articles.slice(0, 6);
+    const gridArticles = articles.slice(0, 4);
     newsContainer.innerHTML = gridArticles.map(article => `
-      <article class="bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
-        <div class="aspect-video bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
-             style="background-image: url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
-        <div class="p-6 flex flex-col flex-1">
+      <article class="relative bg-surface-container rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
+        <div class="aspect-video bg-cover bg-center transition-transform duration-[1.5s] group-hover:scale-110" 
+             style="background-image: linear-gradient(to top, rgba(14,14,14,0.9), transparent), url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
+        <div class="p-6 relative flex flex-col flex-1">
           <div class="flex justify-between items-center mb-4">
-            <span class="text-primary text-[10px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'Sports'}</span>
-            <span class="text-[10px] font-bold text-on-surface/40 uppercase">${new Date(article.published).toLocaleDateString()}</span>
+            <span class="bg-primary text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm">${article.categories?.[0]?.name || 'SPORTS'}</span>
+            <span class="text-[10px] font-bold text-on-surface/40 uppercase">${timeAgo(new Date(article.published))}</span>
           </div>
-          <h3 class="text-xl font-black uppercase leading-tight group-hover:text-primary transition-colors mb-4 line-clamp-2 font-headline">${article.headline}</h3>
-          <p class="text-sm text-on-surface-variant leading-relaxed line-clamp-2 mb-6 flex-1">${article.description || ''}</p>
-          <div class="flex items-center gap-4 text-[10px] font-bold text-on-surface/40 uppercase pt-4 border-t border-white/5">
-            <span>By ${article.byline || 'ESPN'}</span>
-          </div>
+          <h3 class="text-xl font-black italic uppercase leading-tight group-hover:text-primary transition-colors line-clamp-2 mb-4 drop-shadow-md">
+            ${article.headline}
+          </h3>
         </div>
       </article>
     `).join('');
   }
 
-  // 2. Render Latest Headlines below (The rest)
+  // 2. Render Scalable Headlines (Expansion Area)
   if (headlinesContainer) {
-    const headlineArticles = articles.slice(6);
-    if (headlineArticles.length === 0) {
-        // Fallback or just hide section if not enough news
-        // For now, let's just use some of the same news if we don't have enough, or keep it empty
-        // But usually ESPN gives 10+.
-    }
-    
-    headlinesContainer.innerHTML = (headlineArticles.length > 0 ? headlineArticles : articles.slice(0, 4)).map(article => `
-      <article class="flex flex-col md:flex-row gap-8 group cursor-pointer border-b border-white/5 pb-8 last:border-0" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
-        <div class="md:w-1/3 aspect-[4/3] bg-cover bg-center rounded-xl overflow-hidden border border-white/10 shrink-0" 
+    const detailArticles = articles.slice(4);
+    headlinesContainer.innerHTML = detailArticles.map((article, idx) => `
+      <article class="flex flex-col md:flex-row gap-8 group cursor-pointer border-b border-white/5 pb-12 last:border-0 opacity-0 translate-y-10 transition-all duration-700 headline-expansion-item" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
+        <div class="md:w-1/4 aspect-[16/9] bg-cover bg-center rounded-xl overflow-hidden border border-white/10 shrink-0 shadow-lg" 
              style="background-image: url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
-        <div class="md:w-2/3 space-y-4 flex flex-col justify-center">
+        <div class="flex-1 space-y-4">
           <div class="flex items-center gap-3">
-            <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'Sports'}</span>
-            <span class="text-on-surface/40 text-[10px] font-bold uppercase">${timeAgo(new Date(article.published))}</span>
+             <span class="text-primary text-[10px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'HUB'}</span>
+             <span class="text-white/20">•</span>
+             <span class="text-[10px] font-black text-white/40 uppercase tracking-widest font-body">${article.published ? new Date(article.published).toLocaleDateString() : 'REALTIME'}</span>
           </div>
-          <h3 class="text-3xl font-black uppercase leading-[1.1] group-hover:text-primary transition-colors font-headline">${article.headline}</h3>
-          <p class="text-base text-on-surface-variant leading-relaxed line-clamp-3">${article.description || ''}</p>
-          <div class="flex items-center gap-4 text-[10px] font-black uppercase text-on-surface/40">
-            <span>By ${article.byline || 'ESPN'}</span>
-            <span>•</span>
-            <span class="text-primary hover:underline">Read Full Article</span>
-          </div>
+          <h4 class="text-2xl font-black italic uppercase italic leading-none group-hover:text-primary transition-all tracking-tighter">${article.headline}</h4>
+          <p class="text-sm text-on-surface/60 font-medium leading-relaxed line-clamp-2 max-w-3xl">${article.description || ''}</p>
         </div>
       </article>
     `).join('');
+
+    // Setup Expansion Observer
+    setupNewsExpansion();
   }
+}
+
+function setupNewsExpansion() {
+  const trigger = document.getElementById('news-scroll-trigger');
+  const items = document.querySelectorAll('.headline-expansion-item');
+  
+  if (!trigger || items.length === 0) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // Reveal all items in the expanded container
+        items.forEach((item, idx) => {
+          setTimeout(() => {
+            item.classList.remove('opacity-0', 'translate-y-10');
+            item.classList.add('opacity-100', 'translate-y-0');
+          }, idx * 100);
+        });
+        // We only expand once per data refresh for this specific design
+        // For infinite scroll, we would fetch more data here.
+        trigger.style.display = 'none'; 
+      }
+    });
+  }, { threshold: 0.1 });
+
+  observer.observe(trigger);
 }
 
 // Helper for time ago
 function timeAgo(date) {
   const seconds = Math.floor((new Date() - date) / 1000);
   let interval = seconds / 31536000;
-  if (interval > 1) return Math.floor(interval) + " years ago";
+  if (interval > 1) return Math.floor(interval) + "Y ago";
   interval = seconds / 2592000;
-  if (interval > 1) return Math.floor(interval) + " months ago";
+  if (interval > 1) return Math.floor(interval) + "MO ago";
   interval = seconds / 86400;
-  if (interval > 1) return Math.floor(interval) + " days ago";
+  if (interval > 1) return Math.floor(interval) + "D ago";
   interval = seconds / 3600;
-  if (interval > 1) return Math.floor(interval) + "h ago";
+  if (interval > 1) return Math.floor(interval) + "H ago";
   interval = seconds / 60;
-  if (interval > 1) return Math.floor(interval) + "m ago";
-  return Math.floor(seconds) + "s ago";
+  if (interval > 1) return Math.floor(interval) + "M ago";
+  return Math.floor(seconds) + "S ago";
 }
 
 // --- FETCH SIDEBAR LIVE ONLY ---
@@ -877,6 +899,13 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
     }
 
     renderMatches(matches);
+
+    // Render Trending Upcoming (Most 2-3 immediate matches)
+    if (trendingMatchesList) {
+      const upcoming = (data.matches || []).filter(m => m.status === 'upcoming');
+      upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
+      renderTrendingUpcoming(upcoming.slice(0, 3));
+    }
   } catch (err) {
     console.error('Failed to fetch matches:', err);
     if (!sidebarOnly && matchesContainer) {

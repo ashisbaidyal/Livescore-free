@@ -214,7 +214,7 @@
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-active:scale-110 group-hover:rotate-6 group-active:rotate-6 transition-transform group-hover:text-primary group-active:text-primary">campaign</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 group-active:translate-x-2 transition-transform">Advertise</span>
 </a>
-<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary active:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary active:border-primary hover:bg-white/5 active:bg-white/5" href="https://ko-fi.com" target="_blank">
+<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary active:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary active:border-primary hover:bg-white/5 active:bg-white/5" href="https://ko-fi.com/livescorefree" target="_blank">
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-active:scale-110 group-hover:rotate-6 group-active:rotate-6 transition-transform group-hover:text-primary group-active:text-primary">favorite</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 group-active:translate-x-2 transition-transform">Support Us</span>
 </a>
@@ -460,7 +460,9 @@
 <h5 class="text-white font-black italic text-3xl leading-none mb-1 tracking-tighter">GATORADE</h5>
 <p class="text-white/70 font-bold uppercase text-[10px] tracking-[0.2em]">Fuel Your Performance</p>
 </div>
+<a href="https://ko-fi.com/livescorefree" target="_blank" class="block">
 <button class="bg-white text-black w-fit px-6 py-2.5 rounded font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-transform">Shop Now</button>
+</a>
 </div>
 <div class="absolute right-[-10%] bottom-[-20%] opacity-15 transform group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-[2s]">
 <span class="material-symbols-outlined text-[15rem]">bolt</span>
@@ -470,24 +472,41 @@
 </div>
 </section>
 <!-- Headline Reports & News -->
-<section class="py-24 px-6 max-w-7xl mx-auto border-t border-white/5">
+<section class="py-24 px-6 max-w-7xl mx-auto border-t border-white/5" id="headline-reports-section">
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-16">
 <div class="lg:col-span-3">
 <div class="flex items-center gap-4 mb-12">
 <h4 class="text-4xl font-black italic uppercase tracking-tighter leading-none">Headline Reports</h4>
+<span class="bg-primary/20 text-primary px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest animate-pulse">Live Updates</span>
 <div class="flex-1 h-[2px] bg-white/5"></div>
 </div>
-<div id="news-container" class="grid grid-cols-1 md:grid-cols-1 gap-10">
-    <!-- News Injected Here -->
-    <div class="h-40 bg-white/5 rounded-lg animate-pulse"></div>
-    <div class="h-40 bg-white/5 rounded-lg animate-pulse"></div>
+<div id="news-grid-container" class="grid grid-cols-1 md:grid-cols-2 gap-10">
+    <!-- News Injected Here (Main Grid) -->
+    <div class="h-64 bg-white/5 rounded-lg animate-pulse"></div>
+    <div class="h-64 bg-white/5 rounded-lg animate-pulse"></div>
+</div>
+<!-- Detailed Headlines (Expansion Trigger) -->
+<div id="latest-headlines-container" class="mt-16 space-y-12 border-t border-white/5 pt-16">
+    <!-- More news items will be expanded here -->
+</div>
+<div id="news-scroll-trigger" class="h-10 w-full flex items-center justify-center mt-10">
+    <div class="animate-bounce material-symbols-outlined text-on-surface/20">keyboard_double_arrow_down</div>
 </div>
 </div>
-<div id="trending-players-container">
-<h4 class="text-xl font-black italic uppercase tracking-widest mb-12 text-primary border-b border-primary/20 pb-4">Trending Now</h4>
-<div class="space-y-10">
-    <div class="h-20 bg-white/5 rounded animate-pulse"></div>
-    <div class="h-20 bg-white/5 rounded animate-pulse"></div>
+<div id="trending-upcoming-container" class="sticky top-24 h-fit">
+<h4 class="text-xl font-black italic uppercase tracking-widest mb-12 text-primary border-b border-primary/20 pb-4 flex items-center gap-2">
+    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+    Trending Now
+</h4>
+<div id="trending-matches-list" class="space-y-8">
+    <!-- 2-3 Most Upcoming Matches Injected Here -->
+    <div class="h-32 bg-white/5 rounded-xl animate-pulse"></div>
+    <div class="h-32 bg-white/5 rounded-xl animate-pulse"></div>
+</div>
+<div id="trending-scroll-trigger" class="mt-10 pt-8 border-t border-white/5">
+    <button id="see-all-upcoming" class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 hover:text-primary transition-all flex items-center gap-2 group">
+        Explore Universe <span class="material-symbols-outlined text-sm group-hover:translate-x-2 transition-transform">arrow_forward</span>
+    </button>
 </div>
 </div>
 </div>
@@ -516,7 +535,9 @@
 <p class="text-white/80 font-bold text-sm uppercase leading-relaxed tracking-wide">Keep the stream alive and ad-free. Support our independent broadcast crew via Ko-fi or sponsor a segment.</p>
 </div>
 <div class="flex flex-wrap justify-center gap-4">
+<a href="https://ko-fi.com/livescorefree" target="_blank" class="block">
 <button class="bg-white text-black px-8 py-4 rounded-lg font-black uppercase text-[11px] tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl">Support on Ko-fi</button>
+</a>
 <button class="bg-black/20 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-lg font-black uppercase text-[11px] tracking-[0.2em] hover:bg-black/30 transition-all">Advertise Here</button>
 </div>
 </div>
@@ -569,7 +590,7 @@
 <div class="flex flex-col gap-6">
 <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Support</h5>
 <ul class="flex flex-col gap-4">
-<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="https://ko-fi.com" target="_blank">Support on Ko-fi</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="https://ko-fi.com/livescorefree" target="_blank">Support on Ko-fi</a></li>
 <li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=transparency">Donation Transparency</a></li>
 </ul>
 </div>
