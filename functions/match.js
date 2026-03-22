@@ -36,12 +36,12 @@ export async function onRequest(context) {
     class SEOInjector {
       element(element) {
         // Find </title> or inject manually
-        element.prepend(`<title>${metaTitle}</title>`);
-        element.append(`<meta name="description" content="${metaDesc}">`);
-        element.append(`<meta property="og:title" content="${metaTitle}">`);
-        element.append(`<meta property="og:description" content="${metaDesc}">`);
-        element.append(`<meta property="og:image" content="${matchData.homeTeam.logo}">`);
-        element.append(`<meta name="twitter:card" content="summary_large_image">`);
+        element.prepend(`<title>${metaTitle}</title>`, { html: true });
+        element.append(`<meta name="description" content="${metaDesc}">`, { html: true });
+        element.append(`<meta property="og:title" content="${metaTitle}">`, { html: true });
+        element.append(`<meta property="og:description" content="${metaDesc}">`, { html: true });
+        element.append(`<meta property="og:image" content="${matchData.homeTeam.logo}">`, { html: true });
+        element.append(`<meta name="twitter:card" content="summary_large_image">`, { html: true });
       }
     }
 

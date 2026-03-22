@@ -1021,16 +1021,73 @@ function renderMatches(matches) {
 }
 
 // --- RENDER MATCH DETAILS ---
+let activeLineupTab = 'home';
+
 function renderMatchDetail(data) {
   if (!homeTeamName) return;
 
-  homeTeamName.textContent = data.homeTeam.name || 'Team A';
-  awayTeamName.textContent = data.awayTeam.name || 'Team B';
+  const leagueInfo = document.getElementById('match-league-info');
+  const homeEvents = document.getElementById('home-events');
+  const awayEvents = document.getElementById('away-events');
+  const lineupHomeTab = document.getElementById('lineup-home-tab');
+  const lineupAwayTab = document.getElementById('lineup-away-tab');
+  const lineupContainer = document.getElementById('lineup-players-container');
+  const commentaryContainer = document.getElementById('commentary-container');
+
+  homeTeamName.textContent = data.homeTeam.name || 'Home Team';
+  awayTeamName.textContent = data.awayTeam.name || 'Away Team';
   homeTeamLogo.src = data.homeTeam.logo || '/public/logo.png';
   awayTeamLogo.src = data.awayTeam.logo || '/public/logo.png';
   homeScore.textContent = data.homeTeam.score !== undefined ? data.homeTeam.score : '0';
   awayScore.textContent = data.awayTeam.score !== undefined ? data.awayTeam.score : '0';
   matchClock.textContent = data.time || 'LIVE';
+
+  if (leagueInfo) leagueInfo.textContent = data.league || 'Sports Event';
+  
+  if (lineupHomeTab && lineupAwayTab) {
+    lineupHomeTab.textContent = data.homeTeam.name || 'Home';
+    lineupAwayTab.textContent = data.awayTeam.name || 'Away';
+
+    // Setup tab clicks if not already set
+    if (!lineupHomeTab.onclick) {
+        lineupHomeTab.onclick = () => {
+            activeLineupTab = 'home';
+            renderMatchLineup(data);
+            lineupHomeTab.classList.add('border-[#CC1616]', 'bg-surface');
+            lineupHomeTab.classList.remove('text-on-surface-variant/40');
+            lineupAwayTab.classList.remove('border-[#CC1616]', 'bg-surface');
+            lineupAwayTab.classList.add('text-on-surface-variant/40');
+        };
+        lineupAwayTab.onclick = () => {
+            activeLineupTab = 'away';
+            renderMatchLineup(data);
+            lineupAwayTab.classList.add('border-[#CC1616]', 'bg-surface');
+            lineupAwayTab.classList.remove('text-on-surface-variant/40');
+            lineupHomeTab.classList.remove('border-[#CC1616]', 'bg-surface');
+            lineupHomeTab.classList.add('text-on-surface-variant/40');
+        };
+    }
+    renderMatchLineup(data);
+  }
+
+  // Render Goalscorers in Hero Section
+  if (homeEvents && awayEvents && data.timeline) {
+    const goals = data.timeline.filter(e => e.type === 'goal');
+    
+    homeEvents.innerHTML = goals.filter(g => g.side === 'home').map(g => `
+      <div class="flex items-center space-x-2">
+        <span class="text-primary font-medium text-sm lg:text-base">${g.player.split('at')[0]}</span>
+        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+      </div>
+    `).join('');
+
+    awayEvents.innerHTML = goals.filter(g => g.side === 'away').map(g => `
+      <div class="flex items-center space-x-2">
+        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+        <span class="text-primary font-medium text-sm lg:text-base">${g.player.split('at')[0]}</span>
+      </div>
+    `).join('');
+  }
 
   if (statsContainer && data.stats && data.stats.length > 0) {
     statsContainer.innerHTML = data.stats.map(stat => {
@@ -1058,22 +1115,59 @@ function renderMatchDetail(data) {
   if (timelineContainer && data.timeline && data.timeline.length > 0) {
     timelineContainer.innerHTML = `
       <div class="absolute left-0 right-0 h-0.5 bg-white/5 top-1/2 -translate-y-1/2"></div>
-      <div class="relative flex justify-between items-center px-4 w-full overflow-x-auto gap-8">
+      <div class="relative flex justify-start items-center px-4 w-full overflow-x-auto gap-8 no-scrollbar">
         ${data.timeline.map(event => `
-          <div class="flex flex-col items-center relative min-w-[60px]">
+          <div class="flex flex-col items-center relative min-w-[120px] group">
             <span class="material-symbols-outlined text-primary text-xl mb-1 ${event.type === 'goal' ? 'animate-bounce' : ''}" 
                   style="font-variation-settings: 'FILL' 1;">
               ${event.type === 'goal' ? 'sports_soccer' : (event.type === 'card' ? 'style' : 'history')}
             </span>
-            <div class="w-1.5 h-1.5 rounded-full bg-white/20"></div>
-            <span class="text-[8px] font-black mt-2 text-primary uppercase tracking-tighter text-center">
-              ${event.time}' ${event.player || ''}
+            <div class="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-primary transition-colors"></div>
+            <span class="text-[9px] font-black mt-2 text-on-surface uppercase tracking-tighter text-center whitespace-normal max-w-[100px]">
+              ${event.time} ${event.player.length > 20 ? event.player.substring(0,20)+'...' : event.player}
             </span>
           </div>
         `).join('')}
       </div>
     `;
+    
+    // Also use timeline for commentary
+    if (commentaryContainer) {
+        commentaryContainer.innerHTML = `
+            <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-4">Live Commentary</h3>
+            ${data.timeline.slice(0, 5).map(event => `
+                <div class="bg-surface-container-high p-4 rounded-sm border-l-4 ${event.type === 'goal' ? 'border-primary' : 'border-white/10'} mb-3">
+                    <span class="text-[8px] font-black ${event.type === 'goal' ? 'text-primary' : 'text-on-surface-variant/50'} uppercase mb-1 block">
+                        ${event.time} — ${event.type.toUpperCase()}
+                    </span>
+                    <p class="text-xs leading-relaxed font-medium">${event.player}</p>
+                </div>
+            `).join('')}
+        `;
+    }
   }
+}
+
+function renderMatchLineup(data) {
+    const container = document.getElementById('lineup-players-container');
+    if (!container) return;
+
+    const lineup = activeLineupTab === 'home' ? data.homeTeam.lineup : data.awayTeam.lineup;
+    
+    if (!lineup || lineup.length === 0) {
+        container.innerHTML = `<p class="text-[10px] font-black uppercase tracking-widest opacity-40">No lineup data available yet.</p>`;
+        return;
+    }
+
+    container.innerHTML = lineup.map(p => `
+        <div class="flex items-center justify-between group cursor-default">
+            <div class="flex items-center space-x-4">
+                <span class="text-xs font-bold text-on-surface-variant/40 w-4">${p.number || ''}</span>
+                <span class="text-sm font-bold group-hover:text-primary transition-colors">${p.name} ${p.starter ? '<span class="text-[8px] text-secondary ml-1">S</span>' : ''}</span>
+            </div>
+            <span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50 uppercase">${p.position}</span>
+        </div>
+    `).join('');
 }
 
 // --- FETCH UPCOMING MATCH DETAIL ---

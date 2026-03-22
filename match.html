@@ -264,7 +264,7 @@
 <span class="bg-[#CC1616] text-white px-4 py-1.5 rounded-sm text-xs font-black tracking-[0.2em] animate-pulse flex items-center shadow-[0_0_15px_rgba(204,22,22,0.5)]">
 <span class="w-1.5 h-1.5 rounded-full bg-white mr-2"></span> LIVE
                     </span>
-<span class="text-on-surface font-bold text-sm uppercase tracking-widest opacity-80">Champions League • Quarter Final</span>
+<span id="match-league-info" class="text-on-surface font-bold text-sm uppercase tracking-widest opacity-80">Champions League • Quarter Final</span>
 </div>
 <!-- Main Scoreboard Grid -->
 <div class="grid grid-cols-12 gap-4 items-center w-full">
@@ -275,10 +275,7 @@
 <img id="home-team-logo" alt="Home Team Logo" class="relative w-24 h-24 lg:w-40 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
 </div>
 <h1 id="home-team-name" class="text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow">Loading...</h1>
-<div class="flex items-center mt-2 space-x-2">
-<span class="text-primary font-medium text-base">Vini Jr. 24'</span>
-<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: &quot;FILL&quot; 1;">sports_soccer</span>
-</div>
+<div id="home-events" class="flex flex-col items-end mt-2 space-y-1 opacity-70"></div>
 </div>
 <!-- Scoreboard Central -->
 <div class="col-span-4 flex flex-col items-center">
@@ -303,10 +300,7 @@
 <img id="away-team-logo" alt="Away Team Logo" class="relative w-24 h-24 lg:w-40 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
 </div>
 <h1 id="away-team-name" class="text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow">Loading...</h1>
-<div class="flex items-center mt-2 space-x-2">
-<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: &quot;FILL&quot; 1;">sports_soccer</span>
-<span class="text-primary font-medium text-base">Haaland 41' (P)</span>
-</div>
+<div id="away-events" class="flex flex-col items-start mt-2 space-y-1 opacity-70"></div>
 </div>
 </div>
 </div>
@@ -363,52 +357,12 @@
 <div class="p-0">
 <!-- Team Selection -->
 <div class="flex">
-<button class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest bg-surface border-b-2 border-[#CC1616]">Real Madrid</button>
-<button class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40 hover:bg-white/5 transition-colors">Man City</button>
+<button id="lineup-home-tab" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest bg-surface border-b-2 border-[#CC1616]">Home Team</button>
+<button id="lineup-away-tab" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40 hover:bg-white/5 transition-colors">Away Team</button>
 </div>
 <!-- Player List -->
-<div class="p-6 space-y-4">
-<div class="flex items-center justify-between group cursor-default">
-<div class="flex items-center space-x-4">
-<span class="text-xs font-bold text-on-surface-variant/40">1</span>
-<span class="text-sm font-bold group-hover:text-primary transition-colors">Thibaut Courtois</span>
-</div>
-<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">GK</span>
-</div>
-<div class="flex items-center justify-between group cursor-default">
-<div class="flex items-center space-x-4">
-<span class="text-xs font-bold text-on-surface-variant/40">2</span>
-<span class="text-sm font-bold group-hover:text-primary transition-colors">Dani Carvajal</span>
-</div>
-<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">RB</span>
-</div>
-<div class="flex items-center justify-between group cursor-default">
-<div class="flex items-center space-x-4">
-<span class="text-xs font-bold text-on-surface-variant/40">22</span>
-<span class="text-sm font-bold group-hover:text-primary transition-colors">Antonio Rüdiger</span>
-</div>
-<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">CB</span>
-</div>
-<div class="flex items-center justify-between group cursor-default">
-<div class="flex items-center space-x-4">
-<span class="text-xs font-bold text-on-surface-variant/40">5</span>
-<span class="text-sm font-bold group-hover:text-primary transition-colors">Jude Bellingham</span>
-</div>
-<div class="flex space-x-1">
-<span class="material-symbols-outlined text-xs text-[#CC1616]">star</span>
-<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">CAM</span>
-</div>
-</div>
-<div class="flex items-center justify-between group cursor-default">
-<div class="flex items-center space-x-4">
-<span class="text-xs font-bold text-on-surface-variant/40">7</span>
-<span class="text-sm font-bold group-hover:text-primary transition-colors">Vini Jr.</span>
-</div>
-<div class="flex items-center space-x-2">
-<span class="material-symbols-outlined text-xs text-[#CC1616]" style="font-variation-settings: &quot;FILL&quot; 1;">sports_soccer</span>
-<span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50">LW</span>
-</div>
-</div>
+<div id="lineup-players-container" class="p-6 space-y-4">
+  <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Lineups will appear here.</p>
 </div>
 </div>
 </div>
@@ -434,14 +388,8 @@
 </div>
 <!-- Trending News Bento (Red Highlights) -->
 <div class="space-y-4">
-<h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary">Live Commentary</h3>
-<div class="bg-surface-container-high p-4 rounded-sm border-l-4 border-[#CC1616]">
-<span class="text-[8px] font-black text-[#CC1616] uppercase mb-1 block">57' — Substitution</span>
-<p class="text-xs leading-relaxed font-medium">Kevin De Bruyne is preparing to enter the field. Guardiola looking for more control in the midfield.</p>
-</div>
-<div class="bg-surface-container-high p-4 rounded-sm border-l-4 border-white/10">
-<span class="text-[8px] font-black text-on-surface-variant/50 uppercase mb-1 block">55' — Tactical foul</span>
-<p class="text-xs leading-relaxed font-medium">Rodri receives a yellow card for a cynical challenge on Bellingham in the middle of the park.</p>
+<div id="commentary-container" class="space-y-4">
+  <p class="text-[10px] font-black uppercase tracking-widest opacity-40 italic">Live commentary loading...</p>
 </div>
 </div>
 </div>
