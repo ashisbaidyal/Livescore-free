@@ -18,6 +18,7 @@ const SPORTS = [
 ];
 
 let currentTab = 'all';
+let currentArenaTab = 'all'; // Filter for the Arena section
 let currentPageFilter = 'live'; // Added globally to track page-specific selection (live, upcoming, finished)
 let autoRefreshTimer = null;
 
@@ -191,13 +192,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('arena-schedule-container')) {
       fetchArenaSchedule();
       setupArenaControls();
+      renderArenaTabs();
     }
 
     // "Silent" Auto Refresh logic
     setInterval(() => {
       fetchMatches(currentPageFilter);
       fetchSidebarLive();
-      if (document.getElementById('arena-schedule-container')) fetchArenaSchedule();
+      if (document.getElementById('arena-schedule-container')) fetchArenaSchedule(currentArenaTab);
     }, 15000); // 15s for scores
 
     setInterval(() => {
@@ -236,19 +238,49 @@ window.slideArena = function (direction) {
   }
 }
 
-async function fetchArenaSchedule() {
+async function fetchArenaSchedule(sport = currentArenaTab) {
   const container = document.getElementById('arena-schedule-container');
   if (!container) return;
-
+  
   try {
-    // Fetch upcoming matches for 'all' sports
-    const res = await fetch(`${API_LIVE}?status=upcoming`);
+    // Fetch upcoming matches for selected sport
+    const res = await fetch(`${API_LIVE}?status=upcoming&sport=${sport}`);
     const data = await res.json();
     const upcoming = data.matches || [];
     renderArenaSchedule(upcoming);
   } catch (err) {
     console.error('Arena Fetch Error:', err);
   }
+}
+
+function renderArenaTabs() {
+  const container = document.getElementById('arena-tabs');
+  if (!container) return;
+  container.innerHTML = SPORTS.map(sport => `
+    <button 
+      onclick="switchArenaTab('${sport.id}')"
+      class="flex-none px-6 py-2 rounded font-black text-[10px] uppercase tracking-widest transition-all
+      ${currentArenaTab === sport.id 
+        ? 'bg-primary text-white' 
+        : 'bg-white/5 text-on-surface/60 hover:bg-white/10 hover:text-white'
+      }"
+    >
+      ${sport.name}
+    </button>
+  `).join('');
+}
+
+window.switchArenaTab = function(tabId) {
+  currentArenaTab = tabId;
+  renderArenaTabs();
+  const container = document.getElementById('arena-schedule-container');
+  if (container) {
+    container.innerHTML = `
+      <div class="bg-surface-container border border-white/5 p-8 rounded-lg animate-pulse min-w-[300px] h-64"></div>
+      <div class="bg-surface-container border border-white/5 p-8 rounded-lg animate-pulse min-w-[300px] h-64"></div>
+    `;
+  }
+  fetchArenaSchedule(tabId);
 }
 
 function renderArenaSchedule(matches) {
