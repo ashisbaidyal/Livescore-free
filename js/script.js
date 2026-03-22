@@ -30,19 +30,48 @@ const timelineContainer = document.getElementById('timeline-container');
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
+  // --- HEADER & NAVIGATION LOGIC ---
   const path = window.location.pathname;
+  const fileName = path.split('/').pop() || 'index.html';
   
-  // Highlight Active Sidebar Link
+  // 1. Highlight Active Sidebar Link
   const sidebarLinks = document.querySelectorAll('aside nav a');
   sidebarLinks.forEach(link => {
     const href = link.getAttribute('href');
-    if (href && (path.includes(href) || (path === '/' && href === 'index.html'))) {
+    if (href && (fileName === href || (fileName === 'index.html' && href === '/'))) {
       link.classList.remove('text-on-surface/60');
       link.classList.add('text-primary', 'bg-white/5', 'border-l-2', 'border-primary', 'pl-5');
-      // Adjust padding for the border
       link.style.paddingLeft = '1.25rem';
     }
   });
+
+  // 2. Highlight Active Top Nav Link (Glow Effect)
+  const topNavLinks = document.querySelectorAll('#top-nav-links a');
+  topNavLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    if (href && (fileName === href || (fileName === 'index.html' && href === '/'))) {
+      link.classList.remove('text-on-surface/60');
+      link.classList.add('text-primary', 'border-b-2', 'border-primary', 'pb-1');
+    }
+  });
+
+  // 3. Header Scroll Behavior (Hide on scroll down, show on scroll up)
+  const header = document.getElementById('main-header');
+  let lastScrollTop = 0;
+  
+  if (header) {
+    window.addEventListener('scroll', () => {
+      let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollTop > lastScrollTop && scrollTop > 100) {
+        // Scrolling down
+        header.style.transform = 'translateY(-100%)';
+      } else {
+        // Scrolling up
+        header.style.transform = 'translateY(0)';
+      }
+      lastScrollTop = Math.max(0, scrollTop);
+    }, { passive: true });
+  }
 
   // Check for dynamic match detail first
   const urlParams = new URLSearchParams(window.location.search);

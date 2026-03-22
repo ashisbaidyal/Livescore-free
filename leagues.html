@@ -95,21 +95,32 @@
     </script>
 </head>
 <body class="bg-surface-container-lowest text-on-surface font-body selection:bg-primary selection:text-on-primary">
-<!-- TopNavBar -->
-<nav class="fixed top-0 w-full z-50 bg-[#131313]/80 backdrop-blur-xl border-b border-white/10 shadow-2xl shadow-black/50 flex justify-between items-center px-6 py-4">
-<div class="flex items-center gap-8">
-<span class="text-2xl font-black italic text-[#FFB4AA] tracking-tight font-headline uppercase whitespace-nowrap">LivescoreFree</span>
-<div class="hidden lg:flex gap-6 items-center">
-<a class="font-lex font-black uppercase tracking-tighter text-on-surface opacity-70 hover:opacity-100 hover:text-primary transition-all" href="index.html">Home</a>
-<a class="font-lex font-black uppercase tracking-tighter text-on-surface opacity-70 hover:opacity-100 hover:text-primary transition-all" href="live.html">Live</a>
-<a class="font-lex font-black uppercase tracking-tighter text-on-surface opacity-70 hover:opacity-100 hover:text-primary transition-all" href="upcoming.html">Schedule</a>
-<a class="font-lex font-black uppercase tracking-tighter text-on-surface opacity-70 hover:opacity-100 hover:text-primary transition-all" href="news.html">News</a>
-<a class="font-lex font-black uppercase tracking-tighter text-on-surface opacity-70 hover:opacity-100 hover:text-primary transition-all" href="trending.html">Trending</a>
-<a class="font-lex font-black uppercase tracking-tighter text-[#FFB4AA] border-b-2 border-[#CC1616] pb-1" href="leagues.html">Leagues</a>
-</div>
-</div>
+<!-- TopNavBar Shell -->
+<nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
 <div class="flex items-center gap-4">
-<button class="bg-[#CC1616] text-white px-6 py-2 rounded font-black text-[10px] uppercase tracking-widest">Watch Live</button>
+<span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
+<div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
+</div>
+<div class="hidden lg:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter" id="top-nav-links">
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="live.html">live score</a>
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">upcoming matches</a>
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="trending.html">trending</a>
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="news.html">news</a>
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="leagues.html">top league</a>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+<span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
+<span class="text-[10px] font-black tracking-widest uppercase">1.2M LIVE NOW</span>
+</div>
+<button class="material-symbols-outlined text-on-surface hover:text-primary transition-all">search</button>
+<button class="material-symbols-outlined text-on-surface hover:text-primary transition-all relative">
+                    notifications
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+</div>
 </div>
 </nav>
 <div class="flex pt-20">
