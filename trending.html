@@ -31,71 +31,71 @@
         }
     </style>
 <script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              "tertiary-container": "#63676f",
-              "on-tertiary-fixed-variant": "#43474e",
-              "tertiary-fixed-dim": "#c3c6cf",
-              "surface-container-high": "#2a2a2a",
-              "surface-container-lowest": "#0e0e0e",
-              "surface-bright": "#3a3939",
-              "on-secondary-container": "#00320f",
-              "on-primary-fixed": "#410001",
-              "surface-container-low": "#1c1b1b",
-              "surface-tint": "#FF1E1E",
-              "surface": "#131313",
-              "primary-fixed-dim": "#FF1E1E",
-              "tertiary-fixed": "#dfe2eb",
-              "on-secondary-fixed-variant": "#00531f",
-              "error": "#FF0000",
-              "secondary-container": "#1fa64a",
-              "primary-fixed": "#FFFFFF",
-              "outline-variant": "#5d3f3c",
-              "secondary-fixed": "#80fc94",
-              "on-primary": "#690003",
-              "on-background": "#e5e2e1",
-              "secondary-fixed-dim": "#62df7b",
-              "on-surface": "#e5e2e1",
-              "on-primary-fixed-variant": "#930006",
-              "inverse-surface": "#e5e2e1",
-              "on-tertiary": "#2d3137",
-              "on-primary-container": "#FFE5E5",
-              "surface-container": "#201f1f",
-              "secondary": "#62df7b",
-              "on-tertiary-fixed": "#181c22",
-              "error-container": "#93000a",
-              "tertiary": "#c3c6cf",
-              "inverse-primary": "#bf050e",
-              "inverse-on-surface": "#313030",
-              "surface-dim": "#131313",
-              "on-surface-variant": "#8B0000",
-              "background": "#131313",
-              "surface-container-highest": "#353534",
-              "on-secondary-fixed": "#002108",
-              "on-error": "#690005",
-              "on-tertiary-container": "#e3e6ef",
-              "primary": "#CC1616",
-              "on-secondary": "#003913",
-              "on-error-container": "#FFECEC",
-              "outline": "#ad8883",
-              "surface-variant": "#353534",
-              "primary-container": "#cc1616"
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary": "#690003",
+                        "tertiary-fixed-dim": "#c3c6cf",
+                        "on-primary-fixed-variant": "#930006",
+                        "secondary-container": "#1fa64a",
+                        "on-secondary-fixed-variant": "#00531f",
+                        "surface-container-low": "#1c1b1b",
+                        "tertiary": "#c3c6cf",
+                        "on-tertiary-container": "#e3e6ef",
+                        "inverse-primary": "#bf050e",
+                        "secondary": "#62df7b",
+                        "inverse-surface": "#e5e2e1",
+                        "surface": "#131313",
+                        "on-secondary-fixed": "#002108",
+                        "tertiary-container": "#63676f",
+                        "on-background": "#e5e2e1",
+                        "on-primary-container": "#FFE5E5",
+                        "background": "#131313",
+                        "outline-variant": "#5d3f3c",
+                        "tertiary-fixed": "#dfe2eb",
+                        "on-tertiary": "#2d3137",
+                        "secondary-fixed-dim": "#62df7b",
+                        "secondary-fixed": "#80fc94",
+                        "surface-dim": "#131313",
+                        "surface-bright": "#3a3939",
+                        "on-surface-variant": "#8B0000",
+                        "error": "#FF0000",
+                        "surface-container-highest": "#353534",
+                        "primary": "#CC1616",
+                        "on-tertiary-fixed-variant": "#43474e",
+                        "inverse-on-surface": "#313030",
+                        "primary-fixed-dim": "#FF1E1E",
+                        "primary-container": "#cc1616",
+                        "on-secondary": "#003913",
+                        "on-error-container": "#FFECEC",
+                        "primary-fixed": "#FFFFFF",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-high": "#2a2a2a",
+                        "error-container": "#93000a",
+                        "surface-tint": "#CC1616",
+                        "on-error": "#690005",
+                        "outline": "#ad8883",
+                        "on-tertiary-fixed": "#181c22",
+                        "on-secondary-container": "#00320f",
+                        "surface-variant": "#353534",
+                        "surface-container": "#201f1f",
+                        "on-primary-fixed": "#410001"
+                    },
+                    fontFamily: {
+                        "headline": ["Lexend"],
+                        "body": ["Lexend"],
+                        "label": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
             },
-            fontFamily: {
-              "headline": ["Lexend"],
-              "body": ["Lexend"],
-              "label": ["Lexend"]
-            },
-            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
-          },
-        },
-      }
+        }
     </script>
 </head>
-<body class="bg-surface text-on-surface font-body overflow-x-hidden">
+<body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
 <!-- TopNavBar Shell -->
 <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
 <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
@@ -582,41 +582,63 @@
 </section>
 </main>
 <!-- Footer -->
-<footer class="relative w-full py-12 px-8 border-t border-white/5 bg-[#050505]">
-<div class="grid grid-cols-4 gap-8 max-w-7xl mx-auto">
-<div>
-<div class="text-lg font-black text-[#E5E2E1] uppercase mb-4 tracking-tighter italic">LIVESCOREFREE</div>
-<p class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 leading-relaxed uppercase">
-                    Kinetic broadcast data streaming worldwide. Real-time metrics for elite sport performance.
+<footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+<!-- Quick Links -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Quick Links</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Football</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Basketball</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Baseball</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Tennis</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">NFL</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">NBA</a></li>
+</ul>
+</div>
+<!-- Legal -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Legal</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Privacy Policy</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Terms of Service</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Cookie Settings</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">DMCA Policy</a></li>
+</ul>
+</div>
+<!-- Resources -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Resources</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Data Sources</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Help Center</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Advertise With Us</a></li>
+</ul>
+</div>
+<!-- Support -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Support</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Support on Ko-fi</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Donation Transparency</a></li>
+</ul>
+</div>
+</div>
+<!-- Bottom Branding & Copyright -->
+<div class="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col items-center md:items-start gap-4">
+<div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">LIVESCOREFREE</div>
+<p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">
+                    © 2024 LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.
                 </p>
 </div>
-<div>
-<h4 class="font-['Lexend'] font-bold text-[10px] tracking-widest uppercase text-[#CC1616] mb-4">Quick Links</h4>
-<ul class="space-y-2">
-<li><a class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 hover:text-[#CC1616] transition-colors uppercase" href="#">Trending</a></li>
-<li><a class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 hover:text-[#CC1616] transition-colors uppercase" href="#">Live Scores</a></li>
-<li><a class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 hover:text-[#CC1616] transition-colors uppercase" href="#">Betting Hub</a></li>
-</ul>
-</div>
-<div>
-<h4 class="font-['Lexend'] font-bold text-[10px] tracking-widest uppercase text-[#CC1616] mb-4">Support</h4>
-<ul class="space-y-2">
-<li><a class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 hover:text-[#CC1616] transition-colors uppercase" href="#">Help Center</a></li>
-<li><a class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 hover:text-[#CC1616] transition-colors uppercase" href="#">Contact Us</a></li>
-<li><a class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 hover:text-[#CC1616] transition-colors uppercase" href="#">Advertisers</a></li>
-</ul>
-</div>
-<div>
-<h4 class="font-['Lexend'] font-bold text-[10px] tracking-widest uppercase text-[#CC1616] mb-4">Legal</h4>
-<ul class="space-y-2">
-<li><a class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 hover:text-[#CC1616] transition-colors uppercase" href="#">Privacy Policy</a></li>
-<li><a class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 hover:text-[#CC1616] transition-colors uppercase" href="#">Terms of Service</a></li>
-<li><a class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 hover:text-[#CC1616] transition-colors uppercase" href="#">Cookie Settings</a></li>
-</ul>
+<div class="flex gap-6">
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">share</button>
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">rss_feed</button>
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">settings_input_antenna</button>
 </div>
 </div>
-<div class="mt-12 text-center pt-8 border-t border-white/5">
-<p class="font-['Lexend'] font-light text-[10px] tracking-normal text-[#E5E2E1]/40 uppercase italic">© 2026 LIVESCOREFREE BROADCAST. ALL RIGHTS RESERVED.</p>
 </div>
 </footer>
 <script src="js/script.js"></script>

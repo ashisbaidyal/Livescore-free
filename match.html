@@ -16,69 +16,68 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&amp;display=swap" rel="stylesheet">
 <script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              "tertiary-fixed": "#dfe2eb",
-              "outline": "#ad8883",
-              "on-error": "#690005",
-              "primary-fixed-dim": "#FF1E1E",
-              "tertiary-container": "#63676f",
-              "error-container": "#93000a",
-              "secondary-container": "#cc1616", // Replaced green with vibrant red
-              "on-tertiary": "#2d3137",
-              "on-secondary": "#ffffff", // Replaced dark green text with white
-              "surface": "#131313",
-              "surface-container-highest": "#353534",
-              "on-secondary-fixed-variant": "#930006", // Replaced green variant
-              "surface-container-low": "#1c1b1b",
-              "on-surface-variant": "#8B0000",
-              "secondary-fixed-dim": "#FF1E1E", // Replaced green dim
-              "surface-variant": "#353534",
-              "outline-variant": "#5d3f3c",
-              "secondary-fixed": "#FFFFFF", // Replaced green fixed
-              "on-primary-container": "#FFE5E5",
-              "inverse-surface": "#e5e2e1",
-              "inverse-primary": "#bf050e",
-              "primary-fixed": "#FFFFFF",
-              "surface-bright": "#3a3939",
-              "secondary": "#cc1616", // Primary accent red
-              "surface-container-lowest": "#0e0e0e",
-              "on-primary-fixed-variant": "#930006",
-              "on-primary": "#690003",
-              "inverse-on-surface": "#313030",
-              "on-surface": "#e5e2e1",
-              "surface-tint": "#FF1E1E",
-              "on-tertiary-container": "#e3e6ef",
-              "on-primary-fixed": "#410001",
-              "primary": "#CC1616",
-              "surface-container-high": "#2a2a2a",
-              "on-background": "#e5e2e1",
-              "tertiary-fixed-dim": "#c3c6cf",
-              "on-secondary-fixed": "#410001", // Replaced green fixed
-              "background": "#131313",
-              "on-error-container": "#FFECEC",
-              "primary-container": "#cc1616",
-              "surface-container": "#201f1f",
-              "tertiary": "#c3c6cf",
-              "on-tertiary-fixed": "#181c22",
-              "on-secondary-container": "#FFE5E5", // Replaced green container text
-              "on-tertiary-fixed-variant": "#43474e",
-              "error": "#FF0000",
-              "surface-dim": "#131313"
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary": "#690003",
+                        "tertiary-fixed-dim": "#c3c6cf",
+                        "on-primary-fixed-variant": "#930006",
+                        "secondary-container": "#1fa64a",
+                        "on-secondary-fixed-variant": "#00531f",
+                        "surface-container-low": "#1c1b1b",
+                        "tertiary": "#c3c6cf",
+                        "on-tertiary-container": "#e3e6ef",
+                        "inverse-primary": "#bf050e",
+                        "secondary": "#62df7b",
+                        "inverse-surface": "#e5e2e1",
+                        "surface": "#131313",
+                        "on-secondary-fixed": "#002108",
+                        "tertiary-container": "#63676f",
+                        "on-background": "#e5e2e1",
+                        "on-primary-container": "#FFE5E5",
+                        "background": "#131313",
+                        "outline-variant": "#5d3f3c",
+                        "tertiary-fixed": "#dfe2eb",
+                        "on-tertiary": "#2d3137",
+                        "secondary-fixed-dim": "#62df7b",
+                        "secondary-fixed": "#80fc94",
+                        "surface-dim": "#131313",
+                        "surface-bright": "#3a3939",
+                        "on-surface-variant": "#8B0000",
+                        "error": "#FF0000",
+                        "surface-container-highest": "#353534",
+                        "primary": "#CC1616",
+                        "on-tertiary-fixed-variant": "#43474e",
+                        "inverse-on-surface": "#313030",
+                        "primary-fixed-dim": "#FF1E1E",
+                        "primary-container": "#cc1616",
+                        "on-secondary": "#003913",
+                        "on-error-container": "#FFECEC",
+                        "primary-fixed": "#FFFFFF",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-high": "#2a2a2a",
+                        "error-container": "#93000a",
+                        "surface-tint": "#CC1616",
+                        "on-error": "#690005",
+                        "outline": "#ad8883",
+                        "on-tertiary-fixed": "#181c22",
+                        "on-secondary-container": "#00320f",
+                        "surface-variant": "#353534",
+                        "surface-container": "#201f1f",
+                        "on-primary-fixed": "#410001"
+                    },
+                    fontFamily: {
+                        "headline": ["Lexend"],
+                        "body": ["Lexend"],
+                        "label": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
             },
-            fontFamily: {
-              "headline": ["Lexend"],
-              "body": ["Lexend"],
-              "label": ["Lexend"],
-              "digital": ["Orbitron"]
-            },
-            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
-          },
-        },
-      }
+        }
     </script>
 <style>
         .material-symbols-outlined {
@@ -100,7 +99,7 @@
         }
     </style>
 </head>
-<body class="bg-surface-container-lowest text-on-surface font-body selection:bg-primary selection:text-on-primary">
+<body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
 <!-- TopNavBar Shell -->
 <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
 <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
@@ -403,21 +402,63 @@
 </section>
 </main>
 <!-- Footer -->
-<footer class="lg:ml-64 w-full py-12 px-8 border-t border-white/5 bg-[#0E0E0E] flex flex-col md:flex-row justify-between items-center gap-8">
-<div class="flex flex-col items-center md:items-start">
-<div class="text-lg font-black text-[#E5E2E1]/50 mb-2 italic tracking-tighter uppercase">LivescoreFree</div>
-<p class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/30">© 2024 LivescoreFree Media. All Rights Reserved.</p>
+<footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+<!-- Quick Links -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Quick Links</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Football</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Basketball</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Baseball</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Tennis</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">NFL</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">NBA</a></li>
+</ul>
 </div>
-<div class="flex flex-wrap justify-center gap-x-8 gap-y-4">
-<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Privacy Policy</a>
-<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Terms of Service</a>
-<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Broadcast Rights</a>
-<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Careers</a>
-<a class="font-['Lexend'] text-[10px] font-light tracking-wide text-[#E5E2E1]/40 hover:text-[#FFB4AA] transition-colors uppercase" href="#">Cookie Settings</a>
+<!-- Legal -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Legal</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Privacy Policy</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Terms of Service</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Cookie Settings</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">DMCA Policy</a></li>
+</ul>
 </div>
-<div class="flex space-x-6">
-<span class="material-symbols-outlined text-[#E5E2E1]/30 hover:text-[#FFB4AA] transition-colors cursor-pointer">public</span>
-<span class="material-symbols-outlined text-[#E5E2E1]/30 hover:text-[#FFB4AA] transition-colors cursor-pointer">share</span>
+<!-- Resources -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Resources</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Data Sources</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Help Center</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Advertise With Us</a></li>
+</ul>
+</div>
+<!-- Support -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Support</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Support on Ko-fi</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Donation Transparency</a></li>
+</ul>
+</div>
+</div>
+<!-- Bottom Branding & Copyright -->
+<div class="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col items-center md:items-start gap-4">
+<div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">LIVESCOREFREE</div>
+<p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">
+                    © 2024 LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.
+                </p>
+</div>
+<div class="flex gap-6">
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">share</button>
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">rss_feed</button>
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">settings_input_antenna</button>
+</div>
+</div>
 </div>
 </footer>
 <script src="/js/script.js"></script>
