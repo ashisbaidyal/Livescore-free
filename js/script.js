@@ -2097,3 +2097,190 @@ if (window.location.pathname.includes('news.html')) {
     } catch(e) { console.error('News hero update error:', e); }
   })();
 }
+
+// --- SCHEDULE CENTRE (upcoming.html) ---
+if (window.location.pathname.includes('upcoming')) {
+  let selectedDateOffset = 0;
+  const SPORT_ICONS = {
+    soccer: 'sports_soccer', basketball: 'sports_basketball', football: 'sports_football',
+    baseball: 'sports_baseball', hockey: 'sports_hockey', tennis: 'sports_tennis',
+    cricket: 'sports_cricket', mma: 'sports_mma', racing: 'directions_car', golf: 'golf_course'
+  };
+
+  // Generate date tabs
+  function renderDateTabs() {
+    const container = document.getElementById('date-tabs');
+    if (!container) return;
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let tabs = '';
+    for (let i = 0; i <= 7; i++) {
+      const d = new Date(); d.setDate(d.getDate() + i);
+      let label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+      const active = i === selectedDateOffset;
+      tabs += `<button onclick="window.selectDate(${i})" class="flex-none px-5 py-2.5 rounded-lg font-black text-[11px] uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer ${active ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-white/5 text-on-surface/60 hover:bg-white/10 hover:text-white border border-white/5'}">${label}</button>`;
+    }
+    container.innerHTML = tabs;
+  }
+
+  window.selectDate = function(offset) {
+    selectedDateOffset = offset;
+    renderDateTabs();
+    fetchScheduleCentre();
+  };
+
+  // Fetch and render sport-grouped matches
+  async function fetchScheduleCentre() {
+    const container = document.getElementById('matches-container');
+    if (!container) return;
+    container.innerHTML = '<div class="flex items-center justify-center py-20"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>';
+
+    try {
+      const sport = currentTab || 'all';
+      const res = await fetch(`${API_UPCOMING}?sport=${sport}&days=${selectedDateOffset + 1}`);
+      const data = await res.json();
+      let matches = data.matches || [];
+
+      // Filter to only the selected date
+      const target = new Date(); target.setDate(target.getDate() + selectedDateOffset);
+      const targetStr = target.toDateString();
+      matches = matches.filter(m => {
+        try { return new Date(m.date).toDateString() === targetStr; } catch(e) { return false; }
+      });
+
+      if (matches.length === 0) {
+        container.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-20 text-center">
+            <span class="material-symbols-outlined text-5xl text-on-surface/15 mb-4">calendar_month</span>
+            <p class="text-on-surface/30 font-black uppercase tracking-[0.3em] text-xs mb-2">No Fixtures Scheduled</p>
+            <p class="text-on-surface/20 text-[10px]">Check another date or sport category</p>
+          </div>`;
+        return;
+      }
+
+      // Group by sport
+      const grouped = {};
+      matches.forEach(m => {
+        const key = m.sport || 'other';
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(m);
+      });
+
+      // Render sport sections
+      let html = '';
+      Object.entries(grouped).forEach(([sport, sportMatches]) => {
+        const icon = SPORT_ICONS[sport] || 'sports';
+        const sportName = sport.charAt(0).toUpperCase() + sport.slice(1);
+        html += `
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 mb-6">
+              <span class="material-symbols-outlined text-primary text-xl">${icon}</span>
+              <h2 class="text-xl font-black italic uppercase tracking-tight">${sportName}</h2>
+              <span class="text-[10px] font-bold text-on-surface/30 uppercase tracking-widest">${sportMatches.length} ${sportMatches.length === 1 ? 'match' : 'matches'}</span>
+            </div>
+            <div class="space-y-2">
+        `;
+
+        sportMatches.forEach(m => {
+          let kickoff = '';
+          try {
+            const d = new Date(m.date);
+            kickoff = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+          } catch(e) { kickoff = m.time || '--:--'; }
+
+          html += `
+            <a href="/upcoming_match_detail.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" 
+               class="flex items-center gap-4 md:gap-6 p-4 md:p-5 bg-[#111111] border border-white/5 rounded-xl hover:border-primary/30 hover:bg-[#151515] transition-all group cursor-pointer">
+              <!-- Time -->
+              <div class="shrink-0 w-14 text-center">
+                <span class="text-sm font-black font-mono">${kickoff}</span>
+                <span class="block text-[8px] font-bold text-on-surface/30 uppercase">GMT</span>
+              </div>
+              <!-- Divider -->
+              <div class="w-px h-10 bg-white/10 shrink-0"></div>
+              <!-- Home Team -->
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <span class="text-sm font-bold truncate">${m.homeTeam.name}</span>
+                <img src="${m.homeTeam.logo}" class="w-8 h-8 object-contain shrink-0" onerror="this.src='/public/logo.png'">
+              </div>
+              <!-- VS -->
+              <span class="text-[10px] font-black text-on-surface/30 uppercase shrink-0">vs</span>
+              <!-- Away Team -->
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <img src="${m.awayTeam.logo}" class="w-8 h-8 object-contain shrink-0" onerror="this.src='/public/logo.png'">
+                <span class="text-sm font-bold truncate">${m.awayTeam.name}</span>
+              </div>
+              <!-- Broadcast + Notify -->
+              <div class="hidden md:flex items-center gap-4 shrink-0">
+                <span class="text-[9px] font-bold text-on-surface/30 uppercase tracking-wider">${m.broadcast || m.league || 'ESPN'}</span>
+                <button onclick="event.preventDefault(); event.stopPropagation(); handleNotification('${m.id}','${m.homeTeam.name} vs ${m.awayTeam.name}')" 
+                        class="flex items-center gap-1.5 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-white hover:border-primary transition-all">
+                  <span class="material-symbols-outlined text-xs">notifications</span> Notify Me
+                </button>
+              </div>
+            </a>
+          `;
+        });
+
+        html += `</div></div>`;
+      });
+
+      container.innerHTML = html;
+
+      // Set up countdown for first match
+      if (matches.length > 0) setupCountdown(matches[0]);
+
+    } catch(err) {
+      console.error('Schedule Centre error:', err);
+      container.innerHTML = '<div class="text-center py-20 text-on-surface/30 text-sm">Failed to load fixtures. Please refresh.</div>';
+    }
+  }
+
+  // Countdown timer
+  let countdownInterval;
+  function setupCountdown(match) {
+    const timer = document.getElementById('countdown-timer');
+    const homeLogo = document.getElementById('countdown-home-logo');
+    const awayLogo = document.getElementById('countdown-away-logo');
+    const matchName = document.getElementById('countdown-match-name');
+    const matchLeague = document.getElementById('countdown-match-league');
+    if (!timer) return;
+
+    if (homeLogo) homeLogo.innerHTML = `<img src="${match.homeTeam.logo}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">`;
+    if (awayLogo) awayLogo.innerHTML = `<img src="${match.awayTeam.logo}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">`;
+    if (matchName) matchName.textContent = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
+    if (matchLeague) matchLeague.textContent = `${match.league || match.sport} • ${match.venue || ''}`;
+
+    if (countdownInterval) clearInterval(countdownInterval);
+    const matchDate = new Date(match.date);
+
+    function tick() {
+      const now = new Date();
+      const diff = matchDate - now;
+      if (diff <= 0) { timer.textContent = 'KICKOFF!'; return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      timer.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+  }
+
+  // Override renderMatches on upcoming page to use sport-grouped layout
+  const originalRenderMatches = window.renderMatches || renderMatches;
+  renderMatches = function(matches) {
+    if (window.location.pathname.includes('upcoming')) {
+      // Schedule Centre handles its own rendering
+      return;
+    }
+    originalRenderMatches(matches);
+  };
+
+  // Init
+  renderDateTabs();
+  fetchScheduleCentre();
+
+  // Auto-refresh every 2 minutes
+  setInterval(fetchScheduleCentre, 120000);
+}
