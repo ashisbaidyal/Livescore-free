@@ -1134,7 +1134,9 @@ function renderMatchDetail(data) {
     // Render Dots
     if (statsDots) {
         statsDots.innerHTML = chunks.map((_, i) => `
-            <div class="w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === 0 ? 'bg-secondary' : 'bg-white/10'}"></div>
+            <div class="w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer ${i === 0 ? 'bg-secondary' : 'bg-white/10'}" 
+                 onclick="document.getElementById('stats-container').scrollTo({ left: ${i} * document.getElementById('stats-container').clientWidth, behavior: 'smooth' })">
+            </div>
         `).join('');
 
         // Sync dots on scroll
@@ -1155,24 +1157,86 @@ function renderMatchDetail(data) {
   }
 
   if (timelineContainer && data.timeline && data.timeline.length > 0) {
+    // Redesign as Vertical Split Timeline (Home vs Away)
+    const reversedTimeline = [...data.timeline].reverse(); // Oldest first for vertical flow
+    
     timelineContainer.innerHTML = `
-      <div class="absolute left-0 right-0 h-0.5 bg-white/5 top-1/2 -translate-y-1/2"></div>
-      <div class="relative flex justify-start items-center px-4 w-full overflow-x-auto gap-8 no-scrollbar">
-        ${data.timeline.map(event => `
-          <div class="flex flex-col items-center relative min-w-[120px] group">
-            <span class="material-symbols-outlined text-primary text-xl mb-1 ${event.type === 'goal' ? 'animate-bounce' : ''}" 
-                  style="font-variation-settings: 'FILL' 1;">
-              ${event.type === 'goal' ? 'sports_soccer' : (event.type === 'card' ? 'style' : 'history')}
-            </span>
-            <div class="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-primary transition-colors"></div>
-            <span class="text-[9px] font-black mt-2 text-on-surface uppercase tracking-tighter text-center whitespace-normal max-w-[100px]">
-              ${event.time} ${event.player.length > 20 ? event.player.substring(0,20)+'...' : event.player}
-            </span>
-          </div>
-        `).join('')}
+      <div class="flex flex-col items-center w-full max-w-2xl mx-auto py-10">
+        <!-- Vertical Timeline Header: Team Logos -->
+        <div class="flex justify-between items-center w-full mb-16 px-12">
+            <img src="${data.homeTeam.logo}" class="w-12 h-12 object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" onerror="this.src='/public/logo.png'">
+            <div class="w-0.5 h-12 bg-white/10"></div>
+            <img src="${data.awayTeam.logo}" class="w-12 h-12 object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" onerror="this.src='/public/logo.png'">
+        </div>
+
+        <!-- Central Line -->
+        <div class="relative w-full">
+            <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-white/10 -translate-x-1/2"></div>
+            
+            <!-- Kick Off Marker -->
+            <div class="relative z-10 flex flex-col items-center mb-12">
+                <span class="material-symbols-outlined text-white/40 text-2xl mb-2">sports</span>
+                <span class="text-[10px] font-black uppercase tracking-widest text-white/60">Kick off</span>
+            </div>
+
+            <!-- Timeline Events -->
+            <div class="space-y-12 relative z-10">
+                ${reversedTimeline.map((event, idx) => {
+                    const isHome = event.side === 'home';
+                    const isAway = event.side === 'away';
+                    const isGoal = event.type === 'goal';
+                    const isCard = event.type === 'card';
+                    const icon = isGoal ? '⚽' : (isCard ? (event.player.toLowerCase().includes('red') ? '🟥' : '🟨') : '•');
+                    
+                    return `
+                        <div class="flex items-center w-full">
+                            <!-- Left Side (Home) -->
+                            <div class="w-1/2 pr-8 text-right flex flex-col items-end">
+                                ${isHome ? `
+                                    <div class="flex items-center space-x-3 gap-2">
+                                        <div class="flex flex-col items-end">
+                                            <span class="text-xs font-bold text-white">${event.player}</span>
+                                            <span class="text-[9px] font-black uppercase text-white/40 tracking-widest">${event.type.toUpperCase()}</span>
+                                        </div>
+                                        <span class="text-xl">${icon}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <!-- Center Time -->
+                            <div class="flex-none w-12 flex justify-center">
+                                <span class="bg-surface-container px-2 py-1 rounded text-[10px] font-black border border-white/5 text-primary">${event.time}</span>
+                            </div>
+
+                            <!-- Right Side (Away) -->
+                            <div class="w-1/2 pl-8 text-left flex flex-col items-start">
+                                ${isAway ? `
+                                    <div class="flex items-center space-x-3 gap-2">
+                                        <span class="text-xl">${icon}</span>
+                                        <div class="flex flex-col items-start">
+                                            <span class="text-xs font-bold text-white">${event.player}</span>
+                                            <span class="text-[9px] font-black uppercase text-white/40 tracking-widest">${event.type.toUpperCase()}</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+
+            <!-- Half Time / Full Time Marker -->
+            <div class="relative z-10 flex flex-col items-center mt-12">
+                <div class="w-0.5 h-12 bg-white/10 mb-2"></div>
+                <span class="material-symbols-outlined text-white/40 text-2xl mb-2">sports_score</span>
+                <span class="text-[10px] font-black uppercase tracking-widest text-white/60">
+                    ${data.status === 'live' ? 'In Progress' : 'Full Time'}
+                </span>
+            </div>
+        </div>
       </div>
     `;
-    
+
     // Also use timeline for commentary
     if (commentaryContainer) {
         commentaryContainer.innerHTML = `
