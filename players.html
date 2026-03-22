@@ -133,6 +133,7 @@
 </nav>
 <!-- Sidebar Overlay -->
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
+<div class="flex pt-16 min-h-screen">
 <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto no-scrollbar">
 <nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
 <!-- Main Navigation -->
@@ -203,7 +204,7 @@
 </nav>
 </aside>
 <!-- Main Content -->
-<main class="md:pl-64 pt-20 min-h-screen">
+<main class="flex-1 w-full bg-surface relative overflow-hidden">
 <!-- Hero Slider Section -->
 <section class="relative h-[819px] w-full overflow-hidden">
 <img alt="High-resolution action shot of Lionel Messi in action on the pitch" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPnRbky04Xu2WwfbbvUNkMfhfJ5oQ6yyXh6sc5XmbffSyCcWsP90yh3EYmcbtHXzISo_TFxxiRuFFh-kSkjBGTqCe81yP62Bx0TLdLpR9t7BBrWt0DUxlHEYlRJ4nQYFBtfOOxofd7lXcPMsrclHyB_CW_OouCWg69ldkm0R9616MwGKt3YmpaEoJ-gTcjMuvRBiZB2GikR2k6SFGbse79205tbgRTJMsnWR02KCl9GzfaOEo-o4jwSMZqznoVVvr0F9G_hYkEFn-G"/>
@@ -604,7 +605,7 @@
 </div>
 </section>
 <!-- Footer -->
-<footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
+</main></div><footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
 <div class="max-w-7xl mx-auto px-6">
 <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
 <!-- Quick Links -->
@@ -663,12 +664,6 @@
 </div>
 </div>
 </footer>
-</main>
-<!-- Contextual FAB (Suppressing as per guidelines for this detailed hub view, but logic included for mobile focus) -->
-<div class="fixed bottom-6 right-6 md:hidden">
-<button class="w-16 h-16 stadium-gradient text-white rounded-full shadow-2xl flex items-center justify-center">
-<span class="material-symbols-outlined text-3xl">sports_score</span>
-</button>
-</div>
 <script src="js/script.js"></script>
-</body></html>
+</body>
+</html>

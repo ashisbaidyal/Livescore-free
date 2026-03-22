@@ -129,7 +129,7 @@
 </nav>
 <!-- Sidebar Overlay -->
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
-<!-- SideNavBar -->
+<div class="flex pt-16 min-h-screen">
 <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto no-scrollbar">
 <nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
 <!-- Main Navigation -->
@@ -200,7 +200,7 @@
 </nav>
 </aside>
 <!-- Main Content Canvas -->
-<main class="lg:ml-64 pt-20 min-h-screen">
+<main class="flex-1 w-full bg-surface relative overflow-hidden">
 <!-- 1. Hero Kinetic Slider Section -->
 <section class="relative w-full h-[665px] bg-surface-container-lowest overflow-hidden">
 <div aria-label="High energy football stadium with dramatic lighting" class="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDtFgY6m1Ksa-OO6gcEABd-MC7DS6AwGcn7EaEzOXaucomLXV2Pt0jdAMZYIrQYssvuHqBbX4R3amvR1WdEya337Sw9cOvfKYpF7Aq-PP5giS6vUhXvutwmtxzlTbVGdrZ45-S-reo9M590VOGZx4tFcQ1zVYRQeB9cg-y2xj0uVKhoYxqPX0_QncGkknw3QDVnyy_YQOK-lKZEwRNtxSjWjqPqandIWHnbJmax4jdcr1oquY1OO8Xli56UEHDArgnfj_Mp819m0cYe')"></div>
@@ -580,9 +580,7 @@
 </div>
 </div>
 </section>
-</main>
-<!-- Footer -->
-<footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
+</main></div><footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
 <div class="max-w-7xl mx-auto px-6">
 <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
 <!-- Quick Links -->
@@ -642,4 +640,5 @@
 </div>
 </footer>
 <script src="js/script.js"></script>
-</body></html>
+</body>
+</html>

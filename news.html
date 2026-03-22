@@ -132,7 +132,7 @@
 </nav>
 <!-- Sidebar Overlay -->
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
-<!-- Side Navigation Shell -->
+<div class="flex pt-16 min-h-screen">
 <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto no-scrollbar">
 <nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
 <!-- Main Navigation -->
@@ -203,7 +203,7 @@
 </nav>
 </aside>
 <!-- Main Content Canvas -->
-<main class="lg:ml-64 pt-16 min-h-screen">
+<main class="flex-1 w-full bg-surface relative overflow-hidden">
 <!-- Kinetic Hero Results Slider -->
 <section class="relative w-full h-[700px] overflow-hidden group">
 <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADPh8HZSpNcZC1RIO8M7FyiNP0Xis5T98TKjRJu9iOdrsiYtwJHfl_KuvCBAU5CKv7zgqiSQj5ZN0XSZV1eEc0bnGPQme1fv9RBmW4v2DhOcTzIiuvUxuuKMLJdOY-62MEDnxr1RKlFymUV34tlr9uekEfKkvcWWmBEuabgiKGa6p9TwQ4W-0MUdAjXdAyHtC7wRNVQsCiLu06jeK-dqqAQL1Yf1G5wGaJ1XUpeeGoLs3LL3tVfJ7mcadR7hSgcsojtSRfdEPJLD3q')"></div>
@@ -644,5 +644,65 @@
 <ul class="space-y-2 text-[10px] font-bold uppercase text-on-surface/60">
 <li><a class="hover:text-white transition-colors" href="#">Premier League</a></li>
 <li><a class="hover:text-white transition-colors" href="#">La Liga</a></li>
-<li><a class="hover:text-white transition-colors" href="#">Bundesliga</a></li></ul></div></div></section></main><script src="js/script.js"></script>
-</body></html>
+<li><a class="hover:text-white transition-colors" href="#">Bundesliga</a></li></ul></div></div></section></main></div><footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+<!-- Quick Links -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Quick Links</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Football</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Basketball</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Baseball</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Tennis</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">NFL</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">NBA</a></li>
+</ul>
+</div>
+<!-- Legal -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Legal</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Privacy Policy</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Terms of Service</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Cookie Settings</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">DMCA Policy</a></li>
+</ul>
+</div>
+<!-- Resources -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Resources</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Data Sources</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Help Center</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Advertise With Us</a></li>
+</ul>
+</div>
+<!-- Support -->
+<div class="flex flex-col gap-6">
+<h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Support</h5>
+<ul class="flex flex-col gap-4">
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Support on Ko-fi</a></li>
+<li class=""><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="#">Donation Transparency</a></li>
+</ul>
+</div>
+</div>
+<!-- Bottom Branding & Copyright -->
+<div class="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col items-center md:items-start gap-4">
+<div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">LIVESCOREFREE</div>
+<p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">
+                    © 2024 LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.
+                </p>
+</div>
+<div class="flex gap-6">
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">share</button>
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">rss_feed</button>
+<button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">settings_input_antenna</button>
+</div>
+</div>
+</div>
+</footer>
+<script src="js/script.js"></script>
+</body>
+</html>

@@ -129,6 +129,7 @@
 </nav>
 <!-- Sidebar Overlay -->
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
+<div class="flex pt-16 min-h-screen">
 <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto no-scrollbar">
 <nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
 <!-- Main Navigation -->
@@ -199,7 +200,7 @@
 </nav>
 </aside>
 <!-- Main Content Canvas -->
-<main class="lg:ml-64 mt-16 flex-1 flex flex-col">
+<main class="flex-1 w-full bg-surface relative overflow-hidden">
 <!-- Hero Results Slider -->
 <section class="relative h-[614px] w-full overflow-hidden bg-black group">
 <div aria-label="High energy soccer match celebration in a packed stadium" class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-60" role="img" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCGfDWcQ-49Ef4ktxHIFn9Q6c-Lw_iygz1-s21n762G5bzjIjw1OMtOmwbhgtso0J65PNSJRce0ZWt2JPvdsUb8f5bH_5YRHaSbGUeXBZdgw9j1S1b4cADnRfj-kJ9BZvlL3oVohvyAPdEfeEhM8qPBV1VgtaEgnl0h9PG10cl9-0aLW4Wle3KD0CTvbY7_6Ji94_KeUD7I96OwS59bvl8lNp2iroeRryL9a9RL0lHHHiHMjF4reG9agWwFZO7wqr7P9RHfvkixeSFr')"></div>
@@ -440,9 +441,7 @@
 </div>
 </div>
 </section>
-</main>
-<!-- Footer -->
-<footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
+</main></div><footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 mt-20 font-['Lexend'] relative z-20">
 <div class="max-w-7xl mx-auto px-6">
 <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
 <!-- Quick Links -->
@@ -502,4 +501,5 @@
 </div>
 </footer>
 <script src="js/script.js"></script>
-</body></html>
+</body>
+</html>
