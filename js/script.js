@@ -488,23 +488,32 @@ function renderHeroSlider(matches, statusFilter) {
 async function fetchLeagues() {
   if (!leaguesContainer && !topTierContainer) return;
   try {
-    const [standingsRes, liveRes] = await Promise.all([
-      fetch(`${API_INFO}?type=standings&sport=soccer&league=eng.1`),
-      fetch(`${API_LIVE}?sport=all`)
-    ]);
-    const standingsData = await standingsRes.json();
+    // Fetch live matches first for status badges
+    const liveRes = await fetch(`${API_LIVE}?sport=all`);
     const liveData = await liveRes.json();
     const liveMatches = liveData.matches || [];
-    const standings = standingsData.standings?.[0]?.entries || [];
+
+    // Fetch standings for key leagues
+    const [eplRes, laligaRes] = await Promise.all([
+      fetch(`${API_INFO}?type=standings&sport=soccer&league=eng.1`),
+      fetch(`${API_INFO}?type=standings&sport=soccer&league=esp.1`)
+    ]);
+
+    const eplData = await eplRes.json();
+    const laligaData = await laligaRes.json();
+
+    const allStandings = {
+      'eng.1': eplData.standings?.[0]?.entries || [],
+      'esp.1': laligaData.standings?.[0]?.entries || []
+    };
     
-    renderLeaguesHub(standings, liveMatches);
+    renderLeaguesHub(allStandings, liveMatches);
   } catch (err) {
     console.error('Leagues error:', err);
-    // Silent fallback - users see static content or previous state if it exists
   }
 }
 
-function renderLeaguesHub(standings, liveMatches) {
+function renderLeaguesHub(standingsMap, liveMatches) {
   // 1. Top Tier (Elite)
   if (topTierContainer) {
     const topLeagues = [
@@ -534,8 +543,8 @@ function renderLeaguesHub(standings, liveMatches) {
   // 2. Combat Sports
   if (combatSportsContainer) {
     const combatLeagues = [
-      { name: 'UFC', league: 'ufc', sport: 'mma', img: 'https://livescorefree.online/public/hero-ufc.jpg' },
-      { name: 'WBC', league: 'wbc', sport: 'mma', img: 'https://livescorefree.online/public/hero-boxing.jpg' }
+      { id: 'ufc', name: 'UFC', sport: 'mma', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvIyeKN8pU6Tv8l7j-RmQf1mq1YYkRNanPO1kQCTkfpqO1lnOXuSXrM1XtkhkolcZdhEQS_PmMYnlFeWJFN7mnloZTh5Ma37GUcum0oXBwzOPT1dOb1NzKoEbQCIqJwLILR8GSq3XEkvk0bb5iUu5SRjqqNa7LiEsFgaTh6sCpPyjm97xrCouooxKwVn_5v4A8rEfd35QrTnsB3tXr4X7sBhD0favzvQsyRibEZUQ48Y_Zkq1Jop3gjDYtR4ex2BmQWkhgcDR589xC' },
+      { id: 'boxing', name: 'Boxing', sport: 'mma', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDch9QidtmtgyAuKOhBwokTeBFsRbDLkH0wFQjZhtJLDO9QCp6s4LrnaeRYyVXfjZbefQVmOHoMq1wSdEnhGjfTdwC8mUQGZwhyug-EnBbdPSaiIUbN9-cs51DDEzNE_B6liCVR92OWeoEHj86EllurkqqM_w2DjPnkcOYojy7BbXRQV7wpvYR8gZQqUCEQMtlIzBgQXByX4rqtAKsAW5xeNAp5h-sxvkwucT08VJYZzbUttb0wrkNwvi2OPZZLFsvKTmzj30BGI6ZL' }
     ];
     combatSportsContainer.innerHTML = combatLeagues.map(l => {
         const isLive = liveMatches.some(m => m.sport === l.sport && m.status === 'live');
@@ -566,23 +575,34 @@ function renderLeaguesHub(standings, liveMatches) {
         { name: 'Primeira Liga', country: 'Portugal', slug: 'por.1' },
         { name: 'Super Lig', country: 'Turkey', slug: 'tur.1' }
      ];
-     europeanSoccerContainer.innerHTML = euroLeagues.map(l => `
-        <div class="bg-surface-container border border-white/5 p-4 rounded text-center hover:border-primary/50 transition-all cursor-pointer group" onclick="switchTab('soccer')">
+     europeanSoccerContainer.innerHTML = euroLeagues.map(l => {
+        const isLive = liveMatches.some(m => m.leagueSlug === l.slug && m.status === 'live');
+        return `
+        <div class="bg-surface-container border border-white/5 p-4 rounded text-center hover:border-primary/50 transition-all cursor-pointer group relative" onclick="switchTab('soccer')">
+          ${isLive ? '<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse"></span>' : ''}
           <span class="material-symbols-outlined text-2xl text-on-surface/40 group-hover:text-primary mb-3">sports_soccer</span>
           <h4 class="text-xs font-black uppercase tracking-tight">${l.name}</h4>
           <p class="text-[9px] font-bold text-on-surface/30 uppercase mt-1">${l.country}</p>
         </div>
-     `).join('');
+        `;
+     }).join('');
   }
 
-  // 4. Standings Section (Keep EPL as featured)
+  // 4. Standings Section (Tabbed between EPL and LaLiga)
   const standingsTableContainer = document.getElementById('standings-table-container');
-  if (standingsTableContainer && standings.length > 0) {
+  if (standingsTableContainer) {
+    const activeLeague = standingsMap['esp.1'].length > 0 ? 'esp.1' : 'eng.1'; // Simple toggle or default
+    const standings = standingsMap[activeLeague] || [];
+    const leagueName = activeLeague === 'eng.1' ? 'Premier League' : 'LaLiga EA Sports';
+
     standingsTableContainer.innerHTML = `
       <div class="flex items-end justify-between mb-8 border-l-4 border-primary pl-4">
         <div>
           <h2 class="text-3xl font-black italic uppercase tracking-tighter">Live Standings</h2>
-          <p class="text-xs font-bold text-on-surface opacity-40 uppercase tracking-widest">Premier League Table</p>
+          <p class="text-xs font-bold text-on-surface opacity-40 uppercase tracking-widest">${leagueName} Table</p>
+        </div>
+        <div class="flex gap-2">
+           <button onclick="fetchLeagues()" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Refresh</button>
         </div>
       </div>
       <div class="bg-surface-container border border-white/5 rounded-xl overflow-hidden">
@@ -601,8 +621,8 @@ function renderLeaguesHub(standings, liveMatches) {
               <tr class="hover:bg-white/5 transition-colors">
                 <td class="px-6 py-4 text-on-surface/40">${e.stats.find(s => s.name === 'rank')?.value || '-'}</td>
                 <td class="px-6 py-4 flex items-center gap-3">
-                  <img src="${e.team.logos?.[0]?.href}" class="w-4 h-4 object-contain">
-                  <span>${e.team.displayName}</span>
+                  <img src="${e.team.logos?.[0]?.href}" class="w-4 h-4 object-contain" onerror="this.src='/public/logo.png'">
+                  <span class="truncate max-w-[120px]">${e.team.displayName}</span>
                 </td>
                 <td class="px-6 py-4">${e.stats.find(s => s.name === 'gamesPlayed')?.value || '0'}</td>
                 <td class="px-6 py-4 ${e.stats.find(s => s.name === 'pointDifferential')?.value >= 0 ? 'text-primary' : 'text-on-surface/40'}">${e.stats.find(s => s.name === 'pointDifferential')?.displayValue || '0'}</td>
