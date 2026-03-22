@@ -8,15 +8,16 @@ const API_LIVE = '/api/live';
 const API_MATCH = '/api/match';
 const SPORTS = [
   { id: 'all', name: 'All' },
-  { id: 'football', name: 'Soccer' },
+  { id: 'soccer', name: 'Soccer' },
   { id: 'basketball', name: 'Basketball' },
+  { id: 'american-football', name: 'NFL' },
   { id: 'cricket', name: 'Cricket' },
   { id: 'tennis', name: 'Tennis' },
-  { id: 'american-football', name: 'NFL' },
   { id: 'hockey', name: 'Hockey' },
   { id: 'baseball', name: 'Baseball' },
   { id: 'mma', name: 'MMA' },
-  { id: 'racing', name: 'Racing' }
+  { id: 'racing', name: 'Racing' },
+  { id: 'golf', name: 'Golf' }
 ];
 
 let currentTab = 'all';
@@ -184,35 +185,34 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchMatches(currentPageFilter);
     fetchSidebarLive();
     fetchNews();
+    if (heroSliderContainer) fetchHeroData(currentPageFilter);
+    if (leaguesContainer) fetchLeagues();
+    if (playersContainer || trendingPlayersContainer) fetchPlayers();
+    if (document.getElementById('arena-schedule-container')) {
+      fetchArenaSchedule();
+      setupArenaControls();
+    }
 
     // "Silent" Auto Refresh logic
     setInterval(() => {
       fetchMatches(currentPageFilter);
       fetchSidebarLive();
-    }, 10000); // 10s for scores
+      if (document.getElementById('arena-schedule-container')) fetchArenaSchedule();
+    }, 15000); // 15s for scores
 
     setInterval(() => {
       fetchNews();
     }, 300000); // 5m for news
 
-    // Additional Hubs
-    if (heroSliderContainer) fetchHeroData(statusFilter);
-    if (leaguesContainer) fetchLeagues();
-    if (playersContainer || trendingPlayersContainer) fetchPlayers();
-
     // Auto Refresh for Hubs
     setInterval(() => {
-      if (heroSliderContainer) fetchHeroData(statusFilter);
-    }, 60000); // 1m for hero
+      if (heroSliderContainer) fetchHeroData(currentPageFilter);
+      if (leaguesContainer) fetchLeagues();
+    }, 60000); // 1m for hero / leagues standings
 
     setInterval(() => {
       if (playersContainer || trendingPlayersContainer) fetchPlayers();
     }, 600000); // 10m for players
-
-    if (document.getElementById('arena-schedule-container')) {
-      fetchArenaSchedule();
-      setupArenaControls();
-    }
   }
 });
 
@@ -664,18 +664,26 @@ function renderSidebarLive(matches) {
 
   if (matches.length === 0) {
     sidebarLiveContainer.innerHTML = `
-      <div class="py-4 text-center opacity-30 text-[9px] font-black uppercase tracking-widest">No Live Matches</div>
+      <div class="py-8 text-center opacity-30 text-[9px] font-black uppercase tracking-widest border border-white/5 rounded-lg">No Live Matches</div>
     `;
     return;
   }
 
   sidebarLiveContainer.innerHTML = matches.map(match => `
-    <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="flex flex-col gap-2 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group">
-      <div class="flex justify-between items-center">
-        <div class="text-right">
-          <div class="text-[10px] font-black text-primary">${match.homeTeam.score}</div>
-          <div class="text-[10px] font-black text-primary">${match.awayTeam.score}</div>
+    <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all group border border-white/5 hover:border-primary/20">
+      <div class="flex flex-col gap-2 flex-1">
+        <div class="flex items-center gap-2">
+          <img src="${match.homeTeam.logo}" class="w-3 h-3 object-contain opacity-60 group-hover:opacity-100">
+          <span class="text-[10px] font-black uppercase truncate max-w-[80px]">${match.homeTeam.name}</span>
         </div>
+        <div class="flex items-center gap-2">
+          <img src="${match.awayTeam.logo}" class="w-3 h-3 object-contain opacity-60 group-hover:opacity-100">
+          <span class="text-[10px] font-black uppercase truncate max-w-[80px]">${match.awayTeam.name}</span>
+        </div>
+      </div>
+      <div class="flex flex-col items-end gap-1 pl-4 border-l border-white/10 ml-2">
+        <span class="text-xs font-black text-primary">${match.homeTeam.score}</span>
+        <span class="text-xs font-black text-primary">${match.awayTeam.score}</span>
       </div>
     </a>
   `).join('');

@@ -1,29 +1,51 @@
 const LEAGUE_MAP = {
-  // Football
-  "soccer": ["eng.1", "esp.1", "ger.1", "ita.1", "fra.1", "uefa.champions", "uefa.europa", "usa.1", "mex.1", "fifa.world"],
-  "football": ["nfl", "college-football", "cfl", "ufl"],
+  // Football (Soccer)
+  "soccer": [
+    "eng.1", "esp.1", "ger.1", "ita.1", "fra.1", 
+    "uefa.champions", "uefa.europa", "uefa.europa.conf",
+    "usa.1", "mex.1", "fifa.world", "eng.fa", "eng.league_cup",
+    "esp.copa_del_rey", "ger.dfb_pokal", "ita.coppa_italia", "fra.coupe_de_france",
+    "fifa.africa.nations", "fifa.asia.asian_cup", "fifa.copa_america"
+  ],
+  // American Football
+  "football": ["nfl", "college-football", "cfl", "ufl", "xfl"],
   // Basketball
-  "basketball": ["nba", "wnba", "mens-college-basketball", "womens-college-basketball", "fiba"],
-  "cricket": ["19430", "8039", "8040", "8048"], // IPL, International, etc.
+  "basketball": [
+    "nba", "wnba", "mens-college-basketball", "womens-college-basketball", 
+    "fiba", "nba-development", "euroleague"
+  ],
+  // Cricket
+  "cricket": ["8039", "8040", "8048", "19430", "intl", "ipl"],
+  // Tennis
   "tennis": ["atp", "wta"],
-  "hockey": ["nhl", "mens-college-hockey"],
-  "baseball": ["mlb", "college-baseball"],
-  "mma": ["ufc", "bellator", "pfl"],
-  "racing": ["f1", "nascar-premier", "irl"]
+  // Hockey
+  "hockey": ["nhl", "mens-college-hockey", "womens-college-hockey", "hockey-world-cup"],
+  // Baseball
+  "baseball": ["mlb", "college-baseball", "world-baseball-classic"],
+  // MMA
+  "mma": ["ufc", "bellator", "pfl", "cage-warriors"],
+  // Racing
+  "racing": ["f1", "nascar-premier", "irl", "motogp"],
+  // Others
+  "golf": ["pga", "lpga", "champions-tour", "liv"],
+  "rugby": ["271937", "267979", "180659"]
 };
 
 // Map UI tabs to ESPN sport slugs
 const SPORT_MAPPING = {
-  "all": ["soccer", "basketball", "cricket", "tennis", "football"],
-  "football": ["soccer"],
+  "all": ["soccer", "basketball", "cricket", "tennis", "football", "baseball", "mma", "hockey"],
+  "soccer": ["soccer"],
+  "football": ["soccer"], // In some UIs, football means soccer
+  "american-football": ["football"],
   "basketball": ["basketball"],
   "cricket": ["cricket"],
   "tennis": ["tennis"],
-  "american-football": ["football"],
   "hockey": ["hockey"],
   "baseball": ["baseball"],
   "mma": ["mma"],
-  "racing": ["racing"]
+  "racing": ["racing"],
+  "golf": ["golf"],
+  "rugby": ["rugby"]
 };
 
 export async function onRequest(context) {

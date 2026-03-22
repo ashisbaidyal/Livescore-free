@@ -434,94 +434,20 @@
 </div>
 </section>
 <!-- Arena Scheduled Events -->
-<section class="py-20 px-6 bg-surface-container-low border-y border-white/5">
+<section class="py-20 px-6 bg-surface-container-low border-y border-white/5" id="leagues-container">
 <div class="max-w-7xl mx-auto">
     <div class="flex items-center justify-between mb-16">
       <div class="flex items-center gap-4">
         <div class="w-12 h-[2px] bg-primary"></div>
         <h3 class="text-3xl font-black tracking-tighter uppercase leading-none italic">Arena Scheduled Events</h3>
       </div>
-      <div class="flex gap-2">
-        <button id="arena-prev" class="w-10 h-10 rounded border border-white/10 hover:bg-primary transition-all flex items-center justify-center group">
-          <span class="material-symbols-outlined text-sm group-hover:scale-125 transition-transform">arrow_back_ios_new</span>
-        </button>
-        <button id="arena-next" class="w-10 h-10 rounded border border-white/10 hover:bg-primary transition-all flex items-center justify-center group">
-          <span class="material-symbols-outlined text-sm group-hover:scale-125 transition-transform">arrow_forward_ios</span>
-        </button>
-      </div>
     </div>
     <div id="arena-schedule-container" class="flex gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-10">
-      <!-- Dynamic Upcoming Matches Injected Here -->
-      <div class="bg-surface-container border border-white/5 p-8 rounded-lg animate-pulse min-w-[300px] h-64"></div>
-      <div class="bg-surface-container border border-white/5 p-8 rounded-lg animate-pulse min-w-[300px] h-64"></div>
       <div class="bg-surface-container border border-white/5 p-8 rounded-lg animate-pulse min-w-[300px] h-64"></div>
       <div class="bg-surface-container border border-white/5 p-8 rounded-lg animate-pulse min-w-[300px] h-64"></div>
     </div>
   </div>
 </section>
-<!-- Featured: Player Spotlight & Standings -->
-<section class="py-24 px-6 max-w-7xl mx-auto">
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-<!-- Featured Player -->
-<div class="lg:col-span-2 relative h-[600px] rounded-lg overflow-hidden group shadow-2xl">
-<div class="absolute inset-0 bg-cover bg-center transition-transform duration-[10s] group-hover:scale-110" style="background-image: linear-gradient(to top, rgb(14, 14, 14) 20%, transparent 60%), url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuBBOhQZUe5UMZsR9l2SEvqL-YAkANLk7t04hbPFTYr_Tg53l9ywmii2QrIFZJNTQMeugZkvRmRrDEdeQPvl8K4X2Tw0xmJKqpMBpFh764rzTviaMTtnm1NHlxt5jpdrWWNVOHuKJQRrt6A8V_qj56Ml2YT-LUk_N_4VKjP-SoUWukm1hOfAQYFZfavLOHSP6KIpMDJM3ZZmwpIcOoPD05NiJqZSpIL8QmZd4FV8O-Y2gGmoSUWG8TwaSAGlSivxcO-e3rs31ET7wrm_&quot;);"></div>
-<div class="absolute bottom-0 left-0 p-12 w-full">
-<div class="bg-primary text-white inline-flex items-center gap-3 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] mb-6 shadow-xl rounded-sm">
-<span class="material-symbols-outlined text-sm">military_tech</span> Player of the Month
-                            </div>
-<h3 class="text-6xl font-black italic uppercase leading-[0.85] mb-4 tracking-tighter">ERLING <br><span class="text-primary">HAALAND</span></h3>
-<div class="flex gap-12 mt-10">
-<div>
-<div class="text-[10px] text-on-surface-variant font-black uppercase tracking-widest mb-1 opacity-60">Season Goals</div>
-<div class="text-4xl font-black italic">21</div>
-</div>
-<div>
-<div class="text-[10px] text-on-surface-variant font-black uppercase tracking-widest mb-1 opacity-60">Assists</div>
-<div class="text-4xl font-black italic">5</div>
-</div>
-<div class="hidden sm:block">
-<div class="text-[10px] text-on-surface-variant font-black uppercase tracking-widest mb-1 opacity-60">Game Win Rate</div>
-<div class="text-4xl font-black italic">82%</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Point Table + Sidebar Ad -->
-<div class="flex flex-col gap-8">
-<div class="bg-surface-container-low p-10 rounded-lg border border-white/5 shadow-2xl flex-1 flex flex-col">
-<div class="flex justify-between items-center mb-10">
-<h4 class="font-black italic text-2xl uppercase tracking-tighter">Arena Table</h4>
-<select class="bg-surface-container-high border-none text-[10px] font-black uppercase tracking-[0.2em] rounded-md px-4 py-2 ring-1 ring-white/10 focus:ring-primary outline-none">
-<option>PREMIER LEAGUE</option>
-<option>LA LIGA</option>
-<option>BUNDESLIGA</option>
-</select>
-</div>
-<div class="space-y-6 flex-1">
-<div class="flex items-center justify-between py-3 border-b border-white/5 hover:bg-white/5 transition-colors px-2 rounded-lg group">
-<div class="flex items-center gap-5">
-<span class="font-black italic text-primary text-lg">01</span>
-<span class="font-black uppercase tracking-tight text-sm">LIVERPOOL FC</span>
-</div>
-<span class="font-black text-lg">54</span>
-</div>
-<div class="flex items-center justify-between py-3 border-b border-white/5 hover:bg-white/5 transition-colors px-2 rounded-lg group opacity-80">
-<div class="flex items-center gap-5">
-<span class="font-black italic text-lg opacity-30">02</span>
-<span class="font-black uppercase tracking-tight text-sm">MAN CITY</span>
-</div>
-<span class="font-black text-lg">52</span>
-</div>
-<div class="flex items-center justify-between py-3 border-b border-white/5 hover:bg-white/5 transition-colors px-2 rounded-lg group opacity-80">
-<div class="flex items-center gap-5">
-<span class="font-black italic text-lg opacity-30">03</span>
-<span class="font-black uppercase tracking-tight text-sm">ARSENAL</span>
-</div>
-<span class="font-black text-lg">52</span>
-</div>
-</div>
-<button class="w-full mt-10 py-4 text-[10px] font-black uppercase tracking-[0.3em] text-primary hover:bg-primary hover:text-white border border-primary/20 transition-all rounded-lg">View Full Table</button>
-</div>
 <!-- Ad Placement 2: Gatorade Sidebar -->
 <div class="bg-primary rounded-lg p-8 relative overflow-hidden group cursor-pointer shadow-2xl h-52">
 <div class="relative z-10 h-full flex flex-col justify-between">
@@ -546,44 +472,17 @@
 <h4 class="text-4xl font-black italic uppercase tracking-tighter leading-none">Headline Reports</h4>
 <div class="flex-1 h-[2px] bg-white/5"></div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-<article class="group cursor-pointer">
-<div class="relative aspect-[16/10] rounded-lg overflow-hidden mb-6 shadow-2xl border border-white/5">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaSGXnZg6rUcRUGhCXSDsm-MIli-OPWs2W__EW5ttcDM_sn0TieH7YT-nuNwJbLkEdTI0zDpfWUiIZePVnhYv5iOqBVdzyGLbWbaj60RvtcK301gd0IbXOwd-FYNde4HpkZVnWZz7Irg4qdRM5kuawoj0i6DgosoiejN1ABa03W57NTubBtMI08fWAhzfRXZ-J9-8u6I5zfew36yiWKc7SpW5lOEXYgkGs2pMzApttFso6oyYS5E0tfS91XBD9KUpj8U2vpOD8ma9F">
-<div class="absolute top-5 left-5 bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">Analysis</div>
-</div>
-<h5 class="text-2xl font-black uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors mb-3 italic">Tactical breakdown: How Emery neutralized Guardiola's high press</h5>
-<p class="text-on-surface-variant text-sm font-medium leading-relaxed opacity-60">A deep dive into the high-pressing mechanism that led to a historic upset at Villa Park.</p>
-</article>
-<article class="group cursor-pointer">
-<div class="relative aspect-[16/10] rounded-lg overflow-hidden mb-6 shadow-2xl border border-white/5">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1s]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnrWtdgSbu_GZWyfwvLMPCCu7KOcJ36k98pGDw11Pb6lUCNNl6Jd9SB8QA2M74ljs5fedn_5R_4omSdW6l84YjFchDjszCwhSCnnCt0t3O4x_-ATfHK8GX47gI_37EtHSKXBlTiYi60PFiMDyY93JWVEso2Nkm7Trm9nwAjCI9Xh8r5d7_yPSERdja8hPzp4HEtOjEgdHWyH7eM7lHbKtant7RiUqMNSoFyTqDCqMy5vQI3f7BGqAm6S2aG7nn3Fe73zr50btkqkQ7">
-<div class="absolute top-5 left-5 bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">Trade News</div>
-</div>
-<h5 class="text-2xl font-black uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors mb-3 italic">Trade Rumors: Lakers eye veteran floor general before the deadline</h5>
-<p class="text-on-surface-variant text-sm font-medium leading-relaxed opacity-60">The latest insider reports on the Western Conference's shifting power dynamics.</p>
-</article>
+<div id="news-container" class="grid grid-cols-1 md:grid-cols-1 gap-10">
+    <!-- News Injected Here -->
+    <div class="h-40 bg-white/5 rounded-lg animate-pulse"></div>
+    <div class="h-40 bg-white/5 rounded-lg animate-pulse"></div>
 </div>
 </div>
-<div>
+<div id="trending-players-container">
 <h4 class="text-xl font-black italic uppercase tracking-widest mb-12 text-primary border-b border-primary/20 pb-4">Trending Now</h4>
 <div class="space-y-10">
-<div class="flex gap-6 items-start border-b border-white/5 pb-8 group cursor-pointer">
-<span class="text-3xl font-black text-on-surface/10 italic shrink-0 group-hover:text-primary transition-colors">01</span>
-<div>
-<div class="text-[10px] text-primary font-black uppercase tracking-widest mb-2 flex items-center gap-2">
-<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span> TRANSFER HUB
-                                    </div>
-<h6 class="text-base font-black uppercase leading-tight group-hover:underline tracking-tight">Mbappe reaches verbal agreement with Real Madrid</h6>
-</div>
-</div>
-<div class="flex gap-6 items-start border-b border-white/5 pb-8 group cursor-pointer">
-<span class="text-3xl font-black text-on-surface/10 italic shrink-0 group-hover:text-primary transition-colors">02</span>
-<div>
-<div class="text-[10px] text-blue-500 font-black uppercase tracking-widest mb-2">MOTORSPORT</div>
-<h6 class="text-base font-black uppercase leading-tight group-hover:underline tracking-tight">Hamilton shock move to Ferrari: Breakdown</h6>
-</div>
-</div>
+    <div class="h-20 bg-white/5 rounded animate-pulse"></div>
+    <div class="h-20 bg-white/5 rounded animate-pulse"></div>
 </div>
 </div>
 </div>

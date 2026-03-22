@@ -2,9 +2,9 @@
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
-    const type = url.searchParams.get('type') || 'news'; // news, standings, players
+    const type = url.searchParams.get('type') || 'news';
     const sport = url.searchParams.get('sport') || 'soccer';
-    const league = url.searchParams.get('league') || 'eng.1';
+    const league = url.searchParams.get('league') || (sport === 'soccer' ? 'eng.1' : sport === 'basketball' ? 'nba' : sport === 'football' ? 'nfl' : sport);
 
     let apiUrl = '';
     
@@ -13,10 +13,11 @@ export async function onRequest(context) {
     } else if (type === 'standings') {
       apiUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/standings`;
     } else if (type === 'players') {
-      // Use core API for athletes (top 20)
       apiUrl = `https://sports.core.api.espn.com/v2/sports/${sport}/leagues/${league}/athletes?limit=20&active=true`;
     } else if (type === 'teams') {
       apiUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams`;
+    } else if (type === 'scoreboard') {
+      apiUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/scoreboard`;
     }
 
     if (!apiUrl) return new Response(JSON.stringify({ error: 'Invalid type' }), { status: 400 });
