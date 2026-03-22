@@ -688,7 +688,7 @@ function renderHeroSlider(matches, statusFilter) {
   }).join('');
 
   heroSliderContainer.innerHTML = `
-    <div class="relative w-full h-full">
+    <div class="relative w-full h-[500px]">
       ${slides}
     </div>
   `;
