@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>LivescoreFree.online | Sport Hub</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card { background: rgba(42, 42, 42, 0.6); backdrop-filter: blur(12px); border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .kinetic-gradient { background: linear-gradient(135deg, #CC1616 0%, #7A0D0D 100%); transition: all 0.3s ease; }
+        .kinetic-gradient:hover { filter: brightness(1.2); transform: translateY(-2px); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0E0E0E; }
+        ::-webkit-scrollbar-thumb { background: #CC1616; }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#CC1616",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "on-surface": "#e5e2e1"
+                    },
+                    fontFamily: { "body": ["Lexend"] }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#0e0e0e] text-on-surface font-body overflow-x-hidden">
+    <!-- Header Injected by script.js -->
+    <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl"></nav>
+
+    <main class="pt-24 min-h-screen px-6 md:px-12 max-w-7xl mx-auto">
+        <!-- Hero Section -->
+        <section id="sport-hero" class="relative rounded-2xl overflow-hidden mb-12 border border-white/5 h-64 md:h-80">
+            <div id="hero-bg" class="absolute inset-0 bg-cover bg-center opacity-40"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+            <div class="relative h-full flex flex-col justify-end p-8 md:p-12">
+                <span id="sport-badge" class="bg-primary px-3 py-1 rounded text-[10px] font-black uppercase tracking-[.2em] mb-4 self-start">Loading...</span>
+                <h1 id="sport-title" class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-2">SPORT HUB</h1>
+                <p id="sport-desc" class="text-xs font-bold text-white/40 uppercase tracking-widest">Real-time statistics and live coverage</p>
+            </div>
+        </section>
+
+        <!-- Dynamic Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Content: Matches -->
+            <div class="lg:col-span-2 space-y-8">
+                <section>
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-black italic uppercase italic border-l-4 border-primary pl-4">Live & Upcoming</h2>
+                    </div>
+                    <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Matches Injected Here -->
+                        <div class="h-48 bg-white/5 rounded-xl animate-pulse"></div>
+                        <div class="h-48 bg-white/5 rounded-xl animate-pulse"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Sidebar: Standings / News -->
+            <div class="space-y-8">
+                <section id="standings-section">
+                    <h2 class="text-lg font-black italic uppercase mb-6 border-l-4 border-primary pl-4">Standings</h2>
+                    <div id="standings-table-container" class="bg-white/5 rounded-xl overflow-hidden border border-white/5">
+                        <div class="p-8 text-center opacity-40 text-[10px] font-black uppercase tracking-widest">Standings coming soon</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer id="main-footer"></footer>
+
+    <script src="js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const sport = params.get('s') || 'soccer';
+            const league = params.get('l');
+            
+            // UI Updates
+            const title = document.getElementById('sport-title');
+            const badge = document.getElementById('sport-badge');
+            const heroBg = document.getElementById('hero-bg');
+
+            if (title) title.textContent = sport.toUpperCase().replace('-', ' ');
+            if (badge) badge.textContent = sport.toUpperCase();
+            if (heroBg) heroBg.style.backgroundImage = `url('https://source.unsplash.com/featured/?${sport},stadium')`;
+
+            // Data Fetching specialized for this sport hub
+            if (typeof fetchMatches === 'function') {
+                window.currentTab = sport;
+                fetchMatches();
+            }
+            
+            if (typeof fetchLeagues === 'function') {
+                fetchLeagues();
+            }
+        });
+    </script>
+</body>
+</html>

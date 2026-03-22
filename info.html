@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>LivescoreFree.online | Information</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card { background: rgba(42, 42, 42, 0.6); backdrop-filter: blur(12px); border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0E0E0E; }
+        ::-webkit-scrollbar-thumb { background: #CC1616; }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#CC1616",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "on-surface": "#e5e2e1"
+                    },
+                    fontFamily: { "body": ["Lexend"] }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#0e0e0e] text-on-surface font-body overflow-x-hidden">
+    <!-- Header Injected by script.js -->
+    <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl"></nav>
+
+    <main class="pt-32 pb-20 min-h-screen px-6 md:px-12 max-w-4xl mx-auto">
+        <div class="mb-12">
+            <span id="info-badge" class="text-primary text-[10px] font-black uppercase tracking-[0.4em] mb-4 block">Information</span>
+            <h1 id="info-title" class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-6">PAGE TITLE</h1>
+            <p id="info-subtitle" class="text-sm font-bold text-white/40 uppercase tracking-[0.2em]">Last updated: March 22, 2026</p>
+        </div>
+
+        <div id="info-content" class="prose prose-invert max-w-none space-y-8 text-on-surface-variant font-medium leading-relaxed">
+            <!-- Content Injected Here -->
+            <div class="p-12 border border-white/5 rounded-2xl bg-white/5 animate-pulse"></div>
+        </div>
+    </main>
+
+    <footer id="main-footer"></footer>
+
+    <script src="js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const type = params.get('p') || 'privacy';
+            
+            const title = document.getElementById('info-title');
+            const content = document.getElementById('info-content');
+            
+            const pages = {
+                'privacy': {
+                    title: 'Privacy Policy',
+                    html: `<h3>1. Data Collection</h3><p>We do not store personal player data. All match statistics are served via public APIs.</p><h3>2. Cookies</h3><p>We use essential cookies for session management and preference storage.</p>`
+                },
+                'terms': {
+                    title: 'Terms of Service',
+                    html: `<h3>1. Use of Content</h3><p>The information provided on LivescoreFree.online is for entertainment purposes only.</p><h3>2. Liability</h3><p>We are not responsible for any betting losses or external link content.</p>`
+                },
+                'dmca': {
+                    title: 'DMCA Policy',
+                    html: `<h3>DMCA Notice</h3><p>LivescoreFree.online is a technology platform that links to public data. We do not host copyrighted video content. If you believe your rights are violated, please contact our support team.</p>`
+                },
+                'help': {
+                    title: 'Help Center',
+                    html: `<h3>FAQ</h3><p><strong>How often are scores updated?</strong> Scores are updated every 30-60 seconds via our kinetic broadcast engine.</p>`
+                },
+                'data-sources': {
+                    title: 'Data Sources',
+                    html: `<p>Our data is primarily sourced from official ESPN APIs and global sports data providers to ensure accuracy and real-time delivery.</p>`
+                },
+                'advertise': {
+                    title: 'Advertise With Us',
+                    html: `<p>Interested in reaching millions of sports fans? Contact our ad operations team at ads@livescorefree.online</p>`
+                },
+                'transparency': {
+                    title: 'Donation Transparency',
+                    html: `<p>100% of community donations go directly toward server costs and maintaining the ad-free experience for all users.</p>`
+                }
+            };
+
+            const page = pages[type] || pages['privacy'];
+            if (title) title.textContent = page.title;
+            if (content) content.innerHTML = page.html;
+        });
+    </script>
+</body>
+</html>
