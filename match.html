@@ -372,15 +372,19 @@
 <div class="w-8 h-8 bg-[#CC1616] rounded-sm flex items-center justify-center font-black text-white italic">DK</div>
 <span class="text-[10px] font-black uppercase tracking-widest">DraftKings Sportsbook</span>
 </div>
-<h4 class="text-xl font-bold italic tracking-tight mb-4 leading-tight">Bet $5, Get $200 in Bonus Bets Instantly</h4>
-<div class="space-y-3 mb-6">
+<h4 id="odds-promo-title" class="text-xl font-bold italic tracking-tight mb-4 leading-tight">Match Odds</h4>
+<div id="odds-container" class="space-y-3 mb-6">
 <div class="flex justify-between items-center p-3 bg-surface-container-lowest border border-white/5 rounded-sm">
-<span class="text-xs font-bold">Real Madrid to Win</span>
-<span class="text-primary font-black">+185</span>
+<span id="bet-home-team" class="text-xs font-bold">Home Team</span>
+<span id="bet-home-odds" class="text-primary font-black">-</span>
+</div>
+<div id="bet-draw-container" class="flex justify-between items-center p-3 bg-surface-container-lowest border border-white/5 rounded-sm">
+<span class="text-xs font-bold">Draw</span>
+<span id="bet-draw-odds" class="text-primary font-black">-</span>
 </div>
 <div class="flex justify-between items-center p-3 bg-surface-container-lowest border border-white/5 rounded-sm">
-<span class="text-xs font-bold">Manchester City to Win</span>
-<span class="text-primary font-black">-115</span>
+<span id="bet-away-team" class="text-xs font-bold">Away Team</span>
+<span id="bet-away-odds" class="text-primary font-black">-</span>
 </div>
 </div>
 <button class="w-full py-3 bg-[#CC1616] text-white font-black text-xs uppercase tracking-[0.2em] rounded-sm active:scale-95 transition-all">Bet Now</button>

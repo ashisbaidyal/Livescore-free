@@ -53,6 +53,14 @@ const awayScore = document.getElementById('away-score');
 const matchClock = document.getElementById('match-clock');
 const statsContainer = document.getElementById('stats-container');
 const timelineContainer = document.getElementById('timeline-container');
+const commentaryContainer = document.getElementById('commentary-container');
+const oddsPromoTitle = document.getElementById('odds-promo-title');
+const betHomeTeam = document.getElementById('bet-home-team');
+const betHomeOdds = document.getElementById('bet-home-odds');
+const betAwayTeam = document.getElementById('bet-away-team');
+const betAwayOdds = document.getElementById('bet-away-odds');
+const betDrawOdds = document.getElementById('bet-draw-odds');
+const betDrawContainer = document.getElementById('bet-draw-container');
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -1104,7 +1112,7 @@ function renderMatchDetail(data) {
             <span class="text-primary">${stat.home} — ${stat.away}</span>
           </div>
           <div class="h-1.5 w-full bg-white/5 flex rounded-full overflow-hidden">
-            <div class="h-full bg-on-surface" style="width: ${homePercent}%"></div>
+            <div class="h-full bg-surface-container-highest" style="width: ${homePercent}%"></div>
             <div class="h-full bg-primary" style="width: ${awayPercent}%"></div>
           </div>
         </div>
@@ -1144,6 +1152,22 @@ function renderMatchDetail(data) {
                 </div>
             `).join('')}
         `;
+    }
+  }
+
+  // Render Odds
+  if (data.odds) {
+    if (oddsPromoTitle) oddsPromoTitle.textContent = data.odds.details || 'Match Odds';
+    if (betHomeTeam) betHomeTeam.textContent = `${data.homeTeam.name} to Win`;
+    if (betHomeOdds) betHomeOdds.textContent = data.odds.homeOdds || '-';
+    if (betAwayTeam) betAwayTeam.textContent = `${data.awayTeam.name} to Win`;
+    if (betAwayOdds) betAwayOdds.textContent = data.odds.awayOdds || '-';
+    
+    if (data.odds.drawOdds) {
+        if (betDrawContainer) betDrawContainer.classList.remove('hidden');
+        if (betDrawOdds) betDrawOdds.textContent = data.odds.drawOdds;
+    } else {
+        if (betDrawContainer) betDrawContainer.classList.add('hidden');
     }
   }
 }

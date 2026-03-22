@@ -43,45 +43,52 @@ export async function onRequest(context) {
       const home = comp.competitors.find(c => c.homeAway === 'home');
       const away = comp.competitors.find(c => c.homeAway === 'away');
       
-      // Extract stats if available
+      // Extract stats from boxscore.teams
       const stats = [];
-      if (data.record) {
-          // Sometimes stats are in boxscore or summary
+      if (data.boxscore && data.boxscore.teams) {
+        const homeTeamStats = data.boxscore.teams.find(t => t.homeAway === 'home')?.statistics || [];
+        const awayTeamStats = data.boxscore.teams.find(t => t.homeAway === 'away')?.statistics || [];
+        
+        homeTeamStats.forEach(hs => {
+            const as = awayTeamStats.find(s => s.name === hs.name);
+            stats.push({
+                label: hs.label,
+                home: hs.displayValue,
+                away: as ? as.displayValue : '0'
+            });
+        });
       }
       
-      // Extract lineups if available
-      const extractLineup = (teamId) => {
-        if (!data.boxscore || !data.boxscore.players) return [];
-        const teamBox = data.boxscore.players.find(p => p.team?.id === teamId);
-        if (!teamBox || !teamBox.players) return [];
+      // Extract lineups from rosters
+      const extractLineup = (side) => {
+        if (!data.rosters) return [];
+        const teamRoster = data.rosters.find(r => r.homeAway === side);
+        if (!teamRoster || !teamRoster.roster) return [];
         
-        // Flatten and filter starters if possible, or just top players
-        const players = [];
-        teamBox.players.forEach(group => {
-            if (group.statistics && group.statistics[0] && group.statistics[0].athletes) {
-                group.statistics[0].athletes.forEach(ath => {
-                    players.push({
-                        name: ath.athlete.displayName,
-                        number: ath.athlete.jersey || '',
-                        position: ath.athlete.position?.abbreviation || '',
-                        starter: ath.starter || false
-                    });
-                });
-            }
-        });
-        return players;
+        return teamRoster.roster.map(entry => ({
+            name: entry.athlete.displayName,
+            number: entry.jersey || '',
+            position: entry.position?.abbreviation || '',
+            starter: entry.starter || false
+        }));
       };
 
-      const homeLineup = extractLineup(home?.team?.id);
-      const awayLineup = extractLineup(away?.team?.id);
+      const homeLineup = extractLineup('home');
+      const awayLineup = extractLineup('away');
+
+      // Extract Odds (Pickcenter)
+      const odds = data.pickcenter?.[0] || null;
 
       // Extract timeline/plays if available
       const timeline = [];
-      if (data.plays) {
-          // Get last 10 plays, focus on goals and key events
-          data.plays.slice(-10).reverse().forEach(play => {
-              const isGoal = play.type?.text?.toLowerCase().includes('goal');
-              const isCard = play.type?.text?.toLowerCase().includes('card');
+      const plays = data.plays || data.header?.competitions?.[0]?.details || [];
+      if (plays) {
+          // Focus on goals and key events
+          plays.slice(-15).reverse().forEach(play => {
+              const text = play.text || play.athletesInvolved?.[0]?.displayName || '';
+              const type = play.type?.text?.toLowerCase() || play.type?.name?.toLowerCase() || '';
+              const isGoal = type.includes('goal');
+              const isCard = type.includes('card');
               
               const teamId = play.team?.id;
               let side = 'neutral';
@@ -89,9 +96,9 @@ export async function onRequest(context) {
               if (teamId === away?.team?.id) side = 'away';
 
               timeline.push({
-                  time: play.clock?.displayValue || `${play.period?.number || ''}'`,
+                  time: play.clock?.displayValue || play.clock?.value || '0\'',
                   type: isGoal ? 'goal' : (isCard ? 'card' : 'event'),
-                  player: play.text,
+                  player: text,
                   side: side
               });
           });
@@ -117,7 +124,13 @@ export async function onRequest(context) {
           lineup: awayLineup
         },
         stats: stats,
-        timeline: timeline
+        timeline: timeline,
+        odds: odds ? {
+            details: odds.details,
+            homeOdds: odds.homeTeamOdds?.moneyLine,
+            awayOdds: odds.awayTeamOdds?.moneyLine,
+            drawOdds: odds.drawOdds?.moneyLine
+        } : null
       }), {
         headers: {
           'Content-Type': 'application/json',
