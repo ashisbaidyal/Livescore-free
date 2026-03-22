@@ -27,7 +27,8 @@ const tabsContainer = document.getElementById('sports-tabs');
 const matchesContainer = document.getElementById('matches-container');
 const sidebarLiveContainer = document.getElementById('sidebar-live-container');
 const tickerContainer = document.getElementById('ticker-container');
-const newsContainer = document.getElementById('news-container');
+const newsContainer = document.getElementById('news-grid-container');
+const headlinesContainer = document.getElementById('latest-headlines-container');
 const heroSliderContainer = document.getElementById('hero-slider-container');
 const leaguesContainer = document.getElementById('leagues-container');
 const playersContainer = document.getElementById('players-container');
@@ -206,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setInterval(() => {
       fetchNews();
-    }, 300000); // 5m for news
+    }, 60000); // 1m for news
 
     // Auto Refresh for Hubs
     setInterval(() => {
@@ -613,24 +614,75 @@ async function fetchNews() {
 }
 
 function renderNews(articles) {
-  if (!newsContainer || articles.length === 0) return;
+  if (articles.length === 0) return;
 
-  newsContainer.innerHTML = articles.map(article => `
-    <article class="flex flex-col md:flex-row gap-6 group cursor-pointer" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
-      <div class="md:w-1/3 aspect-[4/3] bg-cover bg-center rounded-lg overflow-hidden border border-white/10" 
-           style="background-image: url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
-      <div class="md:w-2/3 space-y-3">
-        <span class="text-primary text-[10px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'Sports'}</span>
-        <h3 class="text-2xl font-black uppercase leading-none group-hover:text-primary transition-colors">${article.headline}</h3>
-        <p class="text-sm text-on-surface-variant leading-relaxed line-clamp-2">${article.description || ''}</p>
-        <div class="flex items-center gap-4 text-[10px] font-bold text-on-surface/40 uppercase">
-          <span>${new Date(article.published).toLocaleTimeString()}</span>
-          <span>•</span>
-          <span>By ${article.byline || 'ESPN'}</span>
+  // 1. Render Top News in Grid (First 3-6 depending on layout)
+  if (newsContainer) {
+    const gridArticles = articles.slice(0, 6);
+    newsContainer.innerHTML = gridArticles.map(article => `
+      <article class="bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
+        <div class="aspect-video bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
+             style="background-image: url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
+        <div class="p-6 flex flex-col flex-1">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-primary text-[10px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'Sports'}</span>
+            <span class="text-[10px] font-bold text-on-surface/40 uppercase">${new Date(article.published).toLocaleDateString()}</span>
+          </div>
+          <h3 class="text-xl font-black uppercase leading-tight group-hover:text-primary transition-colors mb-4 line-clamp-2 font-headline">${article.headline}</h3>
+          <p class="text-sm text-on-surface-variant leading-relaxed line-clamp-2 mb-6 flex-1">${article.description || ''}</p>
+          <div class="flex items-center gap-4 text-[10px] font-bold text-on-surface/40 uppercase pt-4 border-t border-white/5">
+            <span>By ${article.byline || 'ESPN'}</span>
+          </div>
         </div>
-      </div>
-    </article>
-  `).join('');
+      </article>
+    `).join('');
+  }
+
+  // 2. Render Latest Headlines below (The rest)
+  if (headlinesContainer) {
+    const headlineArticles = articles.slice(6);
+    if (headlineArticles.length === 0) {
+        // Fallback or just hide section if not enough news
+        // For now, let's just use some of the same news if we don't have enough, or keep it empty
+        // But usually ESPN gives 10+.
+    }
+    
+    headlinesContainer.innerHTML = (headlineArticles.length > 0 ? headlineArticles : articles.slice(0, 4)).map(article => `
+      <article class="flex flex-col md:flex-row gap-8 group cursor-pointer border-b border-white/5 pb-8 last:border-0" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
+        <div class="md:w-1/3 aspect-[4/3] bg-cover bg-center rounded-xl overflow-hidden border border-white/10 shrink-0" 
+             style="background-image: url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
+        <div class="md:w-2/3 space-y-4 flex flex-col justify-center">
+          <div class="flex items-center gap-3">
+            <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'Sports'}</span>
+            <span class="text-on-surface/40 text-[10px] font-bold uppercase">${timeAgo(new Date(article.published))}</span>
+          </div>
+          <h3 class="text-3xl font-black uppercase leading-[1.1] group-hover:text-primary transition-colors font-headline">${article.headline}</h3>
+          <p class="text-base text-on-surface-variant leading-relaxed line-clamp-3">${article.description || ''}</p>
+          <div class="flex items-center gap-4 text-[10px] font-black uppercase text-on-surface/40">
+            <span>By ${article.byline || 'ESPN'}</span>
+            <span>•</span>
+            <span class="text-primary hover:underline">Read Full Article</span>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  }
+}
+
+// Helper for time ago
+function timeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + " years ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + " months ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + " days ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + "h ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + "m ago";
+  return Math.floor(seconds) + "s ago";
 }
 
 // --- FETCH SIDEBAR LIVE ONLY ---
