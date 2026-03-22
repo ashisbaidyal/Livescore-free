@@ -1116,6 +1116,20 @@ function renderMatches(matches) {
               </span>
             </div>
           </div>
+
+          <!-- Quick Scorers (if available) -->
+          ${match.scorers ? `
+            <div class="flex flex-col gap-1 border-t border-white/5 pt-4">
+                <div class="flex justify-between text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <div class="flex flex-col gap-0.5">
+                        ${(match.scorers.home || []).slice(0, 2).map(s => `<span>${s.name} ${s.time}</span>`).join('')}
+                    </div>
+                    <div class="flex flex-col gap-0.5 items-end text-right">
+                        ${(match.scorers.away || []).slice(0, 2).map(s => `<span>${s.time} ${s.name}</span>`).join('')}
+                    </div>
+                </div>
+            </div>
+          ` : ''}
         </div>
       </a>
     `;
@@ -1330,33 +1344,32 @@ function renderMatchDetail(data) {
                             </div>
                         ` : ''}
                         
-                        <div class="flex items-center w-full">
+                        <div class="flex items-center w-full relative">
                             <!-- Left Side (Home) -->
-                            <div class="w-1/2 pr-8 text-right flex flex-col items-end">
+                            <div class="w-1/2 pr-12 text-right flex flex-col items-end">
                                 ${isHome ? `
                                     <div class="flex items-center space-x-3 gap-2">
                                         <div class="flex flex-col items-end">
-                                            <span class="text-xs font-bold text-white">${event.player}</span>
-                                            <span class="text-[9px] font-black uppercase text-white/40 tracking-widest">${event.type.toUpperCase()}</span>
+                                            <span class="text-xs font-black uppercase text-white">${event.player}</span>
+                                            <span class="text-[8px] font-black uppercase text-primary tracking-widest">${event.type.toUpperCase()}</span>
                                         </div>
-                                        <span class="text-xl">${icon}</span>
                                     </div>
                                 ` : ''}
                             </div>
 
-                            <!-- Center Time -->
-                            <div class="flex-none w-12 flex justify-center">
-                                <span class="bg-surface-container px-2 py-1 rounded text-[10px] font-black border border-white/5 text-primary">${event.time}</span>
+                            <!-- Center Time & Dot -->
+                            <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
+                                <div class="w-2 h-2 rounded-full ${isGoal ? 'bg-primary' : 'bg-white'} border border-black z-20"></div>
+                                <span class="bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded border border-white/10 text-[9px] font-black text-on-surface mt-2">${event.time}</span>
                             </div>
 
                             <!-- Right Side (Away) -->
-                            <div class="w-1/2 pl-8 text-left flex flex-col items-start">
+                            <div class="w-1/2 pl-12 text-left flex flex-col items-start">
                                 ${isAway ? `
                                     <div class="flex items-center space-x-3 gap-2">
-                                        <span class="text-xl">${icon}</span>
                                         <div class="flex flex-col items-start">
-                                            <span class="text-xs font-bold text-white">${event.player}</span>
-                                            <span class="text-[9px] font-black uppercase text-white/40 tracking-widest">${event.type.toUpperCase()}</span>
+                                            <span class="text-xs font-black uppercase text-white">${event.player}</span>
+                                            <span class="text-[8px] font-black uppercase text-primary tracking-widest">${event.type.toUpperCase()}</span>
                                         </div>
                                     </div>
                                 ` : ''}
