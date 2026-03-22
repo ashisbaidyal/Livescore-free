@@ -321,7 +321,7 @@ function renderMatchDetail(data) {
           </div>
           <div class="h-1.5 w-full bg-white/5 flex rounded-full overflow-hidden">
             <div class="h-full bg-on-surface" style="width: ${homePercent}%"></div>
-            <div class="h-full bg-[#CC1616]" style="width: ${awayPercent}%"></div>
+            <div class="h-full bg-primary" style="width: ${awayPercent}%"></div>
           </div>
         </div>
       `;
@@ -334,7 +334,7 @@ function renderMatchDetail(data) {
       <div class="relative flex justify-between items-center px-4 w-full overflow-x-auto gap-8">
         ${data.timeline.map(event => `
           <div class="flex flex-col items-center relative min-w-[60px]">
-            <span class="material-symbols-outlined text-[#CC1616] text-xl mb-1 ${event.type === 'goal' ? 'animate-bounce' : ''}" 
+            <span class="material-symbols-outlined text-primary text-xl mb-1 ${event.type === 'goal' ? 'animate-bounce' : ''}" 
                   style="font-variation-settings: 'FILL' 1;">
               ${event.type === 'goal' ? 'sports_soccer' : (event.type === 'card' ? 'style' : 'history')}
             </span>
