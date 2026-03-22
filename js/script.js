@@ -296,6 +296,9 @@ window.handleNotification = function(matchId, matchName) {
       setupArenaControls();
       renderArenaTabs();
     }
+    if (document.getElementById('trending-matches-list')) {
+      fetchTrendingUpcoming();
+    }
 
     // "Silent" Auto Refresh logic
     setInterval(() => {
@@ -307,6 +310,7 @@ window.handleNotification = function(matchId, matchName) {
       if (recentResultsContainer) fetchRecentResults();
       if (upcomingTodayContainer) fetchUpcomingToday();
       if (document.getElementById('arena-schedule-container')) fetchArenaSchedule(currentArenaTab);
+      if (document.getElementById('trending-matches-list')) fetchTrendingUpcoming();
     }, 15000); // 15s for scores
 
     setInterval(() => {
@@ -352,41 +356,27 @@ async function fetchArenaSchedule(sport = currentArenaTab) {
   const isUpcomingPage = window.location.pathname.includes('upcoming');
   
   try {
-    // On upcoming page, use the dedicated upcoming API for real future fixtures
-    const apiUrl = isUpcomingPage 
-      ? `${API_UPCOMING}?sport=${sport === 'all' ? 'all' : sport}&days=7`
-      : `${API_LIVE}?sport=${sport === 'all' ? 'all' : sport}`;
+    // Always use the dedicated upcoming API for real future fixtures
+    const apiUrl = `${API_UPCOMING}?sport=${sport === 'all' ? 'all' : sport}&days=7`;
       
     const res = await fetch(apiUrl);
     const data = await res.json();
     const allMatches = data.matches || [];
     
-    if (isUpcomingPage) {
-      // On upcoming page, all matches from /api/upcoming are already upcoming
-      if (allMatches.length === 0) {
-        container.innerHTML = `
-          <div class="bg-surface-container border border-white/5 p-12 rounded-2xl flex items-center justify-center w-full min-h-[360px]">
-            <div class="text-center">
-              <span class="material-symbols-outlined text-4xl text-on-surface/20 mb-4 block">calendar_month</span>
-              <p class="text-on-surface/30 font-black uppercase tracking-[0.3em] text-xs">No Upcoming Fixtures Found</p>
-              <p class="text-on-surface/20 text-[10px] mt-2">Check back later for scheduled matches</p>
-            </div>
+    if (allMatches.length === 0) {
+      container.innerHTML = `
+        <div class="bg-surface-container border border-white/5 p-12 rounded-2xl flex items-center justify-center w-full min-h-[360px]">
+          <div class="text-center">
+            <span class="material-symbols-outlined text-4xl text-on-surface/20 mb-4 block">calendar_month</span>
+            <p class="text-on-surface/30 font-black uppercase tracking-[0.3em] text-xs">No Upcoming Fixtures Found</p>
+            <p class="text-on-surface/20 text-[10px] mt-2">Check back later for scheduled matches</p>
           </div>
-        `;
-        return;
-      }
-      renderArenaSchedule(allMatches.slice(0, 12));
-    } else {
-      // On other pages, use the 3-tier fallback (upcoming → live → finished)
-      let upcoming = allMatches.filter(m => m.status === 'upcoming');
-      if (upcoming.length === 0) {
-        const live = allMatches.filter(m => m.status === 'live');
-        if (live.length > 0) { renderArenaLiveFallback(live); return; }
-        const finished = allMatches.filter(m => m.status === 'finished').slice(0, 6);
-        if (finished.length > 0) { renderArenaFinishedFallback(finished); return; }
-      }
-      renderArenaSchedule(upcoming);
+        </div>
+      `;
+      return;
     }
+    
+    renderArenaSchedule(allMatches.slice(0, 12));
   } catch (err) {
     console.error('Arena Fetch Error:', err);
     const container = document.getElementById('arena-schedule-container');
@@ -974,26 +964,46 @@ function renderPlayers(athletes) {
 }
 
 // --- RENDER TRENDING UPCOMING (HOME SIDEBAR) ---
+async function fetchTrendingUpcoming() {
+  const trendingList = document.getElementById('trending-matches-list');
+  if (!trendingList) return;
+
+  try {
+    // Always fetch from upcoming API to ensure we have scheduled matches
+    const res = await fetch(`${API_UPCOMING}?sport=all&days=3`);
+    const data = await res.json();
+    let matches = data.matches || [];
+    
+    // Sort chronologically and take next 3
+    matches.sort((a, b) => new Date(a.date) - new Date(b.date));
+    renderTrendingUpcoming(matches.slice(0, 3));
+  } catch(e) {
+    console.error('Trending matches fetch error:', e);
+    trendingList.innerHTML = '<p class="text-[10px] font-black uppercase tracking-widest opacity-20 py-10">Failed to load trending scheduled events.</p>';
+  }
+}
+
 function renderTrendingUpcoming(matches) {
-  if (!trendingMatchesList) return;
+  const trendingList = document.getElementById('trending-matches-list');
+  if (!trendingList) return;
 
   if (matches.length === 0) {
-    trendingMatchesList.innerHTML = '<p class="text-[10px] font-black uppercase tracking-widest opacity-20 py-10">No upcoming matches discovered</p>';
+    trendingList.innerHTML = '<p class="text-[10px] font-black uppercase tracking-widest opacity-20 py-10">No upcoming matches discovered</p>';
     return;
   }
 
-  trendingMatchesList.innerHTML = matches.map(match => `
+  trendingList.innerHTML = matches.map(match => `
     <a href="/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="flex items-center gap-6 p-5 bg-white/5 rounded-2xl hover:bg-white/10 transition-all group border border-white/5 hover:border-primary/20">
       <div class="flex flex-col items-center gap-2 shrink-0">
-        <img src="${match.homeTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all">
-        <img src="${match.awayTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all">
+        <img src="${match.homeTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" onerror="this.src='/public/logo.png'">
+        <img src="${match.awayTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" onerror="this.src='/public/logo.png'">
       </div>
       <div class="flex-1 min-w-0">
-        <div class="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-1 line-clamp-1">${match.league}</div>
+        <div class="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-1 line-clamp-1">${match.league || 'UPCOMING EVENT'}</div>
         <h4 class="text-xs font-bold uppercase truncate mb-1">${match.homeTeam.name} VS ${match.awayTeam.name}</h4>
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-[10px] text-on-surface/40">schedule</span>
-          <span class="text-[10px] font-black text-on-surface/40 uppercase tracking-widest">${match.time}</span>
+          <span class="text-[10px] font-black text-on-surface/40 uppercase tracking-widest">${match.time || 'SCHEDULED'}</span>
         </div>
       </div>
     </a>
@@ -1226,12 +1236,7 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
       renderMatches(matches);
     }
 
-    // Render Trending Upcoming (Most 2-3 immediate matches)
-    if (trendingMatchesList) {
-      const upcoming = (data.matches || []).filter(m => m.status === 'upcoming');
-      upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
-      renderTrendingUpcoming(upcoming.slice(0, 3));
-    }
+    // trendingMatchesList relies on the new fetchTrendingUpcoming which polls the dedicated upcoming API.
   } catch (err) {
     console.error('Failed to fetch matches:', err);
     if (!sidebarOnly && matchesContainer) {
