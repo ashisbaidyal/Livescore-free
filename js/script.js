@@ -61,6 +61,7 @@ const betAwayTeam = document.getElementById('bet-away-team');
 const betAwayOdds = document.getElementById('bet-away-odds');
 const betDrawOdds = document.getElementById('bet-draw-odds');
 const betDrawContainer = document.getElementById('bet-draw-container');
+const matchLeagueInfo = document.getElementById('match-league-info');
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
