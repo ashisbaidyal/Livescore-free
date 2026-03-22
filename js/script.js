@@ -1,4 +1,9 @@
 // --- CONSTANTS ---
+// Navigation Functions
+function switchTab(sport) {
+  window.location.href = `/?sport=${sport}`;
+}
+
 const API_LIVE = '/api/live'; 
 const API_MATCH = '/api/match';
 const SPORTS = [
