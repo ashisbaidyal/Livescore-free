@@ -94,7 +94,8 @@ export async function onRequest(context) {
             name: away?.team?.shortDisplayName || away?.team?.name,
             logo: away?.team?.logo || '/public/logo.png',
             score: away?.score || '0'
-          }
+          },
+          highlightUrl: event.links?.find(l => l.shortText === 'Highlights' || l.shortText === 'Recap')?.href || ''
         });
       });
     });

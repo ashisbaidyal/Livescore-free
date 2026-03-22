@@ -191,13 +191,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 300000); // 5m for news
 
     // Additional Hubs
-    if (heroSliderContainer) fetchHeroData();
+    if (heroSliderContainer) fetchHeroData(statusFilter);
     if (leaguesContainer) fetchLeagues();
     if (playersContainer || trendingPlayersContainer) fetchPlayers();
 
     // Auto Refresh for Hubs
     setInterval(() => {
-      if (heroSliderContainer) fetchHeroData();
+      if (heroSliderContainer) fetchHeroData(statusFilter);
     }, 60000); // 1m for hero
 
     setInterval(() => {
@@ -207,29 +207,51 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- FETCH TOP HERO DATA ---
-async function fetchHeroData() {
+async function fetchHeroData(statusFilter = null) {
   if (!heroSliderContainer) return;
   try {
     const res = await fetch(`${API_LIVE}?sport=all`);
     const data = await res.json();
-    const matches = (data.matches || []).filter(m => m.status === 'live').slice(0, 3);
-    renderHeroSlider(matches);
+    let matches = data.matches || [];
+    
+    if (statusFilter) {
+      matches = matches.filter(m => m.status === statusFilter);
+    } else {
+      // On Home/Trending, prioritize Live, then upcoming
+      matches = matches.filter(m => m.status === 'live');
+      if (matches.length === 0) matches = (data.matches || []).filter(m => m.status === 'upcoming');
+    }
+
+    renderHeroSlider(matches.slice(0, 3), statusFilter);
   } catch (err) {
     console.error('Hero Slider error:', err);
   }
 }
 
-function renderHeroSlider(matches) {
-  if (!heroSliderContainer || matches.length === 0) return;
+function renderHeroSlider(matches, statusFilter) {
+  if (!heroSliderContainer) return;
+  
+  if (matches.length === 0) {
+    // Show a static fallback or clean empty state
+    heroSliderContainer.style.display = 'none';
+    return;
+  }
+  heroSliderContainer.style.display = 'block';
   
   let currentSlide = 0;
-  const slides = matches.map((match, idx) => `
+  const slides = matches.map((match, idx) => {
+    const ctaText = match.status === 'live' ? 'Watch 4K Stream' : match.status === 'finished' ? 'Watch Highlights' : 'Set Reminder';
+    const ctaIcon = match.status === 'live' ? 'play_circle' : match.status === 'finished' ? 'video_library' : 'notifications';
+    const link = match.highlightUrl && match.status === 'finished' ? match.highlightUrl : `/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}`;
+    const target = match.highlightUrl && match.status === 'finished' ? '_blank' : '_self';
+
+    return `
     <div class="absolute inset-0 z-10 transition-opacity duration-1000 ${idx === 0 ? 'opacity-100' : 'opacity-0'}" id="hero-slide-${idx}">
       <div class="absolute inset-0 bg-cover bg-center" style="background-image: linear-gradient(to top, rgba(19, 19, 19, 0.9) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${match.homeTeam.logo}'); filter: brightness(0.4) blur(4px);"></div>
       <div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
         <div class="flex items-center gap-3 mb-6">
           <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
-            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE NOW
+            <span class="w-2 h-2 bg-white rounded-full ${match.status === 'live' ? 'animate-pulse' : ''}"></span> ${match.status.toUpperCase()}
           </span>
           <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${match.league}</span>
         </div>
@@ -238,18 +260,21 @@ function renderHeroSlider(matches) {
             ${match.homeTeam.name.slice(0,3)} <span class="text-primary">${match.homeTeam.score}-${match.awayTeam.score}</span> ${match.awayTeam.name.slice(0,3)}
           </h1>
           <div class="mb-2 hidden sm:block">
-            <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">Elapsed</div>
-            <div class="text-3xl font-black italic">${match.time}'</div>
+            <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">${match.status === 'upcoming' ? 'Kickoff' : 'Elapsed'}</div>
+            <div class="text-3xl font-black italic">${match.time}</div>
           </div>
         </div>
         <div class="flex flex-wrap gap-4">
-          <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)]">
+          <a href="${link}" target="${target}" class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)]">
+            <span class="material-symbols-outlined">${ctaIcon}</span> ${ctaText}
+          </a>
+          <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="bg-white/5 backdrop-blur-md border border-white/20 px-10 py-5 rounded-lg text-on-surface font-black uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-colors">
             Match Center
           </a>
         </div>
       </div>
     </div>
-  `).join('');
+  `; }).join('');
 
   heroSliderContainer.innerHTML = `
     <div class="relative w-full h-full">
@@ -551,20 +576,6 @@ function renderSidebarLive(matches) {
   sidebarLiveContainer.innerHTML = matches.map(match => `
     <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="flex flex-col gap-2 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group">
       <div class="flex justify-between items-center">
-        <span class="text-[8px] font-black text-primary uppercase italic tracking-tighter">${match.league || 'LIVE'}</span>
-        <span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
-      </div>
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex flex-col gap-1 flex-1">
-          <div class="flex items-center gap-2">
-            <img src="${match.homeTeam.logo}" class="w-3 h-3 object-contain opacity-70" onerror="this.src='/public/logo.png'">
-            <span class="text-[9px] font-bold text-on-surface/80 truncate">${match.homeTeam.name}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <img src="${match.awayTeam.logo}" class="w-3 h-3 object-contain opacity-70" onerror="this.src='/public/logo.png'">
-            <span class="text-[9px] font-bold text-on-surface/80 truncate">${match.awayTeam.name}</span>
-          </div>
-        </div>
         <div class="text-right">
           <div class="text-[10px] font-black text-primary">${match.homeTeam.score}</div>
           <div class="text-[10px] font-black text-primary">${match.awayTeam.score}</div>
