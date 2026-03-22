@@ -457,7 +457,7 @@ function renderHeroSlider(matches, statusFilter) {
           <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${match.league}</span>
         </div>
         <div class="flex items-end gap-6 mb-8">
-          <h1 class="font-headline font-black text-6xl md:text-9xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
+          <h1 class="font-headline font-black text-5xl md:text-7xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
             ${match.homeTeam.name.slice(0, 3)} <span class="text-primary">${match.homeTeam.score}-${match.awayTeam.score}</span> ${match.awayTeam.name.slice(0, 3)}
           </h1>
           <div class="mb-2 hidden sm:block">
@@ -513,8 +513,8 @@ async function fetchLeagues() {
     const laligaData = await laligaRes.json();
 
     const allStandings = {
-      'eng.1': eplData.standings?.[0]?.entries || [],
-      'esp.1': laligaData.standings?.[0]?.entries || []
+      'eng.1': (eplData.standings?.[0]?.entries || eplData.children?.[0]?.standings?.entries || []),
+      'esp.1': (laligaData.standings?.[0]?.entries || laligaData.children?.[0]?.standings?.entries || [])
     };
     
     renderLeaguesHub(allStandings, liveMatches);
@@ -601,7 +601,7 @@ function renderLeaguesHub(standingsMap, liveMatches) {
   // 4. Standings Section (Tabbed between EPL and LaLiga)
   const standingsTableContainer = document.getElementById('standings-table-container');
   if (standingsTableContainer) {
-    const activeLeague = standingsMap['esp.1'].length > 0 ? 'esp.1' : 'eng.1'; // Simple toggle or default
+    const activeLeague = window.currentStandingsLeague || (standingsMap['eng.1'].length > 0 ? 'eng.1' : 'esp.1');
     const standings = standingsMap[activeLeague] || [];
     const leagueName = activeLeague === 'eng.1' ? 'Premier League' : 'LaLiga EA Sports';
 
@@ -611,8 +611,10 @@ function renderLeaguesHub(standingsMap, liveMatches) {
           <h2 class="text-3xl font-black italic uppercase tracking-tighter">Live Standings</h2>
           <p class="text-xs font-bold text-on-surface opacity-40 uppercase tracking-widest">${leagueName} Table</p>
         </div>
-        <div class="flex gap-2">
-           <button onclick="fetchLeagues()" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Refresh</button>
+        <div class="flex gap-4">
+           <button onclick="window.currentStandingsLeague='eng.1'; fetchLeagues()" class="text-[10px] font-black ${activeLeague === 'eng.1' ? 'text-primary' : 'text-on-surface/40'} uppercase tracking-widest hover:text-primary transition-colors">EPL</button>
+           <button onclick="window.currentStandingsLeague='esp.1'; fetchLeagues()" class="text-[10px] font-black ${activeLeague === 'esp.1' ? 'text-primary' : 'text-on-surface/40'} uppercase tracking-widest hover:text-primary transition-colors">LaLiga</button>
+           <button onclick="fetchLeagues()" class="text-[10px] font-black text-on-surface/20 uppercase tracking-widest hover:text-primary transition-colors ml-4">Refresh</button>
         </div>
       </div>
       <div class="bg-surface-container border border-white/5 rounded-xl overflow-hidden">
