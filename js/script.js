@@ -3,6 +3,7 @@
 
 const API_LIVE = '/api/live';
 const API_MATCH = '/api/match';
+const API_UPCOMING = '/api/upcoming';
 const SPORTS = [
   { id: 'all', name: 'All' },
   { id: 'soccer', name: 'Soccer' },
@@ -342,30 +343,44 @@ async function fetchArenaSchedule(sport = currentArenaTab) {
   const container = document.getElementById('arena-schedule-container');
   if (!container) return;
   
+  const isUpcomingPage = window.location.pathname.includes('upcoming');
+  
   try {
-    const res = await fetch(`${API_LIVE}?sport=${sport === 'all' ? 'all' : sport}`);
+    // On upcoming page, use the dedicated upcoming API for real future fixtures
+    const apiUrl = isUpcomingPage 
+      ? `${API_UPCOMING}?sport=${sport === 'all' ? 'all' : sport}&days=7`
+      : `${API_LIVE}?sport=${sport === 'all' ? 'all' : sport}`;
+      
+    const res = await fetch(apiUrl);
     const data = await res.json();
     const allMatches = data.matches || [];
     
-    // Filter for upcoming matches first
-    let upcoming = allMatches.filter(m => m.status === 'upcoming');
-    
-    // If no upcoming, show live matches as "happening now" cards
-    if (upcoming.length === 0) {
-      const live = allMatches.filter(m => m.status === 'live');
-      if (live.length > 0) {
-        renderArenaLiveFallback(live);
+    if (isUpcomingPage) {
+      // On upcoming page, all matches from /api/upcoming are already upcoming
+      if (allMatches.length === 0) {
+        container.innerHTML = `
+          <div class="bg-surface-container border border-white/5 p-12 rounded-2xl flex items-center justify-center w-full min-h-[360px]">
+            <div class="text-center">
+              <span class="material-symbols-outlined text-4xl text-on-surface/20 mb-4 block">calendar_month</span>
+              <p class="text-on-surface/30 font-black uppercase tracking-[0.3em] text-xs">No Upcoming Fixtures Found</p>
+              <p class="text-on-surface/20 text-[10px] mt-2">Check back later for scheduled matches</p>
+            </div>
+          </div>
+        `;
         return;
       }
-      // If no live either, show recent finished as "recent results"
-      const finished = allMatches.filter(m => m.status === 'finished').slice(0, 6);
-      if (finished.length > 0) {
-        renderArenaFinishedFallback(finished);
-        return;
+      renderArenaSchedule(allMatches.slice(0, 12));
+    } else {
+      // On other pages, use the 3-tier fallback (upcoming → live → finished)
+      let upcoming = allMatches.filter(m => m.status === 'upcoming');
+      if (upcoming.length === 0) {
+        const live = allMatches.filter(m => m.status === 'live');
+        if (live.length > 0) { renderArenaLiveFallback(live); return; }
+        const finished = allMatches.filter(m => m.status === 'finished').slice(0, 6);
+        if (finished.length > 0) { renderArenaFinishedFallback(finished); return; }
       }
+      renderArenaSchedule(upcoming);
     }
-    
-    renderArenaSchedule(upcoming);
   } catch (err) {
     console.error('Arena Fetch Error:', err);
     const container = document.getElementById('arena-schedule-container');
@@ -525,13 +540,24 @@ function renderArenaSchedule(matches) {
     if (match.leagueSlug?.includes('eng.1')) dotColor = 'bg-blue-500';
     if (match.leagueSlug?.includes('nfl')) dotColor = 'bg-red-600';
 
+    // Parse date for friendly display
+    let friendlyDate = match.time || '';
+    let dayLabel = '';
+    try {
+      const d = new Date(match.date);
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      dayLabel = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+      friendlyDate = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    } catch(e) {}
+
     return `
       <a href="/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" 
          class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[420px] group min-w-[320px] snap-center shrink-0">
         <div>
           <div class="flex justify-between text-[10px] font-black text-on-surface-variant mb-12 uppercase tracking-[0.2em]">
             <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full ${dotColor}"></span> ${match.league || 'UPCOMING'}</span>
-            <span class="text-primary font-mono">${match.time}</span>
+            <span class="text-primary font-mono">${friendlyDate}</span>
           </div>
           <div class="flex items-center justify-between mb-8 px-2">
             <div class="flex flex-col items-center gap-4 w-1/3">
@@ -544,7 +570,7 @@ function renderArenaSchedule(matches) {
             
             <div class="flex flex-col items-center justify-center">
               <span class="text-3xl font-black text-primary italic tracking-tighter transform group-hover:scale-125 transition-transform duration-700">VS</span>
-              <span class="text-[8px] font-black uppercase opacity-20 mt-2 tracking-[0.3em]">${match.date?.split(',')[0] || ''}</span>
+              <span class="text-[8px] font-black uppercase opacity-20 mt-2 tracking-[0.3em]">${dayLabel || match.date?.split(',')[0] || ''}</span>
             </div>
 
             <div class="flex flex-col items-center gap-4 w-1/3">
@@ -1146,31 +1172,54 @@ window.switchTab = function (tabId) {
 
 // --- FETCH & UPDATE HOME DATA ---
 async function fetchMatches(statusFilter = null, sidebarOnly = false) {
+  const isUpcomingPage = window.location.pathname.includes('upcoming');
+  
   try {
-    const res = await fetch(`${API_LIVE}?sport=${currentTab}`);
+    // On upcoming page, use dedicated upcoming API for real fixture data
+    let apiUrl;
+    if (isUpcomingPage && statusFilter === 'upcoming') {
+      apiUrl = `${API_UPCOMING}?sport=${currentTab}&days=7`;
+    } else {
+      apiUrl = `${API_LIVE}?sport=${currentTab}`;
+    }
+    
+    const res = await fetch(apiUrl);
     const data = await res.json();
     let matches = data.matches || [];
 
-    // Always render sidebar live scores if container exists
-    if (sidebarLiveContainer) {
-      const liveMatches = matches.filter(m => m.status === 'live').slice(0, 5);
-      renderSidebarLive(liveMatches);
+    // On upcoming page with upcoming API, sidebar/ticker need live data separately
+    if (isUpcomingPage && statusFilter === 'upcoming') {
+      // Fetch live data for sidebar/ticker only
+      if (sidebarLiveContainer || tickerContainer) {
+        try {
+          const liveRes = await fetch(`${API_LIVE}?sport=${currentTab}`);
+          const liveData = await liveRes.json();
+          const liveMatches = (liveData.matches || []).filter(m => m.status === 'live');
+          if (sidebarLiveContainer) renderSidebarLive(liveMatches.slice(0, 5));
+          if (tickerContainer) { renderTicker(liveMatches); updatePageTitle(liveMatches); }
+        } catch(e) { /* sidebar fetch failed silently */ }
+      }
+      
+      if (sidebarOnly) return;
+      // All matches from upcoming API are already upcoming — render directly
+      renderMatches(matches);
+    } else {
+      // Normal path for other pages
+      if (sidebarLiveContainer) {
+        const liveMatches = matches.filter(m => m.status === 'live').slice(0, 5);
+        renderSidebarLive(liveMatches);
+      }
+      if (tickerContainer) {
+        const liveMatches = matches.filter(m => m.status === 'live');
+        renderTicker(liveMatches);
+        updatePageTitle(liveMatches);
+      }
+      if (sidebarOnly) return;
+      if (statusFilter) {
+        matches = matches.filter(m => m.status === statusFilter);
+      }
+      renderMatches(matches);
     }
-
-    // Always render ticker if container exists
-    if (tickerContainer) {
-      const liveMatches = matches.filter(m => m.status === 'live');
-      renderTicker(liveMatches);
-      updatePageTitle(liveMatches);
-    }
-
-    if (sidebarOnly) return;
-
-    if (statusFilter) {
-      matches = matches.filter(m => m.status === statusFilter);
-    }
-
-    renderMatches(matches);
 
     // Render Trending Upcoming (Most 2-3 immediate matches)
     if (trendingMatchesList) {
