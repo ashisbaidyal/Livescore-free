@@ -203,8 +203,99 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
       if (playersContainer || trendingPlayersContainer) fetchPlayers();
     }, 600000); // 10m for players
+
+    if (document.getElementById('arena-schedule-container')) {
+      fetchArenaSchedule();
+      setupArenaControls();
+    }
   }
 });
+
+// --- ARENA SCHEDULED EVENTS (CAROUSEL) ---
+async function fetchArenaSchedule() {
+  const container = document.getElementById('arena-schedule-container');
+  if (!container) return;
+  
+  try {
+    const res = await fetch(`${API_LIVE}?sport=all`);
+    const data = await res.json();
+    const upcoming = (data.matches || []).filter(m => m.status === 'upcoming');
+    renderArenaSchedule(upcoming);
+  } catch (err) {
+    console.error('Arena Fetch Error:', err);
+  }
+}
+
+function renderArenaSchedule(matches) {
+  const container = document.getElementById('arena-schedule-container');
+  if (!container || matches.length === 0) return;
+
+  container.innerHTML = matches.map(match => {
+    // Determine color based on league (matching the user image style)
+    let dotColor = 'bg-primary';
+    if (match.leagueSlug?.includes('esp.1')) dotColor = 'bg-yellow-500';
+    if (match.leagueSlug?.includes('nba')) dotColor = 'bg-orange-500';
+    if (match.leagueSlug?.includes('eng.1')) dotColor = 'bg-blue-500';
+    if (match.leagueSlug?.includes('nfl')) dotColor = 'bg-red-600';
+
+    return `
+      <div class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[360px] group min-w-[320px] snap-center">
+        <div>
+          <div class="flex justify-between text-[10px] font-black text-on-surface-variant mb-12 uppercase tracking-[0.2em]">
+            <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full ${dotColor}"></span> ${match.league || 'UPCOMING'}</span>
+            <span class="text-primary">${match.time}</span>
+          </div>
+          <div class="flex items-center justify-between mb-12 px-2">
+            <div class="flex flex-col items-center gap-4">
+              <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase">
+                ${match.homeTeam.name.slice(0,3)}
+              </div>
+              <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-24 text-center">${match.homeTeam.name}</span>
+            </div>
+            
+            <div class="flex flex-col items-center">
+              <span class="text-3xl font-black text-primary italic tracking-tighter transform group-hover:scale-125 transition-transform duration-700">VS</span>
+            </div>
+
+            <div class="flex flex-col items-center gap-4">
+              <div class="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center text-xl font-black shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:border-primary/30 transition-colors uppercase">
+                ${match.awayTeam.name.slice(0,3)}
+              </div>
+              <span class="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity truncate w-24 text-center">${match.awayTeam.name}</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="alert('Notification set for ${match.homeTeam.name} vs ${match.awayTeam.name}')" class="w-full bg-white/5 hover:bg-primary py-5 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all border border-white/10 hover:border-transparent hover:shadow-[0_0_30px_rgba(204,22,22,0.4)]">Notify Me</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function setupArenaControls() {
+  const container = document.getElementById('arena-schedule-container');
+  const prev = document.getElementById('arena-prev');
+  const next = document.getElementById('arena-next');
+  if (!container || !prev || !next) return;
+
+  const scrollAmount = 330; // Card width + gap
+
+  next.addEventListener('click', () => {
+    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  });
+
+  prev.addEventListener('click', () => {
+    container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+  });
+
+  // Auto-slide logic
+  setInterval(() => {
+    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+      container.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  }, 5000);
+}
 
 // --- FETCH TOP HERO DATA ---
 async function fetchHeroData(statusFilter = null) {
