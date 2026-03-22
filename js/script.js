@@ -1,6 +1,8 @@
 // --- CONSTANTS ---
 // Navigation Functions (Consolidated below)
 
+const FALLBACK_HERO_IMAGE = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=1600';
+const FALLBACK_LOGO = 'https://raw.githubusercontent.com/ashisbaidya/Livescore-free/main/logo.png';
 const API_LIVE = '/api/live';
 const API_MATCH = '/api/match';
 const API_UPCOMING = '/api/upcoming';
@@ -248,91 +250,98 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return;
   }
-
   // Handle Hub Pages (Home, Live, Upcoming, Trending, Results)
   if (matchesContainer || sidebarLiveContainer || newsContainer) {
     if (tabsContainer) renderTabs();
 
-    // Determine page filter: 
-    // Homepage and Live hubs now strictly show 'live' matches regardless of tab selection.
-    currentPageFilter = 'live';
-    if (path.includes('upcoming.html')) currentPageFilter = 'upcoming';
-    if (path.includes('results.html')) currentPageFilter = 'finished';
-    if (path.includes('trending.html')) currentPageFilter = null; // Show all (live, upcoming, results)
+    // Set page filter based on current file
+    if (path.includes('upcoming.html')) {
+        currentPageFilter = 'upcoming';
+        currentArenaTab = currentTab;
+    } else if (path.includes('results.html')) {
+        currentPageFilter = 'finished';
+    } else if (path.includes('trending.html')) {
+        currentPageFilter = 'all'; 
+    } else {
+        currentPageFilter = 'live';
+    }
 
-    // --- NOTIFICATION HANDLER ---
-window.handleNotification = function(matchId, matchName) {
-  // Simple toast implementation
-  const toast = document.createElement('div');
-  toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] bg-primary text-white px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-3 animate-bounce';
-  toast.innerHTML = `
-    <span class="material-symbols-outlined text-sm">check_circle</span>
-    Reminder Set for ${matchName}!
-  `;
-  document.body.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => toast.remove(), 500);
-  }, 3000);
-};
-
-// Initial calls ...
-    if (window.location.pathname.includes('upcoming.html')) currentArenaTab = currentTab;
+    // --- INITIAL FETCHES ---
+    fetchSidebarLive();
+    
     // Skip fetchMatches on upcoming page — Schedule Centre module handles it
     if (!window.location.pathname.includes('upcoming')) {
-      fetchMatches(currentPageFilter);
+      fetchMatches(currentPageFilter, true);
     }
-    fetchSidebarLive();
-    fetchNews();
-    if (heroSliderContainer) fetchHeroData(currentPageFilter);
-    if (leaguesContainer || topTierContainer) fetchLeagues();
-    if (playersContainer || trendingPlayersContainer) fetchPlayers();
+
+    if (heroSliderContainer) {
+      fetchHeroData(currentPageFilter);
+      fetchLeaguesHero();
+    }
+    setupNewsletter();
+    if (newsContainer) fetchNews(currentTab);
+    if (headlinesContainer) fetchNews(currentTab);
+    if (playersContainer || document.getElementById('trending-players-container')) fetchPlayers(currentTab);
+    if (leaguesContainer || topTierContainer) fetchLeagues && fetchLeagues(currentTab);
     if (recentResultsContainer) fetchRecentResults();
     if (document.getElementById("featured-match-analysis")) fetchFeaturedAnalysis();
+    
     if (upcomingTodayContainer) {
       fetchUpcomingToday();
       setupUpcomingControls();
     }
     if (document.getElementById('arena-schedule-container')) {
-      fetchArenaSchedule();
-      setupArenaControls();
-      renderArenaTabs();
+      fetchArenaSchedule(currentArenaTab);
+      setupArenaControls && setupArenaControls();
+      renderArenaTabs && renderArenaTabs();
     }
     if (document.getElementById('trending-matches-list')) {
       fetchTrendingUpcoming();
     }
 
-    // "Silent" Auto Refresh logic
+    // --- REFRESH LOGIC ---
     setInterval(() => {
-      // Skip fetchMatches auto-refresh on upcoming page — Schedule Centre handles it
+      fetchSidebarLive();
       if (!window.location.pathname.includes('upcoming')) {
         fetchMatches(currentPageFilter);
       }
-      fetchSidebarLive();
       if (recentResultsContainer) fetchRecentResults();
-    if (document.getElementById("featured-match-analysis")) fetchFeaturedAnalysis();
+      if (document.getElementById("featured-match-analysis")) fetchFeaturedAnalysis();
       if (upcomingTodayContainer) fetchUpcomingToday();
       if (document.getElementById('arena-schedule-container')) fetchArenaSchedule(currentArenaTab);
       if (document.getElementById('trending-matches-list')) fetchTrendingUpcoming();
-    }, 15000); // 15s for scores
+    }, 15000);
 
-    setInterval(() => {
-      fetchNews();
-    }, 60000); // 1m for news
-
-    // Auto Refresh for Hubs
     setInterval(() => {
       if (heroSliderContainer) fetchHeroData(currentPageFilter);
+      if (newsContainer) fetchNews(currentTab);
       if (leaguesContainer || topTierContainer) fetchLeagues();
-    }, 60000); // 1m for hero / leagues standings
+    }, 60000);
 
     setInterval(() => {
-      if (playersContainer || trendingPlayersContainer) fetchPlayers();
-    }, 600000); // 10m for players
+      if (playersContainer) fetchPlayers(currentTab);
+    }, 600000);
   }
 });
+
+// --- NOTIFICATION HANDLER ---
+window.handleNotification = function(matchId, matchName) {
+  const toast = document.getElementById('notification-toast') || document.createElement('div');
+  if (!document.getElementById('notification-toast')) {
+    toast.id = 'notification-toast';
+    toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] bg-primary text-white px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-3 animate-bounce';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<span class="material-symbols-outlined text-sm">check_circle</span> Reminder Set for ${matchName}!`;
+  toast.style.display = 'flex';
+  toast.style.opacity = '1';
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => { toast.style.display = 'none'; }, 500);
+  }, 3000);
+};
 
 // --- ARENA SCHEDULED EVENTS (CAROUSEL) ---
 window.slideArena = function (direction) {
@@ -2228,11 +2237,11 @@ function renderUpcomingMatchDetail(data) {
 
   if (hName) hName.textContent = data.homeTeam.name || 'TBD';
   if (aName) aName.textContent = data.awayTeam.name || 'TBD';
-  if (hLogo) hLogo.src = data.homeTeam.logo || '/public/logo.png';
-  if (aLogo) aLogo.src = data.awayTeam.logo || '/public/logo.png';
+  if (hLogo) hLogo.src = data.homeTeam.logo || 'https://raw.githubusercontent.com/ashisbaidya/Livescore-free/main/logo.png';
+  if (aLogo) aLogo.src = data.awayTeam.logo || 'https://raw.githubusercontent.com/ashisbaidya/Livescore-free/main/logo.png';
   if (mTime) mTime.textContent = data.time || '00:00';
   if (mDate) mDate.textContent = data.date || 'Scheduled Event';
-  if (sName) sName.textContent = data.venue || 'TBD Stadium';
+  if (sName) sName.textContent = data.venue || (data.league ? `${data.league} Arena` : 'TBD Stadium');
   if (lName) lName.textContent = data.league || 'Upcoming Event';
 
   if (h2hContainer && data.h2h) {
@@ -2771,3 +2780,133 @@ if (window.location.pathname.includes('upcoming')) {
   // Auto-refresh every 2 minutes
   setInterval(fetchScheduleCentre, 120000);
 }
+
+// --- FETCH LEAGUES HERO ---
+async function fetchLeaguesHero() {
+  if (!heroSliderContainer || !window.location.pathname.includes('leagues.html')) return;
+  try {
+    const res = await fetch(`${API_NEWS}?sport=all`);
+    const data = await res.json();
+    const featured = (data.news || []).slice(0, 3);
+    
+    if (featured.length > 0) {
+      heroSliderContainer.innerHTML = featured.map((item, i) => `
+        <div class="absolute inset-0 transition-opacity duration-1000 ${i === 0 ? 'opacity-100' : 'opacity-0'}" data-slide="${i}">
+          <img class="absolute inset-0 w-full h-full object-cover opacity-60" src="${item.image || FALLBACK_HERO_IMAGE}" alt="${item.title}">
+          <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+          <div class="absolute bottom-0 left-0 p-10 max-w-2xl">
+            <div class="inline-flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
+              <span class="material-symbols-outlined text-xs">star</span>
+              Featured League Coverage
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-on-surface mb-4 leading-none">${item.title}</h1>
+            <p class="text-sm text-on-surface/60 font-medium max-w-md mb-6 leading-relaxed">${item.description || 'Deep tactical analysis and live coverage from the multiverse elite.'}</p>
+            <div class="flex gap-4">
+              <button onclick="window.location.href='/news.html'" class="px-8 py-4 kinetic-gradient text-xs font-black uppercase tracking-widest rounded active:scale-95 transition-all">Read Analysis</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Simple auto-slide
+      let current = 0;
+      setInterval(() => {
+        const slides = heroSliderContainer.querySelectorAll('[data-slide]');
+        if (slides.length < 2) return;
+        slides[current].classList.replace('opacity-100', 'opacity-0');
+        current = (current + 1) % slides.length;
+        slides[current].classList.replace('opacity-0', 'opacity-100');
+      }, 5000);
+    }
+  } catch (err) {
+    console.error('Leagues Hero Fetch Error:', err);
+  }
+}
+
+// --- NEWSLETTER SIMULATION ---
+function setupNewsletter() {
+  const forms = document.querySelectorAll('form');
+  forms.forEach(form => {
+    // Look for newsletter indicators in the form
+    if (form.innerHTML.toLowerCase().includes('newsletter') || 
+        form.querySelector('input[type="email"]') || 
+        form.querySelector('button')?.innerText.toLowerCase().includes('subscribe')) {
+      
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const input = form.querySelector('input[type="email"]');
+        if (input && input.value) {
+          if (window.handleNotification) {
+            window.handleNotification(`Transmission Received! ${input.value} added to Kinetic Feed.`, 'success');
+          } else {
+            alert(`Kinetic Feed: ${input.value} added to transmission list.`);
+          }
+          form.reset();
+        }
+      };
+    }
+  });
+}
+
+// --- SEARCH LOGIC ---
+const searchInput = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+
+if (searchInput) {
+  searchInput.addEventListener('input', async (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    if (query.length < 2) {
+      if (searchResults) searchResults.innerHTML = '';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_LIVE}?sport=all`);
+      const data = await res.json();
+      const matches = (data.matches || []).filter(m => 
+        m.homeTeam.name.toLowerCase().includes(query) || 
+        m.awayTeam.name.toLowerCase().includes(query) || 
+        (m.league && m.league.toLowerCase().includes(query))
+      );
+
+      if (matches.length > 0 && searchResults) {
+        searchResults.innerHTML = matches.map(m => `
+          <a href="/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 hover:border-primary/50 transition-all group">
+            <div class="flex items-center gap-4">
+              <div class="flex -space-x-2">
+                <img src="${m.homeTeam.logo}" class="w-8 h-8 rounded-full bg-black/20 p-1 border border-white/10" onerror="this.src='${FALLBACK_LOGO}'">
+                <img src="${m.awayTeam.logo}" class="w-8 h-8 rounded-full bg-black/20 p-1 border border-white/10" onerror="this.src='${FALLBACK_LOGO}'">
+              </div>
+              <div>
+                <div class="text-xs font-black uppercase text-on-surface">${m.homeTeam.name} vs ${m.awayTeam.name}</div>
+                <div class="text-[9px] font-bold text-on-surface/40 uppercase tracking-widest">${m.league || m.sport}</div>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+          </a>
+        `).join('');
+      } else if (searchResults) {
+        searchResults.innerHTML = '<div class="text-center py-8 text-[10px] font-black uppercase tracking-widest text-on-surface/20">No matching signals found.</div>';
+      }
+    } catch (err) {
+      console.error('Search Error:', err);
+    }
+  });
+}
+
+window.openSearchModal = function() {
+  const modal = document.getElementById('search-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    if (searchInput) searchInput.focus();
+  }
+};
+
+window.closeSearchModal = function() {
+  const modal = document.getElementById('search-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    if (searchInput) searchInput.value = '';
+    if (searchResults) searchResults.innerHTML = '';
+  }
+};
