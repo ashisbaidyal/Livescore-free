@@ -62,6 +62,7 @@ const betAwayOdds = document.getElementById('bet-away-odds');
 const betDrawOdds = document.getElementById('bet-draw-odds');
 const betDrawContainer = document.getElementById('bet-draw-container');
 const matchLeagueInfo = document.getElementById('match-league-info');
+const statsDots = document.getElementById('stats-dots');
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -1062,18 +1063,18 @@ function renderMatchDetail(data) {
         lineupHomeTab.onclick = () => {
             activeLineupTab = 'home';
             renderMatchLineup(data);
-            lineupHomeTab.classList.add('border-[#CC1616]', 'bg-surface');
-            lineupHomeTab.classList.remove('text-on-surface-variant/40');
-            lineupAwayTab.classList.remove('border-[#CC1616]', 'bg-surface');
-            lineupAwayTab.classList.add('text-on-surface-variant/40');
+            lineupHomeTab.classList.add('border-primary', 'bg-surface');
+            lineupHomeTab.classList.remove('text-on-surface-variant/40', 'border-transparent');
+            lineupAwayTab.classList.remove('border-primary', 'bg-surface');
+            lineupAwayTab.classList.add('text-on-surface-variant/40', 'border-transparent');
         };
         lineupAwayTab.onclick = () => {
             activeLineupTab = 'away';
             renderMatchLineup(data);
-            lineupAwayTab.classList.add('border-[#CC1616]', 'bg-surface');
-            lineupAwayTab.classList.remove('text-on-surface-variant/40');
-            lineupHomeTab.classList.remove('border-[#CC1616]', 'bg-surface');
-            lineupHomeTab.classList.add('text-on-surface-variant/40');
+            lineupAwayTab.classList.add('border-primary', 'bg-surface');
+            lineupAwayTab.classList.remove('text-on-surface-variant/40', 'border-transparent');
+            lineupHomeTab.classList.remove('border-primary', 'bg-surface');
+            lineupHomeTab.classList.add('text-on-surface-variant/40', 'border-transparent');
         };
     }
     renderMatchLineup(data);
@@ -1099,26 +1100,58 @@ function renderMatchDetail(data) {
   }
 
   if (statsContainer && data.stats && data.stats.length > 0) {
-    statsContainer.innerHTML = data.stats.map(stat => {
-      const homeVal = parseFloat(stat.home) || 0;
-      const awayVal = parseFloat(stat.away) || 0;
-      const total = homeVal + awayVal || 1;
-      const homePercent = (homeVal / total) * 100;
-      const awayPercent = (awayVal / total) * 100;
+    // Chunk stats into slides (4 per slide)
+    const chunks = [];
+    for (let i = 0; i < data.stats.length; i += 4) {
+        chunks.push(data.stats.slice(i, i + 4));
+    }
 
-      return `
-        <div class="space-y-2">
-          <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1">
-            <span>${stat.label}</span>
-            <span class="text-primary">${stat.home} — ${stat.away}</span>
-          </div>
-          <div class="h-1.5 w-full bg-white/5 flex rounded-full overflow-hidden">
-            <div class="h-full bg-surface-container-highest" style="width: ${homePercent}%"></div>
-            <div class="h-full bg-primary" style="width: ${awayPercent}%"></div>
-          </div>
-        </div>
-      `;
-    }).join('');
+    statsContainer.innerHTML = chunks.map(chunk => `
+      <div class="min-w-full snap-start space-y-8 p-1">
+        ${chunk.map(stat => {
+          const homeVal = parseFloat(stat.home) || 0;
+          const awayVal = parseFloat(stat.away) || 0;
+          const total = homeVal + awayVal || 1;
+          const homePercent = (homeVal / total) * 100;
+          const awayPercent = (awayVal / total) * 100;
+
+          return `
+            <div class="space-y-2">
+              <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1">
+                <span>${stat.label}</span>
+                <span class="text-primary">${stat.home} — ${stat.away}</span>
+              </div>
+              <div class="h-1.5 w-full bg-white/5 flex rounded-full overflow-hidden">
+                <div class="h-full bg-surface-container-highest" style="width: ${homePercent}%"></div>
+                <div class="h-full bg-primary" style="width: ${awayPercent}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `).join('');
+
+    // Render Dots
+    if (statsDots) {
+        statsDots.innerHTML = chunks.map((_, i) => `
+            <div class="w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === 0 ? 'bg-secondary' : 'bg-white/10'}"></div>
+        `).join('');
+
+        // Sync dots on scroll
+        statsContainer.onscroll = () => {
+            const index = Math.round(statsContainer.scrollLeft / statsContainer.clientWidth);
+            const dots = statsDots.querySelectorAll('div');
+            dots.forEach((dot, i) => {
+                if (i === index) {
+                    dot.classList.remove('bg-white/10');
+                    dot.classList.add('bg-secondary', 'scale-125');
+                } else {
+                    dot.classList.remove('bg-secondary', 'scale-125');
+                    dot.classList.add('bg-white/10');
+                }
+            });
+        };
+    }
   }
 
   if (timelineContainer && data.timeline && data.timeline.length > 0) {
@@ -1185,12 +1218,18 @@ function renderMatchLineup(data) {
     }
 
     container.innerHTML = lineup.map(p => `
-        <div class="flex items-center justify-between group cursor-default">
+        <div class="flex items-center justify-between group cursor-default p-2 rounded-lg hover:bg-white/5 transition-all">
             <div class="flex items-center space-x-4">
-                <span class="text-xs font-bold text-on-surface-variant/40 w-4">${p.number || ''}</span>
-                <span class="text-sm font-bold group-hover:text-primary transition-colors">${p.name} ${p.starter ? '<span class="text-[8px] text-secondary ml-1">S</span>' : ''}</span>
+                <div class="relative">
+                    <img src="${p.face || '/public/logo.png'}" class="w-10 h-10 rounded-full border border-white/10 object-cover bg-white/5 group-hover:border-primary transition-all" onerror="this.src='/public/logo.png'">
+                    ${p.starter ? '<span class="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-surface"></span>' : ''}
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold group-hover:text-primary transition-colors">${p.name}</span>
+                    <span class="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.2em]">${p.number || '--'} • ${p.position}</span>
+                </div>
             </div>
-            <span class="text-[8px] font-black px-1.5 py-0.5 border border-white/10 text-on-surface-variant/50 uppercase">${p.position}</span>
+            <button class="material-symbols-outlined text-white/20 group-hover:text-primary transition-colors text-lg">info</button>
         </div>
     `).join('');
 }

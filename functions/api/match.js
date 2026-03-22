@@ -69,7 +69,8 @@ export async function onRequest(context) {
             name: entry.athlete.displayName,
             number: entry.jersey || '',
             position: entry.position?.abbreviation || '',
-            starter: entry.starter || false
+            starter: entry.starter || false,
+            face: entry.athlete.headshot?.href || ''
         }));
       };
 

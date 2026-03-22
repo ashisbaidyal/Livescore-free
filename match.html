@@ -318,14 +318,14 @@
 <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary">Live Data</h3>
 <h2 class="text-3xl font-bold italic tracking-tight">Match Performance</h2>
 </div>
-<div class="flex space-x-2">
-<div class="w-2 h-2 rounded-full bg-secondary"></div>
-<div class="w-2 h-2 rounded-full bg-white/10"></div>
-<div class="w-2 h-2 rounded-full bg-white/10"></div>
+<div id="stats-dots" class="flex space-x-2">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-white/10"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-white/10"></div>
 </div>
 </div>
-<div id="stats-container" class="space-y-8">
-  <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Live statistics will appear here during the match.</p>
+<div id="stats-container" class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth">
+  <p class="text-[10px] font-black uppercase tracking-widest opacity-40 p-8 min-w-full">Live statistics will appear here during the match.</p>
 </div>
 </div>
 <!-- Tactical Timeline -->
@@ -356,9 +356,9 @@
 </div>
 <div class="p-0">
 <!-- Team Selection -->
-<div class="flex">
-<button id="lineup-home-tab" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest bg-surface border-b-2 border-[#CC1616]">Home Team</button>
-<button id="lineup-away-tab" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40 hover:bg-white/5 transition-colors">Away Team</button>
+<div class="flex border-b border-white/5">
+<button id="lineup-home-tab" class="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] bg-surface border-b-2 border-primary transition-all duration-300">Home Team</button>
+<button id="lineup-away-tab" class="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/40 hover:bg-white/5 border-b-2 border-transparent transition-all duration-300">Away Team</button>
 </div>
 <!-- Player List -->
 <div id="lineup-players-container" class="p-6 space-y-4">
