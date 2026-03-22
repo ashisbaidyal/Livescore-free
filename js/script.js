@@ -299,18 +299,24 @@ registerGlobalImageFallbacks();
 
 function appendHeaderActions() {
   const header = document.getElementById('main-header');
-  if (!header || document.getElementById('lsf-action-cluster')) return;
-  const actionHost = header.querySelector('.flex.items-center.gap-6:last-child') || header.querySelector('.flex.items-center.gap-6');
-  if (!actionHost) return;
+  if (!header) return;
 
-  const cluster = document.createElement('div');
-  cluster.id = 'lsf-action-cluster';
-  cluster.className = 'lsf-action-cluster';
-  cluster.innerHTML = `
-    <button id="lsf-notify-toggle" class="lsf-notify-button" type="button">Enable Alerts</button>
-    <button id="lsf-install-button" class="lsf-pwa-button" type="button" hidden>Install App</button>
-  `;
-  actionHost.prepend(cluster);
+  const notifyButton = Array.from(header.querySelectorAll('button')).find((button) =>
+    (button.textContent || '').toLowerCase().includes('notifications')
+  );
+
+  if (!notifyButton) return;
+
+  notifyButton.id = 'lsf-notify-toggle';
+  notifyButton.type = 'button';
+  notifyButton.classList.add('lsf-header-icon-button');
+  notifyButton.setAttribute('aria-label', 'Enable alerts');
+  notifyButton.setAttribute('title', 'Enable alerts');
+
+  const statusDot = notifyButton.querySelector('span:not(.material-symbols-outlined)');
+  if (statusDot) {
+    statusDot.classList.add('lsf-notify-dot');
+  }
 }
 
 function appendInstallBanner() {
@@ -401,13 +407,24 @@ async function requestNotificationPermission() {
 function updateNotificationButton(permission = notificationPermissionState) {
   const button = document.getElementById('lsf-notify-toggle');
   if (!button) return;
+  button.dataset.permission = permission;
+  const icon = button.querySelector('.material-symbols-outlined');
+
   if (permission === 'granted') {
-    button.textContent = 'Alerts Enabled';
     button.setAttribute('aria-pressed', 'true');
+    button.setAttribute('aria-label', 'Alerts enabled');
+    button.setAttribute('title', 'Alerts enabled');
+    if (icon) icon.textContent = 'notifications_active';
   } else if (permission === 'denied') {
-    button.textContent = 'Alerts Blocked';
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', 'Alerts blocked');
+    button.setAttribute('title', 'Alerts blocked');
+    if (icon) icon.textContent = 'notifications_off';
   } else {
-    button.textContent = 'Enable Alerts';
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', 'Enable alerts');
+    button.setAttribute('title', 'Enable alerts');
+    if (icon) icon.textContent = 'notifications';
   }
 }
 
