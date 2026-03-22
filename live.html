@@ -290,7 +290,7 @@
 <h2 class="text-4xl font-black font-headline uppercase tracking-tighter">Recent <span class="text-primary-container">Results</span></h2>
 <a class="text-primary font-bold text-xs tracking-widest uppercase hover:underline" href="#">View All History</a>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div id="recent-results-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 <!-- Result 1 -->
 <div class="bg-surface-container p-4 rounded-lg border border-white/5 hover:bg-surface-container-high transition-colors cursor-pointer group">
 <div class="flex justify-between text-[10px] font-black text-on-surface/40 mb-3 uppercase tracking-widest">
@@ -360,11 +360,11 @@
 <div class="flex justify-between items-center mb-10 border-b border-white/5 pb-4">
 <h2 class="text-4xl font-black font-headline uppercase tracking-tighter">Upcoming <span class="text-primary-container">Today</span></h2>
 <div class="flex space-x-4">
-<button class="w-10 h-10 border border-white/10 flex items-center justify-center rounded-full hover:bg-white/5"><span class="material-symbols-outlined">chevron_left</span></button>
-<button class="w-10 h-10 border border-white/10 flex items-center justify-center rounded-full hover:bg-white/5"><span class="material-symbols-outlined">chevron_right</span></button>
+<button id="upcoming-prev" class="w-10 h-10 border border-white/10 flex items-center justify-center rounded-full hover:bg-white/5"><span class="material-symbols-outlined">chevron_left</span></button>
+<button id="upcoming-next" class="w-10 h-10 border border-white/10 flex items-center justify-center rounded-full hover:bg-white/5"><span class="material-symbols-outlined">chevron_right</span></button>
 </div>
 </div>
-<div class="flex overflow-x-auto gap-6 pb-8 scrollbar-hide">
+<div id="upcoming-today-container" class="flex overflow-x-auto gap-6 pb-8 scrollbar-hide">
 <!-- Upcoming Card 1 -->
 <div class="flex-none w-72 bg-surface p-6 rounded-xl border-l-4 border-primary shadow-2xl group cursor-pointer hover:bg-surface-container transition-colors">
 <div class="text-[10px] font-black text-primary tracking-widest uppercase mb-4">NFL / 8:30 PM</div>

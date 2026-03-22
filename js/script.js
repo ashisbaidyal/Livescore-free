@@ -33,6 +33,10 @@ const heroSliderContainer = document.getElementById('hero-slider-container');
 const leaguesContainer = document.getElementById('leagues-container');
 const playersContainer = document.getElementById('players-container');
 const trendingPlayersContainer = document.getElementById('trending-players-container');
+const recentResultsContainer = document.getElementById('recent-results-container');
+const upcomingTodayContainer = document.getElementById('upcoming-today-container');
+const upcomingPrev = document.getElementById('upcoming-prev');
+const upcomingNext = document.getElementById('upcoming-next');
 const API_INFO = '/api/info';
 
 // Specific Match Detail Elements
@@ -192,6 +196,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (heroSliderContainer) fetchHeroData(currentPageFilter);
     if (leaguesContainer) fetchLeagues();
     if (playersContainer || trendingPlayersContainer) fetchPlayers();
+    if (recentResultsContainer) fetchRecentResults();
+    if (upcomingTodayContainer) {
+      fetchUpcomingToday();
+      setupUpcomingControls();
+    }
     if (document.getElementById('arena-schedule-container')) {
       fetchArenaSchedule();
       setupArenaControls();
@@ -202,6 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
       fetchMatches(currentPageFilter);
       fetchSidebarLive();
+      if (recentResultsContainer) fetchRecentResults();
+      if (upcomingTodayContainer) fetchUpcomingToday();
       if (document.getElementById('arena-schedule-container')) fetchArenaSchedule(currentArenaTab);
     }, 15000); // 15s for scores
 
@@ -1041,6 +1052,96 @@ function renderUpcomingMatchDetail(data) {
       </div>
     `).join('');
   }
+}
+
+// --- RECENT RESULTS (FINISHED MATCHES) ---
+async function fetchRecentResults() {
+  if (!recentResultsContainer) return;
+  try {
+    const res = await fetch(`${API_LIVE}?sport=all`);
+    const data = await res.json();
+    const finished = (data.matches || []).filter(m => m.status === 'finished');
+    // Sort by date descending (most recent first)
+    finished.sort((a, b) => new Date(b.date) - new Date(a.date));
+    renderRecentResults(finished.slice(0, 4));
+  } catch (err) {
+    console.error('Recent Results Fetch Error:', err);
+  }
+}
+
+function renderRecentResults(matches) {
+  if (!recentResultsContainer) return;
+  if (matches.length === 0) {
+    recentResultsContainer.innerHTML = '<div class="col-span-full py-8 text-center opacity-30 text-[10px] uppercase font-black tracking-widest">No recent results found</div>';
+    return;
+  }
+
+  recentResultsContainer.innerHTML = matches.map(match => `
+    <div class="bg-surface-container p-4 rounded-lg border border-white/5 hover:border-primary/30 transition-all cursor-pointer group" onclick="window.location.href='/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}'">
+      <div class="flex justify-between text-[10px] font-black text-on-surface/40 mb-3 uppercase tracking-widest">
+        <span>${match.leagueSlug?.split('.')[0]?.toUpperCase() || 'SPORTS'}</span>
+        <span class="text-primary font-black italic">FINAL</span>
+      </div>
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-bold text-sm truncate max-w-[120px]">${match.homeTeam.name}</span>
+        <span class="font-black text-lg ${match.homeTeam.score > match.awayTeam.score ? 'text-primary' : ''}">${match.homeTeam.score}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="font-bold text-sm truncate max-w-[120px]">${match.awayTeam.name}</span>
+        <span class="font-black text-lg ${match.awayTeam.score > match.homeTeam.score ? 'text-primary' : ''}">${match.awayTeam.score}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// --- UPCOMING TODAY (SCHEDULED) ---
+async function fetchUpcomingToday() {
+  if (!upcomingTodayContainer) return;
+  try {
+    const res = await fetch(`${API_LIVE}?sport=all`);
+    const data = await res.json();
+    const upcoming = (data.matches || []).filter(m => m.status === 'upcoming');
+    // Sort by date ascending (soonest first)
+    upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
+    renderUpcomingToday(upcoming.slice(0, 8));
+  } catch (err) {
+    console.error('Upcoming Today Fetch Error:', err);
+  }
+}
+
+function renderUpcomingToday(matches) {
+  if (!upcomingTodayContainer) return;
+  if (matches.length === 0) {
+    upcomingTodayContainer.innerHTML = '<div class="py-8 text-center opacity-30 text-[10px] uppercase font-black tracking-widest w-full">No upcoming matches today</div>';
+    return;
+  }
+
+  upcomingTodayContainer.innerHTML = matches.map(match => `
+    <div class="flex-none w-72 bg-surface p-6 rounded-xl border-l-4 border-white/10 shadow-2xl group cursor-pointer hover:bg-surface-container transition-all hover:border-primary" onclick="window.location.href='/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}'">
+      <div class="text-[10px] font-black text-on-surface/40 group-hover:text-primary tracking-widest uppercase mb-4 transition-colors">${match.sport.toUpperCase()} / ${match.time}</div>
+      <div class="space-y-4 mb-6">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center border border-white/5">
+            <img src="${match.homeTeam.logo}" class="w-5 h-5 object-contain" onerror="this.src='/public/logo.png'">
+          </div>
+          <span class="font-bold uppercase tracking-tight text-sm truncate">${match.homeTeam.name}</span>
+        </div>
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center border border-white/5">
+            <img src="${match.awayTeam.logo}" class="w-5 h-5 object-contain" onerror="this.src='/public/logo.png'">
+          </div>
+          <span class="font-bold uppercase tracking-tight text-sm truncate">${match.awayTeam.name}</span>
+        </div>
+      </div>
+      <button class="w-full py-2 border border-white/10 text-[10px] font-black tracking-widest uppercase group-hover:bg-primary group-hover:text-on-primary transition-all">SET REMINDER</button>
+    </div>
+  `).join('');
+}
+
+function setupUpcomingControls() {
+  if (!upcomingPrev || !upcomingNext || !upcomingTodayContainer) return;
+  upcomingNext.onclick = () => upcomingTodayContainer.scrollBy({ left: 300, behavior: 'smooth' });
+  upcomingPrev.onclick = () => upcomingTodayContainer.scrollBy({ left: -300, behavior: 'smooth' });
 }
 
 // --- AUTO-REFRESH (15s) ---
