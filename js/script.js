@@ -280,7 +280,7 @@ window.handleNotification = function(matchId, matchName) {
     fetchSidebarLive();
     fetchNews();
     if (heroSliderContainer) fetchHeroData(currentPageFilter);
-    if (leaguesContainer) fetchLeagues();
+    if (leaguesContainer || topTierContainer) fetchLeagues();
     if (playersContainer || trendingPlayersContainer) fetchPlayers();
     if (recentResultsContainer) fetchRecentResults();
     if (upcomingTodayContainer) {
@@ -309,7 +309,7 @@ window.handleNotification = function(matchId, matchName) {
     // Auto Refresh for Hubs
     setInterval(() => {
       if (heroSliderContainer) fetchHeroData(currentPageFilter);
-      if (leaguesContainer) fetchLeagues();
+      if (leaguesContainer || topTierContainer) fetchLeagues();
     }, 60000); // 1m for hero / leagues standings
 
     setInterval(() => {
@@ -1990,3 +1990,61 @@ setTimeout(initScrollReveal, 500);
 document.querySelectorAll('.copyright-year').forEach(el => {
   el.textContent = new Date().getFullYear();
 });
+
+// --- DYNAMIC CURRENT DATE ---
+const dateDisplay = document.getElementById('current-date-display');
+if (dateDisplay) {
+  const now = new Date();
+  dateDisplay.textContent = now.toLocaleDateString('en-US', { 
+    month: 'short', day: 'numeric', year: 'numeric' 
+  });
+}
+
+// --- DYNAMIC NEWS HERO ---
+// Replace static hero on news.html with a live/recent match
+if (window.location.pathname.includes('news.html')) {
+  (async () => {
+    try {
+      const res = await fetch(`${API_LIVE}?sport=all`);
+      const data = await res.json();
+      const matches = data.matches || [];
+      // Pick biggest live match or most recent finished
+      const heroMatch = matches.find(m => m.status === 'live') || matches.find(m => m.status === 'finished');
+      if (heroMatch) {
+        const heroSection = document.querySelector('main > section.relative');
+        if (heroSection) {
+          const isLive = heroMatch.status === 'live';
+          const badge = isLive ? 'LIVE NOW' : 'FINAL RESULT';
+          const badgeColor = isLive ? 'bg-primary' : 'bg-secondary-container';
+          heroSection.innerHTML = `
+            <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-surface-container-lowest/20"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-transparent to-transparent"></div>
+            <div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6">
+              <div class="flex items-center gap-3">
+                <span class="${badgeColor} text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm flex items-center gap-2">
+                  ${isLive ? '<span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>' : ''}
+                  ${badge}
+                </span>
+                <span class="text-white/60 text-xs font-bold uppercase tracking-tighter">${heroMatch.league || heroMatch.sport}</span>
+              </div>
+              <div class="space-y-2">
+                <h1 class="text-6xl md:text-9xl font-black font-headline uppercase leading-none tracking-tighter">
+                  ${heroMatch.homeTeam.name} <span class="text-primary">${heroMatch.homeTeam.score} - ${heroMatch.awayTeam.score}</span> ${heroMatch.awayTeam.name}
+                </h1>
+                <div class="flex gap-4 text-xs font-bold uppercase text-on-surface/60">
+                  <span>${heroMatch.time || ''}</span>
+                </div>
+              </div>
+              <div class="flex gap-4 pt-4">
+                <a href="/match.html?id=${heroMatch.id}&sport=${heroMatch.sport}&league=${heroMatch.leagueSlug}" class="bg-primary text-white px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2 rounded">
+                  <span class="material-symbols-outlined">sports_score</span> Match Center
+                </a>
+                <a href="/live.html" class="bg-white/5 backdrop-blur-md border border-white/10 text-on-surface px-10 py-4 font-black uppercase text-xs tracking-widest rounded hover:bg-white/10 transition-colors">All Live Scores</a>
+              </div>
+            </div>
+          `;
+        }
+      }
+    } catch(e) { console.error('News hero update error:', e); }
+  })();
+}
