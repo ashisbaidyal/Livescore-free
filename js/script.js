@@ -2781,11 +2781,33 @@ function renderSidebarLive(matches) {
 // --- FETCH & UPDATE MATCH DETAIL ---
 async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
   try {
-    const res = await fetch(`${API_MATCH}?id=${id}&sport=${sport}&league=${league}`);
+    const url = `${API_MATCH}?id=${id}&sport=${sport}&league=${league}`;
+    console.log('Fetching match detail from:', url);
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      console.error(`API returned ${res.status}: ${res.statusText}`);
+      // Show fallback message
+      if (homeTeamName) homeTeamName.textContent = 'Match not found';
+      if (awayTeamName) awayTeamName.textContent = 'Please try another match';
+      return;
+    }
+
     const data = await res.json();
+
+    if (!data || data.notFound) {
+      console.error('Match not found in API response');
+      if (homeTeamName) homeTeamName.textContent = 'Match not found';
+      if (awayTeamName) awayTeamName.textContent = 'Please try another match';
+      return;
+    }
+
+    console.log('Match data received:', data);
     renderMatchDetail(data);
   } catch (err) {
     console.error('Failed to fetch match detail:', err);
+    if (homeTeamName) homeTeamName.textContent = 'Error loading match';
+    if (awayTeamName) awayTeamName.textContent = 'Check console for details';
   }
 }
 
@@ -2891,7 +2913,7 @@ function renderMatches(matches) {
 let activeLineupTab = 'home';
 
 function renderMatchDetail(data) {
-  if (!homeTeamName) return;
+  if (!homeTeamName || !data || !data.homeTeam) return;
 
   const leagueInfo = document.getElementById('match-league-info');
   const homeEvents = document.getElementById('home-events');
@@ -3184,16 +3206,37 @@ function renderMatchLineup(data) {
 // --- FETCH UPCOMING MATCH DETAIL ---
 async function fetchUpcomingMatchDetail(id, sport = 'soccer', league = 'eng.1') {
   try {
-    const res = await fetch(`${API_MATCH}?id=${id}&sport=${sport}&league=${league}&status=upcoming`);
+    const url = `${API_MATCH}?id=${id}&sport=${sport}&league=${league}`;
+    console.log('Fetching upcoming match detail from:', url);
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      console.error(`API returned ${res.status}: ${res.statusText}`);
+      if (homeTeamName) homeTeamName.textContent = 'Match not found';
+      if (awayTeamName) awayTeamName.textContent = 'Please try another match';
+      return;
+    }
+
     const data = await res.json();
+
+    if (!data || data.notFound) {
+      console.error('Match not found in API response');
+      if (homeTeamName) homeTeamName.textContent = 'Match not found';
+      if (awayTeamName) awayTeamName.textContent = 'Please try another match';
+      return;
+    }
+
+    console.log('Upcoming match data received:', data);
     renderUpcomingMatchDetail(data);
   } catch (err) {
     console.error('Failed to fetch upcoming match detail:', err);
+    if (homeTeamName) homeTeamName.textContent = 'Error loading match';
+    if (awayTeamName) awayTeamName.textContent = 'Check console for details';
   }
 }
 
 function renderUpcomingMatchDetail(data) {
-  if (!homeTeamName) return;
+  if (!homeTeamName || !data || !data.homeTeam) return;
 
   const hName = document.getElementById('home-team-name');
   const aName = document.getElementById('away-team-name');
