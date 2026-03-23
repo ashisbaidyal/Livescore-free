@@ -2358,6 +2358,11 @@ async function fetchNews() {
   }
 }
 
+// Alias for backward compatibility
+async function fetchFeaturedAnalysis() {
+  return fetchFeaturedAnalysisNewsPage();
+}
+
 async function fetchFeaturedAnalysisNewsPage() {
   const container = document.getElementById('match-of-the-week');
   if (!container) return;
@@ -3867,6 +3872,15 @@ function setupNewsletter() {
 }
 
 
-// Global Initialization
-fetchLiveCount();
-setupNewsletter();
+// --- GLOBAL AUTO-REFRESH TIMERS ---
+// Update live count and ticker every 15 seconds (separate from the page-specific refresh in setupAppShell)
+setInterval(() => {
+  fetchLiveCount();
+}, 15000);
+
+// Update sidebar live scores every 20 seconds
+setInterval(() => {
+  if (typeof fetchSidebarLive === 'function') {
+    fetchSidebarLive();
+  }
+}, 20000);
