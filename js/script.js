@@ -2914,26 +2914,6 @@ function renderMatchDetail(data) {
   // Sync the High-Precision Kinetic Clock
   syncKineticClock(data.time, data.sport || 'soccer', data.status || 'live');
 
-  // Render Hero Scorers
-  if (homeEvents && awayEvents && data.timeline) {
-      const homeGoals = data.timeline.filter(e => e.side === 'home' && e.type === 'goal');
-      const awayGoals = data.timeline.filter(e => e.side === 'away' && e.type === 'goal');
-
-      homeEvents.innerHTML = homeGoals.map(g => `
-          <div class="flex items-center space-x-2">
-              <span class="text-[10px] font-black italic text-white/40">${g.player} ${g.time}</span>
-              <span class="text-[10px]">⚽</span>
-          </div>
-      `).join('');
-
-      awayEvents.innerHTML = awayGoals.map(g => `
-          <div class="flex items-center space-x-2">
-              <span class="text-[10px]">⚽</span>
-              <span class="text-[10px] font-black italic text-white/40">${g.player} ${g.time}</span>
-          </div>
-      `).join('');
-  }
-
   if (leagueInfo) leagueInfo.textContent = data.league || 'Sports Event';
   
   if (lineupHomeTab && lineupAwayTab) {
@@ -2979,13 +2959,6 @@ function renderMatchDetail(data) {
         <span class="material-symbols-outlined text-xs text-primary" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
         <span class="text-[10px] text-on-surface/40 font-black italic">${g.time}</span>
         <span class="text-primary font-bold text-xs uppercase tracking-tighter">${g.player}</span>
-      </div>
-    `).join('');
-
-    awayEvents.innerHTML = goals.filter(g => g.side === 'away').map(g => `
-      <div class="flex items-center space-x-2">
-        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
-        <span class="text-primary font-medium text-sm lg:text-base">${g.player.split('at')[0]}</span>
       </div>
     `).join('');
   }

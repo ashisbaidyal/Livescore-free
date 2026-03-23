@@ -258,71 +258,71 @@
 </div>
 </div>
 <!-- Redesigned Hero Match Header: Premium Stadium Scoreboard -->
-<section class="relative h-[614px] overflow-hidden flex items-center justify-center bg-black">
+<section class="relative min-h-[400px] sm:min-h-[500px] md:min-h-[600px] lg:h-[614px] overflow-hidden flex items-center justify-center bg-black">
 <div class="absolute inset-0 z-0">
 <img alt="Cinematic wide shot of a full football stadium at night under bright lights" class="w-full h-full object-cover opacity-20 scale-105" src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=1600">
 <div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-surface/90"></div>
 </div>
-<div class="relative z-10 w-full max-w-6xl px-8">
-<div class="flex flex-col items-center">
+<div class="relative z-10 w-full max-w-6xl px-4 sm:px-6 md:px-8">
+<div class="flex flex-col md:grid md:grid-cols-12 md:gap-4 items-center">
 <!-- Status Badge -->
-<div class="flex items-center justify-center space-x-4 mb-12">
+<div class="flex items-center justify-center space-x-4 mb-8 md:mb-12 w-full md:col-span-12">
 <span class="bg-[#CC1616] text-white px-4 py-1.5 rounded-sm text-xs font-black tracking-[0.2em] animate-pulse flex items-center shadow-[0_0_15px_rgba(204,22,22,0.5)]">
 <span class="w-1.5 h-1.5 rounded-full bg-white mr-2"></span> LIVE
                     </span>
-<span id="match-league-info" class="text-on-surface font-bold text-sm uppercase tracking-widest opacity-80">Champions League â€¢ Quarter Final</span>
+<span id="match-league-info" class="text-on-surface font-bold text-xs sm:text-sm uppercase tracking-widest opacity-80">Champions League • Quarter Final</span>
 </div>
 <!-- Main Scoreboard Grid -->
-<div class="grid grid-cols-12 gap-4 items-center w-full">
+<div class="flex flex-col md:contents gap-4 md:gap-0 w-full md:col-span-12">
 <!-- Home Team -->
-<div class="col-span-4 flex flex-col items-end text-right">
-<div class="relative mb-6">
+<div class="flex flex-col items-center md:col-span-4 md:flex-col md:items-end md:text-right">
+<div class="relative mb-4 md:mb-6">
 <div class="absolute inset-0 bg-white/5 rounded-full blur-2xl"></div>
-<img id="home-team-logo" alt="Home Team Logo" class="relative w-24 h-24 lg:w-40 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
+<img id="home-team-logo" alt="Home Team Logo" class="relative w-16 sm:w-20 md:w-24 lg:w-40 h-16 sm:h-20 md:h-24 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
 </div>
-<h1 id="home-team-name" class="text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow">Loading...</h1>
-<div id="home-events" class="flex flex-col items-end mt-2 space-y-1 opacity-70"></div>
+<h1 id="home-team-name" class="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow text-center md:text-right">Loading...</h1>
+<div id="home-events" class="flex flex-col items-center md:items-end mt-2 space-y-1 opacity-70"></div>
 </div>
 <!-- Scoreboard Central -->
-<div class="col-span-4 flex flex-col items-center">
-<div class="glass-panel p-8 lg:p-12 rounded-xl border-white/5 shadow-2xl flex flex-col items-center min-w-[320px]">
-<div class="flex items-baseline space-x-6">
-<span id="home-score" class="text-8xl lg:text-[140px] font-digital font-bold tracking-tighter text-on-surface digital-glow">0</span>
-<span class="text-5xl lg:text-7xl font-digital font-light text-white/10">:</span>
-<span id="away-score" class="text-8xl lg:text-[140px] font-digital font-bold tracking-tighter text-on-surface digital-glow">0</span>
+<div class="flex flex-col items-center md:col-span-4 md:flex-col md:items-center">
+<div class="glass-panel p-4 sm:p-6 md:p-8 lg:p-12 rounded-xl border-white/5 shadow-2xl flex flex-col items-center min-w-[280px] sm:min-w-[320px]">
+<div class="flex items-baseline space-x-3 sm:space-x-6">
+<span id="home-score" class="text-5xl sm:text-6xl md:text-8xl lg:text-[140px] font-digital font-bold tracking-tighter text-on-surface digital-glow">0</span>
+<span class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-digital font-light text-white/10">:</span>
+<span id="away-score" class="text-5xl sm:text-6xl md:text-8xl lg:text-[140px] font-digital font-bold tracking-tighter text-on-surface digital-glow">0</span>
 </div>
-<div class="mt-8 flex flex-col items-center">
-<div class="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mb-2">Match Clock</div>
-<div class="px-8 py-3 bg-black/40 rounded-lg border border-white/5">
-<span id="match-clock" class="text-3xl lg:text-5xl font-digital font-medium tracking-widest text-[#CC1616] digital-glow">00:00</span>
+<div class="mt-4 sm:mt-6 md:mt-8 flex flex-col items-center">
+<div class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mb-2">Match Clock</div>
+<div class="px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-3 bg-black/40 rounded-lg border border-white/5">
+<span id="match-clock" class="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-digital font-medium tracking-widest text-[#CC1616] digital-glow">00:00</span>
 </div>
 </div>
 </div>
 </div>
 <!-- Away Team -->
-<div class="col-span-4 flex flex-col items-start text-left">
-<div class="relative mb-6">
+<div class="flex flex-col items-center md:col-span-4 md:flex-col md:items-start md:text-left">
+<div class="relative mb-4 md:mb-6">
 <div class="absolute inset-0 bg-sky-500/10 rounded-full blur-2xl"></div>
-<img id="away-team-logo" alt="Away Team Logo" class="relative w-24 h-24 lg:w-40 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
+<img id="away-team-logo" alt="Away Team Logo" class="relative w-16 sm:w-20 md:w-24 lg:w-40 h-16 sm:h-20 md:h-24 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
 </div>
-<h2 id="away-team-name" class="text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow">Loading...</h2>
-<div id="away-events" class="flex flex-col items-start mt-2 space-y-1 opacity-70"></div>
+<h2 id="away-team-name" class="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow text-center md:text-left">Loading...</h2>
+<div id="away-events" class="flex flex-col items-center md:items-start mt-2 space-y-1 opacity-70"></div>
 </div>
 </div>
 </div>
 </div>
 </section>
 <!-- Dynamic Content Grid -->
-<section class="max-w-7xl mx-auto px-8 -mt-20 relative z-20 pb-20">
-<div class="grid grid-cols-12 gap-8">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 -mt-12 sm:-mt-16 md:-mt-20 relative z-20 pb-20">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 md:gap-8">
 <!-- Match Stats Column -->
-<div class="col-span-12 lg:col-span-8 space-y-8">
+<div class="col-span-1 lg:col-span-8 space-y-4 sm:space-y-6 md:space-y-8">
 <!-- Tactical Stats Card -->
-<div class="bg-surface-container-high p-8 rounded-sm border border-white/5">
-<div class="flex justify-between items-end mb-10">
+<div class="bg-surface-container-high p-4 sm:p-6 md:p-8 rounded-sm border border-white/5">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-10 gap-4">
 <div>
-<h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary">Live Data</h3>
-<h2 class="text-3xl font-bold italic tracking-tight">Match Performance</h2>
+<h3 class="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-primary">Live Data</h3>
+<h2 class="text-xl sm:text-2xl md:text-3xl font-bold italic tracking-tight">Match Performance</h2>
 </div>
 <div id="stats-dots" class="flex space-x-2">
 <div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
@@ -335,9 +335,9 @@
 </div>
 </div>
 <!-- Tactical Timeline -->
-<div class="bg-surface-container-high p-8 rounded-sm border border-white/5">
-<h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-8">Tactical Timeline</h3>
-<div id="timeline-container" class="relative py-10 min-h-[400px]">
+<div class="bg-surface-container-high p-4 sm:p-6 md:p-8 rounded-sm border border-white/5">
+<h3 class="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-primary mb-4 sm:mb-8">Tactical Timeline</h3>
+<div id="timeline-container" class="relative py-6 sm:py-8 md:py-10 min-h-[300px] sm:min-h-[400px]">
   <p class="text-[10px] font-black uppercase tracking-widest opacity-40 text-center">Match timeline loading...</p>
 </div>
 </div>
