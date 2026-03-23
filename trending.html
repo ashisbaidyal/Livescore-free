@@ -1,151 +1,400 @@
 <!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Trending Matches & Social Pulse | LivescoreFree.online</title>
-    <meta name="description" content="Discover what's trending in sports. Real-time engagement spikes, viral match updates, and global sports buzz.">
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;700;800;900&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <style>
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #0E0E0E; }
-        ::-webkit-scrollbar-thumb { background: #CC1616; }
-        .pulse-red { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(204, 22, 22, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0); }
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>LivescoreFree.online | Trending Hub | Live Heat, Upcoming Radar, Results</title>
+<meta name="description" content="Track the trending sports pulse with live matches, upcoming fixtures, recent results, headlines, and athlete momentum in one realtime hub.">
+<meta property="og:title" content="LivescoreFree.online | Trending Hub">
+<meta property="og:description" content="Realtime live heat, upcoming radar, results, news, and athlete momentum from across the sports feed.">
+<meta property="og:image" content="https://livescorefree.online/logo.png">
+<meta property="og:url" content="https://livescorefree.online/trending.html">
+<meta property="og:type" content="website">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "on-primary": "#690003",
+          "surface": "#131313",
+          "background": "#131313",
+          "primary": "#CC1616",
+          "secondary": "#62df7b",
+          "surface-container-lowest": "#0e0e0e",
+          "surface-container-low": "#1c1b1b",
+          "surface-container": "#201f1f",
+          "surface-container-high": "#2a2a2a",
+          "surface-container-highest": "#353534",
+          "on-surface": "#e5e2e1",
+          "on-surface-variant": "#8B0000",
+          "primary-container": "#cc1616"
+        },
+        fontFamily: {
+          "headline": ["Lexend"],
+          "body": ["Lexend"],
+          "label": ["Lexend"]
+        },
+        borderRadius: {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
         }
-    </style>
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#CC1616",
-                        "surface": "#131313",
-                        "on-surface": "#e5e2e1",
-                        "surface-container-lowest": "#0e0e0e",
-                        "surface-container-low": "#1c1b1b",
-                        "surface-container": "#201f1f",
-                        "surface-container-high": "#2a2a2a",
-                        "surface-container-highest": "#353534"
-                    },
-                    fontFamily: { "body": ["Lexend"] }
-                }
-            }
-        }
-    </script>
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .glass-card {
+    background: rgba(42, 42, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .pulse-red { animation: pulse-red 2s infinite; }
+  .scanline {
+    width: 100%;
+    height: 100px;
+    z-index: 5;
+    background: linear-gradient(0deg, rgba(204,22,22,0) 0%, rgba(204,22,22,0.05) 50%, rgba(204,22,22,0) 100%);
+    opacity: 0.1;
+    position: absolute;
+    bottom: 100%;
+    animation: scanline 10s linear infinite;
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0E0E0E; }
+  ::-webkit-scrollbar-thumb { background: #CC1616; }
+  @keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(204, 22, 22, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0); }
+  }
+  @keyframes scanline {
+    0% { bottom: 100%; }
+    100% { bottom: -100px; }
+  }
+</style>
 <link rel="manifest" href="/manifest.webmanifest"/>
 <meta name="theme-color" content="#0e0e0e"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
-<link rel="stylesheet" href="/css/runtime-enhancements.css"/></head>
+<link rel="stylesheet" href="/css/runtime-enhancements.css"/>
+</head>
 <body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
-    <!-- Header -->
-    <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
-        <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
-            <div class="flex items-center gap-4">
-                <button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full">menu</button>
-                <a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
-                    <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
-                    <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
-                </a>
-            </div>
-            <div class="hidden lg:flex gap-8 items-center font-bold uppercase tracking-tighter">
-                <a class="text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
-                <a class="text-on-surface/60 hover:text-primary transition-all" href="live.html">Live</a>
-                <a class="text-on-surface/60 hover:text-primary transition-all active-link" href="trending.html">Trending</a>
-                <a class="text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">Upcoming</a>
-                <a class="text-on-surface/60 hover:text-primary transition-all" href="results.html">Results</a>
-            </div>
-            <div class="flex items-center gap-6">
-                <button onclick="openSearchModal()" class="material-symbols-outlined hover:text-primary">search</button>
-            </div>
+<nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
+  <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
+    <div class="flex items-center gap-4">
+      <button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full transition-all">menu</button>
+      <a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+        <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
+        <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
+      </a>
+    </div>
+    <div class="hidden lg:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter" id="top-nav-links">
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="live.html">live score</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">upcoming matches</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="results.html">results</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="trending.html">trending</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="news.html">news</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="leagues.html">top league</a>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+        <span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
+        <span id="live-count-text" class="text-[10px] font-black tracking-widest uppercase">LIVE NOW</span>
+      </div>
+      <button onclick="openSearchModal()" class="material-symbols-outlined text-on-surface hover:text-primary transition-all">search</button>
+      <button class="material-symbols-outlined text-on-surface hover:text-primary transition-all relative">
+        notifications
+        <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
+
+<div class="flex pt-16 min-h-screen">
+  <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto">
+    <nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
+      <div class="px-6 mb-8 space-y-1">
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="leagues.html">
+          <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">public</span>
+          <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">All Leagues</span>
+        </a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="standings.html">
+          <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">leaderboard</span>
+          <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Standings</span>
+        </a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="upcoming.html">
+          <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">calendar_month</span>
+          <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Fixtures</span>
+        </a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="teams.html">
+          <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">groups</span>
+          <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Teams Hub</span>
+        </a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="results.html">
+          <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">scoreboard</span>
+          <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Results</span>
+        </a>
+      </div>
+
+      <div class="px-6 mb-8">
+        <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Players</div>
+        <div class="space-y-1">
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="players.html">
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">group</span>
+            <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Players Hub</span>
+          </a>
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="player.html">
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">person</span>
+            <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Player Profile</span>
+          </a>
         </div>
+      </div>
+
+      <div class="px-6 mb-8">
+        <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Today's Live Scores</div>
+        <div id="sidebar-live-container" class="space-y-3">
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+        </div>
+      </div>
+
+      <div class="px-6 mb-8">
+        <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Quick Links</div>
+        <div class="space-y-1">
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="info.html?p=privacy">
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">policy</span>
+            <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Privacy Policy</span>
+          </a>
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="info.html?p=advertise">
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">campaign</span>
+            <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Advertise</span>
+          </a>
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="https://ko-fi.com/livescorefree" target="_blank">
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">favorite</span>
+            <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Support Us</span>
+          </a>
+        </div>
+      </div>
     </nav>
+  </aside>
 
-    <!-- Sidebar & Main Content -->
-    <div class="flex pt-16 min-h-screen">
-        <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 bg-[#0E0E0E] border-r border-white/5 overflow-y-auto">
-            <div class="p-6">
-                <!-- Sidebar content injected by script.js -->
-                <div id="sidebar-live-container" class="space-y-4"></div>
-            </div>
-        </aside>
+  <main class="flex-1 w-full bg-surface relative overflow-hidden">
+    <div class="scanline"></div>
 
-        <main class="flex-1 w-full bg-surface relative min-h-screen pb-20">
-            <!-- Dynamic Hero -->
-            <section id="hero-slider-container" class="relative w-full h-[500px] bg-surface-container-lowest overflow-hidden flex flex-col justify-end p-8 lg:p-16">
-                <div class="animate-pulse">
-                    <h1 class="text-5xl lg:text-7xl font-black italic uppercase tracking-tighter mb-4 opacity-20">Scanning Global Pulse...</h1>
-                </div>
-            </section>
-
-            <!-- Sports Filter -->
-            <section class="sticky top-16 z-40 bg-surface/90 backdrop-blur-xl border-b border-white/5 px-8 py-4 overflow-x-auto">
-                <div id="sports-tabs" class="flex items-center gap-4 min-w-max"></div>
-            </section>
-
-            <!-- Main Dynamic Grid -->
-            <div class="p-8 grid grid-cols-1 xl:grid-cols-4 gap-8 max-w-[1600px] mx-auto">
-                <div class="xl:col-span-3 space-y-12">
-                    <div>
-                        <h2 class="text-4xl font-black italic tracking-tighter uppercase mb-2">Social Spikes & Live Heat</h2>
-                        <p class="text-on-surface/40 text-[10px] font-bold uppercase tracking-[0.3em]">Real-time engagement detected via ESPN API</p>
-                    </div>
-
-                    <!-- Matches -->
-                    <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="col-span-full py-20 text-center opacity-20 uppercase font-black tracking-[0.4em]">Optimizing Multi-Sport Aggregator...</div>
-                    </div>
-
-                    <!-- Trending News Grid -->
-                    <div class="space-y-6">
-                        <h3 class="text-2xl font-black italic uppercase tracking-tighter">Viral Sports Moments</h3>
-                        <div id="news-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-                    </div>
-                </div>
-
-                <!-- Sidebar News/Players -->
-                <aside class="space-y-12">
-                    <section class="glass-panel p-6 rounded-xl bg-white/5">
-                        <h3 class="font-black italic uppercase tracking-tighter text-lg mb-6 text-primary">Live Pulse</h3>
-                        <div id="latest-headlines-container" class="space-y-6"></div>
-                    </section>
-                    
-                    <section>
-                        <h3 class="font-black italic uppercase tracking-tighter text-lg mb-6">Trending Athletes</h3>
-                        <div id="players-container" class="space-y-4"></div>
-                    </section>
-                </aside>
-            </div>
-        </main>
-    </div>
-
-    <!-- Search Modal -->
-    <div id="search-modal" class="fixed inset-0 z-[200] hidden">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeSearchModal()"></div>
-        <div class="relative max-w-2xl mx-auto mt-24 px-6 bg-surface-container border border-white/10 rounded-2xl p-6">
-            <input id="search-input" type="text" placeholder="Search matches, teams, leagues..." class="w-full bg-transparent text-xl font-black outline-none">
-            <div id="search-results" class="mt-4 max-h-96 overflow-y-auto"></div>
+    <div class="bg-surface-container-low border-b border-white/5 py-3 overflow-hidden">
+      <div id="ticker-container" class="flex animate-[scroll_40s_linear_infinite] whitespace-nowrap gap-12 px-6">
+        <div class="flex items-center gap-4 opacity-50">
+          <span class="text-[10px] font-black uppercase italic tracking-widest">LivescoreFree Realtime Stream Active</span>
         </div>
+      </div>
     </div>
 
-    <!-- Toast -->
-    <div id="notification-toast" class="fixed bottom-8 right-8 z-[300] hidden"></div>
+    <section class="relative w-full h-[716px] min-h-[600px] overflow-hidden group" id="hero-slider-container" style="display: none;"></section>
 
-    <script src="js/script.js"></script>
-    <script>
-        // Inline script to ensure sidebar toggle works even if script.js is still loading
-        document.getElementById('sidebar-toggle').addEventListener('click', () => {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('-translate-x-full');
-        });
-    </script>
+    <section class="py-8 px-6 max-w-7xl mx-auto border-b border-white/5">
+      <div id="sports-tabs" class="flex gap-4 overflow-x-auto pb-2 no-scrollbar"></div>
+    </section>
+
+    <section class="py-10 px-6 max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="glass-card rounded-2xl border border-white/5 p-6">
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Live Heat</div>
+          <h2 class="text-2xl font-black italic uppercase tracking-tighter mb-2">Realtime Trend Engine</h2>
+          <p class="text-sm text-on-surface/60 leading-relaxed">The trending hub now follows the same broadcast shell as the rest of the site and surfaces live, upcoming, and completed action in one place.</p>
+        </div>
+        <div class="glass-card rounded-2xl border border-white/5 p-6">
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Upcoming Radar</div>
+          <p class="text-3xl font-black italic">Next Events</p>
+          <p class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40 mt-3">Scheduled fixtures update automatically from the upcoming feed.</p>
+        </div>
+        <div class="glass-card rounded-2xl border border-white/5 p-6">
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Result Pulse</div>
+          <p class="text-3xl font-black italic">Recent Finals</p>
+          <p class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40 mt-3">Follow the latest completed scorelines beside the live trend stream.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="px-6 max-w-7xl mx-auto pb-20">
+      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.65fr)_360px] gap-10">
+        <div class="space-y-16">
+          <section>
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h2 class="text-3xl font-black italic uppercase tracking-tighter">Trending Scoreboard</h2>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Live, upcoming, and final score momentum</p>
+              </div>
+            </div>
+            <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="h-64 bg-white/5 rounded-xl animate-pulse"></div>
+              <div class="h-64 bg-white/5 rounded-xl animate-pulse"></div>
+            </div>
+          </section>
+
+          <section>
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-2xl font-black italic uppercase tracking-tighter">Upcoming Radar</h3>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Next fixtures getting attention now</p>
+              </div>
+              <div class="flex gap-2">
+                <button id="upcoming-prev" class="w-11 h-11 rounded-full border border-white/10 bg-white/5 hover:border-primary/40 hover:text-primary transition-all">
+                  <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button id="upcoming-next" class="w-11 h-11 rounded-full border border-white/10 bg-white/5 hover:border-primary/40 hover:text-primary transition-all">
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+              </div>
+            </div>
+            <div id="upcoming-today-container" class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+              <div class="flex-none w-72 h-56 bg-white/5 rounded-xl animate-pulse"></div>
+              <div class="flex-none w-72 h-56 bg-white/5 rounded-xl animate-pulse"></div>
+            </div>
+          </section>
+
+          <section>
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-2xl font-black italic uppercase tracking-tighter">Recent Results</h3>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Finished matches still driving momentum</p>
+              </div>
+            </div>
+            <div id="recent-results-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="h-36 bg-white/5 rounded-xl animate-pulse"></div>
+              <div class="h-36 bg-white/5 rounded-xl animate-pulse"></div>
+            </div>
+          </section>
+
+          <section>
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-2xl font-black italic uppercase tracking-tighter">Trending Stories</h3>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Headlines powering the social pulse</p>
+              </div>
+              <a href="news.html" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">All News</a>
+            </div>
+            <div id="news-grid-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+          </section>
+        </div>
+
+        <aside class="space-y-10">
+          <section class="glass-card rounded-2xl border border-white/5 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-xl font-black italic uppercase tracking-tighter">Headline Feed</h3>
+              <span class="material-symbols-outlined text-primary">newspaper</span>
+            </div>
+            <div id="latest-headlines-container" class="space-y-6 max-h-[860px] overflow-y-auto pr-2"></div>
+          </section>
+
+          <section id="trending-players-container" class="glass-card rounded-2xl border border-white/5 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-xl font-black italic uppercase tracking-tighter">Trending Athletes</h3>
+              <span class="material-symbols-outlined text-primary">bolt</span>
+            </div>
+            <div id="trending-players-grid" class="grid grid-cols-1 gap-4"></div>
+          </section>
+
+          <section class="glass-card rounded-2xl border border-white/5 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-xl font-black italic uppercase tracking-tighter">Next Big Events</h3>
+              <span class="material-symbols-outlined text-primary">rocket_launch</span>
+            </div>
+            <div id="trending-matches-list" class="space-y-4"></div>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="bg-[#0E0E0E] border-t border-white/10 pt-20 pb-10 font-['Lexend'] relative z-20">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+      <div class="flex flex-col gap-6">
+        <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Quick Links</h5>
+        <ul class="flex flex-col gap-4">
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=soccer">Football</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=basketball">Basketball</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=baseball">Baseball</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=tennis">Tennis</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=football&amp;l=nfl">NFL</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=basketball&amp;l=nba">NBA</a></li>
+        </ul>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Legal</h5>
+        <ul class="flex flex-col gap-4">
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=privacy">Privacy Policy</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=terms">Terms of Service</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=privacy">Cookie Settings</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=dmca">DMCA Policy</a></li>
+        </ul>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Resources</h5>
+        <ul class="flex flex-col gap-4">
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=data-sources">Data Sources</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=help">Help Center</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=advertise">Advertise With Us</a></li>
+        </ul>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Support</h5>
+        <ul class="flex flex-col gap-4">
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="https://ko-fi.com/livescorefree" target="_blank">Support on Ko-fi</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=transparency">Donation Transparency</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+      <div class="flex flex-col items-center md:items-start gap-4">
+        <div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">LIVESCOREFREE</div>
+        <p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">
+          © 2025 LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.
+        </p>
+      </div>
+      <div class="flex gap-6">
+        <button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">share</button>
+        <button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">rss_feed</button>
+        <button class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">settings_input_antenna</button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div id="search-modal" class="fixed inset-0 z-[200] hidden">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeSearchModal()"></div>
+  <div class="relative max-w-2xl mx-auto mt-24 px-6">
+    <div class="bg-surface-container border border-white/10 rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center gap-4 mb-6">
+        <span class="material-symbols-outlined text-primary text-2xl">search</span>
+        <input id="search-input" type="text" placeholder="Search matches, teams, leagues..." class="flex-1 bg-transparent text-xl font-bold outline-none placeholder:text-on-surface/30 text-on-surface" autofocus>
+        <button onclick="closeSearchModal()" class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">close</button>
+      </div>
+      <div id="search-results" class="max-h-96 overflow-y-auto space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/script.js"></script>
 </body>
 </html>

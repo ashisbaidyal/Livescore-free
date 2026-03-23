@@ -692,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (path.includes('results.html')) {
         currentPageFilter = 'finished';
     } else if (path.includes('trending.html')) {
-        currentPageFilter = 'all'; 
+        currentPageFilter = null;
     } else {
         currentPageFilter = 'live';
     }
@@ -702,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Skip fetchMatches on upcoming page — Schedule Centre module handles it
     if (!window.location.pathname.includes('upcoming')) {
-      fetchMatches(currentPageFilter, true);
+      fetchMatches(currentPageFilter);
     }
 
     if (heroSliderContainer) {
@@ -1625,6 +1625,8 @@ async function fetchPlayers() {
        renderSoccerLegends(soccerAthletes);
        renderNbaAllstars(nbaAthletes);
        renderNflElite(nflAthletes);
+    } else if (trendingPlayersContainer && !playersContainer) {
+       renderTrendingPlayersPage(soccerAthletes.concat(nbaAthletes, nflAthletes));
     } else if (playersContainer) {
        // Legacy generic players container fallback
        playersContainer.innerHTML = soccerAthletes.slice(0, 10).map(a => `
