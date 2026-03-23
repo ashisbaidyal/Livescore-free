@@ -1,6 +1,9 @@
-name: Validate LiveScoreFree
+name: Validate livescoreFree.online
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 
@@ -20,5 +23,5 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Build Tailwind CSS
+      - name: Validate Next.js Build
         run: npm run build
