@@ -10,6 +10,9 @@ const API_INFO = '/api/info';
 const API_NEWS = API_INFO;
 const PWA_MANIFEST = '/manifest.webmanifest';
 const SERVICE_WORKER_PATH = '/sw.js';
+const REMINDER_STORAGE_KEY = 'lsf-reminders';
+const INSTALL_BANNER_DISMISSED_KEY = 'lsf-install-banner-dismissed';
+const reminderTimerHandles = new Map();
 const SPORTS = [
   { id: 'all', name: 'All' },
   { id: 'soccer', name: 'Soccer' },
@@ -38,9 +41,23 @@ const LEAGUE_ALIASES = {
   bundesliga: 'ger.1',
   'serie-a': 'ita.1',
   'ligue-1': 'fra.1',
+  'primeira-liga': 'por.1',
+  'liga-portugal': 'por.1',
+  'super-lig': 'tur.1',
   'champions-league': 'uefa.champions',
   'europa-league': 'uefa.europa',
-  'conference-league': 'uefa.europa.conf'
+  'conference-league': 'uefa.europa.conf',
+  'icc-world-cup': '8039',
+  'world-cup': 'fifa.world',
+  nfl: 'nfl',
+  nba: 'nba',
+  nhl: 'nhl',
+  mlb: 'mlb',
+  atp: 'atp',
+  wta: 'wta',
+  ufc: 'ufc',
+  f1: 'f1',
+  ipl: 'ipl'
 };
 const TEAM_PROFILE_SPORT_BY_LEAGUE = {
   nfl: 'football',
@@ -62,6 +79,7 @@ let currentPageFilter = 'live'; // Added globally to track page-specific selecti
 let autoRefreshTimer = null;
 let deferredInstallPrompt = null;
 let notificationPermissionState = typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;
+let notificationPanelVisible = false;
 let activeMatchTimer = {
   baseMs: 0,
   syncTime: 0,
@@ -132,9 +150,12 @@ function getDefaultLeagueForSport(sport = 'soccer') {
   if (normalizedSport === 'football') return 'nfl';
   if (normalizedSport === 'hockey') return 'nhl';
   if (normalizedSport === 'baseball') return 'mlb';
+  if (normalizedSport === 'cricket') return 'ipl';
   if (normalizedSport === 'tennis') return 'atp';
   if (normalizedSport === 'mma') return 'ufc';
   if (normalizedSport === 'racing') return 'f1';
+  if (normalizedSport === 'golf') return 'pga';
+  if (normalizedSport === 'rugby') return '271937';
   return 'eng.1';
 }
 
@@ -227,6 +248,22 @@ function showRuntimeToast(message, tone = 'success') {
   }, 2600);
 }
 
+function getArticleImageUrl(article = {}) {
+  return article.image || article.images?.[0]?.url || article.images?.[0]?.href || FALLBACK_HERO_IMAGE;
+}
+
+function getArticleLinkUrl(article = {}) {
+  return article.url || article.links?.web?.href || article.links?.api?.news?.href || '#';
+}
+
+function sortMatchesForDisplay(matches = [], statusFilter = null) {
+  const list = [...matches];
+  if (statusFilter === 'finished') {
+    return list.sort((left, right) => new Date(right.date) - new Date(left.date));
+  }
+  return list.sort((left, right) => new Date(left.date) - new Date(right.date));
+}
+
 function applyFallbackImage(srcValue) {
   if (!srcValue) return FALLBACK_LOGO;
   if (String(srcValue).includes('/public/logo.png')) return FALLBACK_LOGO;
@@ -268,6 +305,7 @@ function hydrateNavigationLinks() {
     const text = (link.textContent || '').trim().toLowerCase();
     if (!text) return;
 
+    if (text.includes('all leagues') || text.includes('top league')) link.setAttribute('href', 'leagues.html');
     if (text.includes('standings')) link.setAttribute('href', 'standings.html');
     if (text.includes('teams hub')) link.setAttribute('href', 'teams.html');
     if (text.includes('team profile')) link.setAttribute('href', 'team.html');
@@ -301,21 +339,290 @@ function appendHeaderActions() {
   const header = document.getElementById('main-header');
   if (!header) return;
 
-  const notifyButton = Array.from(header.querySelectorAll('button')).find((button) =>
+  let notifyButton = Array.from(header.querySelectorAll('button')).find((button) =>
     (button.textContent || '').toLowerCase().includes('notifications')
   );
+
+  if (!notifyButton) {
+    const searchButton = Array.from(header.querySelectorAll('button')).find((button) =>
+      (button.getAttribute('onclick') || '').includes('openSearchModal')
+    );
+
+    if (searchButton?.parentElement) {
+      notifyButton = document.createElement('button');
+      notifyButton.className = searchButton.className;
+      searchButton.insertAdjacentElement('afterend', notifyButton);
+    }
+  }
 
   if (!notifyButton) return;
 
   notifyButton.id = 'lsf-notify-toggle';
   notifyButton.type = 'button';
   notifyButton.classList.add('lsf-header-icon-button');
-  notifyButton.setAttribute('aria-label', 'Enable alerts');
-  notifyButton.setAttribute('title', 'Enable alerts');
+  notifyButton.innerHTML = `
+    <span class="material-symbols-outlined lsf-notify-icon">notifications</span>
+    <span class="lsf-notify-dot" aria-hidden="true"></span>
+    <span class="lsf-notify-badge" hidden>0</span>
+  `;
+  notifyButton.setAttribute('aria-label', 'Open alerts');
+  notifyButton.setAttribute('title', 'Open alerts');
+}
 
-  const statusDot = notifyButton.querySelector('span:not(.material-symbols-outlined)');
-  if (statusDot) {
-    statusDot.classList.add('lsf-notify-dot');
+function readStoredReminders() {
+  try {
+    const reminders = JSON.parse(localStorage.getItem(REMINDER_STORAGE_KEY) || '[]');
+    return Array.isArray(reminders) ? reminders.filter(Boolean) : [];
+  } catch (error) {
+    console.error('Reminder read failed:', error);
+    return [];
+  }
+}
+
+function writeStoredReminders(reminders = []) {
+  try {
+    localStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify(reminders.slice(-30)));
+  } catch (error) {
+    console.error('Reminder write failed:', error);
+  }
+}
+
+function getSavedReminders() {
+  const now = Date.now();
+  const stored = readStoredReminders();
+  const active = stored
+    .filter((reminder) => {
+      const expiry = Number(reminder.kickoffAt || reminder.notifyAt || 0) + 6 * 60 * 60 * 1000;
+      return !expiry || expiry > now;
+    })
+    .sort((left, right) => (left.notifyAt || left.kickoffAt || 0) - (right.notifyAt || right.kickoffAt || 0));
+
+  if (active.length !== stored.length) {
+    writeStoredReminders(active);
+  }
+
+  return active;
+}
+
+function formatReminderCountdown(reminder) {
+  const kickoffAt = Number(reminder?.kickoffAt || 0);
+  if (!Number.isFinite(kickoffAt) || kickoffAt <= 0) return 'Reminder queued';
+
+  const diff = kickoffAt - Date.now();
+  if (diff <= 0) return 'Starting now';
+
+  const totalMinutes = Math.round(diff / 60000);
+  if (totalMinutes < 60) return `Starts in ${totalMinutes}m`;
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours < 24) return `Starts in ${hours}h ${String(minutes).padStart(2, '0')}m`;
+
+  const days = Math.floor(hours / 24);
+  return `Starts in ${days}d ${hours % 24}h`;
+}
+
+function formatReminderSchedule(reminder) {
+  const kickoffAt = Number(reminder?.kickoffAt || 0);
+  if (!Number.isFinite(kickoffAt) || kickoffAt <= 0) return 'Kickoff time pending';
+
+  return new Date(kickoffAt).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+}
+
+function appendNotificationPanel() {
+  if (document.getElementById('lsf-notify-panel')) return;
+
+  const panel = document.createElement('aside');
+  panel.id = 'lsf-notify-panel';
+  panel.className = 'lsf-notify-panel';
+  panel.hidden = true;
+  panel.innerHTML = `
+    <div class="lsf-notify-panel-header">
+      <div>
+        <div class="lsf-notify-panel-eyebrow">Realtime Alerts</div>
+        <div class="lsf-notify-panel-title">Notification Centre</div>
+      </div>
+      <button type="button" class="lsf-panel-close" data-close-notifications aria-label="Close alerts">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div id="lsf-notify-permission" class="lsf-notify-panel-block"></div>
+    <div id="lsf-notify-install-slot" class="lsf-notify-panel-block"></div>
+    <div class="lsf-notify-panel-block">
+      <div class="lsf-notify-panel-label">Saved reminders</div>
+      <div id="lsf-notify-reminder-list" class="lsf-notify-reminder-list"></div>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  panel.addEventListener('click', async (event) => {
+    const closeButton = event.target.closest('[data-close-notifications]');
+    if (closeButton) {
+      toggleNotificationPanel(false);
+      return;
+    }
+
+    const enableButton = event.target.closest('[data-enable-notifications]');
+    if (enableButton) {
+      const permission = await requestNotificationPermission();
+      if (permission === 'granted') {
+        showRuntimeToast('Browser alerts enabled');
+      }
+      renderNotificationPanel();
+      return;
+    }
+
+    const installButton = event.target.closest('[data-prompt-install]');
+    if (installButton) {
+      await promptInstall();
+      return;
+    }
+
+    const removeButton = event.target.closest('[data-remove-reminder]');
+    if (removeButton) {
+      removeSavedReminder(removeButton.dataset.removeReminder);
+    }
+  });
+}
+
+function removeSavedReminder(matchId, silent = false) {
+  if (!matchId) return;
+  const next = readStoredReminders().filter((reminder) => String(reminder.matchId) !== String(matchId));
+  writeStoredReminders(next);
+  updateNotificationButton();
+  renderNotificationPanel();
+  if (!silent) {
+    showRuntimeToast('Reminder removed');
+  }
+}
+
+function renderNotificationPanel() {
+  const panel = document.getElementById('lsf-notify-panel');
+  if (!panel) return;
+
+  const permission = typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;
+  notificationPermissionState = permission;
+
+  const permissionSlot = document.getElementById('lsf-notify-permission');
+  const installSlot = document.getElementById('lsf-notify-install-slot');
+  const reminderList = document.getElementById('lsf-notify-reminder-list');
+  const reminders = getSavedReminders();
+
+  if (permissionSlot) {
+    if (permission === 'granted') {
+      permissionSlot.innerHTML = `
+        <div class="lsf-notify-status is-ready">
+          <div>
+            <div class="lsf-notify-status-title">Browser alerts enabled</div>
+            <div class="lsf-notify-status-copy">Saved match reminders will fire before kickoff on supported browsers.</div>
+          </div>
+          <span class="material-symbols-outlined">notifications_active</span>
+        </div>
+      `;
+    } else if (permission === 'denied') {
+      permissionSlot.innerHTML = `
+        <div class="lsf-notify-status is-blocked">
+          <div>
+            <div class="lsf-notify-status-title">Alerts blocked</div>
+            <div class="lsf-notify-status-copy">Allow notifications in browser site settings to restore match reminders.</div>
+          </div>
+          <span class="material-symbols-outlined">notifications_off</span>
+        </div>
+      `;
+    } else if (permission === 'unsupported') {
+      permissionSlot.innerHTML = `
+        <div class="lsf-notify-status">
+          <div>
+            <div class="lsf-notify-status-title">Alerts unsupported</div>
+            <div class="lsf-notify-status-copy">This browser does not expose the notification API for reminders.</div>
+          </div>
+          <span class="material-symbols-outlined">error</span>
+        </div>
+      `;
+    } else {
+      permissionSlot.innerHTML = `
+        <div class="lsf-notify-status">
+          <div>
+            <div class="lsf-notify-status-title">Enable alerts</div>
+            <div class="lsf-notify-status-copy">Grant browser permission once, then save reminders from any upcoming fixture card.</div>
+          </div>
+          <button type="button" class="lsf-notify-action" data-enable-notifications>Enable</button>
+        </div>
+      `;
+    }
+  }
+
+  if (installSlot) {
+    installSlot.innerHTML = deferredInstallPrompt
+      ? `
+        <div class="lsf-install-panel">
+          <div>
+            <div class="lsf-notify-panel-label">Install app</div>
+            <div class="lsf-notify-status-copy">Keep the score hub on your device with the same realtime alerts and offline shell.</div>
+          </div>
+          <button type="button" class="lsf-notify-action" data-prompt-install>Download</button>
+        </div>
+      `
+      : '';
+  }
+
+  if (reminderList) {
+    if (!reminders.length) {
+      reminderList.innerHTML = `
+        <div class="lsf-notify-empty">
+          No reminders saved yet. Use "Set Reminder" on upcoming matches to queue kickoff alerts.
+        </div>
+      `;
+    } else {
+      reminderList.innerHTML = reminders
+        .map((reminder) => `
+          <div class="lsf-reminder-item">
+            <a class="lsf-reminder-link" href="${reminder.url || '/upcoming.html'}">
+              <div class="lsf-reminder-title">${reminder.title || 'Match Reminder'}</div>
+              <div class="lsf-reminder-copy">${reminder.body || 'Saved match reminder from LivescoreFree.'}</div>
+              <div class="lsf-reminder-meta">${formatReminderCountdown(reminder)} | ${formatReminderSchedule(reminder)}</div>
+            </a>
+            <button
+              type="button"
+              class="lsf-reminder-remove"
+              data-remove-reminder="${reminder.matchId}"
+              aria-label="Remove reminder"
+            >
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        `)
+        .join('');
+    }
+  }
+
+  updateNotificationButton(permission);
+}
+
+function toggleNotificationPanel(force) {
+  const panel = document.getElementById('lsf-notify-panel');
+  if (!panel) return;
+
+  const nextState = typeof force === 'boolean' ? force : !notificationPanelVisible;
+  notificationPanelVisible = nextState;
+
+  if (nextState) {
+    renderNotificationPanel();
+    panel.hidden = false;
+    panel.classList.add('is-visible');
+  } else {
+    panel.classList.remove('is-visible');
+    panel.hidden = true;
+  }
+
+  const button = document.getElementById('lsf-notify-toggle');
+  if (button) {
+    button.setAttribute('aria-expanded', String(notificationPanelVisible));
   }
 }
 
@@ -330,7 +637,12 @@ function appendInstallBanner() {
       <div class="lsf-install-banner-title">Install LivescoreFree</div>
       <div class="lsf-install-banner-copy">Save the realtime score hub to your home screen for app-like navigation, offline access, and faster updates.</div>
     </div>
-    <button id="lsf-install-banner-button" class="lsf-pwa-button" type="button">Download</button>
+    <div class="lsf-install-banner-actions">
+      <button id="lsf-install-banner-button" class="lsf-pwa-button" type="button">Download</button>
+      <button id="lsf-install-banner-close" class="lsf-install-dismiss" type="button" aria-label="Close install prompt">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
   `;
   document.body.appendChild(banner);
 
@@ -345,10 +657,15 @@ function appendInstallBanner() {
 
 function scheduleStoredReminder(reminder) {
   if (!reminder?.matchId || !reminder?.notifyAt) return;
+  if (reminderTimerHandles.has(reminder.matchId)) {
+    clearTimeout(reminderTimerHandles.get(reminder.matchId));
+    reminderTimerHandles.delete(reminder.matchId);
+  }
   const delay = reminder.notifyAt - Date.now();
   if (delay <= 0 || delay > 86400000) return;
 
-  window.setTimeout(async () => {
+  const timeoutId = window.setTimeout(async () => {
+    reminderTimerHandles.delete(reminder.matchId);
     const url = reminder.url || '/upcoming.html';
     const title = reminder.title || 'Match Reminder';
     try {
@@ -367,26 +684,37 @@ function scheduleStoredReminder(reminder) {
       console.error('Reminder notification failed:', error);
     }
   }, delay);
+
+  reminderTimerHandles.set(reminder.matchId, timeoutId);
 }
 
 function bootstrapSavedReminders() {
   try {
-    const reminders = JSON.parse(localStorage.getItem('lsf-reminders') || '[]');
-    reminders
-      .filter((reminder) => reminder.notifyAt > Date.now())
-      .slice(0, 20)
-      .forEach(scheduleStoredReminder);
+    const reminders = getSavedReminders();
+    reminders.filter((reminder) => reminder.notifyAt > Date.now()).slice(0, 20).forEach(scheduleStoredReminder);
   } catch (error) {
     console.error('Reminder bootstrap failed:', error);
   }
 }
 
+function startReminderHeartbeat() {
+  window.setInterval(() => {
+    getSavedReminders().slice(0, 20).forEach(scheduleStoredReminder);
+    updateNotificationButton();
+    if (notificationPanelVisible) {
+      renderNotificationPanel();
+    }
+  }, 30000);
+}
+
 function persistReminder(reminder) {
   try {
-    const current = JSON.parse(localStorage.getItem('lsf-reminders') || '[]');
+    const current = readStoredReminders();
     const next = current.filter((entry) => entry.matchId !== reminder.matchId);
     next.push(reminder);
-    localStorage.setItem('lsf-reminders', JSON.stringify(next.slice(-30)));
+    writeStoredReminders(next);
+    updateNotificationButton();
+    renderNotificationPanel();
   } catch (error) {
     console.error('Reminder persistence failed:', error);
   }
@@ -401,31 +729,59 @@ async function requestNotificationPermission() {
   const permission = await Notification.requestPermission();
   notificationPermissionState = permission;
   updateNotificationButton(permission);
+  renderNotificationPanel();
   return permission;
 }
 
 function updateNotificationButton(permission = notificationPermissionState) {
   const button = document.getElementById('lsf-notify-toggle');
   if (!button) return;
+
+  const reminders = getSavedReminders();
+  const soonCount = reminders.filter((reminder) => {
+    const kickoffAt = Number(reminder.kickoffAt || 0);
+    return Number.isFinite(kickoffAt) && kickoffAt > Date.now() && kickoffAt - Date.now() <= 30 * 60 * 1000;
+  }).length;
+
   button.dataset.permission = permission;
-  const icon = button.querySelector('.material-symbols-outlined');
+  button.dataset.reminders = String(reminders.length);
+  button.dataset.state = soonCount > 0 ? 'soon' : reminders.length > 0 ? 'scheduled' : 'idle';
+  const icon = button.querySelector('.lsf-notify-icon') || button.querySelector('.material-symbols-outlined');
+  const dot = button.querySelector('.lsf-notify-dot');
+  const badge = button.querySelector('.lsf-notify-badge');
 
   if (permission === 'granted') {
     button.setAttribute('aria-pressed', 'true');
-    button.setAttribute('aria-label', 'Alerts enabled');
-    button.setAttribute('title', 'Alerts enabled');
     if (icon) icon.textContent = 'notifications_active';
   } else if (permission === 'denied') {
     button.setAttribute('aria-pressed', 'false');
-    button.setAttribute('aria-label', 'Alerts blocked');
-    button.setAttribute('title', 'Alerts blocked');
     if (icon) icon.textContent = 'notifications_off';
   } else {
     button.setAttribute('aria-pressed', 'false');
-    button.setAttribute('aria-label', 'Enable alerts');
-    button.setAttribute('title', 'Enable alerts');
     if (icon) icon.textContent = 'notifications';
   }
+
+  if (dot) dot.hidden = soonCount === 0;
+  if (badge) {
+    const badgeCount = soonCount > 0 ? soonCount : reminders.length;
+    badge.hidden = badgeCount === 0;
+    badge.textContent = badgeCount > 9 ? '9+' : String(badgeCount);
+  }
+
+  const stateTitle = permission === 'granted'
+    ? 'Alerts enabled'
+    : permission === 'denied'
+      ? 'Alerts blocked'
+      : permission === 'unsupported'
+        ? 'Alerts unsupported'
+        : 'Enable alerts';
+  const reminderTitle = reminders.length
+    ? soonCount > 0
+      ? `${soonCount} reminder${soonCount === 1 ? '' : 's'} starting soon`
+      : `${reminders.length} saved reminder${reminders.length === 1 ? '' : 's'}`
+    : 'No saved reminders';
+  button.setAttribute('aria-label', `${stateTitle}. ${reminderTitle}.`);
+  button.setAttribute('title', `${stateTitle} | ${reminderTitle}`);
 }
 
 function updateInstallUi() {
@@ -434,15 +790,26 @@ function updateInstallUi() {
   const bannerButton = document.getElementById('lsf-install-banner-button');
   const fab = document.getElementById('lsf-install-fab');
   const canInstall = Boolean(deferredInstallPrompt);
+  const bannerDismissed = localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY) === '1';
 
   if (installButton) installButton.hidden = !canInstall;
-  if (banner) banner.hidden = !canInstall;
-  if (bannerButton) bannerButton.hidden = !canInstall;
+  if (banner) banner.hidden = !canInstall || bannerDismissed;
+  if (bannerButton) bannerButton.hidden = !canInstall || bannerDismissed;
   if (fab) fab.hidden = !canInstall;
+
+  if (notificationPanelVisible) {
+    renderNotificationPanel();
+  }
+}
+
+function dismissInstallBanner() {
+  localStorage.setItem(INSTALL_BANNER_DISMISSED_KEY, '1');
+  updateInstallUi();
 }
 
 async function promptInstall() {
   if (!deferredInstallPrompt) return;
+  localStorage.removeItem(INSTALL_BANNER_DISMISSED_KEY);
   deferredInstallPrompt.prompt();
   await deferredInstallPrompt.userChoice.catch(() => null);
   deferredInstallPrompt = null;
@@ -461,11 +828,13 @@ async function registerServiceWorker() {
 function setupAppShell() {
   appendHeaderActions();
   appendInstallBanner();
+  appendNotificationPanel();
   updateNotificationButton();
   updateInstallUi();
 
   const installButton = document.getElementById('lsf-install-button');
   const installBannerButton = document.getElementById('lsf-install-banner-button');
+  const installBannerClose = document.getElementById('lsf-install-banner-close');
   const installFab = document.getElementById('lsf-install-fab');
   const notifyButton = document.getElementById('lsf-notify-toggle');
 
@@ -473,13 +842,28 @@ function setupAppShell() {
     button.addEventListener('click', promptInstall);
   });
 
+  if (installBannerClose && !installBannerClose.dataset.bound) {
+    installBannerClose.dataset.bound = 'true';
+    installBannerClose.addEventListener('click', dismissInstallBanner);
+  }
+
   if (notifyButton && !notifyButton.dataset.bound) {
     notifyButton.dataset.bound = 'true';
-    notifyButton.addEventListener('click', async () => {
-      const permission = await requestNotificationPermission();
-      if (permission === 'granted') {
-        showRuntimeToast('Browser alerts enabled');
-      }
+    notifyButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleNotificationPanel();
+    });
+  }
+
+  if (!document.body.dataset.lsfPanelBound) {
+    document.body.dataset.lsfPanelBound = 'true';
+    document.addEventListener('click', (event) => {
+      const panel = document.getElementById('lsf-notify-panel');
+      const bell = document.getElementById('lsf-notify-toggle');
+      if (!notificationPanelVisible || !panel) return;
+      if (panel.contains(event.target) || bell?.contains(event.target)) return;
+      toggleNotificationPanel(false);
     });
   }
 
@@ -491,6 +875,7 @@ function setupAppShell() {
 
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
+    localStorage.removeItem(INSTALL_BANNER_DISMISSED_KEY);
     updateInstallUi();
     showRuntimeToast('App installed');
   });
@@ -504,6 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupAppShell();
   registerServiceWorker();
   bootstrapSavedReminders();
+  startReminderHeartbeat();
 
   // --- HEADER & NAVIGATION LOGIC ---
   const path = window.location.pathname;
@@ -786,7 +1172,9 @@ window.handleNotification = async function(subject, detail) {
     body: match
       ? `${match.league || match.sport} at ${match.time || 'scheduled time'}`
       : 'Saved match reminder from LivescoreFree.',
+    kickoffAt: Number.isFinite(kickoffMs) ? kickoffMs : Date.now() + 15 * 60 * 1000,
     notifyAt: Number.isFinite(kickoffMs) ? Math.max(Date.now() + 5000, kickoffMs - 15 * 60 * 1000) : Date.now() + 5000,
+    savedAt: Date.now(),
     url: match ? buildMatchUrl(match) : '/upcoming.html'
   };
 
@@ -1563,8 +1951,17 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
             <tbody class="divide-y divide-white/5">
               ${standings.slice(0, 10).map((e, idx) => {
                 const gd = e.stats.find(s => s.name === 'pointDifferential')?.value || 0;
+                const teamUrl = buildTeamProfileUrl(
+                  {
+                    id: e.team?.id,
+                    name: e.team?.displayName,
+                    logo: e.team?.logos?.[0]?.href
+                  },
+                  activeLeague === 'nba' ? 'basketball' : activeLeague === 'nfl' ? 'football' : 'soccer',
+                  activeLeague
+                );
                 return `
-                <tr class="hover:bg-white/10 transition-all duration-300 group/row cursor-default">
+                <tr class="hover:bg-white/10 transition-all duration-300 group/row cursor-pointer" onclick="window.location.href='${teamUrl}'">
                   <td class="px-8 py-6">
                     <span class="text-sm font-black italic ${idx < 4 ? 'text-primary' : 'text-on-surface/40'}">${e.stats.find(s => s.name === 'rank')?.value || '-'}</span>
                   </td>
@@ -1828,7 +2225,12 @@ async function fetchNews() {
   if (!document.getElementById('news-grid-container') && !document.getElementById('latest-headlines-container') && !isNewsPage) return;
   
   try {
-    const res = await fetch(`${API_INFO}?type=news&sport=${currentTab === 'all' ? 'soccer' : currentTab}`);
+    const res = await fetch(buildApiUrl(API_INFO, {
+      type: 'news',
+      sport: currentTab || 'all',
+      league: currentLeagueFilter || undefined,
+      limit: 40
+    }));
     const data = await res.json();
     let articles = data.articles || [];
     
@@ -1959,7 +2361,7 @@ function renderNewsHero(articles) {
   container.style.display = 'block';
   const a = articles[0]; // main article
   container.innerHTML = `
-    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" style="background-image: url('${a.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
+    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" style="background-image: url('${getArticleImageUrl(a)}')"></div>
     <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-transparent"></div>
     <div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
     <div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6">
@@ -1976,7 +2378,7 @@ function renderNewsHero(articles) {
           ${a.description || 'Follow the latest unfolding stories from the sports world.'}
       </p>
       <div class="flex gap-4 pt-4">
-        <button class="bg-primary text-on-primary px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2" onclick="window.open('${a.links?.web?.href || '#'}', '_blank')">
+        <button class="bg-primary text-on-primary px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2" onclick="window.open('${getArticleLinkUrl(a)}', '_blank')">
           <span class="material-symbols-outlined">article</span> Read Full Story
         </button>
       </div>
@@ -1988,8 +2390,8 @@ function renderNewsVideos(articles) {
   const container = document.getElementById('video-highlights-gallery');
   if (!container) return;
   container.innerHTML = articles.map(a => `
-    <div class="group cursor-pointer" onclick="window.open('${a.links?.web?.href || '#'}', '_blank')">
-      <div class="relative aspect-video bg-cover bg-center rounded-lg overflow-hidden border border-white/10" style="background-image: url('${a.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')">
+    <div class="group cursor-pointer" onclick="window.open('${getArticleLinkUrl(a)}', '_blank')">
+      <div class="relative aspect-video bg-cover bg-center rounded-lg overflow-hidden border border-white/10" style="background-image: url('${getArticleImageUrl(a)}')">
         <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
         <div class="absolute inset-0 flex items-center justify-center">
           <span class="material-symbols-outlined text-4xl text-white opacity-80 group-hover:scale-125 transition-transform" style="font-variation-settings: 'FILL' 1;">play_circle</span>
@@ -2004,7 +2406,7 @@ function renderTrendingSidebar(articles) {
   const container = document.getElementById('trending-sidebar-list');
   if (!container) return;
   container.innerHTML = articles.map(a => `
-    <a class="block group" href="${a.links?.web?.href || '#'}" target="_blank">
+    <a class="block group" href="${getArticleLinkUrl(a)}" target="_blank">
       <span class="text-[8px] font-black uppercase text-on-surface/30">#${(a.categories?.[0]?.name || 'TRENDING').replace(/\\s+/g, '')}</span>
       <p class="text-sm font-bold uppercase group-hover:text-primary transition-colors mt-1 line-clamp-2">${a.headline}</p>
     </a>
@@ -2014,13 +2416,21 @@ function renderTrendingSidebar(articles) {
 function renderNews(articles) {
   const nc = document.getElementById('news-grid-container');
   const hc = document.getElementById('latest-headlines-container');
-  if (!articles.length) return;
+  if (!articles.length) {
+    if (nc) {
+      nc.innerHTML = '<div class="col-span-full rounded-2xl border border-white/5 bg-white/5 px-6 py-24 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No live headlines available right now</div>';
+    }
+    if (hc) {
+      hc.innerHTML = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-24 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No deeper stories available right now</div>';
+    }
+    return;
+  }
 
   if (nc) {
     nc.innerHTML = articles.slice(0, 4).map(article => `
-      <article class="relative bg-surface-container rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
+      <article class="relative bg-surface-container rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${getArticleLinkUrl(article)}', '_blank')">
         <div class="aspect-video bg-cover bg-center transition-transform duration-[1.5s] group-hover:scale-110" 
-             style="background-image: linear-gradient(to top, rgba(14,14,14,0.9), transparent), url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
+             style="background-image: linear-gradient(to top, rgba(14,14,14,0.9), transparent), url('${getArticleImageUrl(article)}')"></div>
         <div class="p-6 relative flex flex-col flex-1">
           <div class="flex justify-between items-center mb-4">
             <span class="bg-primary text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm">${article.categories?.[0]?.name || 'SPORTS'}</span>
@@ -2035,9 +2445,9 @@ function renderNews(articles) {
 
   if (hc) {
     hc.innerHTML = articles.slice(4).map((article, idx) => `
-      <article class="flex flex-col md:flex-row gap-8 group cursor-pointer border-b border-white/5 pb-12 last:border-0 opacity-0 translate-y-10 transition-all duration-700 headline-expansion-item" onclick="window.open('${article.links?.web?.href || '#'}', '_blank')">
+      <article class="flex flex-col md:flex-row gap-8 group cursor-pointer border-b border-white/5 pb-12 last:border-0 opacity-0 translate-y-10 transition-all duration-700 headline-expansion-item" onclick="window.open('${getArticleLinkUrl(article)}', '_blank')">
         <div class="md:w-1/4 aspect-[16/9] bg-cover bg-center rounded-xl overflow-hidden border border-white/10 shrink-0 shadow-lg" 
-             style="background-image: url('${article.images?.[0]?.url || 'https://livescorefree.online/logo.png'}')"></div>
+             style="background-image: url('${getArticleImageUrl(article)}')"></div>
         <div class="flex-1 space-y-4">
           <div class="flex items-center gap-3">
              <span class="text-primary text-[10px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'HUB'}</span>
@@ -2214,6 +2624,7 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
       if (statusFilter) {
         matches = matches.filter(m => m.status === statusFilter);
       }
+      matches = sortMatchesForDisplay(matches, statusFilter);
       renderMatches(matches);
     }
 
@@ -2972,7 +3383,7 @@ async function performSearch(query) {
   }
 
   const q = query.toLowerCase();
-  const matches = (window._cachedMatches || []).filter(m =>
+  const matches = getCachedMatches().filter(m =>
     (m.homeTeam.name || '').toLowerCase().includes(q) ||
     (m.awayTeam.name || '').toLowerCase().includes(q) ||
     (m.league || '').toLowerCase().includes(q) ||
@@ -3306,17 +3717,17 @@ async function fetchLeaguesHero() {
     if (featured.length > 0) {
       heroSliderContainer.innerHTML = featured.map((item, i) => `
         <div class="absolute inset-0 transition-opacity duration-1000 ${i === 0 ? 'opacity-100' : 'opacity-0'}" data-slide="${i}">
-          <img class="absolute inset-0 w-full h-full object-cover opacity-60" src="${item.image || FALLBACK_HERO_IMAGE}" alt="${item.title}">
+          <img class="absolute inset-0 w-full h-full object-cover opacity-60" src="${getArticleImageUrl(item)}" alt="${item.title || item.headline}">
           <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
           <div class="absolute bottom-0 left-0 p-10 max-w-2xl">
             <div class="inline-flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
               <span class="material-symbols-outlined text-xs">star</span>
               Featured League Coverage
             </div>
-            <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-on-surface mb-4 leading-none">${item.title}</h1>
-            <p class="text-sm text-on-surface/60 font-medium max-w-md mb-6 leading-relaxed">${item.description || 'Deep tactical analysis and live coverage from the multiverse elite.'}</p>
+            <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-on-surface mb-4 leading-none">${item.title || item.headline}</h1>
+            <p class="text-sm text-on-surface/60 font-medium max-w-md mb-6 leading-relaxed">${item.description || item.summary || 'Deep tactical analysis and live coverage from the multiverse elite.'}</p>
             <div class="flex gap-4">
-              <button onclick="window.location.href='/news.html'" class="px-8 py-4 kinetic-gradient text-xs font-black uppercase tracking-widest rounded active:scale-95 transition-all">Read Analysis</button>
+              <button onclick="window.open('${getArticleLinkUrl(item)}', '_blank')" class="px-8 py-4 kinetic-gradient text-xs font-black uppercase tracking-widest rounded active:scale-95 transition-all">Read Analysis</button>
             </div>
           </div>
         </div>

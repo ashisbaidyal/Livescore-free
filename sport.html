@@ -368,6 +368,39 @@ document.addEventListener('DOMContentLoaded', () => {
         'f1':         { title: 'F1',         desc: 'Formula 1 Grand Prix Racing', icon: 'sports_motorsports' }
     };
 
+    window.leagueOptions = {
+        soccer: [
+            { league: 'eng.1', label: 'Premier League' },
+            { league: 'esp.1', label: 'La Liga' },
+            { league: 'ger.1', label: 'Bundesliga' },
+            { league: 'ita.1', label: 'Serie A' },
+            { league: 'fra.1', label: 'Ligue 1' },
+            { league: 'uefa.champions', label: 'UCL' }
+        ],
+        basketball: [
+            { league: 'nba', label: 'NBA' },
+            { league: 'wnba', label: 'WNBA' },
+            { league: 'euroleague', label: 'EuroLeague' }
+        ],
+        football: [
+            { league: 'nfl', label: 'NFL' },
+            { league: 'college-football', label: 'NCAAF' }
+        ],
+        hockey: [{ league: 'nhl', label: 'NHL' }],
+        baseball: [{ league: 'mlb', label: 'MLB' }],
+        cricket: [
+            { league: 'ipl', label: 'IPL' },
+            { league: '8039', label: 'ICC World Cup' }
+        ],
+        tennis: [
+            { league: 'atp', label: 'ATP' },
+            { league: 'wta', label: 'WTA' }
+        ],
+        mma: [{ league: 'ufc', label: 'UFC' }],
+        racing: [{ league: 'f1', label: 'F1' }],
+        golf: [{ league: 'pga', label: 'PGA' }]
+    };
+
     const meta = sportMeta[sport] || { title: sport.toUpperCase(), desc: 'Real-time coverage', icon: 'sports' };
     if (title) title.textContent = meta.title;
     if (badge) badge.textContent = meta.title;
@@ -377,6 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sportColors = { soccer: '#1a5f1a', basketball: '#c35831', football: '#2a4f2a', tennis: '#2d6b2d', mma: '#8b0000', hockey: '#1a3a5c', baseball: '#1a3a1a', cricket: '#2d5a2d', racing: '#5a1a1a', golf: '#1a5a3a', f1: '#cc0000' };
     if (heroBg) heroBg.style.background = `linear-gradient(135deg, ${sportColors[sport] || '#1a1a1a'} 0%, #0e0e0e 100%)`;
     if (heroBg) heroBg.style.opacity = '0.5';
+    renderSportLeagueTabs(sport, league || window.leagueOptions?.[sport]?.[0]?.league);
 
     // Set global tab to this sport
     window.currentTab = sport;
@@ -391,10 +425,10 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchSportStandings(sport, league);
 
     // Fetch sport-specific news
-    fetchSportNews(sport);
+    fetchSportNews(sport, league);
 
     // Fetch sport results
-    fetchSportResults(sport);
+    fetchSportResults(sport, league);
 
     // Fetch sport players
     fetchSportPlayers(sport, league);
@@ -407,9 +441,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setInterval(() => {
         fetchSportStandings(sport, league);
-        fetchSportNews(sport);
+        fetchSportNews(sport, league);
+        fetchSportResults(sport, league);
     }, 60000);
 });
+
+function renderSportLeagueTabs(sport, activeLeague) {
+    const container = document.getElementById('sport-league-tabs');
+    if (!container) return;
+
+    const options = window.leagueOptions?.[sport] || [];
+    if (!options.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = options.map((option) => `
+        <a
+            href="sport.html?s=${encodeURIComponent(sport)}&l=${encodeURIComponent(option.league)}"
+            class="flex-none px-5 py-3 rounded-full border text-[10px] font-black uppercase tracking-[0.25em] transition-all ${option.league === activeLeague ? 'border-primary bg-primary text-white' : 'border-white/10 bg-white/5 text-on-surface/55 hover:border-primary/40 hover:text-white'}"
+        >
+            ${option.label}
+        </a>
+    `).join('');
+}
 
 async function fetchSportStandings(sport, league) {
     const container = document.getElementById('standings-table-container');
@@ -417,7 +472,7 @@ async function fetchSportStandings(sport, league) {
 
     const leagueMap = {
         'soccer': 'eng.1', 'basketball': 'nba', 'football': 'nfl', 'american-football': 'nfl',
-        'hockey': 'nhl', 'baseball': 'mlb', 'cricket': '19430'
+        'hockey': 'nhl', 'baseball': 'mlb', 'cricket': 'ipl'
     };
     const targetLeague = league || leagueMap[sport] || 'eng.1';
     const espnSport = sport === 'f1' ? 'racing' : sport;
@@ -445,7 +500,7 @@ async function fetchSportStandings(sport, league) {
                 </thead>
                 <tbody class="divide-y divide-white/5">
                     ${standings.slice(0, 10).map((e, idx) => `
-                        <tr class="hover:bg-white/10 transition-all group cursor-default">
+                        <tr class="hover:bg-white/10 transition-all group cursor-pointer" onclick="window.location.href='team.html?id=${encodeURIComponent(e.team?.id || '')}&name=${encodeURIComponent(e.team?.displayName || 'Team')}&sport=${encodeURIComponent(espnSport)}&league=${encodeURIComponent(targetLeague)}'">
                             <td class="px-4 py-3"><span class="text-xs font-black italic ${idx < 4 ? 'text-primary' : 'text-on-surface/40'}">${e.stats?.find(s => s.name === 'rank')?.value || idx+1}</span></td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
@@ -466,11 +521,11 @@ async function fetchSportStandings(sport, league) {
     }
 }
 
-async function fetchSportNews(sport) {
+async function fetchSportNews(sport, league) {
     const container = document.getElementById('sport-news-container');
     if (!container) return;
     try {
-        const res = await fetch(`/api/info?type=news&sport=${sport}`);
+        const res = await fetch(buildApiUrl('/api/info', { type: 'news', sport, league }));
         const data = await res.json();
         const articles = data.articles || [];
         if (articles.length === 0) {
@@ -478,8 +533,8 @@ async function fetchSportNews(sport) {
             return;
         }
         container.innerHTML = articles.slice(0, 4).map(a => `
-            <article class="relative bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${a.links?.web?.href || '#'}', '_blank')">
-                <div class="aspect-video bg-cover bg-center transition-transform duration-[1.5s] group-hover:scale-110" style="background-image: linear-gradient(to top, rgba(14,14,14,0.9), transparent), url('${a.images?.[0]?.url || ''}')"></div>
+            <article class="relative bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${getArticleLinkUrl(a)}', '_blank')">
+                <div class="aspect-video bg-cover bg-center transition-transform duration-[1.5s] group-hover:scale-110" style="background-image: linear-gradient(to top, rgba(14,14,14,0.9), transparent), url('${getArticleImageUrl(a)}')"></div>
                 <div class="p-4 relative flex flex-col flex-1">
                     <span class="bg-primary text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm self-start mb-2">${a.categories?.[0]?.name || 'SPORTS'}</span>
                     <h3 class="text-sm font-black italic uppercase leading-tight group-hover:text-primary transition-colors line-clamp-2">${a.headline}</h3>
@@ -491,13 +546,13 @@ async function fetchSportNews(sport) {
     }
 }
 
-async function fetchSportResults(sport) {
+async function fetchSportResults(sport, league) {
     const container = document.getElementById('sport-results-container');
     if (!container) return;
     try {
-        const res = await fetch(`/api/live?sport=${sport}`);
+        const res = await fetch(buildApiUrl('/api/live', { sport, league }));
         const data = await res.json();
-        const finished = (data.matches || []).filter(m => m.status === 'finished').slice(0, 4);
+        const finished = (data.matches || []).filter(m => m.status === 'finished').sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 4);
         if (finished.length === 0) {
             container.innerHTML = '<div class="col-span-full text-center text-on-surface/30 text-[10px] font-black uppercase tracking-widest py-8">No recent results</div>';
             return;

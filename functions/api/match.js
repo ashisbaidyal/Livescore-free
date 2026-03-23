@@ -1,11 +1,14 @@
 import {
   FALLBACK_LOGO,
+  SPORT_LEAGUES,
   fetchJson,
   getDefaultLeague,
   jsonResponse,
   mapStatus,
   normalizeLeagueParam,
+  normalizeScoreboardEvent,
   normalizeSportParam,
+  parseDateRange,
   siteApiUrl
 } from "./_shared.js";
 
@@ -13,16 +16,44 @@ function buildSummaryCandidates(id, sport, league) {
   const normalizedSport = normalizeSportParam(sport, league);
   const normalizedLeague = normalizeLeagueParam(league, normalizedSport);
 
-  const candidates = [
-    { sport: normalizedSport, league: normalizedLeague },
-    { sport: "soccer", league: "eng.1" },
-    { sport: "soccer", league: "esp.1" },
-    { sport: "basketball", league: "nba" },
-    { sport: "football", league: "nfl" }
-  ];
+  const candidates = [];
+  const pushCandidate = (candidateSport, candidateLeague) => {
+    if (!candidateSport || !candidateLeague) return;
+    if (candidates.some((entry) => entry.sport === candidateSport && entry.league === candidateLeague)) return;
+    candidates.push({ sport: candidateSport, league: candidateLeague });
+  };
+
+  pushCandidate(normalizedSport, normalizedLeague);
+  (SPORT_LEAGUES[normalizedSport] || []).slice(0, 6).forEach((candidateLeague) => pushCandidate(normalizedSport, candidateLeague));
+  pushCandidate("soccer", "eng.1");
+  pushCandidate("soccer", "esp.1");
+  pushCandidate("basketball", "nba");
+  pushCandidate("football", "nfl");
 
   return candidates.map(({ sport: candidateSport, league: candidateLeague }) =>
     siteApiUrl(candidateSport, candidateLeague, "summary", { event: id })
+  );
+}
+
+function buildScoreboardCandidates(sport, league) {
+  const normalizedSport = normalizeSportParam(sport, league);
+  const normalizedLeague = normalizeLeagueParam(league, normalizedSport);
+  const candidates = [];
+  const dates = parseDateRange(6);
+  const pushPair = (candidateSport, candidateLeague) => {
+    if (!candidateSport || !candidateLeague) return;
+    if (candidates.some((entry) => entry.sport === candidateSport && entry.league === candidateLeague)) return;
+    candidates.push({ sport: candidateSport, league: candidateLeague });
+  };
+
+  pushPair(normalizedSport, normalizedLeague);
+  (SPORT_LEAGUES[normalizedSport] || []).slice(0, 4).forEach((candidateLeague) => pushPair(normalizedSport, candidateLeague));
+  pushPair("soccer", "eng.1");
+  pushPair("basketball", "nba");
+  pushPair("football", "nfl");
+
+  return candidates.flatMap(({ sport: candidateSport, league: candidateLeague }) =>
+    dates.map((date) => ({ sport: candidateSport, league: candidateLeague, date }))
   );
 }
 
@@ -110,6 +141,7 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
     leagueSlug: fallbackLeague,
     league: data.leagues?.[0]?.name || header.league?.name || fallbackLeague.toUpperCase(),
     status: mapStatus(statusType.state),
+    statusText: statusType.detail || statusType.description || statusType.shortDetail || "",
     time: statusType.shortDetail || statusType.detail || "",
     date: header.competitions?.[0]?.date || header.season?.type?.name || "",
     venue: competition.venue?.fullName || "",
@@ -139,6 +171,58 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
   };
 }
 
+function normalizeFallbackScoreboardSummary(event = {}, sport = "soccer", league = "eng.1", leagueName = "") {
+  const normalized = normalizeScoreboardEvent(event, sport, league, leagueName);
+  return {
+    id: normalized.id,
+    sport: normalized.sport,
+    leagueSlug: normalized.leagueSlug,
+    league: normalized.league,
+    status: normalized.status,
+    statusText: normalized.statusText,
+    time: normalized.time,
+    date: normalized.date,
+    venue: normalized.venue,
+    broadcast: normalized.broadcast,
+    homeTeam: {
+      ...normalized.homeTeam,
+      lineup: []
+    },
+    awayTeam: {
+      ...normalized.awayTeam,
+      lineup: []
+    },
+    stats: [],
+    timeline: [],
+    commentary: [],
+    odds: null,
+    h2h: [],
+    situation: null
+  };
+}
+
+async function findScoreboardFallback(id, sport, league) {
+  const candidates = buildScoreboardCandidates(sport, league);
+  for (const candidate of candidates) {
+    try {
+      const data = await fetchJson(siteApiUrl(candidate.sport, candidate.league, "scoreboard", { dates: candidate.date, limit: 100 }));
+      const event = (data.events || []).find((entry) => String(entry.id) === String(id));
+      if (event) {
+        return normalizeFallbackScoreboardSummary(
+          event,
+          candidate.sport,
+          candidate.league,
+          data.leagues?.[0]?.name || candidate.league.toUpperCase()
+        );
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
@@ -162,7 +246,11 @@ export async function onRequest(context) {
     }
 
     if (!summaryData?.header?.competitions?.length) {
-      return jsonResponse({ notFound: true }, 30, 404);
+      const fallback = await findScoreboardFallback(id, sport, league);
+      if (!fallback) {
+        return jsonResponse({ notFound: true }, 30, 404);
+      }
+      return jsonResponse(fallback, 15);
     }
 
     return jsonResponse(normalizeSummary(summaryData, sport, league), 15);

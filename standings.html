@@ -226,11 +226,18 @@
     { key: "eng.1", sport: "soccer", league: "eng.1", label: "Premier League", accent: "Football" },
     { key: "esp.1", sport: "soccer", league: "esp.1", label: "La Liga", accent: "Football" },
     { key: "nba", sport: "basketball", league: "nba", label: "NBA", accent: "Basketball" },
-    { key: "nfl", sport: "football", league: "nfl", label: "NFL", accent: "American Football" }
+    { key: "nfl", sport: "football", league: "nfl", label: "NFL", accent: "American Football" },
+    { key: "nhl", sport: "hockey", league: "nhl", label: "NHL", accent: "Hockey" },
+    { key: "mlb", sport: "baseball", league: "mlb", label: "MLB", accent: "Baseball" }
   ];
 
   const standingsCache = {};
-  let activeStandingsKey = standingsFeeds.find((item) => item.key === (standingsParams.get("league") || ""))?.key || "eng.1";
+  const requestedLeague = standingsParams.get("league") || "";
+  const requestedSport = standingsParams.get("sport") || "";
+  let activeStandingsKey =
+    standingsFeeds.find((item) => item.key === requestedLeague)?.key ||
+    standingsFeeds.find((item) => item.sport === requestedSport)?.key ||
+    "eng.1";
 
   function getStat(entry, names) {
     const stats = entry.stats || [];
@@ -238,7 +245,7 @@
     return stat ? stat.displayValue || stat.value || "-" : "-";
   }
 
-  function normalizeEntries(raw) {
+  function normalizeEntries(raw, feed) {
     return raw.map((entry, index) => ({
       rank: getStat(entry, ["rank", "playoffseed"]) || index + 1,
       id: entry.team?.id || "",
@@ -247,9 +254,9 @@
       wins: getStat(entry, ["wins", "win"]),
       draws: getStat(entry, ["ties", "draws", "tie"]),
       losses: getStat(entry, ["losses", "loss"]),
-      points: getStat(entry, ["points", "pts"]),
-      diff: getStat(entry, ["pointdifferential", "differential", "plusminus", "pointdifference"]),
-      sport: standingsFeeds.find((item) => item.key === activeStandingsKey)?.sport || "soccer",
+      points: getStat(entry, ["points", "pts", "winpercent", "winpercentage"]),
+      diff: getStat(entry, ["pointdifferential", "differential", "plusminus", "pointdifference", "gamesbehind"]),
+      sport: feed?.sport || "soccer",
       league: activeStandingsKey
     }));
   }
@@ -339,7 +346,7 @@
       const response = await fetch(`/api/info?type=standings&sport=${feed.sport}&league=${feed.league}`);
       const data = await response.json();
       const rawEntries = data.entries || data.standings?.[0]?.entries || data.children?.[0]?.standings?.entries || [];
-      const entries = normalizeEntries(rawEntries);
+      const entries = normalizeEntries(rawEntries, feed);
       standingsCache[key] = entries;
       renderStandingsTable(feed, entries);
     } catch (error) {

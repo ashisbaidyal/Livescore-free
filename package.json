@@ -4,7 +4,9 @@
   "description": "Vanilla HTML/JS LiveScore Platform",
   "scripts": {
     "build": "tailwindcss -i ./css/input.css -o ./css/style.css --minify",
-    "dev": "tailwindcss -i ./css/input.css -o ./css/style.css --watch"
+    "dev": "tailwindcss -i ./css/input.css -o ./css/style.css --watch",
+    "deploy:cloudflare": "wrangler pages deploy . --project-name livescore-free",
+    "deploy:cloudflare:branch": "wrangler pages deploy . --project-name livescore-free --branch main"
   },
   "dependencies": {
     "tailwindcss": "^3.4.1"

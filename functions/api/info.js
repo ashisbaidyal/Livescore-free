@@ -2,7 +2,6 @@ import {
   SPORT_LEAGUES,
   coreApiUrl,
   dedupeById,
-  extractTrailingId,
   fetchJson,
   jsonResponse,
   normalizeArticle,
@@ -17,10 +16,62 @@ import {
   siteApiUrl
 } from "./_shared.js";
 
+function getLeaguePairs(sport, league, limit = 4) {
+  if (league) {
+    return [{ sport, league }];
+  }
+
+  if (sport === "all") {
+    return [
+      { sport: "soccer", league: "eng.1" },
+      { sport: "soccer", league: "esp.1" },
+      { sport: "soccer", league: "uefa.champions" },
+      { sport: "basketball", league: "nba" },
+      { sport: "basketball", league: "wnba" },
+      { sport: "football", league: "nfl" },
+      { sport: "hockey", league: "nhl" },
+      { sport: "baseball", league: "mlb" },
+      { sport: "cricket", league: "ipl" },
+      { sport: "tennis", league: "atp" },
+      { sport: "mma", league: "ufc" },
+      { sport: "racing", league: "f1" },
+      { sport: "golf", league: "pga" }
+    ];
+  }
+
+  return (SPORT_LEAGUES[sport] || []).slice(0, limit).map((slug) => ({ sport, league: slug }));
+}
+
+function toTimestamp(value = "") {
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 async function getNormalizedNews(sport, league, teamId = "") {
-  const data = await fetchJson(siteApiUrl(sport, league, "news", teamId ? { team: teamId } : {}));
+  const leaguePairs = getLeaguePairs(sport, league, sport === "all" ? 12 : 4);
+  const responses = await Promise.all(
+    leaguePairs.map(async ({ sport: pairSport, league: pairLeague }) => {
+      try {
+        const data = await fetchJson(
+          siteApiUrl(pairSport, pairLeague, "news", {
+            ...(teamId ? { team: teamId } : {}),
+            limit: 18
+          })
+        );
+        return (data.articles || []).map(normalizeArticle);
+      } catch (error) {
+        return [];
+      }
+    })
+  );
+
   return {
-    articles: (data.articles || []).map(normalizeArticle)
+    articles: dedupeById(responses.flat())
+      .sort((left, right) => toTimestamp(right.published) - toTimestamp(left.published))
+      .slice(0, 40),
+    meta: {
+      feeds: leaguePairs.length
+    }
   };
 }
 
@@ -34,11 +85,22 @@ async function getNormalizedStandings(sport, league) {
 }
 
 async function getNormalizedTeams(sport, league) {
-  const data = await fetchJson(siteApiUrl(sport, league, "teams"));
-  const rawTeams = data.sports?.[0]?.leagues?.[0]?.teams || data.teams || [];
+  const leaguePairs = getLeaguePairs(sport, league, sport === "all" ? 8 : 2);
+  const responses = await Promise.all(
+    leaguePairs.map(async ({ sport: pairSport, league: pairLeague }) => {
+      try {
+        const data = await fetchJson(siteApiUrl(pairSport, pairLeague, "teams"));
+        const rawTeams = data.sports?.[0]?.leagues?.[0]?.teams || data.teams || [];
+        return rawTeams.map((entry) => normalizeTeamEntry(entry, pairSport, pairLeague));
+      } catch (error) {
+        return [];
+      }
+    })
+  );
+
   return {
-    teams: rawTeams.map((entry) => normalizeTeamEntry(entry, sport, league)),
-    rawTeams
+    teams: dedupeById(responses.flat()),
+    rawTeams: []
   };
 }
 
@@ -123,9 +185,14 @@ async function getNormalizedTeamProfile(sport, league, id = "", name = "") {
     detail: injury.detail || "",
     date: injury.date || ""
   }));
-  const scheduleEvents = (scheduleData?.events || []).map((event) =>
-    normalizeScoreboardEvent(event, sport, league, scheduleData?.team?.displayName || team.name)
-  );
+  const rawScheduleEvents = [
+    ...(Array.isArray(scheduleData?.events) ? scheduleData.events : []),
+    ...(scheduleData?.team?.nextEvents || []).flatMap((item) => item?.events || []),
+    ...(Array.isArray(scheduleData?.schedule?.events) ? scheduleData.schedule.events : [])
+  ];
+  const scheduleEvents = dedupeById(
+    rawScheduleEvents.map((event) => normalizeScoreboardEvent(event, sport, league, scheduleData?.team?.displayName || team.name))
+  ).sort((left, right) => new Date(left.date) - new Date(right.date));
 
   return {
     team,
@@ -167,10 +234,22 @@ async function getNormalizedAthleteProfile(sport, league, athleteId) {
 }
 
 async function getNormalizedScores(sport, league, date = "") {
-  const data = await fetchJson(siteApiUrl(sport, league, "scoreboard", date ? { dates: date } : {}));
-  const leagueName = data.leagues?.[0]?.name || league.toUpperCase();
+  const leaguePairs = getLeaguePairs(sport, league, sport === "all" ? 10 : 4);
+  const responses = await Promise.all(
+    leaguePairs.map(async ({ sport: pairSport, league: pairLeague }) => {
+      try {
+        const data = await fetchJson(siteApiUrl(pairSport, pairLeague, "scoreboard", date ? { dates: date } : {}));
+        const leagueName = data.leagues?.[0]?.name || pairLeague.toUpperCase();
+        return (data.events || []).map((event) => normalizeScoreboardEvent(event, pairSport, pairLeague, leagueName));
+      } catch (error) {
+        return [];
+      }
+    })
+  );
+
   return {
-    matches: (data.events || []).map((event) => normalizeScoreboardEvent(event, sport, league, leagueName))
+    matches: dedupeById(responses.flat())
+      .sort((left, right) => new Date(left.date) - new Date(right.date))
   };
 }
 
@@ -181,11 +260,12 @@ export async function onRequest(context) {
   const inputLeague = url.searchParams.get("league") || url.searchParams.get("l") || "";
   const inputSport = url.searchParams.get("sport") || url.searchParams.get("s") || "soccer";
   const sport = normalizeSportParam(inputSport, inputLeague);
-  const league = normalizeLeagueParam(inputLeague, sport);
+  const league = inputLeague ? normalizeLeagueParam(inputLeague, sport) : sport === "all" ? "" : normalizeLeagueParam("", sport);
   const teamId = url.searchParams.get("team") || "";
   const id = url.searchParams.get("id") || "";
   const name = url.searchParams.get("name") || "";
-  const limit = Math.min(parseInt(url.searchParams.get("limit") || "16", 10), 24);
+  const parsedLimit = parseInt(url.searchParams.get("limit") || "16", 10);
+  const limit = Math.max(1, Math.min(Number.isFinite(parsedLimit) ? parsedLimit : 16, 24));
   const date = url.searchParams.get("date") || "";
 
   try {

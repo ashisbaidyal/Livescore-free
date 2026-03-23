@@ -11,6 +11,20 @@ import {
   siteApiUrl
 } from "./_shared.js";
 
+const UPCOMING_SPORT_LIMITS = {
+  soccer: 5,
+  basketball: 3,
+  football: 3,
+  hockey: 2,
+  baseball: 2,
+  cricket: 2,
+  tennis: 2,
+  mma: 2,
+  racing: 2,
+  golf: 2,
+  rugby: 1
+};
+
 function buildUpcomingEndpoints(sportParam, leagueParam, daysAhead) {
   const normalizedLeague = normalizeLeagueParam(leagueParam);
   const dates = parseDateRange(daysAhead);
@@ -24,15 +38,15 @@ function buildUpcomingEndpoints(sportParam, leagueParam, daysAhead) {
   if (sportParam === "all") {
     return targetSports.flatMap((sport) =>
       (SPORT_LEAGUES[sport] || [])
-        .slice(0, sport === "soccer" ? 3 : 1)
-        .flatMap((league) => dates.slice(0, 3).map((date) => ({ sport, league, date })))
+        .slice(0, UPCOMING_SPORT_LIMITS[sport] || 1)
+        .flatMap((league) => dates.slice(0, Math.min(daysAhead + 1, sport === "soccer" ? 4 : 2)).map((date) => ({ sport, league, date })))
     );
   }
 
   return targetSports.flatMap((sport) =>
     (SPORT_LEAGUES[sport] || [normalizeLeagueParam("", sport)])
-      .slice(0, 5)
-      .flatMap((league) => dates.slice(0, 5).map((date) => ({ sport, league, date })))
+      .slice(0, UPCOMING_SPORT_LIMITS[sport] || 3)
+      .flatMap((league) => dates.slice(0, Math.min(daysAhead + 1, 6)).map((date) => ({ sport, league, date })))
   );
 }
 
@@ -41,10 +55,11 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const sportParam = String(url.searchParams.get("sport") || url.searchParams.get("s") || "all").toLowerCase();
   const leagueParam = url.searchParams.get("league") || url.searchParams.get("l") || "";
-  const daysAhead = Math.min(parseInt(url.searchParams.get("days") || "7", 10), 10);
+  const parsedDays = parseInt(url.searchParams.get("days") || "7", 10);
+  const daysAhead = Math.max(1, Math.min(Number.isFinite(parsedDays) ? parsedDays : 7, 10));
 
   try {
-    const endpoints = buildUpcomingEndpoints(sportParam, leagueParam, daysAhead).slice(0, 42);
+    const endpoints = buildUpcomingEndpoints(sportParam, leagueParam, daysAhead).slice(0, 70);
     const results = await Promise.all(
       endpoints.map(async ({ sport, league, date }) => {
         try {

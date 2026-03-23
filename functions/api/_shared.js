@@ -14,19 +14,25 @@ export const SPORT_LEAGUES = {
     "usa.1",
     "mex.1",
     "ned.1",
+    "por.1",
+    "bel.1",
+    "tur.1",
+    "arg.1",
+    "bra.1",
     "ksa.1",
-    "jpn.1"
+    "jpn.1",
+    "fifa.world"
   ],
-  football: ["nfl", "college-football", "cfl", "ufl"],
-  basketball: ["nba", "wnba", "mens-college-basketball", "womens-college-basketball", "euroleague", "nbl"],
+  football: ["nfl", "college-football", "cfl", "ufl", "xfl"],
+  basketball: ["nba", "wnba", "mens-college-basketball", "womens-college-basketball", "euroleague", "nbl", "fiba"],
   baseball: ["mlb", "college-baseball"],
   hockey: ["nhl", "mens-college-hockey"],
-  cricket: ["8039", "8040", "8048", "19430", "ipl"],
+  cricket: ["ipl", "8039", "8040", "8048", "19430"],
   tennis: ["atp", "wta"],
   mma: ["ufc", "pfl", "bellator"],
   racing: ["f1", "nascar-premier", "irl", "motogp"],
   golf: ["pga", "lpga"],
-  rugby: ["271937", "267979"],
+  rugby: ["271937", "267979", "164205"],
   "rugby-league": ["3"]
 };
 
@@ -68,6 +74,10 @@ export const LEAGUE_ALIASES = {
   "world-cup": "fifa.world",
   "icc-world-cup": "8039",
   "saudi-pro": "ksa.1",
+  "primeira-liga": "por.1",
+  "liga-portugal": "por.1",
+  "jupiler-pro-league": "bel.1",
+  "super-lig": "tur.1",
   nfl: "nfl",
   nba: "nba",
   nhl: "nhl",
@@ -110,7 +120,7 @@ export function getDefaultLeague(sport = "soccer") {
 export function getTargetSports(sportParam = "all", leagueParam = "") {
   const normalizedSport = normalizeSportParam(sportParam, leagueParam);
   if (normalizedSport === "all") {
-    return ["soccer", "basketball", "football", "hockey", "baseball", "cricket", "tennis", "mma", "racing"];
+    return ["soccer", "basketball", "football", "hockey", "baseball", "cricket", "tennis", "mma", "racing", "golf", "rugby"];
   }
   return [normalizedSport];
 }
@@ -188,15 +198,31 @@ export function extractLeagueName(scoreboard = {}, fallbackLeague = "") {
 }
 
 export function normalizeArticle(article = {}) {
+  const image = article.images?.[0]?.url || article.images?.[0]?.href || article.image || "";
+  const url =
+    article.links?.web?.href ||
+    article.links?.api?.news?.href ||
+    article.link ||
+    article.url ||
+    "";
+  const byline =
+    typeof article.byline === "string"
+      ? article.byline
+      : article.byline?.name || article.source?.name || article.source || "";
+
   return {
     id: article.id || article.story || article.headline,
     headline: article.headline || "Untitled story",
+    title: article.headline || article.title || "Untitled story",
     description: article.description || article.story || "",
+    summary: article.description || article.story || "",
     published: article.published || article.lastModified || "",
-    byline: article.byline || article.source || "",
+    byline,
     images: article.images || [],
+    image,
     categories: article.categories || [],
-    links: article.links || {}
+    links: article.links || {},
+    url
   };
 }
 
@@ -352,5 +378,23 @@ export async function resolveTeamFromRef(ref = "") {
 }
 
 export function normalizeStandingsEntries(data = {}) {
-  return data.standings?.[0]?.entries || data.children?.[0]?.standings?.entries || [];
+  const entries = [];
+
+  if (Array.isArray(data.standings)) {
+    data.standings.forEach((standing) => {
+      if (Array.isArray(standing?.entries)) {
+        entries.push(...standing.entries);
+      }
+    });
+  }
+
+  if (Array.isArray(data.children)) {
+    data.children.forEach((child) => {
+      if (Array.isArray(child?.standings?.entries)) {
+        entries.push(...child.standings.entries);
+      }
+    });
+  }
+
+  return dedupeById(entries);
 }

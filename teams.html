@@ -219,12 +219,22 @@
   const teamSources = [
     { key: "eng.1", sport: "soccer", league: "eng.1", label: "Premier League" },
     { key: "esp.1", sport: "soccer", league: "esp.1", label: "La Liga" },
+    { key: "usa.1", sport: "soccer", league: "usa.1", label: "MLS" },
     { key: "nba", sport: "basketball", league: "nba", label: "NBA" },
-    { key: "nfl", sport: "football", league: "nfl", label: "NFL" }
+    { key: "wnba", sport: "basketball", league: "wnba", label: "WNBA" },
+    { key: "nfl", sport: "football", league: "nfl", label: "NFL" },
+    { key: "nhl", sport: "hockey", league: "nhl", label: "NHL" },
+    { key: "mlb", sport: "baseball", league: "mlb", label: "MLB" },
+    { key: "college-football", sport: "football", league: "college-football", label: "NCAAF" }
   ];
 
   const teamCache = {};
-  let activeTeamSource = teamSources.find((item) => item.key === (teamParams.get("league") || ""))?.key || "eng.1";
+  const requestedTeamLeague = teamParams.get("league") || "";
+  const requestedTeamSport = teamParams.get("sport") || "";
+  let activeTeamSource =
+    teamSources.find((item) => item.key === requestedTeamLeague)?.key ||
+    teamSources.find((item) => item.sport === requestedTeamSport)?.key ||
+    "eng.1";
 
   function normalizeTeams(data) {
     return (data.teams || []).map((team) => {

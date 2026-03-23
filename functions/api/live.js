@@ -10,6 +10,20 @@ import {
   siteApiUrl
 } from "./_shared.js";
 
+const LIVE_SPORT_LIMITS = {
+  soccer: 8,
+  basketball: 4,
+  football: 4,
+  hockey: 3,
+  baseball: 3,
+  cricket: 3,
+  tennis: 2,
+  mma: 2,
+  racing: 2,
+  golf: 2,
+  rugby: 2
+};
+
 function buildEndpoints(sportParam, leagueParam) {
   const targetSports = getTargetSports(sportParam, leagueParam);
   const normalizedLeague = normalizeLeagueParam(leagueParam);
@@ -21,13 +35,25 @@ function buildEndpoints(sportParam, leagueParam) {
 
   if (sportParam === "all") {
     return targetSports.flatMap((sport) =>
-      (SPORT_LEAGUES[sport] || []).slice(0, sport === "soccer" ? 5 : 2).map((league) => ({ sport, league }))
+      (SPORT_LEAGUES[sport] || []).slice(0, LIVE_SPORT_LIMITS[sport] || 2).map((league) => ({ sport, league }))
     );
   }
 
   return targetSports.flatMap((sport) =>
-    (SPORT_LEAGUES[sport] || [normalizeLeagueParam("", sport)]).slice(0, 6).map((league) => ({ sport, league }))
+    (SPORT_LEAGUES[sport] || [normalizeLeagueParam("", sport)]).slice(0, LIVE_SPORT_LIMITS[sport] || 4).map((league) => ({ sport, league }))
   );
+}
+
+function sortMatches(left, right) {
+  const statusOrder = { live: 0, upcoming: 1, finished: 2 };
+  const statusDiff = (statusOrder[left.status] ?? 9) - (statusOrder[right.status] ?? 9);
+  if (statusDiff !== 0) return statusDiff;
+
+  if (left.status === "finished" && right.status === "finished") {
+    return new Date(right.date) - new Date(left.date);
+  }
+
+  return new Date(left.date) - new Date(right.date);
 }
 
 export async function onRequest(context) {
@@ -37,7 +63,7 @@ export async function onRequest(context) {
   const leagueParam = url.searchParams.get("league") || url.searchParams.get("l") || "";
 
   try {
-    const endpoints = buildEndpoints(sportParam, leagueParam).slice(0, 36);
+    const endpoints = buildEndpoints(sportParam, leagueParam).slice(0, 64);
     const results = await Promise.all(
       endpoints.map(async ({ sport, league }) => {
         try {
@@ -50,12 +76,7 @@ export async function onRequest(context) {
       })
     );
 
-    const matches = dedupeById(results.flat()).sort((left, right) => {
-      const statusOrder = { live: 0, upcoming: 1, finished: 2 };
-      const statusDiff = (statusOrder[left.status] ?? 9) - (statusOrder[right.status] ?? 9);
-      if (statusDiff !== 0) return statusDiff;
-      return new Date(left.date) - new Date(right.date);
-    });
+    const matches = dedupeById(results.flat()).sort(sortMatches);
 
     return jsonResponse(
       {

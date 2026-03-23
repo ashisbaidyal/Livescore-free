@@ -1,0 +1,14 @@
+name = "livescore-free"
+compatibility_date = "2026-03-23"
+pages_build_output_dir = "."
+
+[vars]
+ALLOWED_ORIGINS = "https://livescorefree.online,https://www.livescorefree.online,https://*.pages.dev"
+NODE_ENV = "production"
+API_VERSION = "2.0"
+API_TIMEOUT = "8000"
+CACHE_TTL_LIVE = "15"
+CACHE_TTL_TIMELINE = "10"
+CACHE_TTL_STANDINGS = "300"
+ENABLE_CORS = "true"
+ENVIRONMENT = "production"
