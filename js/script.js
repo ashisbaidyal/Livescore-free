@@ -24,7 +24,14 @@ const SPORTS = [
   { id: 'baseball', name: 'Baseball' },
   { id: 'mma', name: 'MMA' },
   { id: 'racing', name: 'Racing' },
-  { id: 'golf', name: 'Golf' }
+  { id: 'golf', name: 'Golf' },
+  { id: 'rugby', name: 'Rugby' },
+  { id: 'rugby-league', name: 'Rugby League' },
+  { id: 'australian-football', name: 'Aussie Rules' },
+  { id: 'lacrosse', name: 'Lacrosse' },
+  { id: 'volleyball', name: 'Volleyball' },
+  { id: 'water-polo', name: 'Water Polo' },
+  { id: 'field-hockey', name: 'Field Hockey' }
 ];
 const SPORT_ALIASES = {
   'american-football': 'football',

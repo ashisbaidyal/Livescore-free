@@ -33,7 +33,12 @@ export const SPORT_LEAGUES = {
   racing: ["f1", "nascar-premier", "irl", "motogp"],
   golf: ["pga", "lpga"],
   rugby: ["271937", "267979", "164205"],
-  "rugby-league": ["3"]
+  "rugby-league": ["3"],
+  volleyball: ["mens-college-volleyball", "womens-college-volleyball"],
+  "water-polo": ["mens-college-water-polo"],
+  lacrosse: ["pll", "mens-college-lacrosse", "womens-college-lacrosse"],
+  "field-hockey": ["womens-college-field-hockey"],
+  "australian-football": ["afl"]
 };
 
 export const SPORT_ALIASES = {
@@ -51,7 +56,12 @@ export const SPORT_ALIASES = {
   racing: "racing",
   golf: "golf",
   rugby: "rugby",
-  "rugby-league": "rugby-league"
+  "rugby-league": "rugby-league",
+  volleyball: "volleyball",
+  "water-polo": "water-polo",
+  lacrosse: "lacrosse",
+  "field-hockey": "field-hockey",
+  "australian-football": "australian-football"
 };
 
 export const LEAGUE_ALIASES = {
@@ -120,7 +130,7 @@ export function getDefaultLeague(sport = "soccer") {
 export function getTargetSports(sportParam = "all", leagueParam = "") {
   const normalizedSport = normalizeSportParam(sportParam, leagueParam);
   if (normalizedSport === "all") {
-    return ["soccer", "basketball", "football", "hockey", "baseball", "cricket", "tennis", "mma", "racing", "golf", "rugby"];
+    return ["soccer", "basketball", "football", "hockey", "baseball", "cricket", "tennis", "mma", "racing", "golf", "rugby", "rugby-league", "volleyball", "water-polo", "lacrosse", "field-hockey", "australian-football"];
   }
   return [normalizedSport];
 }
