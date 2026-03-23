@@ -70,44 +70,60 @@ async function fetchLiveCount() {
     const res = await fetch(`${API_LIVE}?sport=all`);
     const data = await res.json();
     const matches = data.matches || [];
-    const allLive = matches.filter(m => m.status === 'live');
-    const badge = document.getElementById('live-count-text');
-    const badgeHero = document.getElementById('live-hero-count-text');
-    const label = allLive.length > 0 ? `${allLive.length} MATCHES LIVE NOW` : 'NO LIVE GAMES';
+    const allLive = matches.filter(m => m.status === "live");
+    const badge = document.getElementById("live-count-text");
+    const badgeHero = document.getElementById("live-hero-count-text");
+    const label = allLive.length > 0 ? `${allLive.length} MATCHES LIVE NOW` : "NO LIVE GAMES";
     if (badge) badge.textContent = label;
     if (badgeHero) badgeHero.textContent = label;
-    updateTicker(matches);
+    
+    // Pass real matches to ticker
+    renderTicker(matches);
   } catch (e) {
-    console.error('Ticker/LiveCount Error:', e);
+    console.error("Ticker/LiveCount Error:", e);
   }
 }
 
-function updateTicker(matches = []) {
+function renderTicker(matches = []) {
   if (!tickerContainer) return;
-  const liveMatches = matches.filter(m => m.status === 'live').slice(0, 10);
-  if (liveMatches.length === 0) {
+  
+  // Logic: Prioritize Live, then In-Progress, then Scheduled
+  let tickerMatches = matches.filter(m => m.status === "live");
+  if (tickerMatches.length === 0) {
+    tickerMatches = matches.filter(m => m.status === "in_progress" || m.status === "scheduled").slice(0, 10);
+  } else {
+    tickerMatches = tickerMatches.slice(0, 10);
+  }
+
+  if (tickerMatches.length === 0) {
     tickerContainer.innerHTML = `
       <div class="flex items-center gap-8 animate-marquee whitespace-nowrap">
         <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/40">
           <span class="w-1.5 h-1.5 rounded-full bg-white/10"></span>
-          No live matches at the moment. Stay tuned for upcoming action!
+          Stay tuned for upcoming sports action across 17 global categories.
         </span>
       </div>
     `;
     return;
   }
+  
   tickerContainer.innerHTML = `
     <div class="flex items-center gap-12 animate-marquee whitespace-nowrap">
-      ${liveMatches.map(m => `
+      ${tickerMatches.map(m => `
         <div class="flex items-center gap-3 px-4 py-1.5 bg-white/5 border border-white/5 rounded-full">
-          <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-          <span class="text-[10px] font-black uppercase tracking-widest text-on-surface/60">${m.league}</span>
-          <span class="text-[10px] font-bold text-on-surface">${m.homeTeam.abbreviation || m.homeTeam.name} ${m.homeTeam.score} - ${m.awayTeam.score} ${m.awayTeam.abbreviation || m.awayTeam.name}</span>
-          <span class="text-[10px] font-black text-primary italic">${m.time || 'LIVE'}</span>
+          <span class="w-1.5 h-1.5 rounded-full ${m.status === "live" ? "bg-primary animate-pulse" : "bg-white/20"}"></span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-on-surface/60">${(m.league || m.sport || "MATCH").toUpperCase()}</span>
+          <span class="text-[10px] font-bold text-on-surface">${m.homeTeam.abbreviation || m.homeTeam.name} ${m.homeTeam.score || "0"} - ${m.awayTeam.score || "0"} ${m.awayTeam.abbreviation || m.awayTeam.name}</span>
+          <span class="text-[10px] font-black text-primary italic">${m.status === "live" ? (m.time || "LIVE") : (m.status === "scheduled" ? "UPCOMING" : "TBD")}</span>
         </div>
-      `).join('')}
+      `).join("")}
     </div>
   `;
+}
+
+function getSafeImageUrl(url, fallback = FALLBACK_HERO_IMAGE) {
+  if (!url || url.includes("unsplash.com")) return fallback;
+  return url;
 }
 
 const SPORT_ALIASES = {
@@ -333,7 +349,8 @@ function showRuntimeToast(message, tone = 'success') {
 }
 
 function getArticleImageUrl(article = {}) {
-  return article.image || article.images?.[0]?.url || article.images?.[0]?.href || FALLBACK_HERO_IMAGE;
+  const url = article.image || article.images?.[0]?.url || article.images?.[0]?.href || FALLBACK_HERO_IMAGE;
+  return getSafeImageUrl(url, FALLBACK_HERO_IMAGE);
 }
 
 function getArticleLinkUrl(article = {}) {
@@ -2052,7 +2069,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
                   <td class="px-8 py-6">
                     <div class="flex items-center gap-4">
                       <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center p-2 group-hover/row:bg-primary/20 transition-all duration-500 transform group-hover/row:scale-110 group-hover/row:rotate-6">
-                        <img src="${e.team.logos?.[0]?.href}" class="w-full h-full object-contain" onerror="this.src='/public/logo.png'">
+                        <img src="${getSafeImageUrl(e.team.logos?.[0]?.href, FALLBACK_LOGO)}" class="w-full h-full object-contain" onerror="this.src='${FALLBACK_LOGO}'">
                       </div>
                       <span class="text-xs font-black tracking-tight group-hover/row:text-primary transition-colors">${e.team.displayName}</span>
                     </div>
@@ -2065,7 +2082,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
                 </tr>
                 `;
               }).join('')}
-              ${standings.length === 0 ? '<tr><td colspan="5" class="px-8 py-20 text-center text-on-surface/20 italic tracking-widest">No sector data currently available. Signal lost.</td></tr>' : ''}
+              ${standings.length === 0 ? '<tr><td colspan="5" class="px-8 py-24 text-center"><div class="flex flex-col items-center gap-4 opacity-30"><span class="material-symbols-outlined text-4xl">inventory_2</span><p class="text-[10px] font-black uppercase tracking-[0.3em]">No live standings discovered in the current feed</p></div></td></tr>' : ''}
             </tbody>
           </table>
         </div>
@@ -2112,7 +2129,7 @@ async function fetchPlayers() {
        // Legacy generic players container fallback
        playersContainer.innerHTML = soccerAthletes.slice(0, 10).map(a => `
         <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="bg-surface-container p-4 rounded-lg flex items-center gap-4 border border-white/5 hover:border-primary/30 transition-all">
-          <img src="${a.headshot?.href || '/public/logo.png'}" class="w-12 h-12 rounded-full grayscale hover:grayscale-0 transition-all">
+          <img src="${getSafeImageUrl(a.headshot?.href, FALLBACK_LOGO)}" class="w-12 h-12 rounded-full grayscale hover:grayscale-0 transition-all" onerror="this.src='${FALLBACK_LOGO}'">
           <div>
             <h4 class="font-black uppercase text-xs">${a.fullName}</h4>
             <p class="text-[10px] opacity-40 uppercase font-black">${a.position?.displayName || 'Player'}</p>
@@ -2134,7 +2151,7 @@ function renderTrendingPlayersPage(athletes) {
     <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="flex-none w-80 bg-surface-container-low p-6 border border-white/5 rounded-2xl group hover:border-primary/20 transition-all cursor-pointer block">
       <div class="flex justify-between items-start mb-6">
         <div class="relative">
-          <img src="${a.headshot?.href || '/public/logo.png'}" class="w-16 h-16 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all">
+          <img src="${getSafeImageUrl(a.headshot?.href, FALLBACK_LOGO)}" class="w-16 h-16 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all" onerror="this.src='${FALLBACK_LOGO}'">
           <span class="absolute -bottom-1 -right-1 bg-primary text-[8px] font-black text-white px-2 py-0.5 rounded-full border-2 border-surface-container-low">HOT</span>
         </div>
         <div class="text-right">
@@ -2163,7 +2180,7 @@ function renderSoccerLegends(athletes) {
   container.innerHTML = athletes.slice(0, 4).map(a => `
     <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="bg-surface-container-low border border-white/5 overflow-hidden group hover:border-primary/20 transition-all block">
       <div class="relative h-64 overflow-hidden bg-surface-container-highest">
-        <img src="${a.headshot?.href || '/public/logo.png'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+        <img src="${getSafeImageUrl(a.headshot?.href, FALLBACK_LOGO)}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onerror="this.src='${FALLBACK_LOGO}'">
         <div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
         <div class="absolute bottom-4 left-4">
           <p class="text-xs font-black text-primary uppercase">${a.position?.displayName || 'Player'}</p>
@@ -2193,7 +2210,7 @@ function renderNbaAllstars(athletes) {
     <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="glass-panel p-8 border border-white/5 rounded-2xl relative overflow-hidden group hover:translate-y-[-4px] transition-all block">
       <div class="flex items-end gap-6 mb-8">
         <div class="relative w-24 h-24 overflow-hidden rounded-xl border border-white/10 bg-surface-container-highest">
-          <img src="${a.headshot?.href || '/public/logo.png'}" class="w-full h-full object-cover">
+          <img src="${getSafeImageUrl(a.headshot?.href, FALLBACK_LOGO)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_LOGO}'">
         </div>
         <div>
           <h4 class="text-2xl font-black uppercase italic leading-tight">${a.firstName || ''}<br/>${a.lastName || a.fullName}</h4>
@@ -2225,7 +2242,7 @@ function renderNflElite(athletes) {
   container.innerHTML = athletes.slice(0, 2).map(a => `
     <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="bg-surface-container border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row gap-8 group hover:bg-surface-bright transition-all">
       <div class="w-full md:w-32 h-48 rounded-xl overflow-hidden bg-surface-container-lowest border border-white/10 shrink-0">
-        <img src="${a.headshot?.href || '/public/logo.png'}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500">
+        <img src="${getSafeImageUrl(a.headshot?.href, FALLBACK_LOGO)}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" onerror="this.src='${FALLBACK_LOGO}'">
       </div>
       <div class="flex-1 flex flex-col justify-between py-2">
         <div>
@@ -2287,8 +2304,8 @@ function renderTrendingUpcoming(matches) {
   trendingList.innerHTML = matches.map(match => `
     <a href="${buildMatchUrl(match)}" class="flex items-center gap-6 p-5 bg-white/5 rounded-2xl hover:bg-white/10 transition-all group border border-white/5 hover:border-primary/20">
       <div class="flex flex-col items-center gap-2 shrink-0">
-        <img src="${match.homeTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" onerror="this.src='/public/logo.png'">
-        <img src="${match.awayTeam.logo}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" onerror="this.src='/public/logo.png'">
+        <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" onerror="this.src='${FALLBACK_LOGO}'">
+        <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" onerror="this.src='${FALLBACK_LOGO}'">
       </div>
       <div class="flex-1 min-w-0">
         <div class="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-1 line-clamp-1">${match.league || 'UPCOMING EVENT'}</div>
@@ -2756,31 +2773,6 @@ function renderSidebarLive(matches) {
   `).join('');
 }
 
-// --- RENDER TICKER ---
-function renderTicker(matches) {
-  if (!tickerContainer) return;
-
-  if (matches.length === 0) {
-    tickerContainer.innerHTML = `
-      <div class="flex items-center gap-4 opacity-50">
-        <span class="text-[10px] font-black uppercase italic tracking-widest">LiveScoreFree Realtime Stream Active • No Live Events Currently</span>
-      </div>
-    `;
-    return;
-  }
-
-  // Double the matches to ensure smooth continuous scroll
-  const displayMatches = [...matches, ...matches];
-
-  tickerContainer.innerHTML = displayMatches.map(match => `
-    <div class="flex items-center gap-4">
-      <span class="text-[10px] font-black text-primary uppercase italic">${match.leagueSlug || 'LIVE'}</span>
-      <span class="text-xs font-bold uppercase">${match.homeTeam.name} ${match.homeTeam.score} - ${match.awayTeam.score} ${match.awayTeam.name}</span>
-      <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-    </div>
-  `).join('');
-}
-
 // --- FETCH & UPDATE MATCH DETAIL ---
 async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
   try {
@@ -2797,9 +2789,14 @@ function renderMatches(matches) {
   if (!matchesContainer) return;
 
   if (matches.length === 0) {
+    const isResults = window.location.pathname.includes('results') || (typeof currentTab !== 'undefined' && currentTab === 'results');
+    const msg = isResults ? "No recent results discovered" : "No active matches found";
     matchesContainer.innerHTML = `
-      <div class="col-span-full py-12 text-center bg-surface-container rounded-lg border border-white/5">
-        <p class="text-on-surface/40 font-black uppercase tracking-widest text-[10px]">No active matches found.</p>
+      <div class="col-span-full py-24 text-center bg-surface-container rounded-lg border border-white/5">
+        <div class="flex flex-col items-center gap-4 opacity-20">
+          <span class="material-symbols-outlined text-5xl">inventory_2</span>
+          <p class="text-on-surface/60 font-black uppercase tracking-[0.4em] text-[10px]">${msg}</p>
+        </div>
       </div>
     `;
     return;
@@ -2840,7 +2837,7 @@ function renderMatches(matches) {
           <div class="flex justify-between items-center relative flex-1">
             <div class="flex flex-col items-center gap-3 w-1/3">
               <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center font-black italic">
-                <img src="${match.homeTeam.logo}" alt="${match.homeTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">
+                <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" alt="${match.homeTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
               </div>
               <span class="text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2">
                 ${match.homeTeam.name}
@@ -2859,7 +2856,7 @@ function renderMatches(matches) {
             
             <div class="flex flex-col items-center gap-3 w-1/3">
               <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center font-black italic">
-                <img src="${match.awayTeam.logo}" alt="${match.awayTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">
+                <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" alt="${match.awayTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
               </div>
               <span class="text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2">
                 ${match.awayTeam.name}
@@ -3748,10 +3745,19 @@ if (window.location.pathname.includes('upcoming')) {
     const awayLogo = document.getElementById('countdown-away-logo');
     const matchName = document.getElementById('countdown-match-name');
     const matchLeague = document.getElementById('countdown-match-league');
+    const heroSection = document.querySelector('section.relative.w-full.overflow-hidden'); // The hero section
+    
     if (!timer) return;
 
-    if (homeLogo) homeLogo.innerHTML = `<img src="${match.homeTeam.logo}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">`;
-    if (awayLogo) awayLogo.innerHTML = `<img src="${match.awayTeam.logo}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">`;
+    if (!match) {
+      if (heroSection) heroSection.style.display = 'none';
+      return;
+    }
+
+    if (heroSection) heroSection.style.display = 'block';
+
+    if (homeLogo) homeLogo.innerHTML = `<img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" class="w-8 h-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">`;
+    if (awayLogo) awayLogo.innerHTML = `<img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" class="w-8 h-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">`;
     if (matchName) matchName.textContent = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
     if (matchLeague) matchLeague.textContent = `${match.league || match.sport}${match.venue ? ` | ${match.venue}` : ''}`;
 
@@ -3761,7 +3767,10 @@ if (window.location.pathname.includes('upcoming')) {
     function tick() {
       const now = new Date();
       const diff = matchDate - now;
-      if (diff <= 0) { timer.textContent = 'KICKOFF!'; return; }
+      if (diff <= 0) { 
+        timer.textContent = 'EVENT IN PROGRESS'; 
+        return; 
+      }
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
