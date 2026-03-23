@@ -270,7 +270,23 @@ function getSafeImageUrl(url, fallback = FALLBACK_HERO_IMAGE) {
 
 const SPORT_ALIASES = {
   'american-football': 'football',
-  football: 'football'
+  football: 'football',
+  soccer: 'soccer',
+  cricket: 'cricket',
+  basketball: 'basketball',
+  baseball: 'baseball',
+  hockey: 'hockey',
+  tennis: 'tennis',
+  mma: 'mma',
+  racing: 'racing',
+  golf: 'golf',
+  rugby: 'rugby',
+  'rugby-league': 'rugby-league',
+  volleyball: 'volleyball',
+  'water-polo': 'water-polo',
+  lacrosse: 'lacrosse',
+  'field-hockey': 'field-hockey',
+  'australian-football': 'australian-football'
 };
 const LEAGUE_ALIASES = {
   mls: 'usa.1',
@@ -311,7 +327,9 @@ const TEAM_PROFILE_SPORT_BY_LEAGUE = {
   atp: 'tennis',
   wta: 'tennis',
   ufc: 'mma',
-  f1: 'racing'
+  f1: 'racing',
+  pga: 'golf',
+  afl: 'australian-football'
 };
 
 let currentTab = 'all';
@@ -397,7 +415,12 @@ function getDefaultLeagueForSport(sport = 'soccer') {
   if (normalizedSport === 'mma') return 'ufc';
   if (normalizedSport === 'racing') return 'f1';
   if (normalizedSport === 'golf') return 'pga';
-  if (normalizedSport === 'rugby') return '271937';
+  if (normalizedSport === 'rugby') return '164205';
+  if (normalizedSport === 'rugby-league') return '3';
+  if (normalizedSport === 'volleyball') return 'mens-college-volleyball';
+  if (normalizedSport === 'water-polo') return 'mens-college-water-polo';
+  if (normalizedSport === 'lacrosse') return 'nll';
+  if (normalizedSport === 'australian-football') return 'afl';
   return 'eng.1';
 }
 
@@ -3100,6 +3123,53 @@ function renderMatchDetail(data) {
         };
     }
     renderMatchLineup(data);
+  }
+
+  // Real-time Commentary (Plays)
+  if (commentaryContainer && data.plays) {
+      const plays = [...data.plays].slice(0, 50); // Show last 50 plays
+      commentaryContainer.innerHTML = plays.map(play => `
+          <div class="flex gap-4 p-4 bg-white/5 border border-white/5 rounded-lg mb-4 animate-in fade-in slide-in-from-left-4">
+              <div class="w-12 h-12 bg-surface-container rounded flex items-center justify-center flex-shrink-0">
+                  <span class="text-[10px] font-black italic text-primary">${play.clock?.displayValue || play.period?.number || '—'}</span>
+              </div>
+              <div class="flex-1">
+                  <div class="flex items-center justify-between mb-1">
+                      <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/40">
+                          ${play.team?.id ? (play.team.id === data.homeTeam.id ? data.homeTeam.name : data.awayTeam.name) : 'GAME'}
+                      </span>
+                      ${play.scoringPlay ? '<span class="px-2 py-0.5 bg-primary/20 border border-primary/20 text-primary text-[8px] font-black uppercase italic rounded-sm">Scoring Play</span>' : ''}
+                  </div>
+                  <p class="text-xs font-medium text-on-surface/80 leading-relaxed">${play.text}</p>
+              </div>
+          </div>
+      `).join('');
+      
+      if (plays.length === 0) {
+          commentaryContainer.innerHTML = `
+              <div class="py-12 text-center opacity-40">
+                  <span class="material-symbols-outlined text-4xl mb-4">history_edu</span>
+                  <p class="text-[10px] font-black uppercase tracking-widest">Awaiting live commentary updates...</p>
+              </div>
+          `;
+      }
+  }
+
+  // Situation Handling (Possession, Down/Distance for NFL, etc.)
+  if (data.situation) {
+      const situationContainer = document.getElementById('match-situation-container');
+      if (situationContainer) {
+          situationContainer.innerHTML = `
+              <div class="flex items-center gap-4 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full mb-6">
+                  <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                  <span class="text-[10px] font-black uppercase tracking-widest text-on-surface">
+                      ${data.situation.downDistanceText || data.situation.possessionText || 'IN PROGRESS'}
+                  </span>
+                  ${data.situation.lastPlayText ? `<span class="h-4 w-px bg-white/10"></span><span class="text-[10px] font-medium italic opacity-60 line-clamp-1">${data.situation.lastPlayText}</span>` : ''}
+              </div>
+          `;
+          situationContainer.hidden = false;
+      }
   }
 
   // Render Goalscorers in Hero Section

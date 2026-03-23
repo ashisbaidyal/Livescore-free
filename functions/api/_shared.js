@@ -20,41 +20,33 @@ const IN_FLIGHT_REQUESTS = new Map();
 
 export const SPORT_LEAGUES = {
   soccer: [
-    "eng.1",
-    "esp.1",
-    "ger.1",
-    "ita.1",
-    "fra.1",
-    "uefa.champions",
-    "uefa.europa",
-    "uefa.europa.conf",
-    "usa.1",
-    "mex.1",
-    "ned.1",
-    "por.1",
-    "bel.1",
-    "tur.1",
-    "arg.1",
-    "bra.1",
-    "ksa.1",
-    "jpn.1",
-    "fifa.world"
+    "eng.1", "esp.1", "ger.1", "ita.1", "fra.1", 
+    "usa.1", "mex.1", "ned.1", "por.1", "bel.1", "tur.1", 
+    "arg.1", "bra.1", "ksa.1", "jpn.1",
+    "uefa.champions", "uefa.europa", "uefa.europa.conf", 
+    "fifa.world", "fifa.world.q.uefa"
   ],
-  football: ["nfl", "college-football", "cfl", "ufl", "xfl"],
-  basketball: ["nba", "wnba", "mens-college-basketball", "womens-college-basketball", "euroleague", "nbl", "fiba"],
-  baseball: ["mlb", "college-baseball"],
-  hockey: ["nhl", "mens-college-hockey"],
-  cricket: ["ipl", "8039", "8040", "8048", "19430"],
+  football: ["nfl", "college-football", "nfl-europe", "cfl", "aaf", "xfl", "ncaa-womens-football"],
+  basketball: [
+    "nba", "wnba", "mens-college-basketball", "womens-college-basketball", 
+    "fiba-mens-world-cup", "nba-g-league", "euroleague", "nbl"
+  ],
+  baseball: ["mlb", "ncaa-mens-baseball"],
+  hockey: ["nhl", "mens-college-hockey", "womens-college-hockey"],
+  cricket: ["8", "20", "1", "ipl"],
   tennis: ["atp", "wta"],
-  mma: ["ufc", "pfl", "bellator"],
-  racing: ["f1", "nascar-premier", "irl", "motogp"],
-  golf: ["pga", "lpga"],
-  rugby: ["271937", "267979", "164205"],
+  mma: [
+    "ufc", "bellator", "ifc", "lfa", "ksw", "cage-warriors", 
+    "absolute", "fng", "k1", "m1", "ifl", "dream"
+  ],
+  racing: ["f1", "irl", "nascar-premier", "nascar-secondary", "nascar-truck"],
+  golf: ["pga", "lpga", "pga-tour-champions", "korn-ferry-tour", "dp-world-tour"],
+  rugby: ["164205", "180659", "267979", "242041", "289262"],
   "rugby-league": ["3"],
   volleyball: ["mens-college-volleyball", "womens-college-volleyball"],
-  "water-polo": ["mens-college-water-polo"],
-  lacrosse: ["pll", "mens-college-lacrosse", "womens-college-lacrosse"],
-  "field-hockey": ["womens-college-field-hockey"],
+  "water-polo": ["mens-college-water-polo", "womens-college-water-polo"],
+  lacrosse: ["nll", "pll", "mens-college-lacrosse", "womens-college-lacrosse"],
+  "field-hockey": ["ncaa-womens-field-hockey"],
   "australian-football": ["afl"]
 };
 
@@ -99,7 +91,6 @@ export const LEAGUE_ALIASES = {
   "europa-league": "uefa.europa",
   "conference-league": "uefa.europa.conf",
   "world-cup": "fifa.world",
-  "icc-world-cup": "8039",
   "saudi-pro": "ksa.1",
   "primeira-liga": "por.1",
   "liga-portugal": "por.1",
@@ -112,7 +103,11 @@ export const LEAGUE_ALIASES = {
   atp: "atp",
   wta: "wta",
   ufc: "ufc",
-  f1: "f1"
+  f1: "f1",
+  afl: "afl",
+  ipl: "ipl",
+  pga: "pga",
+  lpga: "lpga"
 };
 
 export function normalizeSportParam(inputSport = "all", inputLeague = "") {

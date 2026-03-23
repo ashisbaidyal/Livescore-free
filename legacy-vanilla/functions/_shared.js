@@ -15,6 +15,75 @@ export const BACKEND_CONFIG = {
   }
 };
 
+export const SPORT_LEAGUES = {
+  soccer: [
+    "eng.1", "esp.1", "ger.1", "ita.1", "fra.1", 
+    "usa.1", "mex.1", "ned.1", "por.1", "bel.1", "tur.1", 
+    "arg.1", "bra.1", "ksa.1", "jpn.1",
+    "uefa.champions", "uefa.europa", "uefa.europa.conf", 
+    "fifa.world", "fifa.world.q.uefa"
+  ],
+  football: ["nfl", "college-football", "nfl-europe", "cfl", "aaf", "xfl", "ncaa-womens-football"],
+  basketball: [
+    "nba", "wnba", "mens-college-basketball", "womens-college-basketball", 
+    "fiba-mens-world-cup", "nba-g-league", "euroleague", "nbl"
+  ],
+  baseball: ["mlb", "ncaa-mens-baseball"],
+  hockey: ["nhl", "mens-college-hockey", "womens-college-hockey"],
+  cricket: ["8", "20", "1", "ipl"],
+  tennis: ["atp", "wta"],
+  mma: [
+    "ufc", "bellator", "ifc", "lfa", "ksw", "cage-warriors", 
+    "absolute", "fng", "k1", "m1", "ifl", "dream"
+  ],
+  racing: ["f1", "irl", "nascar-premier", "nascar-secondary", "nascar-truck"],
+  golf: ["pga", "lpga", "pga-tour-champions", "korn-ferry-tour", "dp-world-tour"],
+  rugby: ["164205", "180659", "267979", "242041", "289262"],
+  "rugby-league": ["3"],
+  volleyball: ["mens-college-volleyball", "womens-college-volleyball"],
+  "water-polo": ["mens-college-water-polo", "womens-college-water-polo"],
+  lacrosse: ["nll", "pll", "mens-college-lacrosse", "womens-college-lacrosse"],
+  "field-hockey": ["ncaa-womens-field-hockey"],
+  "australian-football": ["afl"]
+};
+
+export const LEAGUE_ALIASES = {
+  mls: "usa.1",
+  "saudi-pro-league": "ksa.1",
+  "j-league": "jpn.1",
+  "liga-mx": "mex.1",
+  eredivisie: "ned.1",
+  "premier-league": "eng.1",
+  epl: "eng.1",
+  laliga: "esp.1",
+  "la-liga": "esp.1",
+  bundesliga: "ger.1",
+  "serie-a": "ita.1",
+  "ligue-1": "fra.1",
+  ucl: "uefa.champions",
+  "champions-league": "uefa.champions",
+  "europa-league": "uefa.europa",
+  "conference-league": "uefa.europa.conf",
+  "world-cup": "fifa.world",
+  "saudi-pro": "ksa.1",
+  "primeira-liga": "por.1",
+  "liga-portugal": "por.1",
+  "jupiler-pro-league": "bel.1",
+  "super-lig": "tur.1",
+  nfl: "nfl",
+  nba: "nba",
+  nhl: "nhl",
+  mlb: "mlb",
+  atp: "atp",
+  wta: "wta",
+  ufc: "ufc",
+  f1: "f1",
+  afl: "afl",
+  ipl: "ipl",
+  pga: "pga",
+  lpga: "lpga"
+};
+
 export function getIntEnv(env, key, fallback) {
   const raw = getEnv(env, key, fallback);
   const value = parseInt(raw, 10);
