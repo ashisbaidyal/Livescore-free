@@ -91,7 +91,7 @@ function normalizeLineup(data = {}, side = "home") {
 function normalizeTimeline(data = {}, homeId = "", awayId = "") {
   const plays = data.plays || data.header?.competitions?.[0]?.details || [];
   return (plays || [])
-    .slice(-40)
+    .slice(-50) // Increased from 40 to 50 for more history
     .reverse()
     .map((play) => {
       const text = play.text || play.athletesInvolved?.[0]?.displayName || "";
@@ -101,17 +101,24 @@ function normalizeTimeline(data = {}, homeId = "", awayId = "") {
       if (teamId === homeId) side = "home";
       if (teamId === awayId) side = "away";
 
+      // Enhanced event typing
+      let eventType = "event";
+      if (type.includes("goal") || type.includes("score")) eventType = "goal";
+      else if (type.includes("yellow") || type.includes("caution")) eventType = "yellow-card";
+      else if (type.includes("red") || type.includes("ejection")) eventType = "red-card";
+      else if (type.includes("sub") || type.includes("replace")) eventType = "substitution";
+      else if (type.includes("shot") || type.includes("attempt")) eventType = "shot";
+      else if (type.includes("foul") || type.includes("penalty")) eventType = "foul";
+      else if (type.includes("corner")) eventType = "corner";
+      else if (type.includes("var") || type.includes("review")) eventType = "var";
+
       return {
         time: play.clock?.displayValue || play.clock?.value || "0'",
-        type: type.includes("goal")
-          ? "goal"
-          : type.includes("card")
-            ? "card"
-            : type.includes("sub")
-              ? "substitution"
-              : "event",
-        player: text,
-        side
+        type: eventType,
+        text: text, // Keep original text
+        player: play.athletesInvolved?.[0]?.displayName || "",
+        side,
+        score: play.homeScore !== undefined ? `${play.homeScore} - ${play.awayScore}` : null
       };
     });
 }
@@ -164,7 +171,11 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
     },
     stats: normalizeStats(data),
     timeline: normalizeTimeline(data, home.team?.id || "", away.team?.id || ""),
-    commentary: (data.news || []).map((entry) => entry.headline).filter(Boolean),
+    commentary: (data.commentary || []).map((entry) => ({
+      time: entry.time || entry.clock?.displayValue || "",
+      text: entry.text || "",
+      type: entry.type?.text || "commentary"
+    })).concat((data.news || []).map(n => ({ text: n.headline, type: "news" }))), // Merge news and commentary
     odds: normalizeOdds(data),
     h2h: [],
     situation: data.situation || null

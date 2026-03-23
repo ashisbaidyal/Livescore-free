@@ -1,5 +1,6 @@
 import {
   SPORT_LEAGUES,
+  calculateTTL,
   dedupeById,
   fetchJson,
   getTargetSports,
@@ -84,18 +85,25 @@ export async function onRequest(context) {
 
     const matches = dedupeById(results.flat()).sort(sortMatches);
 
+    // Calculate TTL based on match statuses
+    const hasLive = matches.some(m => m.status === "live");
+    const { ttl, reason } = calculateTTL(hasLive ? "live" : "upcoming");
+
     return jsonResponse(
       {
         matches,
         meta: {
           sport: sportParam,
           league: normalizeLeagueParam(leagueParam),
-          endpoints: endpoints.length
+          endpoints: endpoints.length,
+          hasLive
         }
       },
-      15
+      ttl,
+      200,
+      reason
     );
   } catch (error) {
-    return jsonResponse({ error: error.message, matches: [] }, 15, 500);
+    return jsonResponse({ error: error.message, matches: [] }, 15, 500, "error-fallback");
   }
 }

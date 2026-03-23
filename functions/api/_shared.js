@@ -163,15 +163,137 @@ export async function fetchJson(url, init) {
   return response.json();
 }
 
-export function jsonResponse(payload, cacheSeconds = 30, status = 200) {
+export function jsonResponse(payload, cacheSeconds = 30, status = 200, reason = "") {
+  const headers = {
+    "Content-Type": "application/json",
+    "Cache-Control": `public, max-age=${cacheSeconds}, s-maxage=${cacheSeconds}`,
+    "Access-Control-Allow-Origin": "*"
+  };
+  if (reason) {
+    headers["X-Cache-TTL-Reason"] = reason;
+  }
   return new Response(JSON.stringify(payload), {
     status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": `public, max-age=${cacheSeconds}, s-maxage=${cacheSeconds}`,
-      "Access-Control-Allow-Origin": "*"
-    }
+    headers
   });
+}
+
+export function calculateTTL(status = "upcoming", matchDate = "", sport = "soccer") {
+  // status: "live", "upcoming", or "finished"
+  // matchDate: ISO date string (e.g., "2024-03-23T15:30Z")
+
+  const now = new Date();
+  let ttl = 15; // Default 15 seconds for most dynamic data
+  let reason = "default";
+
+  if (status === "live") {
+    // Live matches refresh very frequently
+    if (sport === "basketball" || sport === "hockey" || sport === "baseball") {
+      ttl = 2; // Faster sports = near-instant updates
+      reason = "live-ultra-fast-" + sport;
+    } else if (sport === "soccer" || sport === "football") {
+      ttl = 5; // Soccer/NFL standard
+      reason = "live-standard-" + sport;
+    } else {
+      ttl = 10;
+      reason = "live-other";
+    }
+  } else if (status === "upcoming") {
+    // Upcoming matches: more frequently as kickoff approaches
+    if (matchDate) {
+      const matchTime = new Date(matchDate);
+      const minutesUntil = (matchTime - now) / 1000 / 60;
+
+      if (minutesUntil < 0) {
+        // Match already started, treat as live
+        ttl = 5;
+        reason = "upcoming-started";
+      } else if (minutesUntil < 15) {
+        // Less than 15 minutes: refresh every 10 seconds for lineup/pre-match updates
+        ttl = 10;
+        reason = "upcoming-imminent";
+      } else if (minutesUntil < 60) {
+        // Less than 1 hour: refresh every 30 seconds
+        ttl = 30;
+        reason = "upcoming-soon";
+      } else if (minutesUntil < 1440) {
+        // Within 24 hours: refresh every 2 minutes
+        ttl = 120;
+        reason = "upcoming-today";
+      } else {
+        // More than 1 day away: refresh every 10 minutes
+        ttl = 600;
+        reason = "upcoming-future";
+      }
+    } else {
+      ttl = 60; // Default for upcoming with no date
+      reason = "upcoming-default";
+    }
+  } else if (status === "finished") {
+    // Finished matches rarely change
+    ttl = 900; // 15 minutes for final scores/cleanup
+    reason = "finished";
+  }
+
+  return { ttl, reason };
+}
+
+export async function fetchWithFallback(urlArray, init = {}, timeout = 5000) {
+  // Try each URL in sequence with timeout, return first success
+  if (!Array.isArray(urlArray) || urlArray.length === 0) {
+    throw new Error("fetchWithFallback: No URLs provided");
+  }
+
+  const errors = [];
+  for (const url of urlArray) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+      const response = await fetch(url, {
+        ...init,
+        signal: controller.signal,
+        headers: {
+          ...init.headers,
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+        }
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        return response;
+      }
+      errors.push(`${url}: ${response.status} ${response.statusText}`);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      errors.push(`${url}: ${error.message}`);
+      continue;
+    }
+  }
+
+  throw new Error(`fetchWithFallback: All ${urlArray.length} URLs failed. Errors: ${errors.join(' | ')}`);
+}
+
+export function buildFallbackUrls(sport, league, resource, query = {}) {
+  // Build array of fallback URLs, primary first
+  const urls = [];
+
+  // Node 1: Primary Site API
+  urls.push(siteApiUrl(sport, league, resource, query));
+
+  // Node 2: Core API (Secondary ESPN Infrastructure)
+  if (["scoreboard", "teams", "standings", "athletes", "summary", "news"].includes(resource)) {
+    urls.push(coreApiUrl(sport, league, resource, query));
+  }
+
+  // Node 3: Public ESPN CDN (Third-party mirror pattern)
+  // Some resources are available via a different public CDN path
+  if (resource === "scoreboard") {
+    const cdnUrl = new URL(`https://site.web.api.espn.com/apis/site/v2/sports/${sport}/${league}/scoreboard`);
+    Object.entries(query).forEach(([key, value]) => cdnUrl.searchParams.set(key, value));
+    urls.push(cdnUrl.toString());
+  }
+
+  return urls;
 }
 
 export function dedupeById(items = []) {

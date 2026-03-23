@@ -13,6 +13,131 @@ const REMINDER_STORAGE_KEY = 'lsf-reminders';
 const INSTALL_BANNER_DISMISSED_KEY = 'lsf-install-banner-dismissed';
 const reminderTimerHandles = new Map();
 
+window._cachedNews = [];
+window._cachedUpcoming = [];
+
+// --- REALTIME MANAGER (WebSocket/SSE Hybrid) ---
+class RealtimeManager {
+  constructor() {
+    this.socket = null;
+    this.subscriptions = new Set();
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+    this.isConnected = false;
+    this.fallbackTimer = null;
+    this.wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws`;
+  }
+
+  connect() {
+    if (this.socket || this.reconnectAttempts >= this.maxReconnectAttempts) return;
+
+    try {
+      this.socket = new WebSocket(this.wsUrl);
+
+      this.socket.onopen = () => {
+        console.log('Realtime connected');
+        this.isConnected = true;
+        this.reconnectAttempts = 0;
+        this.syncSubscriptions();
+        if (this.fallbackTimer) clearInterval(this.fallbackTimer);
+      };
+
+      this.socket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        this.handleMessage(message);
+      };
+
+      this.socket.onclose = () => {
+        this.isConnected = false;
+        this.socket = null;
+        this.reconnectAttempts++;
+        setTimeout(() => this.connect(), Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000));
+        this.startFallbackPolling();
+      };
+
+      this.socket.onerror = (err) => {
+        console.error('WebSocket Error:', err);
+        this.socket.close();
+      };
+    } catch (e) {
+      this.startFallbackPolling();
+    }
+  }
+
+  subscribe(target, options = {}) {
+    const sub = { target, ...options };
+    this.subscriptions.add(JSON.stringify(sub));
+    if (this.isConnected) {
+      this.socket.send(JSON.stringify({ type: 'subscribe', ...sub }));
+    }
+  }
+
+  updateSubscription(target, options = {}) {
+    // Clear old subscriptions of same target
+    this.subscriptions.forEach(s => {
+      const parsed = JSON.parse(s);
+      if (parsed.target === target) this.subscriptions.delete(s);
+    });
+    this.subscribe(target, options);
+  }
+
+  syncSubscriptions() {
+    this.subscriptions.forEach(subStr => {
+      this.socket.send(JSON.stringify({ type: 'subscribe', ...JSON.parse(subStr) }));
+    });
+  }
+
+  handleMessage(message) {
+    if (message.type === 'live') {
+      const matches = message.data.matches || [];
+      window._cachedLiveMatches = matches;
+
+      // Update ALL live-aware components
+      if (typeof renderTicker === 'function') renderTicker(matches);
+      if (typeof renderMatches === 'function' && currentPageFilter === 'live') renderMatches(matches);
+      if (typeof renderSidebarLive === 'function') renderSidebarLive(matches);
+      
+      // Update Hubs/Sliders
+      if (typeof renderHeroSlider === 'function' && heroSliderContainer && currentPageFilter !== 'upcoming') {
+          renderHeroSlider(matches.slice(0, 5), currentPageFilter);
+      }
+      
+      if (typeof renderIndexHeroHub === 'function' && (window.location.pathname === '/' || window.location.pathname.endsWith('index.html'))) {
+          renderIndexHeroHub(matches, window._cachedUpcoming || [], window._cachedNews || []);
+      }
+
+      if (typeof renderArenaLiveFallback === 'function' && document.getElementById('arena-schedule-container')) {
+          renderArenaLiveFallback(matches);
+      }
+
+      if (typeof renderLeaguesHub === 'function' && window.location.pathname.includes('leagues.html')) {
+          // Re-render leagues hub to show live indicator
+          // We assume eliteLeagues and standingsMap are already stored or will be fetched by next interval
+          // For now, only update if it's already rendered once
+          const elite = window._eliteLeaguesCache || [];
+          const standings = window._standingsMapCache || {};
+          renderLeaguesHub(elite, standings, matches);
+      }
+
+    } else if (message.type === 'match') {
+      if (typeof renderMatchDetail === 'function') renderMatchDetail(message.data);
+    }
+  }
+
+  startFallbackPolling() {
+    if (this.fallbackTimer) return;
+    this.fallbackTimer = setInterval(() => {
+      if (typeof fetchLiveCount === 'function' && !this.isConnected) fetchLiveCount();
+      if (typeof fetchMatches === 'function' && !window.location.pathname.includes('upcoming') && !this.isConnected) {
+        fetchMatches(currentPageFilter);
+      }
+    }, 15000);
+  }
+}
+
+const realtime = new RealtimeManager();
+realtime.connect();
+
 const SPORTS = [
   { id: 'all', name: 'All' },
   { id: 'soccer', name: 'Soccer' },
@@ -1114,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fetchUpcomingMatchDetail(matchId, sport, league);
     } else if (homeTeamName) {
       fetchMatchDetail(matchId, sport, league);
-      startAutoRefresh(() => fetchMatchDetail(matchId, sport, league));
+      realtime.subscribe('match', { id: matchId, sport, league, isLive: true });
     }
     fetchMatches(null, true);
     return;
@@ -1215,25 +1340,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (document.getElementById('trending-matches-list')) {
       fetchTrendingUpcoming();
-    }
+    }    // --- REFRESH LOGIC (WebSocket Powered) ---
+    realtime.subscribe('live', { sport: currentTab, isLive: true });
 
-    // --- REFRESH LOGIC ---
-    setInterval(() => {
-      fetchSidebarLive();
-      if (!window.location.pathname.includes('upcoming')) {
-        fetchMatches(currentPageFilter);
-      }
-      if (recentResultsContainer) fetchRecentResults();
-      if (document.getElementById("featured-match-analysis")) fetchFeaturedAnalysis();
-      if (upcomingTodayContainer) fetchUpcomingToday();
-      if (document.getElementById('arena-schedule-container')) fetchArenaSchedule(currentArenaTab);
-      if (document.getElementById('trending-matches-list')) fetchTrendingUpcoming();
-    }, 15000);
-
+    // Secondary timers for less frequent data (News, Leagues)
     setInterval(() => {
       if (heroSliderContainer) fetchHeroData(currentPageFilter);
       if (newsContainer) fetchNews(currentTab);
-      if (leaguesContainer || topTierContainer) fetchLeagues();
+      if (leaguesContainer || topTierContainer) fetchLeagues && fetchLeagues(currentTab);
     }, 60000);
 
     setInterval(() => {
@@ -1449,9 +1563,11 @@ function renderArenaTabs() {
   `).join('');
 }
 
-window.switchArenaTab = function(tabId) {
-  currentArenaTab = tabId;
-  renderArenaTabs();
+window.switchArenaTab = function switchTab(tabId) {
+  currentTab = tabId;
+  renderSportTabs();
+  // Update Realtime subscription
+  realtime.updateSubscription('live', { sport: currentTab, isLive: true });
   const container = document.getElementById('arena-schedule-container');
   if (container) {
     container.innerHTML = `
@@ -1615,6 +1731,8 @@ async function fetchHeroData(statusFilter = null) {
       const newsData = await newsRes.json();
       let newsList = newsData.articles || [];
 
+      window._cachedUpcoming = upMatches;
+      window._cachedNews = newsList;
       renderIndexHeroHub(liveMatches, upMatches, newsList);
       return;
     }
@@ -2592,18 +2710,18 @@ async function fetchSidebarLive() {
     }));
     const data = await res.json();
     const allLive = (data.matches || []).filter(m => m.status === 'live');
-    const liveMatches = allLive.slice(0, 5);
-    renderSidebarLive(liveMatches);
+    
+    // Update global caches
+    window._cachedMatches = data.matches || [];
+    window._cachedLiveMatches = allLive;
 
-    // Update dynamic live counter
+    // Delegate to renderers
+    renderSidebarLive(allLive.slice(0, 5));
+
     const liveCountText = document.getElementById('live-count-text');
     if (liveCountText) {
       liveCountText.textContent = allLive.length > 0 ? `${allLive.length} LIVE NOW` : 'NO LIVE GAMES';
     }
-
-    // Cache all matches for search
-    window._cachedMatches = data.matches || [];
-    window._cachedLiveMatches = allLive;
 
     if (tickerContainer) {
       renderTicker(allLive);
@@ -2654,6 +2772,9 @@ window.switchTab = function (tabId) {
   window.history.pushState({}, '', url);
 
   renderTabs();
+  
+  // Update Realtime subscription
+  realtime.updateSubscription('live', { sport: currentTab, isLive: true });
 
   if (matchesContainer) {
     matchesContainer.innerHTML = Array(3).fill(`
@@ -3889,14 +4010,14 @@ function setupNewsletter() {
 
 
 // --- GLOBAL AUTO-REFRESH TIMERS ---
-// Update live count and ticker every 15 seconds (separate from the page-specific refresh in setupAppShell)
+// Update live count and ticker every 15 seconds (Separate from the page-specific refresh in setupAppShell)
 setInterval(() => {
-  fetchLiveCount();
+  if (!realtime.isConnected) fetchLiveCount();
 }, 15000);
 
 // Update sidebar live scores every 20 seconds
 setInterval(() => {
-  if (typeof fetchSidebarLive === 'function') {
+  if (typeof fetchSidebarLive === 'function' && !realtime.isConnected) {
     fetchSidebarLive();
   }
 }, 20000);
