@@ -1,6 +1,4 @@
 // --- CONSTANTS ---
-// Navigation Functions (Consolidated below)
-
 const FALLBACK_HERO_IMAGE = '/icons/hero-fallback.svg';
 const FALLBACK_LOGO = '/icons/icon-192.png';
 const API_LIVE = '/api/live';
@@ -13,6 +11,7 @@ const SERVICE_WORKER_PATH = '/sw.js';
 const REMINDER_STORAGE_KEY = 'lsf-reminders';
 const INSTALL_BANNER_DISMISSED_KEY = 'lsf-install-banner-dismissed';
 const reminderTimerHandles = new Map();
+
 const SPORTS = [
   { id: 'all', name: 'All' },
   { id: 'soccer', name: 'Soccer' },
@@ -33,6 +32,83 @@ const SPORTS = [
   { id: 'water-polo', name: 'Water Polo' },
   { id: 'field-hockey', name: 'Field Hockey' }
 ];
+
+// --- UTILITIES (Hoisted for Global Use) ---
+function timeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + "Y ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + "MO ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + "D ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + "H ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + "M ago";
+  return Math.floor(seconds) + "S ago";
+}
+
+function setupNewsExpansion() {
+  const items = document.querySelectorAll('.headline-expansion-item');
+  if (!items.length) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.remove('opacity-0', 'translate-y-10');
+        entry.target.classList.add('opacity-100', 'translate-y-0');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  items.forEach(item => observer.observe(item));
+}
+
+async function fetchLiveCount() {
+  try {
+    const res = await fetch(`${API_LIVE}?sport=all`);
+    const data = await res.json();
+    const matches = data.matches || [];
+    const allLive = matches.filter(m => m.status === 'live');
+    const badge = document.getElementById('live-count-text');
+    const badgeHero = document.getElementById('live-hero-count-text');
+    const label = allLive.length > 0 ? `${allLive.length} MATCHES LIVE NOW` : 'NO LIVE GAMES';
+    if (badge) badge.textContent = label;
+    if (badgeHero) badgeHero.textContent = label;
+    updateTicker(matches);
+  } catch (e) {
+    console.error('Ticker/LiveCount Error:', e);
+  }
+}
+
+function updateTicker(matches = []) {
+  if (!tickerContainer) return;
+  const liveMatches = matches.filter(m => m.status === 'live').slice(0, 10);
+  if (liveMatches.length === 0) {
+    tickerContainer.innerHTML = `
+      <div class="flex items-center gap-8 animate-marquee whitespace-nowrap">
+        <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/40">
+          <span class="w-1.5 h-1.5 rounded-full bg-white/10"></span>
+          No live matches at the moment. Stay tuned for upcoming action!
+        </span>
+      </div>
+    `;
+    return;
+  }
+  tickerContainer.innerHTML = `
+    <div class="flex items-center gap-12 animate-marquee whitespace-nowrap">
+      ${liveMatches.map(m => `
+        <div class="flex items-center gap-3 px-4 py-1.5 bg-white/5 border border-white/5 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-on-surface/60">${m.league}</span>
+          <span class="text-[10px] font-bold text-on-surface">${m.homeTeam.abbreviation || m.homeTeam.name} ${m.homeTeam.score} - ${m.awayTeam.score} ${m.awayTeam.abbreviation || m.awayTeam.name}</span>
+          <span class="text-[10px] font-black text-primary italic">${m.time || 'LIVE'}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
 const SPORT_ALIASES = {
   'american-football': 'football',
   football: 'football'
@@ -3780,3 +3856,7 @@ function setupNewsletter() {
   });
 }
 
+
+// Global Initialization
+fetchLiveCount();
+setupNewsletter();

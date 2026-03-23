@@ -76,12 +76,16 @@ async function getNormalizedNews(sport, league, teamId = "") {
 }
 
 async function getNormalizedStandings(sport, league) {
-  const data = await fetchJson(siteApiUrl(sport, league, "standings"));
-  return {
-    standings: data.standings,
-    children: data.children,
-    entries: normalizeStandingsEntries(data)
-  };
+  try {
+    const data = await fetchJson(siteApiUrl(sport, league, "standings"));
+    return {
+      standings: data.standings,
+      children: data.children,
+      entries: normalizeStandingsEntries(data)
+    };
+  } catch (error) {
+    return { standings: [], children: [], entries: [] };
+  }
 }
 
 async function getNormalizedTeams(sport, league) {
@@ -105,38 +109,42 @@ async function getNormalizedTeams(sport, league) {
 }
 
 async function getNormalizedPlayers(sport, league, limit = 16) {
-  const athletesList = await fetchJson(coreApiUrl(sport, league, "athletes", { limit, active: "true" }));
-  const refs = (athletesList.items || athletesList.entries || athletesList.athletes || [])
-    .map((item) => item.$ref || item.ref || item.href || "")
-    .filter(Boolean)
-    .slice(0, limit);
+  try {
+    const athletesList = await fetchJson(coreApiUrl(sport, league, "athletes", { limit, active: "true" }));
+    const refs = (athletesList.items || athletesList.entries || athletesList.athletes || [])
+      .map((item) => item.$ref || item.ref || item.href || "")
+      .filter(Boolean)
+      .slice(0, limit);
 
-  const detailResults = await Promise.all(
-    refs.map(async (ref) => {
-      try {
-        const detail = await fetchJson(ref);
-        const athlete = normalizeAthlete(detail, { sport, league });
-        const team = athlete.teamRef ? await resolveTeamFromRef(athlete.teamRef) : null;
-        return {
-          ...athlete,
-          team: team
-            ? {
-                id: team.id,
-                name: team.name,
-                abbreviation: team.abbreviation,
-                logo: team.logo
-              }
-            : null
-        };
-      } catch (error) {
-        return null;
-      }
-    })
-  );
+    const detailResults = await Promise.all(
+      refs.map(async (ref) => {
+        try {
+          const detail = await fetchJson(ref);
+          const athlete = normalizeAthlete(detail, { sport, league });
+          const team = athlete.teamRef ? await resolveTeamFromRef(athlete.teamRef) : null;
+          return {
+            ...athlete,
+            team: team
+              ? {
+                  id: team.id,
+                  name: team.name,
+                  abbreviation: team.abbreviation,
+                  logo: team.logo
+                }
+              : null
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+    );
 
-  return {
-    athletes: dedupeById(detailResults.filter(Boolean))
-  };
+    return {
+      athletes: dedupeById(detailResults.filter(Boolean))
+    };
+  } catch (error) {
+    return { athletes: [] };
+  }
 }
 
 async function resolveTeamId(sport, league, id, name) {

@@ -21,7 +21,13 @@ const LIVE_SPORT_LIMITS = {
   mma: 2,
   racing: 2,
   golf: 2,
-  rugby: 2
+  rugby: 2,
+  "rugby-league": 2,
+  volleyball: 2,
+  "water-polo": 2,
+  lacrosse: 2,
+  "field-hockey": 2,
+  "australian-football": 2
 };
 
 function buildEndpoints(sportParam, leagueParam) {
