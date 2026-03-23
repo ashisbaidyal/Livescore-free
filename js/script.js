@@ -1,3 +1,4 @@
+// Version: 1.0.1 - Full Sports Data Upgrade
 // --- CONSTANTS ---
 const FALLBACK_HERO_IMAGE = '/icons/hero-fallback.svg';
 const FALLBACK_LOGO = '/icons/icon-192.png';
