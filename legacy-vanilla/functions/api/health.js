@@ -8,7 +8,7 @@
  * @updated 2026-03-13
  */
 
-import { getEnv, getIntEnv, getCorsHeaders, jsonResponse } from "../_shared.js";
+import { getEnv, getIntEnv, getCorsHeaders, jsonResponse, BACKEND_CONFIG } from "../_shared.js";
 
 const bootTime = Date.now();
 
@@ -94,8 +94,8 @@ function getSystemHealth() {
 export async function onRequest(context) {
   const { request, env } = context;
 
-  const ESPN_BASE = getEnv(env, "ESPN_API_BASE", "https://site.api.espn.com/apis/site/v2/sports");
-  const SPORTSDB_BASE = getEnv(env, "SPORTSDB_API_BASE", "https://www.thesportsdb.com/api/v1/json/123");
+  const ESPN_BASE = BACKEND_CONFIG.sources.espn_site;
+  const SPORTSDB_BASE = BACKEND_CONFIG.sources.thesportsdb;
   const REQUEST_TIMEOUT = getIntEnv(env, "API_TIMEOUT", 5000);
   const API_VERSION = getEnv(env, "API_VERSION", "2.0");
 

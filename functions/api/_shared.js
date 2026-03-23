@@ -1,6 +1,23 @@
 export const FALLBACK_LOGO = "/icons/icon-192.png";
 export const FALLBACK_HERO = "/icons/hero-fallback.svg";
 
+// Centralized Backend Configuration
+export const BACKEND_CONFIG = {
+  sources: {
+    espn_site: "https://site.api.espn.com/apis/site/v2",
+    espn_core: "https://sports.core.api.espn.com/v2",
+    espn_web: "https://site.web.api.espn.com/apis/site/v2"
+  },
+  defaults: {
+    sport: "soccer",
+    league: "eng.1"
+  }
+};
+
+// Global cache for in-flight requests within the same isolate
+// Helps prevent 'thundering herd' when multiple requests hit the same worker instance
+const IN_FLIGHT_REQUESTS = new Map();
+
 export const SPORT_LEAGUES = {
   soccer: [
     "eng.1",
@@ -136,7 +153,7 @@ export function getTargetSports(sportParam = "all", leagueParam = "") {
 }
 
 export function siteApiUrl(sport, league, resource, query = {}) {
-  const url = new URL(`https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/${resource}`);
+  const url = new URL(`${BACKEND_CONFIG.sources.espn_site}/sports/${sport}/${league}/${resource}`);
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
       url.searchParams.set(key, value);
@@ -146,7 +163,7 @@ export function siteApiUrl(sport, league, resource, query = {}) {
 }
 
 export function coreApiUrl(sport, league, resource, query = {}) {
-  const url = new URL(`https://sports.core.api.espn.com/v2/sports/${sport}/leagues/${league}/${resource}`);
+  const url = new URL(`${BACKEND_CONFIG.sources.espn_core}/sports/${sport}/leagues/${league}/${resource}`);
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
       url.searchParams.set(key, value);
@@ -155,23 +172,55 @@ export function coreApiUrl(sport, league, resource, query = {}) {
   return url.toString();
 }
 
-export async function fetchJson(url, init) {
-  const response = await fetch(url, init);
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status} for ${url}`);
+export async function fetchJson(url, init = {}) {
+  // Deduplicate in-flight requests for the same URL in the same isolate
+  if (IN_FLIGHT_REQUESTS.has(url)) {
+    return IN_FLIGHT_REQUESTS.get(url);
   }
-  return response.json();
+
+  const promise = (async () => {
+    try {
+      const response = await fetch(url, {
+        ...init,
+        headers: {
+          ...init.headers,
+          'Accept': 'application/json',
+          'User-Agent': 'LivescoreFree-Bot/2.0'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status} for ${url}`);
+      }
+      
+      return await response.json();
+    } finally {
+      // Always cleanup the map once done
+      IN_FLIGHT_REQUESTS.delete(url);
+    }
+  })();
+
+  IN_FLIGHT_REQUESTS.set(url, promise);
+  return promise;
 }
 
 export function jsonResponse(payload, cacheSeconds = 30, status = 200, reason = "") {
+  // Enhanced Cache-Control for thundering herd prevention at the edge
+  // stale-while-revalidate allows serving slightly old data while background refresh happens
+  // stale-if-error allows serving old data if the origin remains down
+  const swr = 60; 
+  const sie = 600;
+  
   const headers = {
     "Content-Type": "application/json",
-    "Cache-Control": `public, max-age=${cacheSeconds}, s-maxage=${cacheSeconds}`,
+    "Cache-Control": `public, max-age=${cacheSeconds}, s-maxage=${cacheSeconds}, stale-while-revalidate=${swr}, stale-if-error=${sie}`,
     "Access-Control-Allow-Origin": "*"
   };
+  
   if (reason) {
     headers["X-Cache-TTL-Reason"] = reason;
   }
+  
   return new Response(JSON.stringify(payload), {
     status,
     headers
@@ -288,7 +337,7 @@ export function buildFallbackUrls(sport, league, resource, query = {}) {
   // Node 3: Public ESPN CDN (Third-party mirror pattern)
   // Some resources are available via a different public CDN path
   if (resource === "scoreboard") {
-    const cdnUrl = new URL(`https://site.web.api.espn.com/apis/site/v2/sports/${sport}/${league}/scoreboard`);
+    const cdnUrl = new URL(`${BACKEND_CONFIG.sources.espn_web}/sports/${sport}/${league}/scoreboard`);
     Object.entries(query).forEach(([key, value]) => cdnUrl.searchParams.set(key, value));
     urls.push(cdnUrl.toString());
   }

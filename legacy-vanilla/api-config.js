@@ -44,19 +44,19 @@ const API_CONFIG = {
   // Development: Use external APIs directly (no proxy needed)
   development: {
     live: {
-      baseUrl: 'https://site.api.espn.com/apis/site/v2/sports',
-      fallback: 'https://www.thesportsdb.com/api/v1/json/123',
-      ttl: 15000, // 15 seconds
+      baseUrl: "https://site.api.espn.com/apis/site/v2/sports",
+      fallback: "https://www.thesportsdb.com/api/v1/json/123",
+      ttl: 15000, 
     },
     timeline: {
-      baseUrl: 'https://site.api.espn.com/apis/site/v2/sports',
-      fallback: 'https://www.thesportsdb.com/api/v1/json/123',
-      ttl: 10000, // 10 seconds
+      baseUrl: "https://site.api.espn.com/apis/site/v2/sports",
+      fallback: "https://www.thesportsdb.com/api/v1/json/123",
+      ttl: 10000,
     },
     standings: {
-      baseUrl: 'https://site.api.espn.com/apis/site/v2/sports',
-      fallback: 'https://www.thesportsdb.com/api/v1/json/123',
-      ttl: 3600000, // 1 hour
+      baseUrl: "https://site.api.espn.com/apis/site/v2/sports",
+      fallback: "https://www.thesportsdb.com/api/v1/json/123",
+      ttl: 3600000,
     }
   },
 

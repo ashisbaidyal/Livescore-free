@@ -11,7 +11,9 @@ import {
   LEAGUE_VISUAL_MATCHERS, 
   LEAGUE_REGIONS, 
   SPORTSDB_SPORTS, 
-  PROXIED_DATA_HOSTS 
+  PROXIED_DATA_HOSTS,
+  ESPN_CORE_BASE,
+  ESPN_CDN_BASE
 } from "./constants.js";
 import { state } from "./state.js";
 import { 
@@ -32,9 +34,9 @@ import {
  */
 export const ESPNClient = {
   DOMAIN: {
-    SITE: "https://site.api.espn.com",
-    CORE: "https://sports.core.api.espn.com",
-    CDN: "https://cdn.espn.com"
+    SITE: ESPN_BASE.replace("/apis/site/v2/sports", ""),
+    CORE: ESPN_CORE_BASE,
+    CDN: ESPN_CDN_BASE
   },
 
   async fetch(domainType, path, params = {}, ttlMs = REFRESH_INTERVAL_MS) {

@@ -3,11 +3,11 @@
  * Same-origin JSON proxy for approved upstream sports/news APIs.
  */
 
-import { getEnv, getIntEnv, getCorsHeaders, jsonResponse } from "../_shared.js";
+import { getEnv, getIntEnv, getCorsHeaders, jsonResponse, BACKEND_CONFIG } from "../_shared.js";
 
 const ALLOWED_HOSTS = new Set([
-  "site.api.espn.com",
-  "www.thesportsdb.com",
+  new URL(BACKEND_CONFIG.sources.espn_site).hostname,
+  new URL(BACKEND_CONFIG.sources.thesportsdb).hostname,
   "gnews.io"
 ]);
 

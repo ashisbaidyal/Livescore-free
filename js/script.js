@@ -1,12 +1,29 @@
-// Version: 1.0.1 - Full Sports Data Upgrade
-// --- CONSTANTS ---
-const FALLBACK_HERO_IMAGE = '/icons/hero-fallback.svg';
-const FALLBACK_LOGO = '/icons/icon-192.png';
-const API_LIVE = '/api/live';
-const API_MATCH = '/api/match';
-const API_UPCOMING = '/api/upcoming';
-const API_INFO = '/api/info';
+// --- CONFIGURATION ---
+// Synchronized with HTML-level externalized data sources
+const LSF_CONFIG = window.LSF_CONFIG || {
+  api: {
+    live: "/api/live",
+    match: "/api/match",
+    upcoming: "/api/upcoming",
+    info: "/api/info"
+  },
+  ws: {
+    url: (window.location.protocol === "https:" ? "wss:" : "ws:") + "//" + window.location.host + "/api/ws"
+  },
+  sources: [
+    "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
+    "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
+    "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+  ]
+};
+
+// Map configuration to easy-access constants
+const API_LIVE = LSF_CONFIG.api.live;
+const API_MATCH = LSF_CONFIG.api.match;
+const API_UPCOMING = LSF_CONFIG.api.upcoming;
+const API_INFO = LSF_CONFIG.api.info;
 const API_NEWS = API_INFO;
+const DATA_SOURCES = LSF_CONFIG.sources || [];
 const PWA_MANIFEST = '/manifest.webmanifest';
 const SERVICE_WORKER_PATH = '/sw.js';
 const REMINDER_STORAGE_KEY = 'lsf-reminders';
@@ -25,7 +42,7 @@ class RealtimeManager {
     this.maxReconnectAttempts = 5;
     this.isConnected = false;
     this.fallbackTimer = null;
-    this.wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws`;
+    this.wsUrl = LSF_CONFIG.ws.url;
   }
 
   connect() {

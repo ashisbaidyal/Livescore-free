@@ -5,7 +5,7 @@
  * Caching: 10 seconds
  */
 
-import { getEnv, getIntEnv, getCorsHeaders, jsonResponse } from "../_shared.js";
+import { getEnv, getIntEnv, getCorsHeaders, jsonResponse, BACKEND_CONFIG } from "../_shared.js";
 
 const cache = new Map();
 
@@ -21,9 +21,9 @@ async function fetchWithTimeout(url, options = {}, timeout = 8000) {
   }
 }
 
-async function fetchEspnTimeline(espnBase, matchId, timeout) {
+async function fetchEspnTimeline(sport, league, matchId, timeout) {
   try {
-    const url = `${espnBase}/soccer/eng.1/events/${matchId}`;
+    const url = `${BACKEND_CONFIG.sources.espn_site}/sports/${sport}/${league}/summary?event=${matchId}`;
     const response = await fetchWithTimeout(url, {
       headers: { "User-Agent": "livescoreFree.online-Bot/1.0" }
     }, timeout);
@@ -147,11 +147,9 @@ export async function onRequest(context) {
   const { request, env } = context;
   const startTime = Date.now();
 
-  const ESPN_BASE = getEnv(env, "ESPN_API_BASE", "https://site.api.espn.com/apis/site/v2/sports");
-  const SPORTSDB_BASE = getEnv(env, "SPORTSDB_API_BASE", "https://www.thesportsdb.com/api/v1/json/123");
+  const API_VERSION = getEnv(env, "API_VERSION", "2.0");
   const REQUEST_TIMEOUT = getIntEnv(env, "API_TIMEOUT", 8000);
   const CACHE_TTL = getIntEnv(env, "CACHE_TTL_TIMELINE", 10000);
-  const API_VERSION = getEnv(env, "API_VERSION", "2.0");
 
   const cacheSeconds = Math.max(1, Math.floor(CACHE_TTL / 1000));
   const baseHeaders = getCorsHeaders(request, env, {
@@ -215,10 +213,10 @@ export async function onRequest(context) {
   }
 
   try {
-    let timeline = await fetchEspnTimeline(ESPN_BASE, matchId, REQUEST_TIMEOUT);
+    let timeline = await fetchEspnTimeline(sport, league, matchId, REQUEST_TIMEOUT);
 
     if (!timeline.length) {
-      timeline = await fetchSportsDbTimeline(SPORTSDB_BASE, matchId, REQUEST_TIMEOUT);
+      timeline = await fetchSportsDbTimeline(BACKEND_CONFIG.sources.thesportsdb, matchId, REQUEST_TIMEOUT);
     }
 
     cache.set(cacheKey, {

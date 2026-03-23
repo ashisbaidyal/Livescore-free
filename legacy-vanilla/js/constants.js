@@ -1,5 +1,23 @@
-export const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports";
-export const SPORTSDB_BASE = "https://www.thesportsdb.com/api/v1/json/123";
+// Synchronized Global Data Sources
+export const LSF_CONFIG = window.LSF_CONFIG || {
+  api: {
+    live: "/api/live",
+    match: "/api/match",
+    upcoming: "/api/upcoming",
+    info: "/api/info"
+  },
+  sources: {
+    espn: "https://site.api.espn.com",
+    espn_core: "https://sports.core.api.espn.com",
+    espn_cdn: "https://cdn.espn.com",
+    sportsdb: "https://www.thesportsdb.com/api/v1/json/123"
+  }
+};
+
+export const ESPN_BASE = `${LSF_CONFIG.sources.espn}/apis/site/v2/sports`;
+export const ESPN_CORE_BASE = LSF_CONFIG.sources.espn_core;
+export const ESPN_CDN_BASE = LSF_CONFIG.sources.espn_cdn;
+export const SPORTSDB_BASE = LSF_CONFIG.sources.sportsdb;
 export const CRICBUZZ_LIVE_URL = "/api/cricket-live";
 export const NHL_LIVE_URL = "/api/nhl-live";
 export const MLB_LIVE_URL = "/api/mlb-live";

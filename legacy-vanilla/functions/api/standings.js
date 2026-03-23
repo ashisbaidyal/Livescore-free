@@ -5,7 +5,7 @@
  * Caching: 3600 seconds (1 hour)
  */
 
-import { getEnv, getIntEnv, getCorsHeaders, jsonResponse } from "../_shared.js";
+import { getEnv, getIntEnv, getCorsHeaders, jsonResponse, BACKEND_CONFIG } from "../_shared.js";
 
 const LEAGUE_MAPPING = {
   "eng.1": "soccer/eng.1",
@@ -29,10 +29,10 @@ function fetchWithTimeout(url, options = {}, timeout = 8000) {
     .finally(() => clearTimeout(timer));
 }
 
-async function fetchEspnStandings(espnBase, leagueId, timeout) {
+async function fetchEspnStandings(leagueId, timeout) {
   try {
     const espnLeague = LEAGUE_MAPPING[leagueId] || `soccer/${leagueId}`;
-    const url = `${espnBase}/${espnLeague}/standings`;
+    const url = `${BACKEND_CONFIG.sources.espn_site}/sports/${espnLeague}/standings`;
     const response = await fetchWithTimeout(url, {
       headers: { "User-Agent": "livescoreFree.online-Bot/1.0" }
     }, timeout);
@@ -74,14 +74,15 @@ function extractStandings(data) {
 }
 
 export async function onRequest(context) {
-  const { request, env } = context;
+  const { request, env, params } = context;
   const startTime = Date.now();
 
-  const ESPN_BASE = getEnv(env, "ESPN_API_BASE", "https://site.api.espn.com/apis/site/v2/sports");
   const API_VERSION = getEnv(env, "API_VERSION", "2.0");
   const REQUEST_TIMEOUT = getIntEnv(env, "API_TIMEOUT", 8000);
   const CACHE_TTL = getIntEnv(env, "CACHE_TTL_STANDINGS", 3600000);
-
+  const ENABLE_RATE_LIMITING = getBoolEnv(env, "ENABLE_RATE_LIMITING", true);
+  const MAX_REQUESTS_PER_WINDOW = getIntEnv(env, "MAX_REQUESTS_PER_WINDOW", 100);
+  
   const cacheSeconds = Math.max(1, Math.floor(CACHE_TTL / 1000));
   const baseHeaders = getCorsHeaders(request, env, {
     "Content-Type": "application/json",
@@ -145,7 +146,7 @@ export async function onRequest(context) {
   }
 
   try {
-    const standings = await fetchEspnStandings(ESPN_BASE, league, REQUEST_TIMEOUT);
+    const standings = await fetchEspnStandings(league, REQUEST_TIMEOUT);
 
     if (standings.length === 0) {
       return jsonResponse({

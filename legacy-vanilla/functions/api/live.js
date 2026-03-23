@@ -15,7 +15,8 @@ import {
   getBoolEnv,
   getClientIp,
   getCorsHeaders,
-  jsonResponse
+  jsonResponse,
+  BACKEND_CONFIG
 } from "../_shared.js";
 
 const SPORT_FEEDS = {
@@ -89,9 +90,9 @@ async function fetchWithTimeout(url, options = {}, timeout = 8000) {
   }
 }
 
-async function fetchEspnMatches(espnBase, sportFeed, timeout) {
+async function fetchEspnMatches(sportFeed, timeout) {
   try {
-    const url = `${espnBase}/${sportFeed}/events?limit=50&status=in,upcoming`;
+    const url = `${BACKEND_CONFIG.sources.espn_site}/sports/${sportFeed}/events?limit=50&status=in,upcoming`;
     const response = await fetchWithTimeout(url, {
       headers: {
         "User-Agent": "livescoreFree.online-Bot/2.0",
@@ -114,9 +115,9 @@ async function fetchEspnMatches(espnBase, sportFeed, timeout) {
   }
 }
 
-async function fetchSportsDbMatches(sportsDbBase, timeout) {
+async function fetchSportsDbMatches(timeout) {
   try {
-    const url = `${sportsDbBase}/eventslast.php?id=133602`;
+    const url = `${BACKEND_CONFIG.sources.thesportsdb}/eventslast.php?id=133602`;
     const response = await fetchWithTimeout(url, {
       headers: {
         "User-Agent": "livescoreFree.online-Bot/2.0",
@@ -184,8 +185,6 @@ export async function onRequest(context) {
   const MAX_REQUESTS_PER_WINDOW = getIntEnv(env, "MAX_REQUESTS_PER_WINDOW", 100);
   const ENABLE_RATE_LIMITING = getBoolEnv(env, "ENABLE_RATE_LIMITING", true);
   const LOG_LEVEL = getEnv(env, "LOG_LEVEL", "info").toLowerCase();
-  const ESPN_BASE = getEnv(env, "ESPN_API_BASE", "https://site.api.espn.com/apis/site/v2/sports");
-  const SPORTSDB_BASE = getEnv(env, "SPORTSDB_API_BASE", "https://www.thesportsdb.com/api/v1/json/123");
 
   const cacheSeconds = Math.max(1, Math.floor(CACHE_TTL / 1000));
   const baseHeaders = getCorsHeaders(request, env, {

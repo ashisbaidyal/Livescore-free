@@ -5,6 +5,16 @@ export function getEnv(env, key, fallback) {
   return env[key];
 }
 
+// Synchronized Backend Configuration
+export const BACKEND_CONFIG = {
+  sources: {
+    espn_site: "https://site.api.espn.com/apis/site/v2",
+    espn_core: "https://sports.core.api.espn.com/v2",
+    espn_web: "https://site.web.api.espn.com/apis/site/v2",
+    thesportsdb: "https://www.thesportsdb.com/api/v1/json/123"
+  }
+};
+
 export function getIntEnv(env, key, fallback) {
   const raw = getEnv(env, key, fallback);
   const value = parseInt(raw, 10);

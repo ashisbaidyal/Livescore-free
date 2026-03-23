@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
@@ -14,6 +14,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="lsf-config">
+  window.LSF_CONFIG = {
+    api: {
+      live: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
+      match: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary",
+      upcoming: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
+      info: "/api/info"
+    },
+    ws: "wss://livescorefree.online/ws",
+    sources: [
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
+      "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
+      "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+    ]
+  };
+</script>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
@@ -14,6 +14,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="lsf-config">
+    window.LSF_CONFIG = {
+        api: {
+            live: '/api/live',
+            match: '/api/match',
+            upcoming: '/api/upcoming',
+            info: '/api/info'
+        },
+        ws: {
+            url: (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/api/ws'
+        },
+        sources: [
+            'https://site.api.espn.com/apis/site/v2/sports',
+            'https://core.api.espn.com/v1/sports',
+            'https://cdn.espn.com/core'
+        ]
+    };
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&amp;display=swap" rel="stylesheet">
 <script id="tailwind-config">
         tailwind.config = {

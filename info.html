@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
     <meta charset="utf-8">
@@ -22,7 +22,23 @@
         .info-content a { color: #CC1616; text-decoration: underline; text-underline-offset: 2px; }
         .info-content strong { color: #e5e2e1; }
     </style>
-    <script id="tailwind-config">
+    <script id="lsf-config">
+  window.LSF_CONFIG = {
+    api: {
+      live: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
+      match: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary",
+      upcoming: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
+      info: "/api/info"
+    },
+    ws: "wss://livescorefree.online/ws",
+    sources: [
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
+      "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
+      "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+    ]
+  };
+</script>
+<script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -414,8 +430,18 @@
                         <h2>Coverage</h2>
                         <p>We cover 10+ sports across 50+ leagues globally, including: Premier League, La Liga, Bundesliga, Serie A, Ligue 1, UEFA Champions League, NBA, NFL, MLB, NHL, UFC, ATP/WTA Tennis, IPL Cricket, F1, PGA Golf, and many more.</p>
 
-                        <h2>API Transparency</h2>
-                        <p>Our backend Cloudflare Workers proxy requests to ESPN's public API endpoints. No data is modified, fabricated, or cached beyond ESPN's own caching headers (15 seconds). We do not store historical match data.</p>
+                        <h3>API Transparency</h3>
+<p>Our backend Cloudflare Workers proxy requests to official ESPN public API endpoints. No data is modified or fabricated. We favor direct edge-delivery for maximum speed.</p>
+<div class="bg-white/5 p-4 rounded-lg my-6 border border-white/10">
+    <div class="text-[9px] font-black text-primary uppercase tracking-widest mb-3">Live Kinetic Feeds</div>
+    <div class="space-y-2 opacity-60 font-mono text-[10px]">
+        <p>• Site Node: site.api.espn.com/apis/site/v2/sports</p>
+        <p>• Core Node: core.api.espn.com/v1/sports</p>
+        <p>• CDN Node: cdn.espn.com/core</p>
+        <p>• Realtime Node: wss://livescorefree.online/api/ws</p>
+    </div>
+</div>
+<p>We do not store historical match data beyond ESPN's own caching windows (15 seconds).</p>
                     `
                 },
                 'advertise': {
