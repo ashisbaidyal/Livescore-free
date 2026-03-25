@@ -1,4 +1,5 @@
 import {
+  buildFeedMeta,
   SPORT_LEAGUES,
   coreApiUrl,
   dedupeById,
@@ -279,30 +280,80 @@ export async function onRequest(context) {
   try {
     switch (type) {
       case "news":
-        return jsonResponse(await getNormalizedNews(sport, league, teamId), 300);
+        return jsonResponse(
+          {
+            ...(await getNormalizedNews(sport, league, teamId)),
+            meta: buildFeedMeta({ type, sport, league })
+          },
+          300
+        );
       case "standings":
-        return jsonResponse(await getNormalizedStandings(sport, league), 300);
+        return jsonResponse(
+          {
+            ...(await getNormalizedStandings(sport, league)),
+            meta: buildFeedMeta({ type, sport, league })
+          },
+          300
+        );
       case "teams":
-        return jsonResponse(await getNormalizedTeams(sport, league), 300);
+        return jsonResponse(
+          {
+            ...(await getNormalizedTeams(sport, league)),
+            meta: buildFeedMeta({ type, sport, league })
+          },
+          300
+        );
       case "team":
-        return jsonResponse(await getNormalizedTeamProfile(sport, league, id, name), 300);
+        return jsonResponse(
+          {
+            ...(await getNormalizedTeamProfile(sport, league, id, name)),
+            meta: buildFeedMeta({ type, sport, league })
+          },
+          300
+        );
       case "players":
-        return jsonResponse(await getNormalizedPlayers(sport, league, limit), 300);
+        return jsonResponse(
+          {
+            ...(await getNormalizedPlayers(sport, league, limit)),
+            meta: buildFeedMeta({ type, sport, league, limit })
+          },
+          300
+        );
       case "athlete":
       case "player":
-        return jsonResponse(await getNormalizedAthleteProfile(sport, league, id), 300);
+        return jsonResponse(
+          {
+            ...(await getNormalizedAthleteProfile(sport, league, id)),
+            meta: buildFeedMeta({ type, sport, league })
+          },
+          300
+        );
       case "roster": {
         const profile = await getNormalizedTeamProfile(sport, league, id, name);
-        return jsonResponse({ roster: profile.roster, team: profile.team }, 300);
+        return jsonResponse(
+          {
+            roster: profile.roster,
+            team: profile.team,
+            meta: buildFeedMeta({ type, sport, league })
+          },
+          300
+        );
       }
       case "scores":
       case "scoreboard":
-        return jsonResponse(await getNormalizedScores(sport, league, date), 60);
+        return jsonResponse(
+          {
+            ...(await getNormalizedScores(sport, league, date)),
+            meta: buildFeedMeta({ type, sport, league, date })
+          },
+          60
+        );
       default:
         return jsonResponse(
           {
             error: "Invalid type",
-            supported: ["news", "standings", "teams", "team", "players", "player", "athlete", "roster", "scores"]
+            supported: ["news", "standings", "teams", "team", "players", "player", "athlete", "roster", "scores"],
+            meta: buildFeedMeta({ degraded: true, type, sport, league })
           },
           60,
           400
@@ -315,7 +366,8 @@ export async function onRequest(context) {
         type,
         sport,
         league,
-        leaguesKnown: SPORT_LEAGUES[sport] || []
+        leaguesKnown: SPORT_LEAGUES[sport] || [],
+        meta: buildFeedMeta({ degraded: true, type, sport, league })
       },
       30,
       500

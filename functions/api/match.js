@@ -1,4 +1,5 @@
 import {
+  buildFeedMeta,
   FALLBACK_LOGO,
   SPORT_LEAGUES,
   fetchJson,
@@ -242,7 +243,7 @@ export async function onRequest(context) {
   const league = normalizeLeagueParam(url.searchParams.get("league") || "", sport || getDefaultLeague("soccer"));
 
   if (!id) {
-    return jsonResponse({ notFound: true }, 30, 404);
+    return jsonResponse({ notFound: true, meta: buildFeedMeta({ degraded: true }) }, 30, 404);
   }
 
   try {
@@ -259,13 +260,13 @@ export async function onRequest(context) {
     if (!summaryData?.header?.competitions?.length) {
       const fallback = await findScoreboardFallback(id, sport, league);
       if (!fallback) {
-        return jsonResponse({ notFound: true }, 30, 404);
+        return jsonResponse({ notFound: true, meta: buildFeedMeta({ degraded: true }) }, 30, 404);
       }
-      return jsonResponse(fallback, 15);
+      return jsonResponse({ ...fallback, meta: buildFeedMeta() }, 15);
     }
 
-    return jsonResponse(normalizeSummary(summaryData, sport, league), 15);
+    return jsonResponse({ ...normalizeSummary(summaryData, sport, league), meta: buildFeedMeta() }, 15);
   } catch (error) {
-    return jsonResponse({ error: error.message }, 15, 500);
+    return jsonResponse({ error: error.message, meta: buildFeedMeta({ degraded: true }) }, 15, 500);
   }
 }

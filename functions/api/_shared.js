@@ -219,6 +219,16 @@ export function jsonResponse(payload, cacheSeconds = 30, status = 200, reason = 
   });
 }
 
+export function buildFeedMeta(extra = {}) {
+  return {
+    provider: "espn-public",
+    providerLabel: "ESPN public sports APIs",
+    freeTier: true,
+    generatedAt: new Date().toISOString(),
+    ...extra
+  };
+}
+
 export function calculateTTL(status = "upcoming", matchDate = "", sport = "soccer") {
   // status: "live", "upcoming", or "finished"
   // matchDate: ISO date string (e.g., "2024-03-23T15:30Z")

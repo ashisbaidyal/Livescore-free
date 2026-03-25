@@ -26,6 +26,10 @@ const API_NEWS = API_INFO;
 const DATA_SOURCES = LSF_CONFIG.sources || [];
 const PWA_MANIFEST = '/manifest.webmanifest';
 const SERVICE_WORKER_PATH = '/sw.js';
+const FALLBACK_LOGO = '/icons/icon-192.png';
+const FALLBACK_HERO_IMAGE = '/icons/hero-fallback.svg';
+const SITE_REDESIGN_STYLESHEET = '/css/site-redesign.css';
+const DATA_PROVIDER_LABEL = 'Free live data via ESPN public APIs';
 const REMINDER_STORAGE_KEY = 'lsf-reminders';
 const INSTALL_BANNER_DISMISSED_KEY = 'lsf-install-banner-dismissed';
 const reminderTimerHandles = new Map();
@@ -213,6 +217,11 @@ async function fetchLiveCount() {
     const data = await res.json();
     const matches = data.matches || [];
     const allLive = matches.filter(m => m.status === "live");
+    updateFeedRibbon(data.meta || {}, {
+      feedLabel: 'Global live board',
+      matchCount: matches.length,
+      liveCount: allLive.length
+    });
     const badge = document.getElementById("live-count-text");
     const badgeHero = document.getElementById("live-hero-count-text");
     const label = allLive.length > 0 ? `${allLive.length} MATCHES LIVE NOW` : "NO LIVE GAMES";
@@ -513,6 +522,71 @@ function showRuntimeToast(message, tone = 'success') {
   }, 2600);
 }
 
+function getPageKeyFromPath(pathname = window.location.pathname) {
+  const file = (pathname.split('/').pop() || 'index.html').replace('.html', '');
+  return file || 'index';
+}
+
+function ensureFeedRibbon() {
+  let ribbon = document.getElementById('lsf-feed-ribbon');
+  if (ribbon) return ribbon;
+
+  const main = document.querySelector('main');
+  if (!main) return null;
+
+  ribbon = document.createElement('section');
+  ribbon.id = 'lsf-feed-ribbon';
+  ribbon.className = 'lsf-feed-ribbon';
+  ribbon.innerHTML = `
+    <div class="lsf-feed-ribbon-grid">
+      <div class="lsf-feed-ribbon-chip">
+        <span class="lsf-feed-ribbon-label">Provider</span>
+        <strong id="lsf-feed-provider">${DATA_PROVIDER_LABEL}</strong>
+      </div>
+      <div class="lsf-feed-ribbon-chip">
+        <span class="lsf-feed-ribbon-label">Coverage</span>
+        <strong id="lsf-feed-coverage">Booting live scoreboard</strong>
+      </div>
+      <div class="lsf-feed-ribbon-chip">
+        <span class="lsf-feed-ribbon-label">Updated</span>
+        <strong id="lsf-feed-updated">Pending sync</strong>
+      </div>
+    </div>
+  `;
+
+  main.insertAdjacentElement('afterbegin', ribbon);
+  return ribbon;
+}
+
+function updateFeedRibbon(meta = {}, snapshot = {}) {
+  const ribbon = ensureFeedRibbon();
+  if (!ribbon) return;
+
+  const provider = document.getElementById('lsf-feed-provider');
+  const coverage = document.getElementById('lsf-feed-coverage');
+  const updated = document.getElementById('lsf-feed-updated');
+  const generatedAt = meta.generatedAt ? new Date(meta.generatedAt) : new Date();
+  const liveCount = Number.isFinite(snapshot.liveCount) ? snapshot.liveCount : 0;
+  const matchCount = Number.isFinite(snapshot.matchCount) ? snapshot.matchCount : 0;
+  const feedLabel = snapshot.feedLabel || 'Live board';
+  const endpointSummary = meta.endpoints ? ` across ${meta.endpoints} feeds` : '';
+
+  ribbon.dataset.page = getPageKeyFromPath();
+  if (provider) {
+    provider.textContent = meta.providerLabel || DATA_PROVIDER_LABEL;
+  }
+  if (coverage) {
+    coverage.textContent = `${feedLabel}: ${matchCount} matches, ${liveCount} live${endpointSummary}`;
+  }
+  if (updated) {
+    updated.textContent = generatedAt.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+}
+
 function getArticleImageUrl(article = {}) {
   const url = article.image || article.images?.[0]?.url || article.images?.[0]?.href || FALLBACK_HERO_IMAGE;
   return getSafeImageUrl(url, FALLBACK_HERO_IMAGE);
@@ -549,6 +623,13 @@ function ensureHeadEnhancements() {
     styleLink.rel = 'stylesheet';
     styleLink.href = '/css/runtime-enhancements.css';
     document.head.appendChild(styleLink);
+  }
+
+  if (!document.querySelector(`link[href="${SITE_REDESIGN_STYLESHEET}"]`)) {
+    const redesignLink = document.createElement('link');
+    redesignLink.rel = 'stylesheet';
+    redesignLink.href = SITE_REDESIGN_STYLESHEET;
+    document.head.appendChild(redesignLink);
   }
 
   if (!document.querySelector(`link[href="${PWA_MANIFEST}"]`)) {
@@ -1150,9 +1231,11 @@ function setupAppShell() {
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
   ensureHeadEnhancements();
+  document.body.dataset.lsfPage = getPageKeyFromPath();
   hydrateNavigationLinks();
   patchLegacyImages();
   setupAppShell();
+  updateFeedRibbon();
   registerServiceWorker();
   bootstrapSavedReminders();
   startReminderHeartbeat();
@@ -1605,7 +1688,7 @@ function renderArenaTabs() {
 
 window.switchArenaTab = function switchTab(tabId) {
   currentTab = tabId;
-  renderSportTabs();
+  renderArenaTabs();
   // Update Realtime subscription
   realtime.updateSubscription('live', { sport: currentTab, isLive: true });
   const container = document.getElementById('arena-schedule-container');
@@ -1759,6 +1842,11 @@ async function fetchHeroData(statusFilter = null) {
       const liveData = await liveRes.json();
       let liveMatches = (liveData.matches || []).filter(m => m.status === 'live');
       if (liveMatches.length === 0) liveMatches = (liveData.matches || []).slice(0, 3);
+      updateFeedRibbon(liveData.meta || {}, {
+        feedLabel: 'Homepage live board',
+        matchCount: (liveData.matches || []).length,
+        liveCount: liveMatches.length
+      });
       
       // 2. Fetch upcoming matches for "Next Major Event"
       const upRes = await fetch(`${API_UPCOMING}?sport=all&days=3`);
@@ -1780,6 +1868,11 @@ async function fetchHeroData(statusFilter = null) {
     const res = await fetch(`${API_LIVE}?sport=all`);
     const data = await res.json();
     let matches = data.matches || [];
+    updateFeedRibbon(data.meta || {}, {
+      feedLabel: 'Hero spotlight',
+      matchCount: matches.length,
+      liveCount: matches.filter((match) => match.status === 'live').length
+    });
 
     if (statusFilter === 'live') {
       // Strictly live for pages that request it (like Leagues or when user wants strict Live)
@@ -1821,8 +1914,16 @@ function renderHeroSlider(matches, statusFilter) {
 
   let currentSlide = 0;
   const slides = matches.map((match, idx) => {
-    const ctaText = match.status === 'live' ? 'Watch 4K Stream' : match.status === 'finished' ? 'Watch Highlights' : 'Set Reminder';
-    const ctaIcon = match.status === 'live' ? 'play_circle' : match.status === 'finished' ? 'video_library' : 'notifications';
+    const ctaText = match.status === 'live'
+      ? 'Open Match Center'
+      : match.status === 'finished'
+        ? (match.highlightUrl ? 'Watch Highlights' : 'View Final Recap')
+        : 'Set Reminder';
+    const ctaIcon = match.status === 'live'
+      ? 'radio_button_checked'
+      : match.status === 'finished'
+        ? (match.highlightUrl ? 'video_library' : 'description')
+        : 'notifications';
     const link = match.highlightUrl && match.status === 'finished' ? match.highlightUrl : buildMatchUrl(match);
     const target = match.highlightUrl && match.status === 'finished' ? '_blank' : '_self';
 
@@ -1906,8 +2007,16 @@ function renderIndexHeroHub(liveMatches, upMatches, newsList) {
     ? (featuredMatch.highlightUrl || buildMatchUrl(featuredMatch))
     : buildMatchUrl(featuredMatch);
   const upLink = nextUpMatch ? buildMatchUrl(nextUpMatch) : '#';
-  const ctaText = featuredMatch.status === 'live' ? 'Watch 4K Stream' : featuredMatch.status === 'finished' ? 'Watch Highlights' : 'Set Reminder';
-  const ctaIcon = featuredMatch.status === 'live' ? 'play_circle' : featuredMatch.status === 'finished' ? 'video_library' : 'notifications';
+  const ctaText = featuredMatch.status === 'live'
+    ? 'Open Match Center'
+    : featuredMatch.status === 'finished'
+      ? (featuredMatch.highlightUrl ? 'Watch Highlights' : 'View Final Recap')
+      : 'Set Reminder';
+  const ctaIcon = featuredMatch.status === 'live'
+    ? 'radio_button_checked'
+    : featuredMatch.status === 'finished'
+      ? (featuredMatch.highlightUrl ? 'video_library' : 'description')
+      : 'notifications';
 
   heroSliderContainer.innerHTML = `
 <!-- Multi-Slide Hub Container -->
@@ -2931,6 +3040,15 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
     const res = await fetch(apiUrl);
     const data = await res.json();
     let matches = data.matches || [];
+    updateFeedRibbon(data.meta || {}, {
+      feedLabel: isUpcomingPage && statusFilter === 'upcoming'
+        ? 'Schedule feed'
+        : statusFilter === 'finished'
+          ? 'Results feed'
+          : 'Match feed',
+      matchCount: matches.length,
+      liveCount: matches.filter((match) => match.status === 'live').length
+    });
     window._cachedMatches = matches;
 
     // On upcoming page with upcoming API, sidebar/ticker need live data separately
@@ -3041,6 +3159,11 @@ async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
     }
 
     console.log('Match data received:', data);
+    updateFeedRibbon(data.meta || {}, {
+      feedLabel: 'Match center',
+      matchCount: 1,
+      liveCount: data.status === 'live' ? 1 : 0
+    });
     renderMatchDetail(data);
   } catch (err) {
     console.error('Failed to fetch match detail:', err);
@@ -3940,6 +4063,11 @@ if (window.location.pathname.includes('upcoming')) {
       }));
       const data = await res.json();
       let matches = data.matches || [];
+      updateFeedRibbon(data.meta || {}, {
+        feedLabel: 'Upcoming schedule',
+        matchCount: matches.length,
+        liveCount: 0
+      });
       window._cachedUpcomingMatches = data.matches || [];
 
       // Filter to only the selected date

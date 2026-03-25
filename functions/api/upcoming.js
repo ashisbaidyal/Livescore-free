@@ -1,4 +1,5 @@
 import {
+  buildFeedMeta,
   SPORT_LEAGUES,
   calculateTTL,
   dedupeById,
@@ -84,12 +85,21 @@ export async function onRequest(context) {
           sport: sportParam,
           league: normalizeLeagueParam(leagueParam),
           daysAhead,
-          endpoints: endpoints.length
+          endpoints: endpoints.length,
+          ...buildFeedMeta()
         }
       },
       90
     );
   } catch (error) {
-    return jsonResponse({ error: error.message, matches: [] }, 30, 500);
+    return jsonResponse(
+      {
+        error: error.message,
+        matches: [],
+        meta: buildFeedMeta({ degraded: true })
+      },
+      30,
+      500
+    );
   }
 }

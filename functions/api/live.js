@@ -1,4 +1,5 @@
 import {
+  buildFeedMeta,
   SPORT_LEAGUES,
   calculateTTL,
   dedupeById,
@@ -96,7 +97,8 @@ export async function onRequest(context) {
           sport: sportParam,
           league: normalizeLeagueParam(leagueParam),
           endpoints: endpoints.length,
-          hasLive
+          hasLive,
+          ...buildFeedMeta()
         }
       },
       ttl,
@@ -104,6 +106,15 @@ export async function onRequest(context) {
       reason
     );
   } catch (error) {
-    return jsonResponse({ error: error.message, matches: [] }, 15, 500, "error-fallback");
+    return jsonResponse(
+      {
+        error: error.message,
+        matches: [],
+        meta: buildFeedMeta({ degraded: true })
+      },
+      15,
+      500,
+      "error-fallback"
+    );
   }
 }
