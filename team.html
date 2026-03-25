@@ -266,7 +266,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.2"></script>
+<script src="js/script.js?v=1.0.3"></script>
 <script>
   function safeUpper(value) {
     return String(value || "").toUpperCase();
@@ -535,6 +535,172 @@
 
     renderTeam(profile);
   }
+
+  document.addEventListener("DOMContentLoaded", hydrateTeamProfile);
+</script>
+<script>
+  document.removeEventListener("DOMContentLoaded", hydrateTeamProfile);
+
+  renderInjuries = function(injuries) {
+    const section = document.getElementById("team-injuries-section");
+    const container = document.getElementById("team-injuries-list");
+    if (!injuries.length) {
+      section.classList.add("hidden");
+      container.innerHTML = "";
+      return;
+    }
+
+    section.classList.remove("hidden");
+    container.innerHTML = injuries.map((inj) => `
+      <div class="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
+        <span class="material-symbols-outlined text-yellow-400 text-lg">healing</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-black uppercase tracking-tight">${inj.athlete?.displayName || "Unknown"}</div>
+          <div class="text-[9px] text-on-surface/40 uppercase tracking-widest">${inj.status || ""} ${inj.detail ? `- ${inj.detail}` : ""}</div>
+        </div>
+        ${inj.date ? `<div class="text-[9px] text-on-surface/30 uppercase tracking-widest shrink-0">${new Date(inj.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>` : ""}
+      </div>
+    `).join("");
+  };
+
+  renderTeam = function(profile) {
+    const team = profile.team;
+    const nextMatch = profile.schedule.find((match) => match.status === "upcoming") || profile.schedule[0] || null;
+    const fallbackLogo = "/icons/icon-192.png";
+
+    document.title = `${team.name} | Team Profile | LivescoreFree.online`;
+    document.getElementById("team-name").textContent = team.name;
+    document.getElementById("team-kicker").textContent = `${safeUpper(team.sport)} / ${safeUpper(team.league)}`;
+    document.getElementById("team-logo").src = team.logo;
+    document.getElementById("team-logo").alt = team.name;
+    document.getElementById("team-logo").onerror = function() { this.src = fallbackLogo; };
+    document.getElementById("team-summary").textContent = `${team.name} - full profile with roster, schedule, and injuries from the live ESPN feed.`;
+    document.getElementById("team-logo-shell").style.borderColor = `${team.color}55`;
+
+    document.getElementById("team-meta-grid").innerHTML = [
+      { icon: "public", label: "League", value: safeUpper(team.league) },
+      { icon: "emoji_events", label: "Record", value: team.record || "Pending" },
+      { icon: "stadium", label: "Venue", value: team.venue || "Not listed" },
+      { icon: "groups", label: "Roster", value: `${profile.roster.length || 0} players` }
+    ].map((item) => `
+      <div class="glass-card rounded-3xl border border-white/5 p-5">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="material-symbols-outlined text-primary text-lg">${item.icon}</span>
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40">${item.label}</div>
+        </div>
+        <div class="text-xl font-black italic leading-tight">${item.value}</div>
+      </div>
+    `).join("");
+
+    document.getElementById("team-story").innerHTML = `
+      <p><span class="text-white font-black">${team.name}</span> is tracked in <span class="text-white font-black">${safeUpper(team.league)}</span> under the <span class="text-white font-black">${safeUpper(team.sport)}</span> feed.</p>
+      <p>${team.venue ? `Home venue: <span class="text-white font-black">${team.venue}</span>.` : "Venue data not available."}</p>
+      <p>${team.location ? `Location: <span class="text-white font-black">${team.location}</span>.` : ""}</p>
+      <p>${nextMatch ? `Next fixture: <a class="text-primary font-black hover:underline" href="${buildMatchUrl(nextMatch)}">${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}</a> - ${nextMatch.time || new Date(nextMatch.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}.` : "No upcoming schedule item returned."}</p>
+    `;
+
+    document.getElementById("team-signals").innerHTML = [
+      { icon: "badge", label: "Identity", value: team.abbreviation || team.location || team.name },
+      { icon: "medical_services", label: "Injuries", value: profile.injuries.length ? `${profile.injuries.length} listed` : "No active report" },
+      { icon: "schedule", label: "Schedule", value: `${profile.schedule.length} matches tracked` },
+      { icon: "sports_score", label: "Next Match", value: nextMatch ? `${nextMatch.homeTeam.abbreviation || nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.abbreviation || nextMatch.awayTeam.name}` : "Pending" }
+    ].map((item) => `
+      <div class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 flex items-center gap-4">
+        <span class="material-symbols-outlined text-primary text-lg">${item.icon}</span>
+        <div>
+          <div class="text-[9px] font-black uppercase tracking-[0.25em] text-on-surface/40 mb-1">${item.label}</div>
+          <div class="font-black uppercase tracking-tight text-sm">${item.value}</div>
+        </div>
+      </div>
+    `).join("");
+
+    renderRoster(profile.roster, team);
+    renderSchedule(profile.schedule);
+    renderInjuries(profile.injuries);
+
+    document.getElementById("team-links").innerHTML = `
+      <a href="teams.html?league=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Back To Teams Hub</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Browse more teams</div>
+      </a>
+      <a href="standings.html?sport=${encodeURIComponent(team.sport)}&league=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Check Standings</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Review league position</div>
+      </a>
+      <a href="upcoming.html?sport=${encodeURIComponent(team.sport)}&l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Upcoming Fixtures</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Move from profile to schedule</div>
+      </a>
+    `;
+
+    const quickStatsPanel = document.getElementById("team-quick-stats");
+    const quickStatsContent = document.getElementById("team-quick-stats-content");
+    if (profile.roster.length > 0) {
+      quickStatsPanel.classList.remove("hidden");
+      const positions = {};
+      profile.roster.forEach((athlete) => {
+        const position = athlete.position?.displayName || athlete.position?.name || "Other";
+        positions[position] = (positions[position] || 0) + 1;
+      });
+      quickStatsContent.innerHTML = Object.entries(positions).map(([position, count]) => `
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-on-surface/60 font-bold uppercase tracking-tight">${position}</span>
+          <span class="font-black text-primary">${count}</span>
+        </div>
+      `).join("");
+    } else {
+      quickStatsPanel.classList.add("hidden");
+      quickStatsContent.innerHTML = "";
+    }
+  };
+
+  let teamProfileUnsubscribe = null;
+
+  function buildFallbackTeamProfile(fallback) {
+    return normalizeTeamPayload({
+      team: {
+        id: fallback.id,
+        name: fallback.name,
+        sport: fallback.sport,
+        league: fallback.league,
+        logo: fallback.logo,
+        record: fallback.record,
+        venue: fallback.venue,
+        location: fallback.name,
+        color: "#CC1616"
+      },
+      roster: [],
+      injuries: [],
+      schedule: []
+    }, fallback);
+  }
+
+  hydrateTeamProfile = function() {
+    const fallback = readParams();
+    const params = {
+      type: "team",
+      sport: fallback.sport,
+      league: fallback.league
+    };
+    if (fallback.id) params.id = fallback.id;
+    if (fallback.name) params.name = fallback.name;
+
+    renderTeam(buildFallbackTeamProfile(fallback));
+
+    if (teamProfileUnsubscribe) teamProfileUnsubscribe();
+    teamProfileUnsubscribe = window.LSFDataStore.subscribe({
+      path: "/api/info",
+      params,
+      refreshMs: 120000,
+      maxAgeMs: 45000
+    }, (snapshot) => {
+      if (snapshot.data?.team) {
+        renderTeam(normalizeTeamPayload(snapshot.data, fallback));
+      } else if (snapshot.status === "error" && !snapshot.data) {
+        console.error("Team profile hydrate failed:", snapshot.error);
+      }
+    });
+  };
 
   document.addEventListener("DOMContentLoaded", hydrateTeamProfile);
 </script>

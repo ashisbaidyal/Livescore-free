@@ -349,8 +349,15 @@
 </div>
 </footer>
 
-<script src="js/script.js?v=1.0.2"></script>
+<script src="js/script.js?v=1.0.3"></script>
 <script>
+const sportStoreSubscriptions = {
+    standings: null,
+    news: null,
+    results: null,
+    players: null
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const sport = params.get('s') || 'soccer';
@@ -441,17 +448,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch sport players
     fetchSportPlayers(sport, league);
 
-    // Auto-refresh
     setInterval(() => {
         if (typeof fetchMatches === 'function') fetchMatches(null);
         if (typeof fetchSidebarLive === 'function') fetchSidebarLive();
     }, 15000);
-
-    setInterval(() => {
-        fetchSportStandings(sport, league);
-        fetchSportNews(sport, league);
-        fetchSportResults(sport, league);
-    }, 60000);
 });
 
 function renderSportLeagueTabs(sport, activeLeague) {
@@ -474,7 +474,7 @@ function renderSportLeagueTabs(sport, activeLeague) {
     `).join('');
 }
 
-async function fetchSportStandings(sport, league) {
+function fetchSportStandings(sport, league) {
     const container = document.getElementById('standings-table-container');
     if (!container) return;
 
@@ -485,11 +485,26 @@ async function fetchSportStandings(sport, league) {
     const targetLeague = league || leagueMap[sport] || 'eng.1';
     const espnSport = sport === 'f1' ? 'racing' : sport;
 
-    try {
-        const res = await fetch(`/api/info?type=standings&sport=${espnSport}&league=${targetLeague}`);
-        const data = await res.json();
-        const standings = data.standings?.[0]?.entries || data.children?.[0]?.standings?.entries || [];
+    if (sportStoreSubscriptions.standings) sportStoreSubscriptions.standings();
+    sportStoreSubscriptions.standings = window.LSFDataStore.subscribe({
+        path: '/api/info',
+        params: { type: 'standings', sport: espnSport, league: targetLeague },
+        refreshMs: 120000,
+        maxAgeMs: 45000
+    }, (snapshot) => {
+        if (snapshot.status === 'loading' && !snapshot.data) {
+            container.innerHTML = '<div class="h-48 rounded-2xl bg-white/5 animate-pulse"></div>';
+            return;
+        }
 
+        if (!snapshot.data) {
+            if (snapshot.status === 'error') {
+                container.innerHTML = `<div class="p-8 text-center opacity-40 text-[10px] font-black uppercase tracking-widest">Unable to load standings</div>`;
+            }
+            return;
+        }
+
+        const standings = snapshot.data.standings?.[0]?.entries || snapshot.data.children?.[0]?.standings?.entries || snapshot.data.entries || [];
         if (standings.length === 0) {
             container.innerHTML = `<div class="p-8 text-center opacity-40 text-[10px] font-black uppercase tracking-widest">No standings data available for this league</div>`;
             return;
@@ -507,39 +522,62 @@ async function fetchSportStandings(sport, league) {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
-                    ${standings.slice(0, 10).map((e, idx) => `
-                        <tr class="hover:bg-white/10 transition-all group cursor-pointer" onclick="window.location.href='team.html?id=${encodeURIComponent(e.team?.id || '')}&name=${encodeURIComponent(e.team?.displayName || 'Team')}&sport=${encodeURIComponent(espnSport)}&league=${encodeURIComponent(targetLeague)}'">
-                            <td class="px-4 py-3"><span class="text-xs font-black italic ${idx < 4 ? 'text-primary' : 'text-on-surface/40'}">${e.stats?.find(s => s.name === 'rank')?.value || idx+1}</span></td>
+                    ${standings.slice(0, 10).map((entry, idx) => {
+                        const teamUrl = buildTeamProfileUrl({
+                            id: entry.team?.id || '',
+                            name: entry.team?.displayName || 'Team',
+                            logo: entry.team?.logos?.[0]?.href || '/public/logo.png'
+                        }, espnSport, targetLeague);
+                        return `
+                        <tr class="hover:bg-white/10 transition-all group cursor-pointer" onclick="window.location.href='${teamUrl}'">
+                            <td class="px-4 py-3"><span class="text-xs font-black italic ${idx < 4 ? 'text-primary' : 'text-on-surface/40'}">${entry.stats?.find(s => s.name === 'rank')?.value || idx + 1}</span></td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
-                                    <img src="${e.team?.logos?.[0]?.href || '/public/logo.png'}" class="w-6 h-6 object-contain" onerror="this.src='/public/logo.png'" alt="">
-                                    <span class="text-[10px] font-black tracking-tight group-hover:text-primary transition-colors truncate max-w-[100px]">${e.team?.displayName || 'Team'}</span>
+                                    <img src="${entry.team?.logos?.[0]?.href || '/public/logo.png'}" class="w-6 h-6 object-contain" onerror="this.src='/public/logo.png'" alt="">
+                                    <span class="text-[10px] font-black tracking-tight group-hover:text-primary transition-colors truncate max-w-[100px]">${entry.team?.displayName || 'Team'}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-center text-on-surface/60">${e.stats?.find(s => s.name === 'gamesPlayed')?.value || '0'}</td>
-                            <td class="px-4 py-3 text-right"><span class="text-sm font-black text-primary">${e.stats?.find(s => s.name === 'points')?.value || '0'}</span></td>
+                            <td class="px-4 py-3 text-center text-on-surface/60">${entry.stats?.find(s => s.name === 'gamesPlayed')?.value || '0'}</td>
+                            <td class="px-4 py-3 text-right"><span class="text-sm font-black text-primary">${entry.stats?.find(s => s.name === 'points')?.value || '0'}</span></td>
                         </tr>
-                    `).join('')}
+                    `;
+                    }).join('')}
                 </tbody>
             </table>
             </div>
         `;
-    } catch (err) {
-        container.innerHTML = `<div class="p-8 text-center opacity-40 text-[10px] font-black uppercase tracking-widest">Unable to load standings</div>`;
-    }
+    });
 }
 
-async function fetchSportNews(sport, league) {
+function fetchSportNews(sport, league) {
     const container = document.getElementById('sport-news-container');
     if (!container) return;
-    try {
-        const res = await fetch(buildApiUrl('/api/info', { type: 'news', sport, league }));
-        const data = await res.json();
-        const articles = data.articles || [];
+
+    if (sportStoreSubscriptions.news) sportStoreSubscriptions.news();
+    sportStoreSubscriptions.news = window.LSFDataStore.subscribe({
+        path: '/api/info',
+        params: { type: 'news', sport, league },
+        refreshMs: 120000,
+        maxAgeMs: 45000
+    }, (snapshot) => {
+        if (snapshot.status === 'loading' && !snapshot.data) {
+            container.innerHTML = '<div class="col-span-full h-48 rounded-2xl bg-white/5 animate-pulse"></div>';
+            return;
+        }
+
+        if (!snapshot.data) {
+            if (snapshot.status === 'error') {
+                container.innerHTML = '<div class="col-span-full text-center text-on-surface/30 text-[10px] py-8">News unavailable</div>';
+            }
+            return;
+        }
+
+        const articles = snapshot.data.articles || [];
         if (articles.length === 0) {
             container.innerHTML = '<div class="col-span-full text-center text-on-surface/30 text-[10px] font-black uppercase tracking-widest py-8">No news available</div>';
             return;
         }
+
         container.innerHTML = articles.slice(0, 4).map(a => `
             <article class="relative bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${getArticleLinkUrl(a)}', '_blank')">
                 <div class="aspect-video bg-cover bg-center transition-transform duration-[1.5s] group-hover:scale-110" style="background-image: linear-gradient(to top, rgba(14,14,14,0.9), transparent), url('${getArticleImageUrl(a)}')"></div>
@@ -549,22 +587,41 @@ async function fetchSportNews(sport, league) {
                 </div>
             </article>
         `).join('');
-    } catch(e) {
-        container.innerHTML = '<div class="col-span-full text-center text-on-surface/30 text-[10px] py-8">News unavailable</div>';
-    }
+    });
 }
 
-async function fetchSportResults(sport, league) {
+function fetchSportResults(sport, league) {
     const container = document.getElementById('sport-results-container');
     if (!container) return;
-    try {
-        const res = await fetch(buildApiUrl('/api/live', { sport, league }));
-        const data = await res.json();
-        const finished = (data.matches || []).filter(m => m.status === 'finished').sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 4);
+
+    if (sportStoreSubscriptions.results) sportStoreSubscriptions.results();
+    sportStoreSubscriptions.results = window.LSFDataStore.subscribe({
+        path: '/api/live',
+        params: { sport, league },
+        refreshMs: 30000,
+        maxAgeMs: 15000
+    }, (snapshot) => {
+        if (snapshot.status === 'loading' && !snapshot.data) {
+            container.innerHTML = '<div class="col-span-full h-40 rounded-2xl bg-white/5 animate-pulse"></div>';
+            return;
+        }
+
+        if (!snapshot.data) {
+            if (snapshot.status === 'error') {
+                container.innerHTML = '<div class="col-span-full text-center text-on-surface/30 text-[10px] py-8">Results unavailable</div>';
+            }
+            return;
+        }
+
+        const finished = filterRenderableMatches(snapshot.data.matches || [])
+            .filter((match) => match.status === 'finished')
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, 4);
         if (finished.length === 0) {
             container.innerHTML = '<div class="col-span-full text-center text-on-surface/30 text-[10px] font-black uppercase tracking-widest py-8">No recent results</div>';
             return;
         }
+
         container.innerHTML = finished.map(m => `
             <a href="/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" class="bg-surface-container p-4 rounded-lg border border-white/5 hover:border-primary/30 transition-all group block">
                 <div class="flex justify-between text-[9px] font-black text-on-surface/40 mb-2 uppercase tracking-widest">
@@ -581,38 +638,52 @@ async function fetchSportResults(sport, league) {
                 </div>
             </a>
         `).join('');
-    } catch(e) {
-        container.innerHTML = '<div class="col-span-full text-center text-on-surface/30 text-[10px] py-8">Results unavailable</div>';
-    }
+    });
 }
 
-async function fetchSportPlayers(sport, league) {
+function fetchSportPlayers(sport, league) {
     const container = document.getElementById('sport-players-container');
     if (!container) return;
     const leagueMap = { 'soccer': 'eng.1', 'basketball': 'nba', 'football': 'nfl', 'hockey': 'nhl', 'baseball': 'mlb' };
     const targetLeague = league || leagueMap[sport] || 'eng.1';
-    try {
-        const res = await fetch(`/api/info?type=players&sport=${sport}&league=${targetLeague}`);
-        const data = await res.json();
-        const athletes = data.items || data.athletes || [];
+
+    if (sportStoreSubscriptions.players) sportStoreSubscriptions.players();
+    sportStoreSubscriptions.players = window.LSFDataStore.subscribe({
+        path: '/api/info',
+        params: { type: 'players', sport, league: targetLeague },
+        refreshMs: 180000,
+        maxAgeMs: 60000
+    }, (snapshot) => {
+        if (snapshot.status === 'loading' && !snapshot.data) {
+            container.innerHTML = '<div class="h-40 rounded-2xl bg-white/5 animate-pulse"></div>';
+            return;
+        }
+
+        if (!snapshot.data) {
+            if (snapshot.status === 'error') {
+                container.innerHTML = '<div class="text-center text-on-surface/30 text-[10px] py-8">Players unavailable</div>';
+            }
+            return;
+        }
+
+        const athletes = snapshot.data.items || snapshot.data.athletes || [];
         if (athletes.length === 0) {
             container.innerHTML = '<div class="text-center text-on-surface/30 text-[10px] font-black uppercase py-8">No player data</div>';
             return;
         }
-        // If items have $ref links, we show what we can
+
         container.innerHTML = athletes.slice(0, 6).map((a, i) => `
-            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all group">
+            <a href="${buildPlayerProfileUrl(a, sport, targetLeague)}" class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all group">
                 <div class="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary font-black text-xs">${i+1}</div>
                 <div class="flex-1 min-w-0">
                     <div class="text-xs font-black truncate group-hover:text-primary transition-colors">${a.fullName || a.displayName || 'Player'}</div>
                     <div class="text-[9px] font-bold text-on-surface/40 uppercase">${a.position?.displayName || sport}</div>
                 </div>
-            </div>
+            </a>
         `).join('');
-    } catch(e) {
-        container.innerHTML = '<div class="text-center text-on-surface/30 text-[10px] py-8">Players unavailable</div>';
-    }
+    });
 }
+
 </script>
 </body>
 </html>

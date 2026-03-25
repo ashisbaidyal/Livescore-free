@@ -224,7 +224,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.2"></script>
+<script src="js/script.js?v=1.0.3"></script>
 <script>
   const teamParams = new URLSearchParams(window.location.search);
   const teamSources = [
@@ -246,17 +246,16 @@
     { key: "pga", sport: "golf", league: "pga", label: "PGA" }
   ];
 
-  const teamCache = {};
   const requestedTeamLeague = teamParams.get("league") || "";
   const requestedTeamSport = teamParams.get("sport") || "";
   let activeTeamSource =
     teamSources.find((item) => item.key === requestedTeamLeague)?.key ||
     teamSources.find((item) => item.sport === requestedTeamSport)?.key ||
     "eng.1";
+  let teamsUnsubscribe = null;
 
-  function normalizeTeams(data) {
+  function normalizeTeams(data, source) {
     return (data.teams || []).map((team) => {
-      const source = teamSources.find((item) => item.key === activeTeamSource);
       const colorValue = team.color || team.alternateColor || "CC1616";
       return {
         id: team.id || "",
@@ -287,7 +286,7 @@
         url.searchParams.set("league", activeTeamSource);
         window.history.replaceState({}, "", url);
         renderSourceTabs();
-        loadTeams(activeTeamSource);
+        subscribeToTeams(activeTeamSource);
       });
     });
   }
@@ -326,31 +325,45 @@
     `).join("");
   }
 
-  async function loadTeams(key) {
+  function renderTeamsLoading() {
+    const grid = document.getElementById("teams-grid");
+    grid.innerHTML = '<div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div><div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div><div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div>';
+  }
+
+  function subscribeToTeams(key) {
     const grid = document.getElementById("teams-grid");
     const source = teamSources.find((item) => item.key === key);
-
-    if (teamCache[key]) {
-      renderTeamsGrid(teamCache[key]);
+    if (!source) {
+      grid.innerHTML = '<div class="md:col-span-2 xl:col-span-3 rounded-3xl border border-red-500/20 bg-red-500/10 px-6 py-24 text-center text-[10px] font-black uppercase tracking-[0.3em] text-red-200">Invalid team feed</div>';
       return;
     }
 
-    grid.innerHTML = '<div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div><div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div><div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div>';
+    if (teamsUnsubscribe) teamsUnsubscribe();
+    teamsUnsubscribe = window.LSFDataStore.subscribe({
+      path: "/api/info",
+      params: { type: "teams", sport: source.sport, league: source.league },
+      refreshMs: 180000,
+      maxAgeMs: 60000
+    }, (snapshot) => {
+      if (snapshot.status === "loading" && !snapshot.data) {
+        renderTeamsLoading();
+        return;
+      }
 
-    try {
-      const response = await fetch(`/api/info?type=teams&sport=${source.sport}&league=${source.league}`);
-      const data = await response.json();
-      const teams = normalizeTeams(data);
-      teamCache[key] = teams;
-      renderTeamsGrid(teams);
-    } catch (error) {
-      grid.innerHTML = '<div class="md:col-span-2 xl:col-span-3 rounded-3xl border border-red-500/20 bg-red-500/10 px-6 py-24 text-center text-[10px] font-black uppercase tracking-[0.3em] text-red-200">Failed to load team feed</div>';
-    }
+      if (snapshot.data) {
+        renderTeamsGrid(normalizeTeams(snapshot.data, source));
+        return;
+      }
+
+      if (snapshot.status === "error") {
+        grid.innerHTML = '<div class="md:col-span-2 xl:col-span-3 rounded-3xl border border-red-500/20 bg-red-500/10 px-6 py-24 text-center text-[10px] font-black uppercase tracking-[0.3em] text-red-200">Failed to load team feed</div>';
+      }
+    });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     renderSourceTabs();
-    loadTeams(activeTeamSource);
+    subscribeToTeams(activeTeamSource);
   });
 </script>
 </body>

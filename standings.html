@@ -230,7 +230,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.2"></script>
+<script src="js/script.js?v=1.0.3"></script>
 <script>
   const standingsParams = new URLSearchParams(window.location.search);
   const standingsFeeds = [
@@ -250,13 +250,13 @@
     { key: "ipl", sport: "cricket", league: "ipl", label: "IPL", accent: "Cricket" }
   ];
 
-  const standingsCache = {};
   const requestedLeague = standingsParams.get("league") || "";
   const requestedSport = standingsParams.get("sport") || "";
   let activeStandingsKey =
     standingsFeeds.find((item) => item.key === requestedLeague)?.key ||
     standingsFeeds.find((item) => item.sport === requestedSport)?.key ||
     "eng.1";
+  let standingsUnsubscribe = null;
 
   function getStat(entry, names) {
     const stats = entry.stats || [];
@@ -295,7 +295,7 @@
         url.searchParams.set("league", activeStandingsKey);
         window.history.replaceState({}, "", url);
         renderTabs();
-        loadStandings(activeStandingsKey);
+        subscribeToStandings(activeStandingsKey);
       });
     });
   }
@@ -350,32 +350,46 @@
     `;
   }
 
-  async function loadStandings(key) {
+  function renderStandingsLoading() {
+    const content = document.getElementById("standings-content");
+    content.innerHTML = '<div class="h-80 rounded-2xl bg-white/5 animate-pulse"></div>';
+  }
+
+  function subscribeToStandings(key) {
     const feed = standingsFeeds.find((item) => item.key === key);
     const content = document.getElementById("standings-content");
-
-    if (standingsCache[key]) {
-      renderStandingsTable(feed, standingsCache[key]);
+    if (!feed) {
+      content.innerHTML = '<div class="rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-20 text-center text-[10px] font-black uppercase tracking-[0.3em] text-red-200">Invalid standings feed</div>';
       return;
     }
 
-    content.innerHTML = '<div class="h-80 rounded-2xl bg-white/5 animate-pulse"></div>';
+    if (standingsUnsubscribe) standingsUnsubscribe();
+    standingsUnsubscribe = window.LSFDataStore.subscribe({
+      path: "/api/info",
+      params: { type: "standings", sport: feed.sport, league: feed.league },
+      refreshMs: 120000,
+      maxAgeMs: 45000
+    }, (snapshot) => {
+      if (snapshot.status === "loading" && !snapshot.data) {
+        renderStandingsLoading();
+        return;
+      }
 
-    try {
-      const response = await fetch(`/api/info?type=standings&sport=${feed.sport}&league=${feed.league}`);
-      const data = await response.json();
-      const rawEntries = data.entries || data.standings?.[0]?.entries || data.children?.[0]?.standings?.entries || [];
-      const entries = normalizeEntries(rawEntries, feed);
-      standingsCache[key] = entries;
-      renderStandingsTable(feed, entries);
-    } catch (error) {
-      content.innerHTML = '<div class="rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-20 text-center text-[10px] font-black uppercase tracking-[0.3em] text-red-200">Failed to load standings feed</div>';
-    }
+      if (snapshot.data) {
+        const rawEntries = snapshot.data.entries || snapshot.data.standings?.[0]?.entries || snapshot.data.children?.[0]?.standings?.entries || [];
+        renderStandingsTable(feed, normalizeEntries(rawEntries, feed));
+        return;
+      }
+
+      if (snapshot.status === "error") {
+        content.innerHTML = '<div class="rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-20 text-center text-[10px] font-black uppercase tracking-[0.3em] text-red-200">Failed to load standings feed</div>';
+      }
+    });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     renderTabs();
-    loadStandings(activeStandingsKey);
+    subscribeToStandings(activeStandingsKey);
   });
 </script>
 </body>

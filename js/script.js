@@ -480,6 +480,186 @@ function buildApiUrl(path, params = {}) {
   return suffix ? `${path}?${suffix}` : path;
 }
 
+class PublicApiDataStore {
+  constructor() {
+    this.entries = new Map();
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) this.refreshActive();
+    });
+    window.addEventListener('online', () => this.refreshActive({ force: true }));
+  }
+
+  buildKey(path, params = {}) {
+    const query = new URLSearchParams();
+    Object.keys(params)
+      .sort()
+      .forEach((key) => {
+        const value = params[key];
+        if (value !== undefined && value !== null && value !== '') {
+          query.set(key, value);
+        }
+      });
+    const suffix = query.toString();
+    return suffix ? `${path}?${suffix}` : path;
+  }
+
+  getEntry(path, params = {}) {
+    const key = this.buildKey(path, params);
+    if (!this.entries.has(key)) {
+      this.entries.set(key, {
+        key,
+        path,
+        params: { ...params },
+        data: null,
+        error: null,
+        status: 'idle',
+        updatedAt: 0,
+        inflight: null,
+        subscribers: new Map(),
+        refreshMs: 0,
+        maxAgeMs: 0,
+        timer: null
+      });
+    }
+    return this.entries.get(key);
+  }
+
+  createSnapshot(entry) {
+    return {
+      key: entry.key,
+      url: buildApiUrl(entry.path, entry.params),
+      data: entry.data,
+      error: entry.error,
+      status: entry.status,
+      updatedAt: entry.updatedAt
+    };
+  }
+
+  notify(entry) {
+    const snapshot = this.createSnapshot(entry);
+    entry.subscribers.forEach((config, listener) => {
+      try {
+        listener(snapshot);
+      } catch (error) {
+        console.error('LSFDataStore listener failed:', error);
+      }
+    });
+  }
+
+  isStale(entry, maxAgeMs = entry.maxAgeMs) {
+    if (!entry.updatedAt) return true;
+    if (!maxAgeMs || maxAgeMs < 0) return false;
+    return Date.now() - entry.updatedAt >= maxAgeMs;
+  }
+
+  recalculateEntry(entry) {
+    const configs = Array.from(entry.subscribers.values());
+    entry.refreshMs = configs.reduce((min, cfg) => {
+      if (!cfg.refreshMs || cfg.refreshMs <= 0) return min;
+      return min ? Math.min(min, cfg.refreshMs) : cfg.refreshMs;
+    }, 0);
+    entry.maxAgeMs = configs.reduce((min, cfg) => {
+      if (!cfg.maxAgeMs || cfg.maxAgeMs <= 0) return min;
+      return min ? Math.min(min, cfg.maxAgeMs) : cfg.maxAgeMs;
+    }, 0);
+
+    if (entry.timer) {
+      clearInterval(entry.timer);
+      entry.timer = null;
+    }
+
+    if (!entry.subscribers.size || !entry.refreshMs) return;
+
+    entry.timer = setInterval(() => {
+      if (document.hidden) return;
+      if (!this.isStale(entry)) return;
+      this.fetchEntry(entry, { force: true }).catch(() => {});
+    }, entry.refreshMs);
+  }
+
+  async fetchEntry(entry, options = {}) {
+    const { force = false } = options;
+    if (entry.inflight) return entry.inflight;
+    if (!force && !this.isStale(entry)) return entry.data;
+
+    entry.status = entry.data ? 'refreshing' : 'loading';
+    entry.error = null;
+    this.notify(entry);
+
+    entry.inflight = fetch(buildApiUrl(entry.path, entry.params), { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        entry.data = data;
+        entry.error = null;
+        entry.status = 'success';
+        entry.updatedAt = Date.now();
+        return data;
+      })
+      .catch((error) => {
+        entry.error = error;
+        entry.status = entry.data ? 'stale' : 'error';
+        throw error;
+      })
+      .finally(() => {
+        entry.inflight = null;
+        this.notify(entry);
+      });
+
+    return entry.inflight;
+  }
+
+  subscribe(options, listener) {
+    const { path, params = {}, refreshMs = 0, maxAgeMs = 0 } = options || {};
+    const entry = this.getEntry(path, params);
+    entry.subscribers.set(listener, { refreshMs, maxAgeMs });
+    this.recalculateEntry(entry);
+    listener(this.createSnapshot(entry));
+
+    if (entry.status === 'idle' || this.isStale(entry, maxAgeMs || entry.maxAgeMs)) {
+      this.fetchEntry(entry, { force: true }).catch(() => {});
+    }
+
+    return () => {
+      entry.subscribers.delete(listener);
+      this.recalculateEntry(entry);
+    };
+  }
+
+  fetch(options) {
+    const entry = this.getEntry(options?.path, options?.params);
+    return this.fetchEntry(entry, { force: options?.force === true });
+  }
+
+  peek(options) {
+    const entry = this.getEntry(options?.path, options?.params);
+    return this.createSnapshot(entry);
+  }
+
+  invalidate(options) {
+    const entry = this.getEntry(options?.path, options?.params);
+    entry.updatedAt = 0;
+    entry.status = entry.data ? 'stale' : 'idle';
+    if (entry.subscribers.size && !document.hidden) {
+      this.fetchEntry(entry, { force: true }).catch(() => {});
+    }
+  }
+
+  refreshActive(options = {}) {
+    this.entries.forEach((entry) => {
+      if (!entry.subscribers.size) return;
+      if (!options.force && !this.isStale(entry)) return;
+      this.fetchEntry(entry, { force: true }).catch(() => {});
+    });
+  }
+}
+
+window.LSFDataStore = window.LSFDataStore || new PublicApiDataStore();
+
 function buildSportHubUrl(sport = '', league = '') {
   const params = new URLSearchParams();
   const normalizedSport = normalizeSportSlug(sport, league);

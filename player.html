@@ -273,7 +273,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.2"></script>
+<script src="js/script.js?v=1.0.3"></script>
 <script>
   const FALLBACK_AVATAR = '/icons/icon-192.png';
 
@@ -534,6 +534,137 @@
 
     renderPlayerProfile(payload);
   }
+
+  document.addEventListener("DOMContentLoaded", hydratePlayerProfile);
+</script>
+<script>
+  document.removeEventListener("DOMContentLoaded", hydratePlayerProfile);
+
+  renderPlayerProfile = function(payload) {
+    const athlete = payload.athlete;
+    const bio = payload.bio;
+    const news = payload.news;
+
+    document.title = `${athlete.name} | Player Profile | LivescoreFree.online`;
+    document.getElementById("player-kicker").textContent = `${up(athlete.sport)} PLAYER PROFILE`;
+    document.getElementById("player-name").textContent = athlete.name;
+    document.getElementById("player-summary").textContent = `${athlete.name}${athlete.team?.name ? ` of ${athlete.team.name}` : ""} - live profile with stats, bio, and news powered by the ESPN feed.`;
+
+    const headshotUrl = athlete.headshot?.href || athlete.headshot?.url || FALLBACK_AVATAR;
+    const headshot = document.getElementById("player-headshot");
+    headshot.src = headshotUrl;
+    headshot.alt = athlete.name;
+    headshot.onerror = function() { this.src = FALLBACK_AVATAR; };
+
+    document.getElementById("meta-sport").textContent = up(athlete.sport) || "-";
+    document.getElementById("meta-team").textContent = athlete.team?.name || "Free Agent";
+    document.getElementById("meta-role").textContent = athlete.role || "-";
+    document.getElementById("meta-jersey").textContent = athlete.jersey ? `#${athlete.jersey}` : "-";
+    document.getElementById("meta-age").textContent = athlete.age || "-";
+    const statusEl = document.getElementById("meta-status");
+    statusEl.classList.remove("text-green-400", "text-yellow-400", "text-red-400");
+    statusEl.textContent = athlete.status?.name || (athlete.active ? "Active" : "Inactive");
+    if (athlete.status?.name === "Active" || athlete.active) {
+      statusEl.classList.add("text-green-400");
+    } else if (athlete.status?.name === "Injured" || athlete.status?.name === "Day-To-Day") {
+      statusEl.classList.add("text-yellow-400");
+    }
+
+    const birthInfo = athlete.birthPlace?.city ? `Born in ${athlete.birthPlace.city}${athlete.birthPlace.state ? `, ${athlete.birthPlace.state}` : ""}${athlete.birthPlace.country ? `, ${athlete.birthPlace.country}` : ""}.` : "";
+    const experienceInfo = athlete.experience?.years ? `${athlete.experience.years} years of professional experience.` : "";
+
+    document.getElementById("player-overview").innerHTML = `
+      <p><span class="text-white font-black">${athlete.name}</span> is tracked in <span class="text-white font-black">${up(athlete.league)}</span> under the <span class="text-white font-black">${up(athlete.sport)}</span> feed.</p>
+      ${athlete.team?.name ? `<p>Current team: <span class="text-white font-black">${athlete.team.name}</span>${athlete.team.abbreviation ? ` (${athlete.team.abbreviation})` : ""}.</p>` : '<p class="text-on-surface/40">No team context available.</p>'}
+      ${athlete.role ? `<p>Position: <span class="text-white font-black">${athlete.role}</span>.</p>` : ""}
+      ${birthInfo ? `<p>${birthInfo}</p>` : ""}
+      ${experienceInfo ? `<p>${experienceInfo}</p>` : ""}
+      ${athlete.citizenship ? `<p>Nationality: <span class="text-white font-black">${athlete.citizenship}</span>.</p>` : ""}
+    `;
+
+    document.getElementById("player-modules").innerHTML = [
+      { icon: "straighten", label: "Height", value: athlete.height || "-" },
+      { icon: "fitness_center", label: "Weight", value: athlete.weight || "-" },
+      { icon: "medical_services", label: "Status", value: athlete.status?.name || "Active" },
+      { icon: "badge", label: "Jersey", value: athlete.jersey ? `#${athlete.jersey}` : "-" },
+      { icon: "calendar_month", label: "Experience", value: athlete.experience?.years ? `${athlete.experience.years} YRS` : "-" },
+      { icon: "flag", label: "Nationality", value: athlete.citizenship || "-" }
+    ].map((item) => `
+      <div class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 flex items-center gap-4">
+        <span class="material-symbols-outlined text-primary text-lg">${item.icon}</span>
+        <div>
+          <div class="text-[9px] font-black uppercase tracking-[0.25em] text-on-surface/40 mb-1">${item.label}</div>
+          <div class="font-black uppercase tracking-tight text-sm">${item.value}</div>
+        </div>
+      </div>
+    `).join("");
+
+    renderPlayerStats(bio);
+    renderPlayerNews(news);
+    renderTeamCard(athlete);
+
+    const teamLink = athlete.team?.id
+      ? `team.html?id=${encodeURIComponent(athlete.team.id)}&name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`
+      : athlete.team?.name
+        ? `team.html?name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`
+        : "teams.html";
+
+    document.getElementById("player-links").innerHTML = `
+      <a href="players.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Players Hub</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Browse all athletes</div>
+      </a>
+      <a href="${teamLink}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Team Profile</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">${athlete.team?.name || "View team"}</div>
+      </a>
+      <a href="live.html?sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Live Scores</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Return to live action</div>
+      </a>
+      <a href="standings.html?sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+        <div class="text-xs font-black uppercase tracking-widest">Standings</div>
+        <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">League table</div>
+      </a>
+    `;
+  };
+
+  let playerProfileUnsubscribe = null;
+
+  function buildFallbackPlayerPayload(fallback) {
+    return normalizePlayerPayload({
+      athlete: {
+        id: fallback.id,
+        fullName: fallback.name,
+        sport: fallback.sport,
+        league: fallback.league,
+        team: fallback.team ? { name: fallback.team } : null,
+        position: fallback.role ? { displayName: fallback.role } : {}
+      },
+      news: []
+    }, fallback);
+  }
+
+  hydratePlayerProfile = function() {
+    const fallback = readPlayerParams();
+    renderPlayerProfile(buildFallbackPlayerPayload(fallback));
+
+    if (playerProfileUnsubscribe) playerProfileUnsubscribe();
+    if (!fallback.id) return;
+
+    playerProfileUnsubscribe = window.LSFDataStore.subscribe({
+      path: "/api/info",
+      params: { type: "player", id: fallback.id, sport: fallback.sport, league: fallback.league },
+      refreshMs: 120000,
+      maxAgeMs: 45000
+    }, (snapshot) => {
+      if (snapshot.data?.athlete) {
+        renderPlayerProfile(normalizePlayerPayload(snapshot.data, fallback));
+      } else if (snapshot.status === "error" && !snapshot.data) {
+        console.error("Player profile hydrate failed:", snapshot.error);
+      }
+    });
+  };
 
   document.addEventListener("DOMContentLoaded", hydratePlayerProfile);
 </script>
