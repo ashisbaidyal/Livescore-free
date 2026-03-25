@@ -12,20 +12,22 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
 <link rel="stylesheet" href="/css/runtime-enhancements.css"/><script id="lsf-config">
-  window.LSF_CONFIG = {
-    api: {
-      live: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      match: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary",
-      upcoming: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      info: "/api/info"
-    },
-    ws: "wss://livescorefree.online/ws",
-    sources: [
-      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
-      "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
-    ]
-  };
+    window.LSF_CONFIG = {
+        api: {
+            live: '/api/live',
+            match: '/api/match',
+            upcoming: '/api/upcoming',
+            info: '/api/info'
+        },
+        ws: {
+            url: (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/api/ws'
+        },
+        sources: [
+            'https://site.api.espn.com/apis/site/v2/sports',
+            'https://core.api.espn.com/v1/sports',
+            'https://cdn.espn.com/core'
+        ]
+    };
 </script>
 </head>
 <body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
@@ -175,8 +177,10 @@
 <!-- Ticker -->
 <div class="bg-surface-container-low border-b border-white/5 py-3 overflow-hidden">
 <div id="ticker-container" class="flex animate-[scroll_40s_linear_infinite] whitespace-nowrap gap-12 px-6">
-<div class="flex items-center gap-4 opacity-50">
-<span class="text-[10px] font-black uppercase italic tracking-widest">LiveScoreFree Realtime Stream Active</span>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-black text-primary uppercase italic">LIVE</span>
+<span class="text-xs font-bold">Discovering Live Scores...</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
 </div>
 </div>
 </div>

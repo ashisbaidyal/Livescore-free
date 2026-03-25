@@ -15,20 +15,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="lsf-config">
-  window.LSF_CONFIG = {
-    api: {
-      live: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      match: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary",
-      upcoming: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      info: "/api/info"
-    },
-    ws: "wss://livescorefree.online/ws",
-    sources: [
-      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
-      "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
-    ]
-  };
+    window.LSF_CONFIG = {
+        api: {
+            live: '/api/live',
+            match: '/api/match',
+            upcoming: '/api/upcoming',
+            info: '/api/info'
+        },
+        ws: {
+            url: (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/api/ws'
+        },
+        sources: [
+            'https://site.api.espn.com/apis/site/v2/sports',
+            'https://core.api.espn.com/v1/sports',
+            'https://cdn.espn.com/core'
+        ]
+    };
 </script>
 <script id="tailwind-config">
         tailwind.config = {
@@ -249,24 +251,9 @@
 <div class="bg-surface-container-low border-b border-white/5 py-3 overflow-hidden">
 <div id="ticker-container" class="flex animate-[scroll_40s_linear_infinite] whitespace-nowrap gap-12 px-6">
 <div class="flex items-center gap-4">
-<span class="text-[10px] font-black text-primary uppercase italic">EPL</span>
-<span class="text-xs font-bold">LIV 2 - 1 ARS</span>
+<span class="text-[10px] font-black text-primary uppercase italic">LIVE</span>
+<span class="text-xs font-bold">Discovering Live Scores...</span>
 <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-</div>
-<div class="flex items-center gap-4 opacity-60">
-<span class="text-[10px] font-black uppercase italic">NBA</span>
-<span class="text-xs font-bold">LAL 102 - 98 GSW</span>
-<span class="text-[10px]">Q4 2:14</span>
-</div>
-<div class="flex items-center gap-4">
-<span class="text-[10px] font-black text-primary uppercase italic">La Liga</span>
-<span class="text-xs font-bold">RMA 0 - 0 BAR</span>
-<span class="text-[10px]">21:00</span>
-</div>
-<div class="flex items-center gap-4 opacity-60">
-<span class="text-[10px] font-black uppercase italic">NFL</span>
-<span class="text-xs font-bold">DAL 24 - 17 SF</span>
-<span class="text-[10px]">FINAL</span>
 </div>
 </div>
 </div>

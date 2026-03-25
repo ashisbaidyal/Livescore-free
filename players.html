@@ -13,20 +13,22 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <script id="lsf-config">
-  window.LSF_CONFIG = {
-    api: {
-      live: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      match: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary",
-      upcoming: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      info: "/api/info"
-    },
-    ws: "wss://livescorefree.online/ws",
-    sources: [
-      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
-      "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
-    ]
-  };
+    window.LSF_CONFIG = {
+        api: {
+            live: '/api/live',
+            match: '/api/match',
+            upcoming: '/api/upcoming',
+            info: '/api/info'
+        },
+        ws: {
+            url: (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/api/ws'
+        },
+        sources: [
+            'https://site.api.espn.com/apis/site/v2/sports',
+            'https://core.api.espn.com/v1/sports',
+            'https://cdn.espn.com/core'
+        ]
+    };
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -250,55 +252,15 @@
 <div class="bg-surface-container-low border-b border-white/5 py-3 overflow-hidden">
 <div id="ticker-container" class="flex animate-[scroll_40s_linear_infinite] whitespace-nowrap gap-12 px-6">
 <div class="flex items-center gap-4">
-<span class="text-[10px] font-black text-primary uppercase italic">EPL</span>
-<span class="text-xs font-bold">LIV 2 - 1 ARS</span>
+<span class="text-[10px] font-black text-primary uppercase italic">LIVE</span>
+<span class="text-xs font-bold">Discovering Live Scores...</span>
 <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-</div>
-<div class="flex items-center gap-4 opacity-60">
-<span class="text-[10px] font-black uppercase italic">NBA</span>
-<span class="text-xs font-bold">LAL 102 - 98 GSW</span>
-<span class="text-[10px]">Q4 2:14</span>
-</div>
-<div class="flex items-center gap-4">
-<span class="text-[10px] font-black text-primary uppercase italic">La Liga</span>
-<span class="text-xs font-bold">RMA 0 - 0 BAR</span>
-<span class="text-[10px]">21:00</span>
-</div>
-<div class="flex items-center gap-4 opacity-60">
-<span class="text-[10px] font-black uppercase italic">NFL</span>
-<span class="text-xs font-bold">DAL 24 - 17 SF</span>
-<span class="text-[10px]">FINAL</span>
 </div>
 </div>
 </div>
 <!-- Hero Slider Section -->
-<section class="relative h-[819px] w-full overflow-hidden" id="hero-slider-container" style="display: none;">
-<img alt="High-resolution action shot of Lionel Messi in action on the pitch" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPnRbky04Xu2WwfbbvUNkMfhfJ5oQ6yyXh6sc5XmbffSyCcWsP90yh3EYmcbtHXzISo_TFxxiRuFFh-kSkjBGTqCe81yP62Bx0TLdLpR9t7BBrWt0DUxlHEYlRJ4nQYFBtfOOxofd7lXcPMsrclHyB_CW_OouCWg69ldkm0R9616MwGKt3YmpaEoJ-gTcjMuvRBiZB2GikR2k6SFGbse79205tbgRTJMsnWR02KCl9GzfaOEo-o4jwSMZqznoVVvr0F9G_hYkEFn-G"/>
-<div class="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent"></div>
-<div class="absolute inset-0 flex items-center px-12 lg:px-24">
-<div class="max-w-2xl space-y-6">
-<div class="flex items-center gap-4">
-<span class="bg-primary-container text-white px-3 py-1 text-[10px] font-black tracking-widest uppercase rounded-sm">LEGENDARY STATUS</span>
-<span class="text-on-surface-variant text-xs font-bold tracking-widest uppercase">Inter Miami CF | Argentina</span>
-</div>
-<h1 class="text-7xl lg:text-9xl font-black italic tracking-tighter uppercase leading-[0.8] text-on-surface drop-shadow-2xl">
-                        Lionel<br/><span class="text-primary-tint">Messi</span>
-</h1>
-<p class="text-lg text-on-surface-variant max-w-md font-medium">8-time Ballon d'Or winner. World Cup Champion. The greatest of all time continues his legacy in the MLS.</p>
-<div class="flex gap-4 pt-4">
-<button class="stadium-gradient text-on-primary px-8 py-4 font-black uppercase tracking-widest text-xs hover:scale-105 transition-transform flex items-center gap-2">
-<span class="material-symbols-outlined">analytics</span> VIEW CAREER STATS
-                        </button>
-<button class="bg-white/10 backdrop-blur-md border border-white/10 text-white px-8 py-4 font-black uppercase tracking-widest text-xs hover:bg-white/20 transition-all">WATCH HIGHLIGHTS</button>
-</div>
-</div>
-</div>
-<!-- Slider Indicators -->
-<div class="absolute bottom-12 right-12 flex gap-4">
-<div class="w-12 h-1 bg-primary"></div>
-<div class="w-12 h-1 bg-white/20 hover:bg-white/40 transition-colors cursor-pointer"></div>
-<div class="w-12 h-1 bg-white/20 hover:bg-white/40 transition-colors cursor-pointer"></div>
-</div>
+<section class="relative w-full h-[716px] min-h-[600px] overflow-hidden group" id="hero-slider-container" style="display: none;">
+<!-- Dynamic Hero Hub injected by script.js -->
 </section>
 <!-- DraftKings Sponsored Banner -->
 <section class="px-6 lg:px-12 py-8">
