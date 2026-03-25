@@ -20,27 +20,24 @@ const IN_FLIGHT_REQUESTS = new Map();
 
 export const SPORT_LEAGUES = {
   soccer: [
-    "eng.1", "esp.1", "ger.1", "ita.1", "fra.1", 
-    "usa.1", "mex.1", "ned.1", "por.1", "bel.1", "tur.1", 
-    "arg.1", "bra.1", "ksa.1", "jpn.1",
-    "uefa.champions", "uefa.europa", "uefa.europa.conf", 
-    "fifa.world", "fifa.world.q.uefa"
+    "eng.1", "esp.1", "ger.1", "ita.1", "fra.1", "usa.1", "mex.1", 
+    "ned.1", "por.1", "bel.1", "tur.1", "arg.1", "bra.1", "ksa.1", "jpn.1",
+    "uefa.champions", "uefa.europa", "uefa.europa.conf", "uefa.nations",
+    "fifa.world", "fifa.worldq.uefa", "fifa.friendly", "conmebol.america",
+    "caf.nations", "afc.asian.cup", "concacaf.gold"
   ],
-  football: ["nfl", "college-football", "nfl-europe", "cfl", "aaf", "xfl", "ncaa-womens-football"],
+  football: ["nfl", "college-football", "ufl", "xfl", "cfl"],
   basketball: [
     "nba", "wnba", "mens-college-basketball", "womens-college-basketball", 
-    "fiba-mens-world-cup", "nba-g-league", "euroleague", "nbl"
+    "fiba", "nba-development", "nbl", "euroleague"
   ],
-  baseball: ["mlb", "ncaa-mens-baseball"],
-  hockey: ["nhl", "mens-college-hockey", "womens-college-hockey"],
-  cricket: ["8", "20", "1", "ipl"],
+  baseball: ["mlb", "college-baseball", "mexican-winter-league", "dominican-winter-league", "caribbean-series"],
+  hockey: ["nhl", "mens-college-hockey", "womens-college-hockey", "hockey-world-cup"],
+  cricket: ["icc.t20", "ipl", "icc.odi", "icc.test", "bbl", "psl", "cpl"],
   tennis: ["atp", "wta"],
-  mma: [
-    "ufc", "bellator", "ifc", "lfa", "ksw", "cage-warriors", 
-    "absolute", "fng", "k1", "m1", "ifl", "dream"
-  ],
+  mma: ["ufc", "bellator", "ifc", "lfa", "ksw", "cage-warriors"],
   racing: ["f1", "irl", "nascar-premier", "nascar-secondary", "nascar-truck"],
-  golf: ["pga", "lpga", "pga-tour-champions", "korn-ferry-tour", "dp-world-tour"],
+  golf: ["pga", "lpga", "champions-tour", "dp-world-tour", "liv", "korn-ferry-tour"],
   rugby: ["164205", "180659", "267979", "242041", "289262"],
   "rugby-league": ["3"],
   volleyball: ["mens-college-volleyball", "womens-college-volleyball"],

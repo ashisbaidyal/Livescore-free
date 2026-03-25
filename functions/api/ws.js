@@ -3,7 +3,8 @@ import {
   normalizeSportParam,
   normalizeLeagueParam,
   siteApiUrl,
-  calculateTTL
+  calculateTTL,
+  SPORT_LEAGUES
 } from "./_shared.js";
 
 export async function onRequest(context) {
@@ -28,20 +29,40 @@ export async function onRequest(context) {
 
   const pushData = async () => {
     try {
-      let data = null;
+      let results = null;
       if (subscription.type === "live") {
-        const url = siteApiUrl(subscription.sport, subscription.league || "all", "scoreboard");
-        data = await fetchJson(url);
+        if (subscription.sport === "all") {
+          // Poll top leagues for all major sports to provide a global live feed
+          const topSports = ["soccer", "basketball", "football", "hockey", "baseball", "cricket", "tennis"];
+          const endpoints = topSports.map(s => ({ sport: s, league: (SPORT_LEAGUES[s] || [])[0] || "all" }));
+          
+          const sportsData = await Promise.all(
+            endpoints.map(async ({ sport, league }) => {
+              try {
+                const url = siteApiUrl(sport, league, "scoreboard");
+                return await fetchJson(url);
+              } catch (e) { return null; }
+            })
+          );
+          
+          // Merge all events into a single scoreboard-like structure
+          const allEvents = sportsData.filter(Boolean).flatMap(d => d.events || []);
+          results = { events: allEvents };
+        } else {
+          // Specific sport or league subscription
+          const url = siteApiUrl(subscription.sport, subscription.league || "all", "scoreboard");
+          results = await fetchJson(url);
+        }
       } else if (subscription.type === "match" && subscription.id) {
         const url = siteApiUrl(subscription.sport, subscription.league, "summary", { event: subscription.id });
-        data = await fetchJson(url);
+        results = await fetchJson(url);
       }
 
-      if (data) {
+      if (results) {
         server.send(JSON.stringify({
           type: subscription.type,
           timestamp: Date.now(),
-          data: data
+          data: results
         }));
       }
     } catch (err) {
