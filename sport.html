@@ -11,24 +11,9 @@
 <meta name="theme-color" content="#0e0e0e"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
-<link rel="stylesheet" href="/css/runtime-enhancements.css"/><script id="lsf-config">
-    window.LSF_CONFIG = {
-        api: {
-            live: '/api/live',
-            match: '/api/match',
-            upcoming: '/api/upcoming',
-            info: '/api/info'
-        },
-        ws: {
-            url: (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/api/ws'
-        },
-        sources: [
-            'https://site.api.espn.com/apis/site/v2/sports',
-            'https://core.api.espn.com/v1/sports',
-            'https://cdn.espn.com/core'
-        ]
-    };
-</script>
+<link rel="stylesheet" href="/css/runtime-enhancements.css"/>
+    <!-- Real-time Data Configuration -->
+    <script src="js/config.js"></script>
 </head>
 <body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
