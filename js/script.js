@@ -508,6 +508,24 @@ function findCachedMatch(matchId = '') {
   return getCachedMatches().find((match) => String(match.id) === String(matchId)) || null;
 }
 
+function isGenericTeamLabel(value = '') {
+  const label = String(value || '').trim().toLowerCase();
+  return !label || ['home', 'away', 'tbd', 'to be determined', 'team home', 'team away', 'player 1', 'player 2'].includes(label);
+}
+
+function isPlaceholderTeam(team = {}) {
+  const name = String(team?.name || team?.fullName || '').trim();
+  const abbreviation = String(team?.abbreviation || '').trim().toLowerCase();
+  return isGenericTeamLabel(name) || ['hom', 'awa', 'tbd'].includes(abbreviation);
+}
+
+function filterRenderableMatches(matches = []) {
+  return matches.filter((match) => {
+    if (!match?.id || !match?.homeTeam || !match?.awayTeam) return false;
+    return !isPlaceholderTeam(match.homeTeam) && !isPlaceholderTeam(match.awayTeam);
+  });
+}
+
 function showRuntimeToast(message, tone = 'success') {
   const existing = document.querySelector('.lsf-toast');
   if (existing) existing.remove();
@@ -1556,7 +1574,7 @@ async function fetchArenaSchedule(sport = currentArenaTab) {
       
     const res = await fetch(apiUrl);
     const data = await res.json();
-    const allMatches = data.matches || [];
+    const allMatches = filterRenderableMatches(data.matches || []);
     
     if (allMatches.length === 0) {
       container.innerHTML = `
@@ -1690,6 +1708,7 @@ function renderArenaTabs() {
 }
 
 window.switchArenaTab = function switchTab(tabId) {
+  currentArenaTab = tabId;
   currentTab = tabId;
   renderArenaTabs();
   // Update Realtime subscription
@@ -1843,8 +1862,9 @@ async function fetchHeroData(statusFilter = null) {
       // 1. Fetch live matches for featured match
       const liveRes = await fetch(`${API_LIVE}?sport=all`);
       const liveData = await liveRes.json();
-      let liveMatches = (liveData.matches || []).filter(m => m.status === 'live');
-      if (liveMatches.length === 0) liveMatches = (liveData.matches || []).slice(0, 3);
+      const allLiveMatches = filterRenderableMatches(liveData.matches || []);
+      let liveMatches = allLiveMatches.filter(m => m.status === 'live');
+      if (liveMatches.length === 0) liveMatches = allLiveMatches.slice(0, 3);
       updateFeedRibbon(liveData.meta || {}, {
         feedLabel: 'Homepage live board',
         matchCount: (liveData.matches || []).length,
@@ -1854,7 +1874,7 @@ async function fetchHeroData(statusFilter = null) {
       // 2. Fetch upcoming matches for "Next Major Event"
       const upRes = await fetch(`${API_UPCOMING}?sport=all&days=3`);
       const upData = await upRes.json();
-      let upMatches = upData.matches || [];
+      let upMatches = filterRenderableMatches(upData.matches || []);
       upMatches.sort((a,b) => new Date(a.date) - new Date(b.date));
 
       // 3. Fetch news for "Breaking Now"
@@ -1870,7 +1890,7 @@ async function fetchHeroData(statusFilter = null) {
 
     const res = await fetch(`${API_LIVE}?sport=all`);
     const data = await res.json();
-    let matches = data.matches || [];
+    let matches = filterRenderableMatches(data.matches || []);
     updateFeedRibbon(data.meta || {}, {
       feedLabel: 'Hero spotlight',
       matchCount: matches.length,
@@ -2627,7 +2647,7 @@ async function fetchTrendingUpcoming() {
       days: 3
     }));
     const data = await res.json();
-    let matches = data.matches || [];
+    let matches = filterRenderableMatches(data.matches || []);
     window._cachedUpcomingMatches = matches;
     
     // Sort chronologically and take next 3
@@ -3042,7 +3062,7 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
     
     const res = await fetch(apiUrl);
     const data = await res.json();
-    let matches = data.matches || [];
+    let matches = filterRenderableMatches(data.matches || []);
     updateFeedRibbon(data.meta || {}, {
       feedLabel: isUpcomingPage && statusFilter === 'upcoming'
         ? 'Schedule feed'
@@ -3736,7 +3756,7 @@ async function fetchUpcomingToday() {
       days: 1
     }));
     const data = await res.json();
-    const upcoming = (data.matches || []).filter(m => m.status === 'upcoming');
+    const upcoming = filterRenderableMatches(data.matches || []).filter(m => m.status === 'upcoming');
     window._cachedUpcomingMatches = upcoming;
     // Sort by date ascending (soonest first)
     upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -3934,6 +3954,7 @@ async function performSearch(query) {
 
 // --- SCROLL REVEAL ANIMATIONS ---
 function initScrollReveal() {
+  if (typeof IntersectionObserver === 'undefined') return;
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -3944,11 +3965,22 @@ function initScrollReveal() {
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-  document.querySelectorAll('section, .glass-card, article').forEach(el => {
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  document.querySelectorAll('.glass-card, article').forEach(el => {
     if (!el.closest('#main-header') && !el.closest('aside') && !el.closest('footer')) {
+      el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+      if (el.classList.contains('headline-expansion-item')) {
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      const isInInitialViewport = rect.top <= viewportHeight * 0.92 && rect.bottom >= 0;
+      if (isInInitialViewport) {
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+        return;
+      }
       el.style.opacity = '0';
       el.style.transform = 'translateY(30px)';
-      el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
       observer.observe(el);
     }
   });
@@ -4065,13 +4097,13 @@ if (window.location.pathname.includes('upcoming')) {
         days: selectedDateOffset + 1
       }));
       const data = await res.json();
-      let matches = data.matches || [];
+      let matches = filterRenderableMatches(data.matches || []);
       updateFeedRibbon(data.meta || {}, {
         feedLabel: 'Upcoming schedule',
         matchCount: matches.length,
         liveCount: 0
       });
-      window._cachedUpcomingMatches = data.matches || [];
+      window._cachedUpcomingMatches = matches;
 
       // Filter to only the selected date
       const target = new Date(); target.setDate(target.getDate() + selectedDateOffset);
@@ -4160,8 +4192,8 @@ if (window.location.pathname.includes('upcoming')) {
       container.innerHTML = html;
 
       // Set up countdown using ALL upcoming matches (so it works even if selected date is empty)
-      if (data.matches && data.matches.length > 0) {
-          setupCountdown(data.matches[0]);
+      if (matches.length > 0) {
+          setupCountdown(matches[0]);
       } else {
           // If absolutely NO fixtures over the next 7 days in this sport
           const matchName = document.getElementById('countdown-match-name');
