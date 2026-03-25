@@ -4145,23 +4145,20 @@ function initScrollReveal() {
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
   document.querySelectorAll('.glass-card, article').forEach(el => {
     if (!el.closest('#main-header') && !el.closest('aside') && !el.closest('footer')) {
       el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
       if (el.classList.contains('headline-expansion-item')) {
         return;
       }
-      const rect = el.getBoundingClientRect();
-      const isInInitialViewport = rect.top <= viewportHeight * 0.92 && rect.bottom >= 0;
-      if (isInInitialViewport) {
-        el.style.opacity = '1';
-        el.style.transform = 'translateY(0)';
+      if (el.dataset.lsfReveal === 'defer') {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        observer.observe(el);
         return;
       }
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(30px)';
-      observer.observe(el);
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
     }
   });
 }
