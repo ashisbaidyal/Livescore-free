@@ -114,35 +114,7 @@ class RealtimeManager {
   handleMessage(message) {
     if (message.type === 'live') {
       const matches = message.data.matches || [];
-      window._cachedLiveMatches = matches;
-
-      // Update ALL live-aware components
-      if (typeof renderTicker === 'function') renderTicker(matches);
-      if (typeof renderMatches === 'function' && currentPageFilter === 'live') renderMatches(matches);
-      if (typeof renderSidebarLive === 'function') renderSidebarLive(matches);
-      
-      // Update Hubs/Sliders
-      if (typeof renderHeroSlider === 'function' && heroSliderContainer && currentPageFilter !== 'upcoming') {
-          renderHeroSlider(matches.slice(0, 5), currentPageFilter);
-      }
-      
-      if (typeof renderIndexHeroHub === 'function' && (window.location.pathname === '/' || window.location.pathname.endsWith('index.html'))) {
-          renderIndexHeroHub(matches, window._cachedUpcoming || [], window._cachedNews || []);
-      }
-
-      if (typeof renderArenaLiveFallback === 'function' && document.getElementById('arena-schedule-container')) {
-          renderArenaLiveFallback(matches);
-      }
-
-      if (typeof renderLeaguesHub === 'function' && window.location.pathname.includes('leagues.html')) {
-          // Re-render leagues hub to show live indicator
-          // We assume eliteLeagues and standingsMap are already stored or will be fetched by next interval
-          // For now, only update if it's already rendered once
-          const elite = window._eliteLeaguesCache || [];
-          const standings = window._standingsMapCache || {};
-          renderLeaguesHub(elite, standings, matches);
-      }
-
+      broadcastLiveMatches(matches);
     } else if (message.type === 'match') {
       if (typeof renderMatchDetail === 'function') renderMatchDetail(message.data);
     }
@@ -214,6 +186,34 @@ function setupNewsExpansion() {
   items.forEach(item => observer.observe(item));
 }
 
+function broadcastLiveMatches(matches) {
+  window._cachedLiveMatches = matches;
+
+  // Update ALL live-aware components
+  if (typeof renderTicker === 'function') renderTicker(matches);
+  if (typeof renderMatches === 'function' && currentPageFilter === 'live') renderMatches(matches);
+  if (typeof renderSidebarLive === 'function') renderSidebarLive(matches);
+  
+  // Update Hubs/Sliders
+  if (typeof renderHeroSlider === 'function' && typeof heroSliderContainer !== 'undefined' && heroSliderContainer && currentPageFilter !== 'upcoming') {
+      renderHeroSlider(matches.slice(0, 5), currentPageFilter);
+  }
+  
+  if (typeof renderIndexHeroHub === 'function' && (window.location.pathname === '/' || window.location.pathname.endsWith('index.html'))) {
+      renderIndexHeroHub(matches, window._cachedUpcoming || [], window._cachedNews || []);
+  }
+
+  if (typeof renderArenaLiveFallback === 'function' && document.getElementById('arena-schedule-container')) {
+      renderArenaLiveFallback(matches);
+  }
+
+  if (typeof renderLeaguesHub === 'function' && window.location.pathname.includes('leagues.html')) {
+      const elite = window._eliteLeaguesCache || [];
+      const standings = window._standingsMapCache || {};
+      renderLeaguesHub(elite, standings, matches);
+  }
+}
+
 async function fetchLiveCount() {
   try {
     const res = await fetch(`${API_LIVE}?sport=all`);
@@ -231,8 +231,8 @@ async function fetchLiveCount() {
     if (badge) badge.textContent = label;
     if (badgeHero) badgeHero.textContent = label;
     
-    // Pass real matches to ticker
-    renderTicker(matches);
+    // Pass real matches to ALL widgets via standard broadcast
+    broadcastLiveMatches(matches);
   } catch (e) {
     console.error("Ticker/LiveCount Error:", e);
   }
