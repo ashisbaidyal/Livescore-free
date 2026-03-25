@@ -49,7 +49,13 @@
 <meta name="theme-color" content="#0e0e0e"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
-<link rel="stylesheet" href="/css/runtime-enhancements.css"/></head>
+<link rel="stylesheet" href="/css/runtime-enhancements.css"/>
+<meta property="og:title" content="LivescoreFree.online | The Kinetic Broadcast">
+<meta property="og:description" content="Track the global matchday universe with high-contrast scores and tactical headline reports.">
+<meta property="og:image" content="https://livescorefree.online/logo.png">
+<meta property="og:url" content="https://livescorefree.online">
+<meta property="og:type" content="website">
+</head>
 <body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
 <nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
   <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
@@ -60,15 +66,18 @@
         <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
       </a>
     </div>
-    <div class="hidden lg:flex gap-8 items-center font-bold uppercase tracking-tighter" id="top-nav-links">
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="live.html">Live</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">Upcoming</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="results.html">Results</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="trending.html">Trending</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="news.html">News</a>
-      <a class="text-on-surface/60 hover:text-primary transition-all" href="players.html">Players</a>
+    <div class="hidden lg:flex gap-8 items-center font-bold uppercase tracking-tighter" id="top-nav-links"><a class="text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="live.html">Live</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">Upcoming</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="results.html">Results</a>
+
+<div class="relative group cursor-pointer h-full flex items-center">
+    <span class="nav-link text-on-surface/60 hover:text-primary transition-all uppercase flex items-center gap-1">More <span class="material-symbols-outlined text-sm">expand_more</span></span>
+    <div class="absolute top-full left-0 mt-2 w-48 bg-surface-container-high border border-white/10 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-[200]">
+        <a class="text-on-surface/60 hover:text-primary transition-all" href="trending.html">Trending</a><a class="text-on-surface/60 hover:text-primary transition-all" href="news.html">News</a><a class="text-on-surface/60 hover:text-primary transition-all" href="players.html">Players</a>
     </div>
+</div>
+</div>
     <div class="flex items-center gap-6">
       <div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
         <span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
@@ -461,7 +470,7 @@
     container.innerHTML = news.slice(0, 6).map(article => `
       <a href="${article.url || article.links?.web?.href || 'news.html'}" target="_blank" rel="noreferrer" class="rounded-2xl border border-white/5 bg-white/5 p-5 hover:border-primary/30 hover:bg-white/10 transition-all group block">
         <div class="flex gap-4">
-          ${article.image ? `<img src="${article.image}" class="w-20 h-20 rounded-xl object-cover shrink-0" onerror="this.style.display='none'">` : ''}
+          ${article.image ? `<img src="${article.image}" class="w-20 h-20 rounded-xl object-cover shrink-0" onerror="this.style.display='none'" alt="Image description">` : ''}
           <div class="flex-1 min-w-0">
             <h4 class="text-sm font-black uppercase tracking-tight leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">${article.headline || article.title}</h4>
             <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${article.published ? new Date(article.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} ${article.byline ? `• ${article.byline}` : ''}</p>
@@ -489,7 +498,7 @@
       <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Current Team</div>
       <a href="${teamLink}" class="block rounded-2xl border border-white/5 bg-white/5 p-5 hover:border-primary/30 hover:bg-white/10 transition-all group">
         <div class="flex items-center gap-4 mb-3">
-          ${athlete.team.logo ? `<img src="${athlete.team.logo}" class="w-12 h-12 object-contain" onerror="this.src='${FALLBACK_AVATAR}'">` : ''}
+          ${athlete.team.logo ? `<img src="${athlete.team.logo}" class="w-12 h-12 object-contain" onerror="this.src='${FALLBACK_AVATAR}'" alt="Image description">` : ''}
           <div>
             <h4 class="text-lg font-black uppercase tracking-tight group-hover:text-primary transition-colors">${athlete.team.name}</h4>
             <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${up(athlete.league)} • ${up(athlete.sport)}</p>

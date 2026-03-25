@@ -60,7 +60,10 @@ class RealtimeManager {
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.syncSubscriptions();
-        if (this.fallbackTimer) clearInterval(this.fallbackTimer);
+        if (this.fallbackTimer) {
+          clearInterval(this.fallbackTimer);
+          this.fallbackTimer = null;
+        }
       };
 
       this.socket.onmessage = (event) => {
