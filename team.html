@@ -124,11 +124,11 @@
 
     <section class="max-w-7xl mx-auto px-8 py-10 grid gap-8 xl:grid-cols-[1fr_320px]">
       <div class="space-y-8">
-        <div id="team-meta-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div class="h-32 rounded-3xl bg-white/5 animate-pulse"></div>
-          <div class="h-32 rounded-3xl bg-white/5 animate-pulse"></div>
-          <div class="h-32 rounded-3xl bg-white/5 animate-pulse"></div>
-          <div class="h-32 rounded-3xl bg-white/5 animate-pulse"></div>
+        <div id="team-meta-grid" class="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="h-28 rounded-3xl bg-white/5 animate-pulse"></div>
+          <div class="h-28 rounded-3xl bg-white/5 animate-pulse"></div>
+          <div class="h-28 rounded-3xl bg-white/5 animate-pulse"></div>
+          <div class="h-28 rounded-3xl bg-white/5 animate-pulse"></div>
         </div>
 
         <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
@@ -146,13 +146,57 @@
           </div>
 
           <div class="glass-card rounded-3xl border border-white/5 p-6 lg:p-8">
-            <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Profile Signals</div>
+            <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Profile Signals</div>
             <div id="team-signals" class="grid gap-4">
               <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
               <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
               <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
             </div>
           </div>
+        </div>
+
+        <!-- Full Roster -->
+        <div class="glass-card rounded-3xl border border-white/5 p-6 lg:p-8">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Squad</div>
+              <h2 class="text-3xl font-black italic uppercase tracking-tighter">Full Roster</h2>
+            </div>
+            <span class="material-symbols-outlined text-primary text-3xl">groups</span>
+          </div>
+          <div id="team-roster-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div class="h-28 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-28 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-28 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-28 rounded-2xl bg-white/5 animate-pulse"></div>
+          </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="glass-card rounded-3xl border border-white/5 p-6 lg:p-8">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Upcoming & Recent</div>
+              <h2 class="text-3xl font-black italic uppercase tracking-tighter">Schedule</h2>
+            </div>
+            <span class="material-symbols-outlined text-primary text-3xl">calendar_month</span>
+          </div>
+          <div id="team-schedule-list" class="space-y-3">
+            <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+          </div>
+        </div>
+
+        <!-- Injuries -->
+        <div id="team-injuries-section" class="glass-card rounded-3xl border border-white/5 p-6 lg:p-8 hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Injury Report</div>
+              <h2 class="text-3xl font-black italic uppercase tracking-tighter">Injuries</h2>
+            </div>
+            <span class="material-symbols-outlined text-primary text-3xl">medical_services</span>
+          </div>
+          <div id="team-injuries-list" class="space-y-3"></div>
         </div>
       </div>
 
@@ -174,9 +218,10 @@
             </a>
           </div>
         </div>
-        <div class="glass-card rounded-3xl border border-white/5 p-6">
-          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Theme Note</div>
-          <p class="text-sm text-on-surface/65 leading-relaxed">Use this profile to move quickly between team context, standings, and upcoming fixtures.</p>
+        <!-- Quick Stats sidebar -->
+        <div id="team-quick-stats" class="glass-card rounded-3xl border border-white/5 p-6 hidden">
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Quick Stats</div>
+          <div id="team-quick-stats-content" class="space-y-3"></div>
         </div>
       </aside>
     </section>
@@ -256,48 +301,68 @@
 
   function renderTeam(profile) {
     const team = profile.team;
-    const nextMatch = profile.schedule.find((match) => match.status === "upcoming") || profile.schedule[0] || null;
-    const rosterPreview = profile.roster.slice(0, 4);
+    const nextMatch = profile.schedule.find((m) => m.status === "upcoming") || profile.schedule[0] || null;
+    const FALLBACK = '/icons/icon-192.png';
 
     document.title = `${team.name} | Team Profile | LivescoreFree.online`;
     document.getElementById("team-name").textContent = team.name;
     document.getElementById("team-kicker").textContent = `${safeUpper(team.sport)} / ${safeUpper(team.league)}`;
     document.getElementById("team-logo").src = team.logo;
     document.getElementById("team-logo").alt = team.name;
-    document.getElementById("team-summary").textContent = `${team.name} is connected to the live ESPN feed for identity, roster, and schedule context inside the current site theme.`;
+    document.getElementById("team-logo").onerror = function() { this.src = FALLBACK; };
+    document.getElementById("team-summary").textContent = `${team.name} — full profile with roster, schedule, and injuries from the live ESPN feed.`;
     document.getElementById("team-logo-shell").style.borderColor = `${team.color}55`;
 
-    const metaGrid = document.getElementById("team-meta-grid");
-    metaGrid.innerHTML = [
-      { label: "League", value: safeUpper(team.league) },
-      { label: "Record", value: team.record || "Record pending" },
-      { label: "Venue", value: team.venue || "Venue pending" },
-      { label: "Roster", value: `${profile.roster.length || 0} active entries` }
-    ].map((item) => `
+    // Meta Grid
+    document.getElementById("team-meta-grid").innerHTML = [
+      { icon: "public", label: "League", value: safeUpper(team.league) },
+      { icon: "emoji_events", label: "Record", value: team.record || "Pending" },
+      { icon: "stadium", label: "Venue", value: team.venue || "Not listed" },
+      { icon: "groups", label: "Roster", value: `${profile.roster.length || 0} players` }
+    ].map(item => `
       <div class="glass-card rounded-3xl border border-white/5 p-5">
-        <div class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-3">${item.label}</div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="material-symbols-outlined text-primary text-lg">${item.icon}</span>
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40">${item.label}</div>
+        </div>
         <div class="text-xl font-black italic leading-tight">${item.value}</div>
       </div>
     `).join("");
 
+    // Story
     document.getElementById("team-story").innerHTML = `
-      <p><span class="text-white font-black">${team.name}</span> is currently tracked in <span class="text-white font-black">${safeUpper(team.league)}</span> under the <span class="text-white font-black">${safeUpper(team.sport)}</span> feed.</p>
-      <p>${team.venue ? `Home venue: <span class="text-white font-black">${team.venue}</span>.` : "Venue data is not available in the current response."}</p>
-      <p>${nextMatch ? `Next schedule item: <a class="text-primary font-black" href="${buildMatchUrl(nextMatch)}">${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}</a>.` : "No upcoming schedule item was returned for this team."}</p>
-      ${rosterPreview.length ? `<div class="pt-2"><div class="text-[10px] font-black uppercase tracking-[0.25em] text-primary mb-3">Roster Preview</div>${rosterPreview.map((athlete) => `<div class="flex items-center justify-between border-t border-white/5 py-3"><span class="font-black uppercase">${athlete.fullName}</span><span class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">${athlete.position?.displayName || athlete.jersey || "Athlete"}</span></div>`).join("")}</div>` : ""}
+      <p><span class="text-white font-black">${team.name}</span> is tracked in <span class="text-white font-black">${safeUpper(team.league)}</span> under the <span class="text-white font-black">${safeUpper(team.sport)}</span> feed.</p>
+      <p>${team.venue ? `Home venue: <span class="text-white font-black">${team.venue}</span>.` : 'Venue data not available.'}</p>
+      <p>${team.location ? `Location: <span class="text-white font-black">${team.location}</span>.` : ''}</p>
+      <p>${nextMatch ? `Next fixture: <a class="text-primary font-black hover:underline" href="${buildMatchUrl(nextMatch)}">${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}</a> — ${nextMatch.time || new Date(nextMatch.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}.` : 'No upcoming schedule item returned.'}</p>
     `;
 
+    // Signals
     document.getElementById("team-signals").innerHTML = [
-      { label: "Identity", value: team.abbreviation || team.location || team.name },
-      { label: "Injuries", value: profile.injuries.length ? `${profile.injuries.length} listed` : "No active report" },
-      { label: "Next Match", value: nextMatch ? `${nextMatch.homeTeam.abbreviation || nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.abbreviation || nextMatch.awayTeam.name}` : "Schedule pending" }
-    ].map((item) => `
-      <div class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4">
-        <div class="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface/40 mb-2">${item.label}</div>
-        <div class="font-black uppercase tracking-tight">${item.value}</div>
+      { icon: "badge", label: "Identity", value: team.abbreviation || team.location || team.name },
+      { icon: "medical_services", label: "Injuries", value: profile.injuries.length ? `${profile.injuries.length} listed` : "No active report" },
+      { icon: "schedule", label: "Schedule", value: `${profile.schedule.length} matches tracked` },
+      { icon: "sports_score", label: "Next Match", value: nextMatch ? `${nextMatch.homeTeam.abbreviation || nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.abbreviation || nextMatch.awayTeam.name}` : "Pending" }
+    ].map(item => `
+      <div class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 flex items-center gap-4">
+        <span class="material-symbols-outlined text-primary text-lg">${item.icon}</span>
+        <div>
+          <div class="text-[9px] font-black uppercase tracking-[0.25em] text-on-surface/40 mb-1">${item.label}</div>
+          <div class="font-black uppercase tracking-tight text-sm">${item.value}</div>
+        </div>
       </div>
     `).join("");
 
+    // Full Roster Grid
+    renderRoster(profile.roster, team);
+
+    // Schedule
+    renderSchedule(profile.schedule);
+
+    // Injuries
+    renderInjuries(profile.injuries);
+
+    // Sidebar Links
     document.getElementById("team-links").innerHTML = `
       <a href="teams.html?league=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
         <div class="text-xs font-black uppercase tracking-widest">Back To Teams Hub</div>
@@ -312,6 +377,114 @@
         <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Move from profile to schedule</div>
       </a>
     `;
+
+    // Quick Stats sidebar
+    if (profile.roster.length > 0) {
+      const qsPanel = document.getElementById("team-quick-stats");
+      qsPanel.classList.remove("hidden");
+      const positions = {};
+      profile.roster.forEach(a => {
+        const pos = a.position?.displayName || a.position?.name || 'Other';
+        positions[pos] = (positions[pos] || 0) + 1;
+      });
+      document.getElementById("team-quick-stats-content").innerHTML = Object.entries(positions).map(([pos, count]) => `
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-on-surface/60 font-bold uppercase tracking-tight">${pos}</span>
+          <span class="font-black text-primary">${count}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  function renderRoster(roster, team) {
+    const grid = document.getElementById("team-roster-grid");
+    const FALLBACK = '/icons/icon-192.png';
+    if (!roster.length) {
+      grid.innerHTML = '<div class="col-span-full rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Roster not available from the current feed</div>';
+      return;
+    }
+
+    grid.innerHTML = roster.map(a => {
+      const headshotUrl = a.headshot?.href || a.headshot?.url || FALLBACK;
+      const playerUrl = `player.html?id=${encodeURIComponent(a.id)}&name=${encodeURIComponent(a.fullName)}&sport=${encodeURIComponent(team.sport)}&league=${encodeURIComponent(team.league)}&team=${encodeURIComponent(team.name)}&role=${encodeURIComponent(a.position?.displayName || '')}`;
+      return `
+        <a href="${playerUrl}" class="group rounded-2xl border border-white/5 bg-white/5 p-4 hover:border-primary/30 hover:bg-white/10 transition-all">
+          <div class="flex items-center gap-3 mb-3">
+            <img src="${headshotUrl}" alt="${a.fullName}" class="w-10 h-10 rounded-full object-cover border border-white/10" onerror="this.src='${FALLBACK}'">
+            <div class="min-w-0">
+              <div class="text-sm font-black uppercase tracking-tight truncate group-hover:text-primary transition-colors">${a.fullName}</div>
+              <div class="text-[9px] text-on-surface/40 uppercase tracking-widest">${a.jersey ? `#${a.jersey}` : ''} ${a.position?.displayName || a.position?.abbreviation || ''}</div>
+            </div>
+          </div>
+          <div class="flex gap-3 text-[9px] text-on-surface/40 uppercase tracking-widest">
+            ${a.age ? `<span>Age ${a.age}</span>` : ''}
+            ${a.displayHeight ? `<span>${a.displayHeight}</span>` : ''}
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  function renderSchedule(schedule) {
+    const container = document.getElementById("team-schedule-list");
+    if (!schedule.length) {
+      container.innerHTML = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No schedule data returned from the feed</div>';
+      return;
+    }
+
+    // Show last 5 + next 10
+    const now = new Date();
+    const past = schedule.filter(m => new Date(m.date) < now).slice(-5);
+    const future = schedule.filter(m => new Date(m.date) >= now).slice(0, 10);
+    const display = [...past, ...future];
+
+    container.innerHTML = display.map(m => {
+      const d = new Date(m.date);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const isLive = m.status === 'live';
+      const isFinished = m.status === 'finished';
+      const matchUrl = buildMatchUrl(m);
+      return `
+        <a href="${matchUrl}" class="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 px-4 py-3 hover:border-primary/30 hover:bg-white/10 transition-all group">
+          <div class="text-center shrink-0 w-14">
+            <div class="text-[9px] font-black uppercase tracking-widest text-on-surface/40">${dateStr}</div>
+            ${isLive ? '<div class="text-[9px] font-black uppercase tracking-widest text-red-400 animate-pulse">LIVE</div>' : ''}
+            ${isFinished ? '<div class="text-[9px] font-black uppercase tracking-widest text-on-surface/30">FT</div>' : ''}
+            ${!isLive && !isFinished ? '<div class="text-[9px] font-black uppercase tracking-widest text-on-surface/30">SCH</div>' : ''}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <img src="${m.homeTeam.logo}" class="w-5 h-5 object-contain" onerror="this.style.display='none'">
+              <span class="text-sm font-black uppercase tracking-tight truncate ${m.homeTeam.winner ? 'text-white' : 'text-on-surface/60'}">${m.homeTeam.name}</span>
+              <span class="text-sm font-black ${isFinished || isLive ? '' : 'text-on-surface/30'}">${isFinished || isLive ? m.homeTeam.score : ''}</span>
+            </div>
+            <div class="flex items-center gap-2 mt-1">
+              <img src="${m.awayTeam.logo}" class="w-5 h-5 object-contain" onerror="this.style.display='none'">
+              <span class="text-sm font-black uppercase tracking-tight truncate ${m.awayTeam.winner ? 'text-white' : 'text-on-surface/60'}">${m.awayTeam.name}</span>
+              <span class="text-sm font-black ${isFinished || isLive ? '' : 'text-on-surface/30'}">${isFinished || isLive ? m.awayTeam.score : ''}</span>
+            </div>
+          </div>
+          <span class="material-symbols-outlined text-primary text-sm opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+        </a>
+      `;
+    }).join('');
+  }
+
+  function renderInjuries(injuries) {
+    if (!injuries.length) return;
+    const section = document.getElementById("team-injuries-section");
+    section.classList.remove("hidden");
+    const container = document.getElementById("team-injuries-list");
+    container.innerHTML = injuries.map(inj => `
+      <div class="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
+        <span class="material-symbols-outlined text-yellow-400 text-lg">healing</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-black uppercase tracking-tight">${inj.athlete?.displayName || 'Unknown'}</div>
+          <div class="text-[9px] text-on-surface/40 uppercase tracking-widest">${inj.status || ''} ${inj.detail ? `• ${inj.detail}` : ''}</div>
+        </div>
+        ${inj.date ? `<div class="text-[9px] text-on-surface/30 uppercase tracking-widest shrink-0">${new Date(inj.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>` : ''}
+      </div>
+    `).join('');
   }
 
   async function hydrateTeamProfile() {

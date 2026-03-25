@@ -2256,31 +2256,46 @@ async function fetchPlayers() {
 
   try {
     // We will do parallel fetches for different player groupings
-    const [soccerRes, nbaRes, nflRes] = await Promise.all([
+    const [soccerRes, nbaRes, nflRes, nhlRes, cricketRes, tennisRes] = await Promise.all([
       fetch(`${API_INFO}?type=players&sport=soccer&league=eng.1`).catch(() => null),
       fetch(`${API_INFO}?type=players&sport=basketball&league=nba`).catch(() => null),
-      fetch(`${API_INFO}?type=players&sport=football&league=nfl`).catch(() => null)
+      fetch(`${API_INFO}?type=players&sport=football&league=nfl`).catch(() => null),
+      fetch(`${API_INFO}?type=players&sport=hockey&league=nhl`).catch(() => null),
+      fetch(`${API_INFO}?type=players&sport=cricket&league=ipl`).catch(() => null),
+      fetch(`${API_INFO}?type=players&sport=tennis&league=atp`).catch(() => null)
     ]);
 
     const soccerData = soccerRes ? await soccerRes.json() : { athletes: [] };
     const nbaData = nbaRes ? await nbaRes.json() : { athletes: [] };
     const nflData = nflRes ? await nflRes.json() : { athletes: [] };
+    const nhlData = nhlRes ? await nhlRes.json() : { athletes: [] };
+    const cricketData = cricketRes ? await cricketRes.json() : { athletes: [] };
+    const tennisData = tennisRes ? await tennisRes.json() : { athletes: [] };
 
     const soccerAthletes = soccerData.athletes || [];
     const nbaAthletes = nbaData.athletes || [];
     const nflAthletes = nflData.athletes || [];
+    const nhlAthletes = nhlData.athletes || [];
+    const cricketAthletes = cricketData.athletes || [];
+    const tennisAthletes = tennisData.athletes || [];
     
     // Inject sport data
     soccerAthletes.forEach(a => { a.sport = 'soccer'; a.league = 'eng.1'; });
     nbaAthletes.forEach(a => { a.sport = 'basketball'; a.league = 'nba'; });
     nflAthletes.forEach(a => { a.sport = 'football'; a.league = 'nfl'; });
+    nhlAthletes.forEach(a => { a.sport = 'hockey'; a.league = 'nhl'; });
+    cricketAthletes.forEach(a => { a.sport = 'cricket'; a.league = 'ipl'; });
+    tennisAthletes.forEach(a => { a.sport = 'tennis'; a.league = 'atp'; });
 
-    // On players.html, render the 4 grids
+    // On players.html, render the 6 grids
     if (isPlayersPage) {
-       renderTrendingPlayersPage(soccerAthletes.concat(nbaAthletes, nflAthletes));
+       renderTrendingPlayersPage(soccerAthletes.concat(nbaAthletes, nflAthletes, nhlAthletes, cricketAthletes, tennisAthletes));
        renderSoccerLegends(soccerAthletes);
        renderNbaAllstars(nbaAthletes);
        renderNflElite(nflAthletes);
+       renderNhlStars(nhlAthletes);
+       renderCricketIcons(cricketAthletes);
+       renderTennisAces(tennisAthletes);
     } else if (trendingPlayersContainer && !playersContainer) {
        renderTrendingPlayersPage(soccerAthletes.concat(nbaAthletes, nflAthletes));
     } else if (playersContainer) {
@@ -2424,6 +2439,68 @@ function renderNflElite(athletes) {
   `).join('');
 }
 
+function renderNhlStars(athletes) {
+  const container = document.getElementById('nhl-stars-grid');
+  if (!container) return;
+  if (!athletes.length) { container.innerHTML = ''; return; }
+  container.innerHTML = athletes.slice(0, 3).map(a => `
+    <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="glass-panel p-6 border border-white/5 rounded-2xl relative overflow-hidden group hover:bg-white/5 transition-all block">
+      <div class="flex items-center gap-4 mb-4">
+        <img src="${getSafeImageUrl(a.headshot?.href, FALLBACK_LOGO)}" class="w-16 h-16 rounded-full object-cover border border-white/10" onerror="this.src='${FALLBACK_LOGO}'">
+        <div>
+          <h4 class="text-xl font-black uppercase italic tracking-tighter">${a.fullName}</h4>
+          <p class="text-[10px] text-primary font-black tracking-widest uppercase mt-1">NHL | ${a.position?.abbreviation || 'Player'}</p>
+        </div>
+      </div>
+      <div class="flex justify-between items-center text-xs text-on-surface-variant font-bold uppercase tracking-widest">
+        <span>Age: ${a.age || '-'}</span>
+        <span>${a.displayHeight || '-'}</span>
+      </div>
+    </a>
+  `).join('');
+}
+
+function renderCricketIcons(athletes) {
+  const container = document.getElementById('cricket-icons-grid');
+  if (!container) return;
+  if (!athletes.length) { container.innerHTML = ''; return; }
+  container.innerHTML = athletes.slice(0, 3).map(a => `
+    <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="bg-surface-container border border-white/5 rounded-2xl p-6 relative group hover:border-primary/40 transition-all block">
+      <div class="flex items-center gap-4 mb-4">
+        <img src="${getSafeImageUrl(a.headshot?.href, FALLBACK_LOGO)}" class="w-16 h-16 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all border border-white/10" onerror="this.src='${FALLBACK_LOGO}'">
+        <div>
+          <h4 class="text-xl font-black uppercase italic tracking-tighter">${a.fullName}</h4>
+          <p class="text-[10px] text-primary font-black tracking-widest uppercase mt-1">IPL | ${a.position?.abbreviation || 'Cricket'}</p>
+        </div>
+      </div>
+      <div class="flex justify-between items-center text-xs text-on-surface-variant font-bold uppercase tracking-widest">
+        <span>Age: ${a.age || '-'}</span>
+        <span class="text-primary">${a.status?.name || 'Active'}</span>
+      </div>
+    </a>
+  `).join('');
+}
+
+function renderTennisAces(athletes) {
+  const container = document.getElementById('tennis-aces-grid');
+  if (!container) return;
+  if (!athletes.length) { container.innerHTML = ''; return; }
+  container.innerHTML = athletes.slice(0, 3).map(a => `
+    <a href="${buildPlayerProfileUrl(a, a.sport, a.league)}" class="glass-panel p-6 border border-white/5 rounded-2xl relative group hover:bg-white/5 transition-all block">
+      <div class="flex items-center gap-4 mb-4">
+        <img src="${getSafeImageUrl(a.headshot?.href, FALLBACK_LOGO)}" class="w-16 h-16 rounded-full object-cover border border-white/10" onerror="this.src='${FALLBACK_LOGO}'">
+        <div>
+          <h4 class="text-xl font-black uppercase italic tracking-tighter">${a.fullName}</h4>
+          <p class="text-[10px] text-primary font-black tracking-widest uppercase mt-1">ATP | ${a.position?.displayName || 'Pro'}</p>
+        </div>
+      </div>
+      <div class="flex justify-between items-center text-xs text-on-surface-variant font-bold uppercase tracking-widest border-t border-white/5 pt-3">
+        <span>Age: ${a.age || '-'}</span>
+        <span>${a.displayHeight || '-'}</span>
+      </div>
+    </a>
+  `).join('');
+}
 
 // --- RENDER TRENDING UPCOMING (HOME SIDEBAR) ---
 async function fetchTrendingUpcoming() {
