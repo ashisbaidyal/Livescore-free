@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -125,7 +125,7 @@
               <span id="team-kicker" class="text-[10px] font-black uppercase tracking-[0.3em]">Team Profile</span>
             </div>
             <h1 id="team-name" class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">Team Profile</h1>
-            <p id="team-summary" class="max-w-3xl text-sm md:text-base text-on-surface/65 leading-relaxed">Track team identity, venue, record, and schedule context in a dedicated profile view powered by the live feed.</p>
+            <p id="team-summary" class="max-w-3xl text-sm md:text-base text-on-surface/65 leading-relaxed">Track team identity, venue, record, and schedule context in a dedicated profile view.</p>
           </div>
         </div>
       </div>
@@ -266,7 +266,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.5"></script>
+<script src="js/script.js?v=1.0.8"></script>
 <script>
   function safeUpper(value) {
     return String(value || "").toUpperCase();
@@ -319,7 +319,7 @@
     document.getElementById("team-logo").src = team.logo;
     document.getElementById("team-logo").alt = team.name;
     document.getElementById("team-logo").onerror = function() { this.src = FALLBACK; };
-    document.getElementById("team-summary").textContent = `${team.name} — full profile with roster, schedule, and injuries from the live ESPN feed.`;
+    document.getElementById("team-summary").textContent = `${team.name} - full profile with roster, schedule, and injuries.`;
     document.getElementById("team-logo-shell").style.borderColor = `${team.color}55`;
 
     // Meta Grid
@@ -340,10 +340,10 @@
 
     // Story
     document.getElementById("team-story").innerHTML = `
-      <p><span class="text-white font-black">${team.name}</span> is tracked in <span class="text-white font-black">${safeUpper(team.league)}</span> under the <span class="text-white font-black">${safeUpper(team.sport)}</span> feed.</p>
+      <p><span class="text-white font-black">${team.name}</span> is featured in <span class="text-white font-black">${safeUpper(team.league)}</span> under <span class="text-white font-black">${safeUpper(team.sport)}</span>.</p>
       <p>${team.venue ? `Home venue: <span class="text-white font-black">${team.venue}</span>.` : 'Venue data not available.'}</p>
       <p>${team.location ? `Location: <span class="text-white font-black">${team.location}</span>.` : ''}</p>
-      <p>${nextMatch ? `Next fixture: <a class="text-primary font-black hover:underline" href="${buildMatchUrl(nextMatch)}">${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}</a> — ${nextMatch.time || new Date(nextMatch.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}.` : 'No upcoming schedule item returned.'}</p>
+      <p>${nextMatch ? `Next fixture: <a class="text-primary font-black hover:underline" href="${buildMatchUrl(nextMatch)}">${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}</a> â€” ${nextMatch.time || new Date(nextMatch.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}.` : 'No upcoming schedule item returned.'}</p>
     `;
 
     // Signals
@@ -409,7 +409,7 @@
     const grid = document.getElementById("team-roster-grid");
     const FALLBACK = '/icons/icon-192.png';
     if (!roster.length) {
-      grid.innerHTML = '<div class="col-span-full rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Roster not available from the current feed</div>';
+      grid.innerHTML = '<div class="col-span-full rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Roster not available right now</div>';
       return;
     }
 
@@ -437,7 +437,7 @@
   function renderSchedule(schedule) {
     const container = document.getElementById("team-schedule-list");
     if (!schedule.length) {
-      container.innerHTML = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No schedule data returned from the feed</div>';
+      container.innerHTML = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No schedule data returned right now</div>';
       return;
     }
 
@@ -484,14 +484,14 @@
     const section = document.getElementById("team-injuries-section");
     section.classList.remove("hidden");
     const container = document.getElementById("team-injuries-list");
-    container.innerHTML = injuries.map(inj => `
+    container.innerHTML = injuries.map(ins => `
       <div class="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
         <span class="material-symbols-outlined text-yellow-400 text-lg">healing</span>
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-black uppercase tracking-tight">${inj.athlete?.displayName || 'Unknown'}</div>
-          <div class="text-[9px] text-on-surface/40 uppercase tracking-widest">${inj.status || ''} ${inj.detail ? `• ${inj.detail}` : ''}</div>
+          <div class="text-sm font-black uppercase tracking-tight">${ins.athlete?.displayName || 'Unknown'}</div>
+          <div class="text-[9px] text-on-surface/40 uppercase tracking-widest">${ins.status || ''} ${ins.detail ? `â€¢ ${ins.detail}` : ''}</div>
         </div>
-        ${inj.date ? `<div class="text-[9px] text-on-surface/30 uppercase tracking-widest shrink-0">${new Date(inj.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>` : ''}
+        ${ins.date ? `<div class="text-[9px] text-on-surface/30 uppercase tracking-widest shrink-0">${new Date(ins.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>` : ''}
       </div>
     `).join('');
   }
@@ -551,14 +551,14 @@
     }
 
     section.classList.remove("hidden");
-    container.innerHTML = injuries.map((inj) => `
+    container.innerHTML = injuries.map((ins) => `
       <div class="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
         <span class="material-symbols-outlined text-yellow-400 text-lg">healing</span>
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-black uppercase tracking-tight">${inj.athlete?.displayName || "Unknown"}</div>
-          <div class="text-[9px] text-on-surface/40 uppercase tracking-widest">${inj.status || ""} ${inj.detail ? `- ${inj.detail}` : ""}</div>
+          <div class="text-sm font-black uppercase tracking-tight">${ins.athlete?.displayName || "Unknown"}</div>
+          <div class="text-[9px] text-on-surface/40 uppercase tracking-widest">${ins.status || ""} ${ins.detail ? `- ${ins.detail}` : ""}</div>
         </div>
-        ${inj.date ? `<div class="text-[9px] text-on-surface/30 uppercase tracking-widest shrink-0">${new Date(inj.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>` : ""}
+        ${ins.date ? `<div class="text-[9px] text-on-surface/30 uppercase tracking-widest shrink-0">${new Date(ins.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>` : ""}
       </div>
     `).join("");
   };
@@ -574,7 +574,7 @@
     document.getElementById("team-logo").src = team.logo;
     document.getElementById("team-logo").alt = team.name;
     document.getElementById("team-logo").onerror = function() { this.src = fallbackLogo; };
-    document.getElementById("team-summary").textContent = `${team.name} - full profile with roster, schedule, and injuries from the live ESPN feed.`;
+    document.getElementById("team-summary").textContent = `${team.name} - full profile with roster, schedule, and injuries.`;
     document.getElementById("team-logo-shell").style.borderColor = `${team.color}55`;
 
     document.getElementById("team-meta-grid").innerHTML = [
@@ -593,7 +593,7 @@
     `).join("");
 
     document.getElementById("team-story").innerHTML = `
-      <p><span class="text-white font-black">${team.name}</span> is tracked in <span class="text-white font-black">${safeUpper(team.league)}</span> under the <span class="text-white font-black">${safeUpper(team.sport)}</span> feed.</p>
+      <p><span class="text-white font-black">${team.name}</span> is featured in <span class="text-white font-black">${safeUpper(team.league)}</span> under <span class="text-white font-black">${safeUpper(team.sport)}</span>.</p>
       <p>${team.venue ? `Home venue: <span class="text-white font-black">${team.venue}</span>.` : "Venue data not available."}</p>
       <p>${team.location ? `Location: <span class="text-white font-black">${team.location}</span>.` : ""}</p>
       <p>${nextMatch ? `Next fixture: <a class="text-primary font-black hover:underline" href="${buildMatchUrl(nextMatch)}">${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}</a> - ${nextMatch.time || new Date(nextMatch.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}.` : "No upcoming schedule item returned."}</p>
@@ -706,4 +706,6 @@
 </script>
 </body>
 </html>
+
+
 

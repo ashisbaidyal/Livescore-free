@@ -1,5 +1,5 @@
-const STATIC_CACHE = "lsf-static-v5";
-const DATA_CACHE = "lsf-data-v4";
+﻿const STATIC_CACHE = "lsf-static-v8";
+const DATA_CACHE = "lsf-data-v7";
 const APP_SHELL = [
   "/index.html",
   "/live.html",
@@ -18,7 +18,7 @@ const APP_SHELL = [
   "/info.html",
   "/manifest.webmanifest",
   "/offline.html",
-  "/js/script.js?v=1.0.5",
+  "/js/script.js?v=1.0.8",
   "/css/runtime-enhancements.css",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -103,3 +103,4 @@ async function staleWhileRevalidate(request, cacheName) {
 
   return cached || networkPromise;
 }
+

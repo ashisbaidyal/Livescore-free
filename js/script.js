@@ -1,5 +1,5 @@
-// --- CONFIGURATION ---
-// Synchronized with HTML-level externalized data sources
+﻿// --- CONFIGURATION ---
+// Synchronized with HTML-level externalized config
 const LSF_CONFIG = window.LSF_CONFIG || {
   api: {
     live: "/api/live",
@@ -29,7 +29,6 @@ const SERVICE_WORKER_PATH = '/sw.js';
 const FALLBACK_LOGO = '/icons/icon-192.png';
 const FALLBACK_HERO_IMAGE = '/icons/hero-fallback.svg';
 const SITE_REDESIGN_STYLESHEET = '/css/site-redesign.css';
-const DATA_PROVIDER_LABEL = 'Free live data via ESPN public APIs';
 const REMINDER_STORAGE_KEY = 'lsf-reminders';
 const INSTALL_BANNER_DISMISSED_KEY = 'lsf-install-banner-dismissed';
 const reminderTimerHandles = new Map();
@@ -749,63 +748,15 @@ function getPageKeyFromPath(pathname = window.location.pathname) {
 }
 
 function ensureFeedRibbon() {
-  let ribbon = document.getElementById('lsf-feed-ribbon');
-  if (ribbon) return ribbon;
-
-  const main = document.querySelector('main');
-  if (!main) return null;
-
-  ribbon = document.createElement('section');
-  ribbon.id = 'lsf-feed-ribbon';
-  ribbon.className = 'lsf-feed-ribbon';
-  ribbon.innerHTML = `
-    <div class="lsf-feed-ribbon-grid">
-      <div class="lsf-feed-ribbon-chip">
-        <span class="lsf-feed-ribbon-label">Provider</span>
-        <strong id="lsf-feed-provider">${DATA_PROVIDER_LABEL}</strong>
-      </div>
-      <div class="lsf-feed-ribbon-chip">
-        <span class="lsf-feed-ribbon-label">Coverage</span>
-        <strong id="lsf-feed-coverage">Booting live scoreboard</strong>
-      </div>
-      <div class="lsf-feed-ribbon-chip">
-        <span class="lsf-feed-ribbon-label">Updated</span>
-        <strong id="lsf-feed-updated">Pending sync</strong>
-      </div>
-    </div>
-  `;
-
-  main.insertAdjacentElement('afterbegin', ribbon);
-  return ribbon;
+  const ribbon = document.getElementById('lsf-feed-ribbon');
+  if (ribbon) {
+    ribbon.remove();
+  }
+  return null;
 }
 
-function updateFeedRibbon(meta = {}, snapshot = {}) {
-  const ribbon = ensureFeedRibbon();
-  if (!ribbon) return;
-
-  const provider = document.getElementById('lsf-feed-provider');
-  const coverage = document.getElementById('lsf-feed-coverage');
-  const updated = document.getElementById('lsf-feed-updated');
-  const generatedAt = meta.generatedAt ? new Date(meta.generatedAt) : new Date();
-  const liveCount = Number.isFinite(snapshot.liveCount) ? snapshot.liveCount : 0;
-  const matchCount = Number.isFinite(snapshot.matchCount) ? snapshot.matchCount : 0;
-  const feedLabel = snapshot.feedLabel || 'Live board';
-  const endpointSummary = meta.endpoints ? ` across ${meta.endpoints} feeds` : '';
-
-  ribbon.dataset.page = getPageKeyFromPath();
-  if (provider) {
-    provider.textContent = meta.providerLabel || DATA_PROVIDER_LABEL;
-  }
-  if (coverage) {
-    coverage.textContent = `${feedLabel}: ${matchCount} matches, ${liveCount} live${endpointSummary}`;
-  }
-  if (updated) {
-    updated.textContent = generatedAt.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  }
+function updateFeedRibbon() {
+  ensureFeedRibbon();
 }
 
 function getArticleImageUrl(article = {}) {
@@ -1589,7 +1540,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Empty state for match.html without ?id — show live matches to pick from
+  // Empty state for match.html without ?id â€” show live matches to pick from
   if (path.includes('match.html') && !matchId) {
     const mainContent = document.querySelector('main') || document.querySelector('.flex-1');
     if (mainContent) {
@@ -1656,7 +1607,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIAL FETCHES ---
     fetchSidebarLive();
     
-    // Skip fetchMatches on upcoming page — Schedule Centre module handles it
+    // Skip fetchMatches on upcoming page â€” Schedule Centre module handles it
     if (!window.location.pathname.includes('upcoming')) {
       fetchMatches(currentPageFilter);
     }
@@ -2434,7 +2385,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
           </div>
           <div class="flex-1">
             <h3 class="text-lg font-black uppercase tracking-tight mb-1 group-hover:text-primary transition-colors">${l.name}</h3>
-            <p class="text-[10px] text-on-surface/40 font-bold uppercase tracking-widest mb-6">${l.country} • ${l.sport}</p>
+            <p class="text-[10px] text-on-surface/40 font-bold uppercase tracking-widest mb-6">${l.country} â€¢ ${l.sport}</p>
           </div>
           <button onclick="window.location.href='${buildSportHubUrl(l.sport, l.slug)}'" class="w-full py-3 bg-white/5 group-hover:bg-primary group-hover:text-on-primary transition-all text-[10px] font-black uppercase tracking-widest rounded">View Hub</button>
         </div>
@@ -2573,7 +2524,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
                 </tr>
                 `;
               }).join('')}
-              ${standings.length === 0 ? '<tr><td colspan="5" class="px-8 py-24 text-center"><div class="flex flex-col items-center gap-4 opacity-30"><span class="material-symbols-outlined text-4xl">inventory_2</span><p class="text-[10px] font-black uppercase tracking-[0.3em]">No live standings discovered in the current feed</p></div></td></tr>' : ''}
+              ${standings.length === 0 ? '<tr><td colspan="5" class="px-8 py-24 text-center"><div class="flex flex-col items-center gap-4 opacity-30"><span class="material-symbols-outlined text-4xl">inventory_2</span><p class="text-[10px] font-black uppercase tracking-[0.3em]">No live standings available right now</p></div></td></tr>' : ''}
             </tbody>
           </table>
         </div>
@@ -2990,7 +2941,7 @@ async function fetchFeaturedAnalysisNewsPage() {
         </div>
         <div class="p-8 space-y-6">
           <h4 class="text-xs font-black uppercase text-primary tracking-widest">Realtime Snapshot</h4>
-          <p class="text-[11px] text-on-surface-variant leading-relaxed">${featured.status === 'live' ? 'This fixture is active now in the live feed.' : 'This matchup is coming directly from the current ESPN feed.'}</p>
+          <p class="text-[11px] text-on-surface-variant leading-relaxed">${featured.status === 'live' ? 'This fixture is active right now.' : 'This matchup is part of the current live board.'}</p>
           <a href="${buildMatchUrl(featured)}" class="block w-full py-3 text-center bg-surface-container-high border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">Open Match Centre</a>
         </div>
       </div>
@@ -3359,6 +3310,11 @@ function renderSidebarLive(matches) {
   `).join('');
 }
 
+function setMatchUnavailableState(primary = 'Match unavailable', secondary = 'Please try again shortly') {
+  if (homeTeamName) homeTeamName.textContent = primary;
+  if (awayTeamName) awayTeamName.textContent = secondary;
+}
+
 // --- FETCH & UPDATE MATCH DETAIL ---
 async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
   try {
@@ -3368,9 +3324,10 @@ async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
 
     if (!res.ok) {
       console.error(`API returned ${res.status}: ${res.statusText}`);
-      // Show fallback message
-      if (homeTeamName) homeTeamName.textContent = 'Match not found';
-      if (awayTeamName) awayTeamName.textContent = 'Please try another match';
+      setMatchUnavailableState(
+        res.status === 404 ? 'Match not found' : 'Match unavailable',
+        res.status === 404 ? 'Please try another match' : 'Please try again shortly'
+      );
       return;
     }
 
@@ -3378,8 +3335,13 @@ async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
 
     if (!data || data.notFound) {
       console.error('Match not found in API response');
-      if (homeTeamName) homeTeamName.textContent = 'Match not found';
-      if (awayTeamName) awayTeamName.textContent = 'Please try another match';
+      setMatchUnavailableState('Match not found', 'Please try another match');
+      return;
+    }
+
+    if (!data.homeTeam || !data.awayTeam) {
+      console.error('Match detail payload was incomplete');
+      setMatchUnavailableState('Match unavailable', 'Please try again shortly');
       return;
     }
 
@@ -3392,8 +3354,7 @@ async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
     renderMatchDetail(data);
   } catch (err) {
     console.error('Failed to fetch match detail:', err);
-    if (homeTeamName) homeTeamName.textContent = 'Error loading match';
-    if (awayTeamName) awayTeamName.textContent = 'Check console for details';
+    setMatchUnavailableState('Error loading match', 'Check console for details');
   }
 }
 
@@ -3556,7 +3517,7 @@ function renderMatchDetail(data) {
       commentaryContainer.innerHTML = plays.map(play => `
           <div class="flex gap-4 p-4 bg-white/5 border border-white/5 rounded-lg mb-4 animate-in fade-in slide-in-from-left-4">
               <div class="w-12 h-12 bg-surface-container rounded flex items-center justify-center flex-shrink-0">
-                  <span class="text-[10px] font-black italic text-primary">${play.clock?.displayValue || play.period?.number || '—'}</span>
+                  <span class="text-[10px] font-black italic text-primary">${play.clock?.displayValue || play.period?.number || 'â€”'}</span>
               </div>
               <div class="flex-1">
                   <div class="flex items-center justify-between mb-1">
@@ -3638,7 +3599,7 @@ function renderMatchDetail(data) {
             <div class="space-y-2">
               <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1">
                 <span>${stat.label}</span>
-                <span class="text-primary">${stat.home} — ${stat.away}</span>
+                <span class="text-primary">${stat.home} â€” ${stat.away}</span>
               </div>
               <div class="h-1.5 w-full bg-white/5 flex rounded-full overflow-hidden">
                 <div class="h-full bg-surface-container-highest" style="width: ${homePercent}%"></div>
@@ -3707,10 +3668,10 @@ function renderMatchDetail(data) {
                     const isCard = event.type === 'card';
                     const isSub = event.type === 'substitution';
                     
-                    let icon = '•';
-                    if (isGoal) icon = '⚽';
-                    else if (isCard) icon = event.player.toLowerCase().includes('red') ? '🟥' : '🟨';
-                    else if (isSub) icon = '🔄';
+                    let icon = 'â€¢';
+                    if (isGoal) icon = 'âš½';
+                    else if (isCard) icon = event.player.toLowerCase().includes('red') ? 'ðŸŸ¥' : 'ðŸŸ¨';
+                    else if (isSub) icon = 'ðŸ”„';
 
                     // Half-time logic: detect if we crossed 45'
                     const showHT = idx > 0 && reversedTimeline[idx-1].time.includes('45') && !event.time.includes('45');
@@ -3780,7 +3741,7 @@ function renderMatchDetail(data) {
             ${data.timeline.slice(0, 5).map(event => `
                 <div class="bg-surface-container-high p-4 rounded-sm border-l-4 ${event.type === 'goal' ? 'border-primary' : 'border-white/10'} mb-3">
                     <span class="text-[8px] font-black ${event.type === 'goal' ? 'text-primary' : 'text-on-surface-variant/50'} uppercase mb-1 block">
-                        ${event.time} — ${event.type.toUpperCase()}
+                        ${event.time} â€” ${event.type.toUpperCase()}
                     </span>
                     <p class="text-xs leading-relaxed font-medium">${event.player}</p>
                 </div>
@@ -3828,7 +3789,7 @@ function renderMatchLineup(data) {
                 </div>
                 <div class="flex flex-col">
                     <span class="text-sm font-bold group-hover:text-primary transition-colors">${p.name}</span>
-                    <span class="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.2em]">${p.number || '--'} • ${p.position}</span>
+                    <span class="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.2em]">${p.number || '--'} â€¢ ${p.position}</span>
                 </div>
             </div>
             <button class="material-symbols-outlined text-white/20 group-hover:text-primary transition-colors text-lg">info</button>
@@ -3845,8 +3806,10 @@ async function fetchUpcomingMatchDetail(id, sport = 'soccer', league = 'eng.1') 
 
     if (!res.ok) {
       console.error(`API returned ${res.status}: ${res.statusText}`);
-      if (homeTeamName) homeTeamName.textContent = 'Match not found';
-      if (awayTeamName) awayTeamName.textContent = 'Please try another match';
+      setMatchUnavailableState(
+        res.status === 404 ? 'Match not found' : 'Match unavailable',
+        res.status === 404 ? 'Please try another match' : 'Please try again shortly'
+      );
       return;
     }
 
@@ -3854,8 +3817,13 @@ async function fetchUpcomingMatchDetail(id, sport = 'soccer', league = 'eng.1') 
 
     if (!data || data.notFound) {
       console.error('Match not found in API response');
-      if (homeTeamName) homeTeamName.textContent = 'Match not found';
-      if (awayTeamName) awayTeamName.textContent = 'Please try another match';
+      setMatchUnavailableState('Match not found', 'Please try another match');
+      return;
+    }
+
+    if (!data.homeTeam || !data.awayTeam) {
+      console.error('Upcoming match payload was incomplete');
+      setMatchUnavailableState('Match unavailable', 'Please try again shortly');
       return;
     }
 
@@ -3863,8 +3831,7 @@ async function fetchUpcomingMatchDetail(id, sport = 'soccer', league = 'eng.1') 
     renderUpcomingMatchDetail(data);
   } catch (err) {
     console.error('Failed to fetch upcoming match detail:', err);
-    if (homeTeamName) homeTeamName.textContent = 'Error loading match';
-    if (awayTeamName) awayTeamName.textContent = 'Check console for details';
+    setMatchUnavailableState('Error loading match', 'Check console for details');
   }
 }
 
@@ -4375,7 +4342,7 @@ if (window.location.pathname.includes('upcoming')) {
               </div>
               <!-- Broadcast + Notify -->
               <div class="hidden md:flex items-center gap-4 shrink-0">
-                <span class="text-[9px] font-bold text-on-surface/30 uppercase tracking-wider">${m.broadcast || m.league || 'ESPN'}</span>
+                <span class="text-[9px] font-bold text-on-surface/30 uppercase tracking-wider">${m.broadcast || m.league || 'LIVE'}</span>
                 <button onclick="event.preventDefault(); event.stopPropagation(); handleNotification('${m.id}','${encodeURIComponent(`${m.homeTeam.name} vs ${m.awayTeam.name}`)}')" 
                         class="flex items-center gap-1.5 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-white hover:border-primary transition-all">
                   <span class="material-symbols-outlined text-xs">notifications</span> Notify Me
@@ -4547,3 +4514,4 @@ setInterval(() => {
     fetchSidebarLive();
   }
 }, 20000);
+

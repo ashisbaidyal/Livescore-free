@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "LivescoreFree",
   "short_name": "LivescoreFree",
-  "description": "Realtime multi-sport scores, fixtures, standings, players, and match centres powered by ESPN public data.",
+  "description": "Realtime multi-sport scores, fixtures, standings, players, and match centres from LivescoreFree.",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
@@ -44,3 +44,4 @@
     }
   ]
 }
+

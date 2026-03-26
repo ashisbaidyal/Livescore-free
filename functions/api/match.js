@@ -13,6 +13,30 @@ import {
   siteApiUrl
 } from "./_shared.js";
 
+function buildInternalApiUrl(request, path, params = {}) {
+  const url = new URL(path, request.url);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, value);
+    }
+  });
+  return url.toString();
+}
+
+async function fetchInternalJson(request, path, params = {}) {
+  const response = await fetch(buildInternalApiUrl(request, path, params), {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Internal request failed: ${response.status} for ${path}`);
+  }
+
+  return response.json();
+}
+
 function buildSummaryCandidates(id, sport, league) {
   const normalizedSport = normalizeSportParam(sport, league);
   const normalizedLeague = normalizeLeagueParam(league, normalizedSport);
@@ -213,6 +237,73 @@ function normalizeFallbackScoreboardSummary(event = {}, sport = "soccer", league
   };
 }
 
+function normalizeFeedFallbackSummary(match = {}) {
+  return {
+    id: match.id || "",
+    sport: match.sport || "soccer",
+    leagueSlug: match.leagueSlug || "eng.1",
+    league: match.league || (match.leagueSlug || "MATCH").toUpperCase(),
+    status: match.status || "upcoming",
+    statusText: match.statusText || "",
+    time: match.time || "",
+    date: match.date || "",
+    venue: match.venue || "",
+    broadcast: match.broadcast || "",
+    homeTeam: {
+      ...(match.homeTeam || {}),
+      name: match.homeTeam?.name || "Home Team",
+      logo: match.homeTeam?.logo || FALLBACK_LOGO,
+      score: match.homeTeam?.score || "0",
+      lineup: []
+    },
+    awayTeam: {
+      ...(match.awayTeam || {}),
+      name: match.awayTeam?.name || "Away Team",
+      logo: match.awayTeam?.logo || FALLBACK_LOGO,
+      score: match.awayTeam?.score || "0",
+      lineup: []
+    },
+    stats: [],
+    timeline: [],
+    commentary: [],
+    odds: null,
+    h2h: [],
+    situation: null
+  };
+}
+
+async function findFeedFallback(request, id, sport, league) {
+  const normalizedSport = normalizeSportParam(sport, league);
+  const normalizedLeague = normalizeLeagueParam(league, normalizedSport);
+  const candidates = [];
+  const pushCandidate = (path, params = {}) => {
+    const key = `${path}:${JSON.stringify(params)}`;
+    if (candidates.some((candidate) => candidate.key === key)) return;
+    candidates.push({ key, path, params });
+  };
+
+  pushCandidate("/api/live", { sport: normalizedSport, league: normalizedLeague });
+  pushCandidate("/api/live", { sport: normalizedSport });
+  pushCandidate("/api/upcoming", { sport: normalizedSport, league: normalizedLeague, days: 7 });
+  pushCandidate("/api/upcoming", { sport: normalizedSport, days: 7 });
+  pushCandidate("/api/live", { sport: "all" });
+  pushCandidate("/api/upcoming", { sport: "all", days: 7 });
+
+  for (const candidate of candidates) {
+    try {
+      const data = await fetchInternalJson(request, candidate.path, candidate.params);
+      const match = (data.matches || []).find((entry) => String(entry.id) === String(id));
+      if (match) {
+        return normalizeFeedFallbackSummary(match);
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 async function findScoreboardFallback(id, sport, league) {
   const candidates = buildScoreboardCandidates(sport, league);
   for (const candidate of candidates) {
@@ -258,6 +349,11 @@ export async function onRequest(context) {
     }
 
     if (!summaryData?.header?.competitions?.length) {
+      const feedFallback = await findFeedFallback(request, id, sport, league);
+      if (feedFallback) {
+        return jsonResponse({ ...feedFallback, meta: buildFeedMeta({ fallback: "feed" }) }, 15);
+      }
+
       const fallback = await findScoreboardFallback(id, sport, league);
       if (!fallback) {
         return jsonResponse({ notFound: true, meta: buildFeedMeta({ degraded: true }) }, 30, 404);

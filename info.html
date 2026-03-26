@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
     <meta charset="utf-8">
@@ -144,8 +144,7 @@
             <a href="info.html?p=terms" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Terms</a>
             <a href="info.html?p=dmca" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">DMCA</a>
             <a href="info.html?p=help" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Help</a>
-            <a href="info.html?p=data-sources" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Data Sources</a>
-            <a href="info.html?p=advertise" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Advertise</a>
+                        <a href="info.html?p=advertise" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Advertise</a>
             <a href="info.html?p=transparency" class="info-page-link px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-primary hover:text-white transition-all border border-white/5">Transparency</a>
         </div>
 
@@ -194,8 +193,7 @@
     <div class="flex flex-col gap-6">
     <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Resources</h5>
     <ul class="flex flex-col gap-4">
-    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=data-sources">Data Sources</a></li>
-    <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=help">Help Center</a></li>
+        <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=help">Help Center</a></li>
     <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=advertise">Advertise With Us</a></li>
     </ul>
     </div>
@@ -210,17 +208,19 @@
     <div class="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
     <div class="flex flex-col items-center md:items-start gap-4">
     <div class="text-2xl font-black italic tracking-tighter text-on-surface uppercase">LIVESCOREFREE</div>
-    <p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">Â© <span class="copyright-year">2025</span> LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.</p>
+    <p class="text-[9px] font-black tracking-[0.4em] text-on-surface/30 uppercase text-center md:text-left">&#169; <span class="copyright-year">2026</span> LIVESCOREFREE KINETIC BROADCAST. ALL RIGHTS RESERVED.</p>
     </div>
     </div>
     </div>
     </footer>
 
-<script src="js/script.js?v=1.0.5"></script>
+<script src="js/script.js?v=1.0.8"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            const type = params.get('p') || 'privacy';
+            const requestedType = params.get('p') || 'privacy';
+            const aliases = { 'data-sources': 'help' };
+            const type = aliases[requestedType] || requestedType;
             
             const title = document.getElementById('info-title');
             const badge = document.getElementById('info-badge');
@@ -265,7 +265,7 @@
                         <p>We use essential cookies for session management and user preference storage (such as your preferred sport filter). We also use Google Analytics to understand traffic patterns. You can disable cookies in your browser settings, though this may affect site functionality.</p>
 
                         <h2>4. Third-Party Services</h2>
-                        <p>Our website integrates with public ESPN APIs to deliver real-time sports data. We do not share, sell, or transmit your personal data to ESPN or any third party. Advertising partners may use cookies to serve relevant ads.</p>
+                        <p>Our website may rely on trusted third-party infrastructure for site operations. We do not share or sell your personal data except as needed for normal site functionality and legal compliance. Advertising partners may use cookies to serve relevant ads.</p>
 
                         <h2>5. Data Security</h2>
                         <p>We implement industry-standard security measures including HTTPS encryption, secure CDN delivery via Cloudflare, and regular security audits to protect your data.</p>
@@ -295,14 +295,14 @@
                         <p>By accessing LivescoreFree.online, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any part of these terms, you may not use our service.</p>
 
                         <h2>2. Description of Service</h2>
-                        <p>LivescoreFree.online provides real-time sports scores, statistics, standings, and news aggregated from publicly available APIs. Our service is provided "as is" for informational and entertainment purposes only.</p>
+                        <p>LivescoreFree.online provides real-time sports scores, statistics, standings, and news for informational and entertainment purposes only. Our service is provided "as is".</p>
 
                         <h2>3. Use of Content</h2>
                         <ul>
-                            <li>All match data, scores, and statistics are sourced from public sports APIs and are provided for informational purposes</li>
+                            <li>All match data, scores, and statistics are provided for informational purposes</li>
                             <li>Content may not be reproduced, distributed, or used commercially without prior written consent</li>
                             <li>Team logos and names are trademarks of their respective owners</li>
-                            <li>Articles and news content link to their original sources and are not hosted by us</li>
+                            <li>Articles and news content link to their original publishers and are not hosted by us</li>
                         </ul>
 
                         <h2>4. User Conduct</h2>
@@ -320,7 +320,7 @@
                         <p>We are <strong>not responsible</strong> for: betting losses, inaccuracies in real-time data due to API delays, actions taken based on information from our platform, or content on third-party websites linked from our platform.</p>
 
                         <h2>6. Intellectual Property</h2>
-                        <p>The design, logos, and original content of LivescoreFree.online are our intellectual property. ESPN, NFL, NBA, and other league names are trademarks of their respective organizations.</p>
+                        <p>The design, logos, and original content of LivescoreFree.online are our intellectual property. League and team names remain the property of their respective organizations.</p>
 
                         <h2>7. Termination</h2>
                         <p>We reserve the right to terminate or suspend access to our service at any time, without notice, for conduct that we believe violates these Terms or is harmful to other users.</p>
@@ -336,13 +336,13 @@
                     title: 'DMCA Policy',
                     html: `
                         <h2>Digital Millennium Copyright Act Notice</h2>
-                        <p>LivescoreFree.online respects the intellectual property rights of others and expects its users to do the same. We operate as a technology platform that aggregates publicly available sports data through authorized APIs.</p>
+                        <p>LivescoreFree.online respects the intellectual property rights of others and expects its users to do the same.</p>
 
                         <h2>What We Host</h2>
                         <ul>
-                            <li>Real-time scores and statistics from public APIs (ESPN)</li>
-                            <li>News article links (linking to original sources, not hosting)</li>
-                            <li>Team logos served directly from ESPN CDN (not re-hosted)</li>
+                            <li>Real-time scores and statistics</li>
+                            <li>News article links (linking to original publishers, not hosting)</li>
+                            <li>Team and league branding where shown as part of event presentation</li>
                         </ul>
 
                         <h2>What We Do NOT Host</h2>
@@ -386,7 +386,7 @@
                         <p>Yes! On the Upcoming Matches page, click "SET REMINDER" on any match card. You'll receive a browser notification when the match is about to begin (if you've enabled notifications).</p>
 
                         <h3>How do I search for a specific team or match?</h3>
-                        <p>Click the search icon (ðŸ”) in the top navigation bar to open the search modal. You can search by team name, league, or sport in real-time.</p>
+                        <p>Click the search icon in the top navigation bar to open the search modal. You can search by team name, league, or sport in real-time.</p>
 
                         <h3>Is this a betting service?</h3>
                         <p>No. LivescoreFree.online is a free sports information platform. We display match odds for informational purposes only and do not facilitate betting transactions.</p>
@@ -396,47 +396,6 @@
 
                         <h3>I found a bug. How do I report it?</h3>
                         <p>Please email us at <a href="mailto:livescorefree.online@gmail.com">livescorefree.online@gmail.com</a> with details about the issue, including your browser, device, and steps to reproduce. Screenshots are appreciated!</p>
-                    `
-                },
-                'data-sources': {
-                    title: 'Data Sources',
-                    html: `
-                        <h2>Copyright Disclaimer</h2>
-                        <p><strong>All live scores, statistics, and news displayed on LivescoreFree are generated from aggregated, free-to-use public APIs. LiveScoreFree is an independent platform. We do not hold copyrights to any league, team names, or logos, which are the property of their respective owners.</strong></p>
-
-                        <h2>Our Data Pipeline</h2>
-                        <p>LivescoreFree.online aggregates sports data from trusted, publicly available sources to deliver accurate real-time information across all supported sports.</p>
-
-                        <h2>Primary Data Source</h2>
-                        <h3>ESPN Public API</h3>
-                        <p>Our primary data source is the ESPN public API ecosystem, which provides:</p>
-                        <ul>
-                            <li><strong>Live Scoreboards</strong> â€” Real-time scores updated every 15 seconds across 50+ leagues</li>
-                            <li><strong>Match Summaries</strong> â€” Detailed match statistics, lineups, and play-by-play data</li>
-                            <li><strong>Standings</strong> â€” Current league tables and rankings</li>
-                            <li><strong>News</strong> â€” Latest headlines and articles from ESPN editorial</li>
-                            <li><strong>Player Data</strong> â€” Active rosters and athlete profiles</li>
-                            <li><strong>Team Data</strong> â€” Team profiles, logos, and historical data</li>
-                        </ul>
-
-                        <h2>Data Accuracy</h2>
-                        <p>While we strive for maximum accuracy, real-time sports data may occasionally experience delays of 15-60 seconds. We recommend cross-referencing with official league sources for critical decisions.</p>
-
-                        <h2>Coverage</h2>
-                        <p>We cover 10+ sports across 50+ leagues globally, including: Premier League, La Liga, Bundesliga, Serie A, Ligue 1, UEFA Champions League, NBA, NFL, MLB, NHL, UFC, ATP/WTA Tennis, IPL Cricket, F1, PGA Golf, and many more.</p>
-
-                        <h3>API Transparency</h3>
-<p>Our backend Cloudflare Workers proxy requests to official ESPN public API endpoints. No data is modified or fabricated. We favor direct edge-delivery for maximum speed.</p>
-<div class="bg-white/5 p-4 rounded-lg my-6 border border-white/10">
-    <div class="text-[9px] font-black text-primary uppercase tracking-widest mb-3">Live Kinetic Feeds</div>
-    <div class="space-y-2 opacity-60 font-mono text-[10px]">
-        <p>• Site Node: site.api.espn.com/apis/site/v2/sports</p>
-        <p>• Core Node: core.api.espn.com/v1/sports</p>
-        <p>• CDN Node: cdn.espn.com/core</p>
-        <p>• Realtime Node: wss://livescorefree.online/api/ws</p>
-    </div>
-</div>
-<p>We do not store historical match data beyond ESPN's own caching windows (15 seconds).</p>
                     `
                 },
                 'advertise': {
@@ -511,4 +470,6 @@
     </script>
 </body>
 </html>
+
+
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -130,7 +130,7 @@
         <div class="grid gap-10 lg:grid-cols-[1.4fr_0.9fr] items-end">
           <div>
             <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">Teams <span class="text-primary">Hub</span></h1>
-            <p class="max-w-2xl text-sm md:text-base text-on-surface/65 leading-relaxed">Explore clubs and franchises across the live feed with direct routing into team profiles, standings, and upcoming fixtures.</p>
+            <p class="max-w-2xl text-sm md:text-base text-on-surface/65 leading-relaxed">Explore clubs and franchises with direct routing into team profiles, standings, and upcoming fixtures.</p>
           </div>
           <div class="grid grid-cols-3 gap-3">
             <div class="glass-card rounded-2xl border border-white/5 p-4">
@@ -141,7 +141,7 @@
             <div class="glass-card rounded-2xl border border-white/5 p-4">
               <div class="text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-2">Feed</div>
               <div class="text-3xl font-black italic">Teams</div>
-              <div class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">API sourced</div>
+              <div class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">Live teams</div>
             </div>
             <div class="glass-card rounded-2xl border border-white/5 p-4">
               <div class="text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-2">Theme</div>
@@ -203,7 +203,6 @@
           <a href="standings.html" class="hover:text-primary transition-colors">Standings</a>
           <a href="team.html" class="hover:text-primary transition-colors">Team</a>
           <a href="player.html" class="hover:text-primary transition-colors">Player</a>
-          <a href="info.html?p=data-sources" class="hover:text-primary transition-colors">Data Sources</a>
         </div>
       </div>
     </footer>
@@ -224,7 +223,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.5"></script>
+<script src="js/script.js?v=1.0.8"></script>
 <script>
   const teamParams = new URLSearchParams(window.location.search);
   const teamSources = [
@@ -368,4 +367,5 @@
 </script>
 </body>
 </html>
+
 

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>LivescoreFree.online | Standings Centre</title>
-<meta name="description" content="Track league tables, wins, losses, points, and movement across major competitions inside the LivescoreFree standings centre."/>
+<meta name="description" content="Track league tables, wins, losses, points, and movement across masor competitions inside the LivescoreFree standings centre."/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
     <!-- Real-time Data Configuration -->
@@ -131,7 +131,7 @@
         <div class="grid gap-10 lg:grid-cols-[1.5fr_0.8fr] items-end">
           <div>
             <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">League <span class="text-primary">Standings</span></h1>
-            <p class="max-w-2xl text-sm md:text-base text-on-surface/65 leading-relaxed">A dedicated standings destination was missing from the live theme. This page now tracks table position, form direction, and points pressure across major competitions.</p>
+            <p class="max-w-2xl text-sm md:text-base text-on-surface/65 leading-relaxed">A dedicated standings destination was missing from the live theme. This page now tracks table position, form direction, and points pressure across masor competitions.</p>
           </div>
           <div class="grid grid-cols-3 gap-3">
             <div class="glass-card rounded-2xl border border-white/5 p-4">
@@ -209,7 +209,6 @@
           <a href="leagues.html" class="hover:text-primary transition-colors">Leagues</a>
           <a href="teams.html" class="hover:text-primary transition-colors">Teams</a>
           <a href="player.html" class="hover:text-primary transition-colors">Player</a>
-          <a href="info.html?p=data-sources" class="hover:text-primary transition-colors">Data Sources</a>
         </div>
       </div>
     </footer>
@@ -230,7 +229,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.5"></script>
+<script src="js/script.js?v=1.0.8"></script>
 <script>
   const standingsParams = new URLSearchParams(window.location.search);
   const standingsFeeds = [
@@ -306,10 +305,10 @@
     const content = document.getElementById("standings-content");
 
     title.textContent = feed.label;
-    subtitle.textContent = `${feed.accent.toUpperCase()} TABLE FEED`;
+    subtitle.textContent = `${feed.accent.toUpperCase()} TABLE`;
 
     if (!entries.length) {
-      content.innerHTML = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-20 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No standings available in the current feed</div>';
+      content.innerHTML = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-20 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No standings available right now</div>';
       return;
     }
 
@@ -394,4 +393,5 @@
 </script>
 </body>
 </html>
+
 

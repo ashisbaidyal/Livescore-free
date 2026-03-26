@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -125,7 +125,7 @@
               <span id="player-kicker" class="text-[10px] font-black uppercase tracking-[0.3em]">Player Profile</span>
             </div>
             <h1 id="player-name" class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">Featured Player</h1>
-            <p id="player-summary" class="max-w-3xl text-sm md:text-base text-on-surface/65 leading-relaxed">Loading athlete profile from the live ESPN feed...</p>
+            <p id="player-summary" class="max-w-3xl text-sm md:text-base text-on-surface/65 leading-relaxed">Loading athlete profile...</p>
           </div>
         </div>
       </div>
@@ -137,27 +137,27 @@
         <div id="player-meta-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Sport</div>
-            <div id="meta-sport" class="text-lg font-black italic">—</div>
+            <div id="meta-sport" class="text-lg font-black italic">â€”</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Team</div>
-            <div id="meta-team" class="text-lg font-black italic">—</div>
+            <div id="meta-team" class="text-lg font-black italic">â€”</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Position</div>
-            <div id="meta-role" class="text-lg font-black italic">—</div>
+            <div id="meta-role" class="text-lg font-black italic">â€”</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Jersey</div>
-            <div id="meta-jersey" class="text-lg font-black italic">—</div>
+            <div id="meta-jersey" class="text-lg font-black italic">â€”</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Age</div>
-            <div id="meta-age" class="text-lg font-black italic">—</div>
+            <div id="meta-age" class="text-lg font-black italic">â€”</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Status</div>
-            <div id="meta-status" class="text-lg font-black italic">—</div>
+            <div id="meta-status" class="text-lg font-black italic">â€”</div>
           </div>
         </div>
 
@@ -273,7 +273,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.5"></script>
+<script src="js/script.js?v=1.0.8"></script>
 <script>
   const FALLBACK_AVATAR = '/icons/icon-192.png';
 
@@ -329,7 +329,7 @@
     // Hero
     document.getElementById("player-kicker").textContent = `${up(a.sport)} PLAYER PROFILE`;
     document.getElementById("player-name").textContent = a.name;
-    document.getElementById("player-summary").textContent = `${a.name}${a.team?.name ? ` of ${a.team.name}` : ''} — live profile with stats, bio, and news powered by the ESPN feed.`;
+    document.getElementById("player-summary").textContent = `${a.name}${a.team?.name ? ` of ${a.team.name}` : ''} - live profile with stats, bio, and news.`;
 
     // Headshot
     const headshotUrl = a.headshot?.href || a.headshot?.url || FALLBACK_AVATAR;
@@ -339,11 +339,11 @@
     hsImg.onerror = function() { this.src = FALLBACK_AVATAR; };
 
     // Meta cards
-    document.getElementById("meta-sport").textContent = up(a.sport) || "—";
+    document.getElementById("meta-sport").textContent = up(a.sport) || "-";
     document.getElementById("meta-team").textContent = a.team?.name || "Free Agent";
-    document.getElementById("meta-role").textContent = a.role || "—";
-    document.getElementById("meta-jersey").textContent = a.jersey ? `#${a.jersey}` : "—";
-    document.getElementById("meta-age").textContent = a.age || "—";
+    document.getElementById("meta-role").textContent = a.role || "-";
+    document.getElementById("meta-jersey").textContent = a.jersey ? `#${a.jersey}` : "-";
+    document.getElementById("meta-age").textContent = a.age || "-";
     document.getElementById("meta-status").textContent = a.status?.name || (a.active ? "Active" : "Inactive");
     const statusEl = document.getElementById("meta-status");
     if (a.status?.name === "Active" || a.active) statusEl.classList.add("text-green-400");
@@ -354,7 +354,7 @@
     const expInfo = a.experience?.years ? `${a.experience.years} years of professional experience.` : '';
 
     document.getElementById("player-overview").innerHTML = `
-      <p><span class="text-white font-black">${a.name}</span> is tracked in <span class="text-white font-black">${up(a.league)}</span> under the <span class="text-white font-black">${up(a.sport)}</span> feed.</p>
+      <p><span class="text-white font-black">${a.name}</span> is featured in <span class="text-white font-black">${up(a.league)}</span> under <span class="text-white font-black">${up(a.sport)}</span>.</p>
       ${a.team?.name ? `<p>Current team: <span class="text-white font-black">${a.team.name}</span>${a.team.abbreviation ? ` (${a.team.abbreviation})` : ''}.</p>` : '<p class="text-on-surface/40">No team context available.</p>'}
       ${a.role ? `<p>Position: <span class="text-white font-black">${a.role}</span>.</p>` : ''}
       ${birthInfo ? `<p>${birthInfo}</p>` : ''}
@@ -364,12 +364,12 @@
 
     // Physical & Status modules
     document.getElementById("player-modules").innerHTML = [
-      { icon: "straighten", label: "Height", value: a.height || "—" },
-      { icon: "fitness_center", label: "Weight", value: a.weight || "—" },
+      { icon: "straighten", label: "Height", value: a.height || "-" },
+      { icon: "fitness_center", label: "Weight", value: a.weight || "-" },
       { icon: "medical_services", label: "Status", value: a.status?.name || "Active" },
-      { icon: "badge", label: "Jersey", value: a.jersey ? `#${a.jersey}` : "—" },
-      { icon: "calendar_month", label: "Experience", value: a.experience?.years ? `${a.experience.years} YRS` : "—" },
-      { icon: "flag", label: "Nationality", value: a.citizenship || "—" }
+      { icon: "badge", label: "Jersey", value: a.jersey ? `#${a.jersey}` : "-" },
+      { icon: "calendar_month", label: "Experience", value: a.experience?.years ? `${a.experience.years} YRS` : "-" },
+      { icon: "flag", label: "Nationality", value: a.citizenship || "-" }
     ].map(item => `
       <div class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 flex items-center gap-4">
         <span class="material-symbols-outlined text-primary text-lg">${item.icon}</span>
@@ -419,7 +419,7 @@
   function renderPlayerStats(bio) {
     const container = document.getElementById("player-stats-container");
     if (!bio) {
-      container.innerHTML = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Career stats will appear here when available from the live feed</div>';
+      container.innerHTML = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Career stats will appear here when available</div>';
       return;
     }
 
@@ -439,8 +439,8 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               ${entries.map(s => `
                 <div class="rounded-xl border border-white/5 bg-white/5 p-3 text-center">
-                  <div class="text-lg font-black text-primary">${s.value || s.displayValue || '—'}</div>
-                  <div class="text-[9px] font-bold uppercase tracking-widest text-on-surface/40 mt-1">${s.name || s.label || s.abbreviation || '—'}</div>
+                  <div class="text-lg font-black text-primary">${s.value || s.displayValue || 'â€”'}</div>
+                  <div class="text-[9px] font-bold uppercase tracking-widest text-on-surface/40 mt-1">${s.name || s.label || s.abbreviation || 'â€”'}</div>
                 </div>
               `).join('')}
             </div>
@@ -454,7 +454,7 @@
     }
 
     if (!statsHtml) {
-      statsHtml = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No career stats returned from the current feed</div>';
+      statsHtml = '<div class="rounded-2xl border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No career stats returned right now</div>';
     }
 
     container.innerHTML = statsHtml;
@@ -473,7 +473,7 @@
           ${article.image ? `<img src="${article.image}" class="w-20 h-20 rounded-xl object-cover shrink-0" onerror="this.style.display='none'" alt="Image description">` : ''}
           <div class="flex-1 min-w-0">
             <h4 class="text-sm font-black uppercase tracking-tight leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">${article.headline || article.title}</h4>
-            <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${article.published ? new Date(article.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} ${article.byline ? `• ${article.byline}` : ''}</p>
+            <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${article.published ? new Date(article.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} ${article.byline ? `â€¢ ${article.byline}` : ''}</p>
           </div>
         </div>
       </a>
@@ -501,7 +501,7 @@
           ${athlete.team.logo ? `<img src="${athlete.team.logo}" class="w-12 h-12 object-contain" onerror="this.src='${FALLBACK_AVATAR}'" alt="Image description">` : ''}
           <div>
             <h4 class="text-lg font-black uppercase tracking-tight group-hover:text-primary transition-colors">${athlete.team.name}</h4>
-            <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${up(athlete.league)} • ${up(athlete.sport)}</p>
+            <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${up(athlete.league)} â€¢ ${up(athlete.sport)}</p>
           </div>
         </div>
         <div class="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1">
@@ -548,7 +548,7 @@
     document.title = `${athlete.name} | Player Profile | LivescoreFree.online`;
     document.getElementById("player-kicker").textContent = `${up(athlete.sport)} PLAYER PROFILE`;
     document.getElementById("player-name").textContent = athlete.name;
-    document.getElementById("player-summary").textContent = `${athlete.name}${athlete.team?.name ? ` of ${athlete.team.name}` : ""} - live profile with stats, bio, and news powered by the ESPN feed.`;
+    document.getElementById("player-summary").textContent = `${athlete.name}${athlete.team?.name ? ` of ${athlete.team.name}` : ""} - live profile with stats, bio, and news.`;
 
     const headshotUrl = athlete.headshot?.href || athlete.headshot?.url || FALLBACK_AVATAR;
     const headshot = document.getElementById("player-headshot");
@@ -574,7 +574,7 @@
     const experienceInfo = athlete.experience?.years ? `${athlete.experience.years} years of professional experience.` : "";
 
     document.getElementById("player-overview").innerHTML = `
-      <p><span class="text-white font-black">${athlete.name}</span> is tracked in <span class="text-white font-black">${up(athlete.league)}</span> under the <span class="text-white font-black">${up(athlete.sport)}</span> feed.</p>
+      <p><span class="text-white font-black">${athlete.name}</span> is featured in <span class="text-white font-black">${up(athlete.league)}</span> under <span class="text-white font-black">${up(athlete.sport)}</span>.</p>
       ${athlete.team?.name ? `<p>Current team: <span class="text-white font-black">${athlete.team.name}</span>${athlete.team.abbreviation ? ` (${athlete.team.abbreviation})` : ""}.</p>` : '<p class="text-on-surface/40">No team context available.</p>'}
       ${athlete.role ? `<p>Position: <span class="text-white font-black">${athlete.role}</span>.</p>` : ""}
       ${birthInfo ? `<p>${birthInfo}</p>` : ""}
@@ -670,4 +670,6 @@
 </script>
 </body>
 </html>
+
+
 
