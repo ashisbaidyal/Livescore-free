@@ -725,6 +725,111 @@ function filterRenderableMatches(matches = []) {
   });
 }
 
+function normalizeMatchDetailFallback(match = {}) {
+  return {
+    id: match.id || '',
+    sport: normalizeSportSlug(match.sport || '', match.leagueSlug || ''),
+    leagueSlug: normalizeLeagueSlug(match.leagueSlug || ''),
+    league: match.league || 'Sports Event',
+    status: match.status || 'upcoming',
+    statusText: match.statusText || match.time || '',
+    time: match.time || match.statusText || '',
+    date: match.date || '',
+    venue: match.venue || '',
+    broadcast: match.broadcast || '',
+    homeTeam: {
+      ...(match.homeTeam || {}),
+      name: match.homeTeam?.name || 'Home Team',
+      logo: match.homeTeam?.logo || FALLBACK_LOGO,
+      score: match.homeTeam?.score || '0',
+      lineup: Array.isArray(match.homeTeam?.lineup) ? match.homeTeam.lineup : []
+    },
+    awayTeam: {
+      ...(match.awayTeam || {}),
+      name: match.awayTeam?.name || 'Away Team',
+      logo: match.awayTeam?.logo || FALLBACK_LOGO,
+      score: match.awayTeam?.score || '0',
+      lineup: Array.isArray(match.awayTeam?.lineup) ? match.awayTeam.lineup : []
+    },
+    stats: [],
+    timeline: [],
+    commentary: [],
+    odds: null,
+    h2h: [],
+    situation: null
+  };
+}
+
+async function resolveMatchDetailFromFeeds(id, sport = 'all', league = '') {
+  const cachedMatch = findCachedMatch(id);
+  if (cachedMatch) {
+    return normalizeMatchDetailFallback(cachedMatch);
+  }
+
+  const candidates = [];
+  const seen = new Set();
+  const pushCandidate = (path, params = {}) => {
+    const key = `${path}:${JSON.stringify(params)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push({ path, params });
+  };
+
+  pushCandidate(API_LIVE, { sport, league });
+  pushCandidate(API_LIVE, { sport });
+  pushCandidate(API_UPCOMING, { sport, league, days: 7 });
+  pushCandidate(API_UPCOMING, { sport, days: 7 });
+  pushCandidate(API_LIVE, { sport: 'all' });
+  pushCandidate(API_UPCOMING, { sport: 'all', days: 7 });
+
+  for (const candidate of candidates) {
+    try {
+      const response = await fetch(buildApiUrl(candidate.path, candidate.params), { cache: 'no-store' });
+      if (!response.ok) continue;
+      const payload = await response.json();
+      const matches = filterRenderableMatches(payload.matches || []);
+      const match = matches.find((entry) => String(entry.id) === String(id));
+      if (match) {
+        return normalizeMatchDetailFallback(match);
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+async function fetchMatchPayload(id, sport = 'soccer', league = 'eng.1') {
+  const url = `${API_MATCH}?id=${encodeURIComponent(id)}&sport=${encodeURIComponent(sport)}&league=${encodeURIComponent(league)}`;
+  let response = null;
+  let data = null;
+
+  try {
+    response = await fetch(url, { cache: 'no-store' });
+    if (response.ok) {
+      data = await response.json();
+      if (data && !data.notFound && data.homeTeam && data.awayTeam) {
+        return { data, source: 'api', status: response.status };
+      }
+    }
+  } catch (error) {
+    response = null;
+  }
+
+  const fallback = await resolveMatchDetailFromFeeds(id, sport, league);
+  if (fallback) {
+    return { data: fallback, source: 'feed-fallback', status: response?.status || 200 };
+  }
+
+  return {
+    data: null,
+    source: 'none',
+    status: response?.status || 0,
+    notFound: Boolean(data?.notFound || response?.status === 404)
+  };
+}
+
 function showRuntimeToast(message, tone = 'success') {
   const existing = document.querySelector('.lsf-toast');
   if (existing) existing.remove();
@@ -3318,34 +3423,19 @@ function setMatchUnavailableState(primary = 'Match unavailable', secondary = 'Pl
 // --- FETCH & UPDATE MATCH DETAIL ---
 async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
   try {
-    const url = `${API_MATCH}?id=${id}&sport=${sport}&league=${league}`;
-    console.log('Fetching match detail from:', url);
-    const res = await fetch(url);
+    const result = await fetchMatchPayload(id, sport, league);
+    const data = result.data;
 
-    if (!res.ok) {
-      console.error(`API returned ${res.status}: ${res.statusText}`);
+    if (!data) {
+      console.error('Match detail unavailable for id:', id, 'status:', result.status);
       setMatchUnavailableState(
-        res.status === 404 ? 'Match not found' : 'Match unavailable',
-        res.status === 404 ? 'Please try another match' : 'Please try again shortly'
+        result.notFound ? 'Match not found' : 'Match unavailable',
+        result.notFound ? 'Please try another match' : 'Please try again shortly'
       );
       return;
     }
 
-    const data = await res.json();
-
-    if (!data || data.notFound) {
-      console.error('Match not found in API response');
-      setMatchUnavailableState('Match not found', 'Please try another match');
-      return;
-    }
-
-    if (!data.homeTeam || !data.awayTeam) {
-      console.error('Match detail payload was incomplete');
-      setMatchUnavailableState('Match unavailable', 'Please try again shortly');
-      return;
-    }
-
-    console.log('Match data received:', data);
+    console.log('Match data received:', data, 'source:', result.source);
     updateFeedRibbon(data.meta || {}, {
       feedLabel: 'Match center',
       matchCount: 1,
@@ -3800,34 +3890,19 @@ function renderMatchLineup(data) {
 // --- FETCH UPCOMING MATCH DETAIL ---
 async function fetchUpcomingMatchDetail(id, sport = 'soccer', league = 'eng.1') {
   try {
-    const url = `${API_MATCH}?id=${id}&sport=${sport}&league=${league}`;
-    console.log('Fetching upcoming match detail from:', url);
-    const res = await fetch(url);
+    const result = await fetchMatchPayload(id, sport, league);
+    const data = result.data;
 
-    if (!res.ok) {
-      console.error(`API returned ${res.status}: ${res.statusText}`);
+    if (!data) {
+      console.error('Upcoming match detail unavailable for id:', id, 'status:', result.status);
       setMatchUnavailableState(
-        res.status === 404 ? 'Match not found' : 'Match unavailable',
-        res.status === 404 ? 'Please try another match' : 'Please try again shortly'
+        result.notFound ? 'Match not found' : 'Match unavailable',
+        result.notFound ? 'Please try another match' : 'Please try again shortly'
       );
       return;
     }
 
-    const data = await res.json();
-
-    if (!data || data.notFound) {
-      console.error('Match not found in API response');
-      setMatchUnavailableState('Match not found', 'Please try another match');
-      return;
-    }
-
-    if (!data.homeTeam || !data.awayTeam) {
-      console.error('Upcoming match payload was incomplete');
-      setMatchUnavailableState('Match unavailable', 'Please try again shortly');
-      return;
-    }
-
-    console.log('Upcoming match data received:', data);
+    console.log('Upcoming match data received:', data, 'source:', result.source);
     renderUpcomingMatchDetail(data);
   } catch (err) {
     console.error('Failed to fetch upcoming match detail:', err);

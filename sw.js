@@ -1,5 +1,5 @@
-﻿const STATIC_CACHE = "lsf-static-v8";
-const DATA_CACHE = "lsf-data-v7";
+﻿const STATIC_CACHE = "lsf-static-v9";
+const DATA_CACHE = "lsf-data-v8";
 const APP_SHELL = [
   "/index.html",
   "/live.html",
@@ -18,7 +18,7 @@ const APP_SHELL = [
   "/info.html",
   "/manifest.webmanifest",
   "/offline.html",
-  "/js/script.js?v=1.0.8",
+  "/js/script.js?v=1.0.9",
   "/css/runtime-enhancements.css",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -82,7 +82,9 @@ async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   try {
     const response = await fetch(request);
-    cache.put(request, response.clone());
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
     return response;
   } catch (error) {
     const cached = await cache.match(request);
@@ -103,4 +105,6 @@ async function staleWhileRevalidate(request, cacheName) {
 
   return cached || networkPromise;
 }
+
+
 

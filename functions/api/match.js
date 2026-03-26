@@ -1,8 +1,9 @@
 import {
+  buildFallbackUrls,
   buildFeedMeta,
   FALLBACK_LOGO,
   SPORT_LEAGUES,
-  fetchJson,
+  fetchWithFallback,
   getDefaultLeague,
   jsonResponse,
   mapStatus,
@@ -34,6 +35,11 @@ async function fetchInternalJson(request, path, params = {}) {
     throw new Error(`Internal request failed: ${response.status} for ${path}`);
   }
 
+  return response.json();
+}
+
+async function fetchExternalJson(sport, league, resource, query = {}) {
+  const response = await fetchWithFallback(buildFallbackUrls(sport, league, resource, query), {}, 5000);
   return response.json();
 }
 
@@ -308,7 +314,7 @@ async function findScoreboardFallback(id, sport, league) {
   const candidates = buildScoreboardCandidates(sport, league);
   for (const candidate of candidates) {
     try {
-      const data = await fetchJson(siteApiUrl(candidate.sport, candidate.league, "scoreboard", { dates: candidate.date, limit: 100 }));
+      const data = await fetchExternalJson(candidate.sport, candidate.league, "scoreboard", { dates: candidate.date, limit: 100 });
       const event = (data.events || []).find((entry) => String(entry.id) === String(id));
       if (event) {
         return normalizeFallbackScoreboardSummary(
@@ -341,7 +347,12 @@ export async function onRequest(context) {
     let summaryData = null;
     for (const candidate of buildSummaryCandidates(id, sport, league)) {
       try {
-        summaryData = await fetchJson(candidate);
+        const candidateUrl = new URL(candidate);
+        const pathMatch = candidateUrl.pathname.match(/\/sports\/([^/]+)\/([^/]+)\/summary$/);
+        if (!pathMatch) continue;
+        const [, candidateSport, candidateLeague] = pathMatch;
+        const eventId = candidateUrl.searchParams.get("event") || id;
+        summaryData = await fetchExternalJson(candidateSport, candidateLeague, "summary", { event: eventId });
         if (summaryData?.header?.competitions?.length) break;
       } catch (error) {
         summaryData = null;
