@@ -1,11 +1,28 @@
-import {
-  fetchJson,
-  normalizeSportParam,
-  normalizeLeagueParam,
-  siteApiUrl,
-  calculateTTL,
-  SPORT_LEAGUES
-} from "./_shared.js";
+import { normalizeSportParam, normalizeLeagueParam } from "./_shared.js";
+
+function buildInternalApiUrl(request, path, params = {}) {
+  const url = new URL(path, request.url);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, value);
+    }
+  });
+  return url.toString();
+}
+
+async function fetchSubscriptionJson(request, path, params = {}) {
+  const response = await fetch(buildInternalApiUrl(request, path, params), {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Subscription request failed: ${response.status} for ${path}`);
+  }
+
+  return response.json();
+}
 
 export async function onRequest(context) {
   const { request } = context;
@@ -31,31 +48,16 @@ export async function onRequest(context) {
     try {
       let results = null;
       if (subscription.type === "live") {
-        if (subscription.sport === "all") {
-          // Poll top leagues for all major sports to provide a global live feed
-          const topSports = ["soccer", "basketball", "football", "hockey", "baseball", "cricket", "tennis"];
-          const endpoints = topSports.map(s => ({ sport: s, league: (SPORT_LEAGUES[s] || [])[0] || "all" }));
-          
-          const sportsData = await Promise.all(
-            endpoints.map(async ({ sport, league }) => {
-              try {
-                const url = siteApiUrl(sport, league, "scoreboard");
-                return await fetchJson(url);
-              } catch (e) { return null; }
-            })
-          );
-          
-          // Merge all events into a single scoreboard-like structure
-          const allEvents = sportsData.filter(Boolean).flatMap(d => d.events || []);
-          results = { events: allEvents };
-        } else {
-          // Specific sport or league subscription
-          const url = siteApiUrl(subscription.sport, subscription.league || "all", "scoreboard");
-          results = await fetchJson(url);
-        }
+        results = await fetchSubscriptionJson(request, "/api/live", {
+          sport: subscription.sport || "all",
+          league: subscription.league || undefined
+        });
       } else if (subscription.type === "match" && subscription.id) {
-        const url = siteApiUrl(subscription.sport, subscription.league, "summary", { event: subscription.id });
-        results = await fetchJson(url);
+        results = await fetchSubscriptionJson(request, "/api/match", {
+          id: subscription.id,
+          sport: subscription.sport || "soccer",
+          league: subscription.league || undefined
+        });
       }
 
       if (results) {

@@ -1,5 +1,5 @@
-const STATIC_CACHE = "lsf-static-v4";
-const DATA_CACHE = "lsf-data-v3";
+const STATIC_CACHE = "lsf-static-v5";
+const DATA_CACHE = "lsf-data-v4";
 const APP_SHELL = [
   "/index.html",
   "/live.html",
@@ -18,7 +18,7 @@ const APP_SHELL = [
   "/info.html",
   "/manifest.webmanifest",
   "/offline.html",
-  "/js/script.js?v=1.0.4",
+  "/js/script.js?v=1.0.5",
   "/css/runtime-enhancements.css",
   "/icons/icon-192.png",
   "/icons/icon-512.png",

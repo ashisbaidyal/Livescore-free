@@ -113,10 +113,13 @@ class RealtimeManager {
 
   handleMessage(message) {
     if (message.type === 'live') {
-      const matches = message.data.matches || [];
+      const matches = Array.isArray(message?.data?.matches) ? message.data.matches : null;
+      if (!matches) return;
       broadcastLiveMatches(matches);
     } else if (message.type === 'match') {
-      if (typeof renderMatchDetail === 'function') renderMatchDetail(message.data);
+      const match = message?.data;
+      if (!match || match.notFound || !match.homeTeam || !match.awayTeam) return;
+      if (typeof renderMatchDetail === 'function') renderMatchDetail(match);
     }
   }
 
@@ -187,30 +190,47 @@ function setupNewsExpansion() {
 }
 
 function broadcastLiveMatches(matches) {
-  window._cachedLiveMatches = matches;
+  const normalizedMatches = filterRenderableMatches(Array.isArray(matches) ? matches : []);
+  const liveMatches = normalizedMatches.filter((match) => match.status === 'live');
+  window._cachedMatches = normalizedMatches;
+  window._cachedLiveMatches = liveMatches;
+
+  const liveCountText = document.getElementById('live-count-text');
+  const liveHeroCountText = document.getElementById('live-hero-count-text');
+  const liveLabel = liveMatches.length > 0 ? `${liveMatches.length} LIVE NOW` : 'NO LIVE GAMES';
+  if (liveCountText) liveCountText.textContent = liveLabel;
+  if (liveHeroCountText) liveHeroCountText.textContent = liveLabel;
 
   // Update ALL live-aware components
-  if (typeof renderTicker === 'function') renderTicker(matches);
-  if (typeof renderMatches === 'function' && currentPageFilter === 'live') renderMatches(matches);
-  if (typeof renderSidebarLive === 'function') renderSidebarLive(matches);
+  if (typeof renderTicker === 'function') renderTicker(normalizedMatches);
+  if (typeof updatePageTitle === 'function') updatePageTitle(liveMatches);
+  if (typeof renderMatches === 'function' && currentPageFilter === 'live') {
+    renderMatches(sortMatchesForDisplay(liveMatches, 'live'));
+  }
+  if (typeof renderSidebarLive === 'function') renderSidebarLive(liveMatches.slice(0, 5));
   
   // Update Hubs/Sliders
   if (typeof renderHeroSlider === 'function' && typeof heroSliderContainer !== 'undefined' && heroSliderContainer && currentPageFilter !== 'upcoming') {
-      renderHeroSlider(matches.slice(0, 5), currentPageFilter);
+      renderHeroSlider(normalizedMatches.slice(0, 5), currentPageFilter);
   }
   
   if (typeof renderIndexHeroHub === 'function' && (window.location.pathname === '/' || window.location.pathname.endsWith('index.html'))) {
-      renderIndexHeroHub(matches, window._cachedUpcoming || [], window._cachedNews || []);
+      renderIndexHeroHub(normalizedMatches, window._cachedUpcoming || [], window._cachedNews || []);
   }
 
-  if (typeof renderArenaLiveFallback === 'function' && document.getElementById('arena-schedule-container')) {
-      renderArenaLiveFallback(matches);
+  if (
+    typeof renderArenaLiveFallback === 'function' &&
+    document.getElementById('arena-schedule-container') &&
+    !(window._cachedUpcomingMatches || []).length &&
+    liveMatches.length > 0
+  ) {
+      renderArenaLiveFallback(liveMatches);
   }
 
   if (typeof renderLeaguesHub === 'function' && window.location.pathname.includes('leagues.html')) {
       const elite = window._eliteLeaguesCache || [];
       const standings = window._standingsMapCache || {};
-      renderLeaguesHub(elite, standings, matches);
+      renderLeaguesHub(elite, standings, normalizedMatches);
   }
 }
 
@@ -218,7 +238,7 @@ async function fetchLiveCount() {
   try {
     const res = await fetch(`${API_LIVE}?sport=all`);
     const data = await res.json();
-    const matches = data.matches || [];
+    const matches = filterRenderableMatches(data.matches || []);
     const allLive = matches.filter(m => m.status === "live");
     updateFeedRibbon(data.meta || {}, {
       feedLabel: 'Global live board',
@@ -241,10 +261,10 @@ async function fetchLiveCount() {
 function renderTicker(matches = []) {
   if (!tickerContainer) return;
   
-  // Logic: Prioritize Live, then In-Progress, then Scheduled
+  // Logic: prioritize live, then the next scheduled fixtures, then recent finals.
   let tickerMatches = matches.filter(m => m.status === "live");
   if (tickerMatches.length === 0) {
-    tickerMatches = matches.filter(m => m.status === "in_progress" || m.status === "scheduled").slice(0, 10);
+    tickerMatches = matches.filter(m => m.status === "upcoming" || m.status === "finished").slice(0, 10);
   } else {
     tickerMatches = tickerMatches.slice(0, 10);
   }
@@ -268,7 +288,7 @@ function renderTicker(matches = []) {
           <span class="w-1.5 h-1.5 rounded-full ${m.status === "live" ? "bg-primary animate-pulse" : "bg-white/20"}"></span>
           <span class="text-[10px] font-black uppercase tracking-widest text-on-surface/60">${(m.league || m.sport || "MATCH").toUpperCase()}</span>
           <span class="text-[10px] font-bold text-on-surface">${m.homeTeam.abbreviation || m.homeTeam.name} ${m.homeTeam.score || "0"} - ${m.awayTeam.score || "0"} ${m.awayTeam.abbreviation || m.awayTeam.name}</span>
-          <span class="text-[10px] font-black text-primary italic">${m.status === "live" ? (m.time || "LIVE") : (m.status === "scheduled" ? "UPCOMING" : "TBD")}</span>
+          <span class="text-[10px] font-black text-primary italic">${m.status === "live" ? (m.time || "LIVE") : (m.status === "upcoming" ? "UPCOMING" : "FINAL")}</span>
         </div>
       `).join("")}
     </div>
@@ -1755,6 +1775,7 @@ async function fetchArenaSchedule(sport = currentArenaTab) {
     const res = await fetch(apiUrl);
     const data = await res.json();
     const allMatches = filterRenderableMatches(data.matches || []);
+    window._cachedUpcomingMatches = allMatches;
     
     if (allMatches.length === 0) {
       container.innerHTML = `
@@ -3138,10 +3159,11 @@ async function fetchSidebarLive() {
       league: currentLeagueFilter || undefined
     }));
     const data = await res.json();
-    const allLive = (data.matches || []).filter(m => m.status === 'live');
+    const matches = filterRenderableMatches(data.matches || []);
+    const allLive = matches.filter(m => m.status === 'live');
     
     // Update global caches
-    window._cachedMatches = data.matches || [];
+    window._cachedMatches = matches;
     window._cachedLiveMatches = allLive;
 
     // Delegate to renderers
@@ -3265,7 +3287,7 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
             league: feedParams.league
           }));
           const liveData = await liveRes.json();
-          const liveMatches = (liveData.matches || []).filter(m => m.status === 'live');
+          const liveMatches = filterRenderableMatches(liveData.matches || []).filter(m => m.status === 'live');
           window._cachedLiveMatches = liveMatches;
           if (sidebarLiveContainer) renderSidebarLive(liveMatches.slice(0, 5));
           if (tickerContainer) { renderTicker(liveMatches); updatePageTitle(liveMatches); }
@@ -3892,7 +3914,7 @@ async function fetchRecentResults() {
       league: currentLeagueFilter || undefined
     }));
     const data = await res.json();
-    const finished = (data.matches || []).filter(m => m.status === 'finished');
+    const finished = filterRenderableMatches(data.matches || []).filter(m => m.status === 'finished');
     // Sort by date descending (most recent first)
     finished.sort((a, b) => new Date(b.date) - new Date(a.date));
     renderRecentResults(finished.slice(0, 4));
