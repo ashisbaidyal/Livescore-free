@@ -7,6 +7,7 @@ window.LSF_CONFIG = {
         live: '/api/live',
         match: '/api/match',
         upcoming: '/api/upcoming',
+        results: '/api/results',
         info: '/api/info'
     },
     ws: {

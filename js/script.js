@@ -21,6 +21,7 @@ const LSF_CONFIG = window.LSF_CONFIG || {
 const API_LIVE = LSF_CONFIG.api.live;
 const API_MATCH = LSF_CONFIG.api.match;
 const API_UPCOMING = LSF_CONFIG.api.upcoming;
+const API_RESULTS = LSF_CONFIG.api.results || "/api/results";
 const API_INFO = LSF_CONFIG.api.info;
 const API_NEWS = API_INFO;
 const DATA_SOURCES = LSF_CONFIG.sources || [];
@@ -760,6 +761,75 @@ function normalizeMatchDetailFallback(match = {}) {
   };
 }
 
+function hasUsefulMatchText(value, blocked = []) {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  return !blocked.some((candidate) => text.toLowerCase() === String(candidate || '').trim().toLowerCase());
+}
+
+function pickBestMatchText(primaryValue, fallbackValue, blocked = []) {
+  if (hasUsefulMatchText(primaryValue, blocked)) return String(primaryValue).trim();
+  if (hasUsefulMatchText(fallbackValue, blocked)) return String(fallbackValue).trim();
+  return String(primaryValue || fallbackValue || '').trim();
+}
+
+function needsMatchFeedHydration(data = {}) {
+  if (!data?.homeTeam || !data?.awayTeam) return true;
+  if (isPlaceholderTeam(data.homeTeam) || isPlaceholderTeam(data.awayTeam)) return true;
+  if (!hasUsefulMatchText(data.league, ['sports event', 'upcoming event'])) return true;
+  if (!hasUsefulMatchText(data.date, ['loading...', 'scheduled event'])) return true;
+  if (!hasUsefulMatchText(data.time, ['00:00'])) return true;
+  return false;
+}
+
+function mergeMatchDetailPayload(primary = {}, fallback = {}) {
+  const primaryHome = primary.homeTeam || {};
+  const primaryAway = primary.awayTeam || {};
+  const fallbackHome = fallback.homeTeam || {};
+  const fallbackAway = fallback.awayTeam || {};
+
+  const useFallbackHomeIdentity = isPlaceholderTeam(primaryHome) && !isPlaceholderTeam(fallbackHome);
+  const useFallbackAwayIdentity = isPlaceholderTeam(primaryAway) && !isPlaceholderTeam(fallbackAway);
+
+  return {
+    ...fallback,
+    ...primary,
+    sport: normalizeSportSlug(primary.sport || fallback.sport || '', primary.leagueSlug || fallback.leagueSlug || ''),
+    leagueSlug: normalizeLeagueSlug(primary.leagueSlug || fallback.leagueSlug || ''),
+    league: pickBestMatchText(primary.league, fallback.league, ['sports event', 'upcoming event']),
+    status: primary.status || fallback.status || 'upcoming',
+    statusText: pickBestMatchText(primary.statusText, fallback.statusText),
+    time: pickBestMatchText(primary.time, fallback.time, ['00:00']),
+    date: pickBestMatchText(primary.date, fallback.date, ['loading...', 'scheduled event']),
+    venue: pickBestMatchText(primary.venue, fallback.venue, ['tbd', 'tbd stadium']),
+    broadcast: pickBestMatchText(primary.broadcast, fallback.broadcast),
+    commentary: Array.isArray(primary.commentary) && primary.commentary.length ? primary.commentary : (fallback.commentary || []),
+    stats: Array.isArray(primary.stats) && primary.stats.length ? primary.stats : (fallback.stats || []),
+    timeline: Array.isArray(primary.timeline) && primary.timeline.length ? primary.timeline : (fallback.timeline || []),
+    h2h: Array.isArray(primary.h2h) && primary.h2h.length ? primary.h2h : (fallback.h2h || []),
+    odds: primary.odds || fallback.odds || null,
+    situation: primary.situation || fallback.situation || null,
+    homeTeam: {
+      ...fallbackHome,
+      ...primaryHome,
+      name: useFallbackHomeIdentity ? (fallbackHome.name || primaryHome.name || 'Home Team') : (primaryHome.name || fallbackHome.name || 'Home Team'),
+      fullName: useFallbackHomeIdentity ? (fallbackHome.fullName || primaryHome.fullName || fallbackHome.name || primaryHome.name || 'Home Team') : (primaryHome.fullName || fallbackHome.fullName || primaryHome.name || fallbackHome.name || 'Home Team'),
+      logo: primaryHome.logo || fallbackHome.logo || FALLBACK_LOGO,
+      score: primaryHome.score ?? fallbackHome.score ?? '0',
+      lineup: Array.isArray(primaryHome.lineup) && primaryHome.lineup.length ? primaryHome.lineup : (fallbackHome.lineup || [])
+    },
+    awayTeam: {
+      ...fallbackAway,
+      ...primaryAway,
+      name: useFallbackAwayIdentity ? (fallbackAway.name || primaryAway.name || 'Away Team') : (primaryAway.name || fallbackAway.name || 'Away Team'),
+      fullName: useFallbackAwayIdentity ? (fallbackAway.fullName || primaryAway.fullName || fallbackAway.name || primaryAway.name || 'Away Team') : (primaryAway.fullName || fallbackAway.fullName || primaryAway.name || fallbackAway.name || 'Away Team'),
+      logo: primaryAway.logo || fallbackAway.logo || FALLBACK_LOGO,
+      score: primaryAway.score ?? fallbackAway.score ?? '0',
+      lineup: Array.isArray(primaryAway.lineup) && primaryAway.lineup.length ? primaryAway.lineup : (fallbackAway.lineup || [])
+    }
+  };
+}
+
 async function resolveMatchDetailFromFeeds(id, sport = 'all', league = '') {
   const cachedMatch = findCachedMatch(id);
   if (cachedMatch) {
@@ -804,13 +874,17 @@ async function fetchMatchPayload(id, sport = 'soccer', league = 'eng.1') {
   const url = `${API_MATCH}?id=${encodeURIComponent(id)}&sport=${encodeURIComponent(sport)}&league=${encodeURIComponent(league)}`;
   let response = null;
   let data = null;
+  let apiData = null;
 
   try {
     response = await fetch(url, { cache: 'no-store' });
     if (response.ok) {
       data = await response.json();
       if (data && !data.notFound && data.homeTeam && data.awayTeam) {
-        return { data, source: 'api', status: response.status };
+        apiData = data;
+        if (!needsMatchFeedHydration(apiData)) {
+          return { data: apiData, source: 'api', status: response.status };
+        }
       }
     }
   } catch (error) {
@@ -818,8 +892,18 @@ async function fetchMatchPayload(id, sport = 'soccer', league = 'eng.1') {
   }
 
   const fallback = await resolveMatchDetailFromFeeds(id, sport, league);
+  if (fallback && apiData) {
+    return {
+      data: mergeMatchDetailPayload(apiData, fallback),
+      source: 'api+feed-fallback',
+      status: response?.status || 200
+    };
+  }
   if (fallback) {
     return { data: fallback, source: 'feed-fallback', status: response?.status || 200 };
+  }
+  if (apiData) {
+    return { data: apiData, source: 'api-partial', status: response?.status || 200 };
   }
 
   return {
@@ -879,6 +963,56 @@ function sortMatchesForDisplay(matches = [], statusFilter = null) {
     return list.sort((left, right) => new Date(right.date) - new Date(left.date));
   }
   return list.sort((left, right) => new Date(left.date) - new Date(right.date));
+}
+
+async function fetchFinishedResultsFeed(options = {}) {
+  const sport = normalizeSportSlug(options.sport ?? currentTab ?? 'all', options.league ?? currentLeagueFilter ?? '');
+  const league = normalizeLeagueSlug(options.league ?? currentLeagueFilter ?? '');
+  const candidates = [];
+  const seen = new Set();
+  const pushCandidate = (path, params = {}) => {
+    const key = `${path}:${JSON.stringify(params)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push({ path, params });
+  };
+
+  pushCandidate(API_RESULTS, { sport, league: league || undefined, days: 4 });
+  if (sport !== 'all' && !league) {
+    pushCandidate(API_RESULTS, { sport: 'all', days: 4 });
+  }
+  pushCandidate(API_LIVE, { sport, league: league || undefined });
+  if (sport !== 'all' && !league) {
+    pushCandidate(API_LIVE, { sport: 'all' });
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const response = await fetch(buildApiUrl(candidate.path, candidate.params), { cache: 'no-store' });
+      if (!response.ok) continue;
+      const payload = await response.json();
+      const finished = sortMatchesForDisplay(
+        filterRenderableMatches(payload.matches || []).filter((match) => match.status === 'finished'),
+        'finished'
+      );
+      if (finished.length) {
+        return {
+          matches: finished,
+          meta: payload.meta || {}
+        };
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+
+  return {
+    matches: sortMatchesForDisplay(
+      filterRenderableMatches(getCachedMatches()).filter((match) => match.status === 'finished'),
+      'finished'
+    ),
+    meta: {}
+  };
 }
 
 function applyFallbackImage(srcValue) {
@@ -2145,7 +2279,16 @@ async function fetchHeroData(statusFilter = null) {
       return;
     }
 
-    const res = await fetch(`${API_LIVE}?sport=all`);
+    const heroFeedPath = statusFilter === 'finished' ? API_RESULTS : API_LIVE;
+    const heroFeedParams = {
+      sport: currentTab || 'all',
+      league: currentLeagueFilter || undefined
+    };
+    if (statusFilter === 'finished') {
+      heroFeedParams.days = 4;
+    }
+
+    const res = await fetch(buildApiUrl(heroFeedPath, heroFeedParams), { cache: 'no-store' });
     const data = await res.json();
     let matches = filterRenderableMatches(data.matches || []);
     updateFeedRibbon(data.meta || {}, {
@@ -3318,22 +3461,18 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
       });
     }
     
-    const res = await fetch(apiUrl);
+    const res = await fetch(apiUrl, { cache: 'no-store' });
     const data = await res.json();
     let matches = filterRenderableMatches(data.matches || []);
-    updateFeedRibbon(data.meta || {}, {
-      feedLabel: isUpcomingPage && statusFilter === 'upcoming'
-        ? 'Schedule feed'
-        : statusFilter === 'finished'
-          ? 'Results feed'
-          : 'Match feed',
-      matchCount: matches.length,
-      liveCount: matches.filter((match) => match.status === 'live').length
-    });
     window._cachedMatches = matches;
 
     // On upcoming page with upcoming API, sidebar/ticker need live data separately
     if (isUpcomingPage && statusFilter === 'upcoming') {
+      updateFeedRibbon(data.meta || {}, {
+        feedLabel: 'Schedule feed',
+        matchCount: matches.length,
+        liveCount: 0
+      });
       window._cachedUpcomingMatches = matches;
       // Fetch live data for sidebar/ticker only
       if (sidebarLiveContainer || tickerContainer) {
@@ -3341,7 +3480,7 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
           const liveRes = await fetch(buildApiUrl(API_LIVE, {
             sport: feedParams.sport,
             league: feedParams.league
-          }));
+          }), { cache: 'no-store' });
           const liveData = await liveRes.json();
           const liveMatches = filterRenderableMatches(liveData.matches || []).filter(m => m.status === 'live');
           window._cachedLiveMatches = liveMatches;
@@ -3364,7 +3503,22 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
         updatePageTitle(liveMatches);
       }
       if (sidebarOnly) return;
-      if (statusFilter) {
+      if (statusFilter === 'finished') {
+        const resultsFeed = await fetchFinishedResultsFeed(feedParams);
+        matches = resultsFeed.matches;
+        updateFeedRibbon(resultsFeed.meta || data.meta || {}, {
+          feedLabel: 'Results feed',
+          matchCount: matches.length,
+          liveCount: 0
+        });
+      } else {
+        updateFeedRibbon(data.meta || {}, {
+          feedLabel: statusFilter === 'finished' ? 'Results feed' : 'Match feed',
+          matchCount: matches.length,
+          liveCount: matches.filter((match) => match.status === 'live').length
+        });
+      }
+      if (statusFilter && statusFilter !== 'finished') {
         matches = matches.filter(m => m.status === statusFilter);
       }
       matches = sortMatchesForDisplay(matches, statusFilter);
@@ -3910,6 +4064,20 @@ async function fetchUpcomingMatchDetail(id, sport = 'soccer', league = 'eng.1') 
   }
 }
 
+function formatUpcomingDatePresentation(data = {}) {
+  const parsedDate = data?.date ? new Date(data.date) : null;
+  const hasParsedDate = parsedDate && !Number.isNaN(parsedDate.getTime());
+  const rawTime = String(data?.time || '').trim();
+  const timeLabel = hasParsedDate
+    ? parsedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+    : (hasUsefulMatchText(rawTime, ['00:00']) ? rawTime : '00:00');
+  const dateLabel = hasParsedDate
+    ? parsedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+    : (hasUsefulMatchText(data?.date, ['loading...', 'scheduled event']) ? String(data.date).trim() : 'Scheduled Event');
+
+  return { timeLabel, dateLabel };
+}
+
 function renderUpcomingMatchDetail(data) {
   if (!homeTeamName || !data || !data.homeTeam) return;
 
@@ -3922,17 +4090,18 @@ function renderUpcomingMatchDetail(data) {
   const sName = document.getElementById('stadium-name');
   const lName = document.getElementById('league-name');
   const h2hContainer = document.getElementById('h2h-container');
+  const { timeLabel, dateLabel } = formatUpcomingDatePresentation(data);
 
   if (hName) hName.textContent = data.homeTeam.name || 'TBD';
   if (aName) aName.textContent = data.awayTeam.name || 'TBD';
   if (hLogo) hLogo.src = data.homeTeam.logo || 'https://raw.githubusercontent.com/ashisbaidya/Livescore-free/main/logo.png';
   if (aLogo) aLogo.src = data.awayTeam.logo || 'https://raw.githubusercontent.com/ashisbaidya/Livescore-free/main/logo.png';
-  if (mTime) mTime.textContent = data.time || '00:00';
-  if (mDate) mDate.textContent = data.date || 'Scheduled Event';
+  if (mTime) mTime.textContent = timeLabel;
+  if (mDate) mDate.textContent = dateLabel;
   if (sName) sName.textContent = data.venue || (data.league ? `${data.league} Arena` : 'TBD Stadium');
   if (lName) lName.textContent = data.league || 'Upcoming Event';
 
-  if (h2hContainer && data.h2h) {
+  if (h2hContainer && Array.isArray(data.h2h) && data.h2h.length) {
     h2hContainer.innerHTML = data.h2h.map(match => `
       <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5">
         <span class="text-[10px] font-black opacity-40 italic uppercase tracking-widest">${match.date}</span>
@@ -3944,6 +4113,12 @@ function renderUpcomingMatchDetail(data) {
         <span class="text-[10px] font-black text-primary uppercase italic tracking-widest ml-4">${match.result}</span>
       </div>
     `).join('');
+  } else if (h2hContainer) {
+    h2hContainer.innerHTML = `
+      <div class="py-8 text-center opacity-30 text-[10px] uppercase font-black tracking-widest">
+        No recent head-to-head results available
+      </div>
+    `;
   }
 }
 
@@ -3951,15 +4126,11 @@ function renderUpcomingMatchDetail(data) {
 async function fetchRecentResults() {
   if (!recentResultsContainer) return;
   try {
-    const res = await fetch(buildApiUrl(API_LIVE, {
+    const resultsFeed = await fetchFinishedResultsFeed({
       sport: currentTab || 'all',
       league: currentLeagueFilter || undefined
-    }));
-    const data = await res.json();
-    const finished = filterRenderableMatches(data.matches || []).filter(m => m.status === 'finished');
-    // Sort by date descending (most recent first)
-    finished.sort((a, b) => new Date(b.date) - new Date(a.date));
-    renderRecentResults(finished.slice(0, 4));
+    });
+    renderRecentResults(resultsFeed.matches.slice(0, 4));
   } catch (err) {
     console.error('Recent Results Fetch Error:', err);
   }
