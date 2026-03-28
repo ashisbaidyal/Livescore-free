@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -137,27 +137,27 @@
         <div id="player-meta-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Sport</div>
-            <div id="meta-sport" class="text-lg font-black italic">â€”</div>
+            <div id="meta-sport" class="text-lg font-black italic">—</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Team</div>
-            <div id="meta-team" class="text-lg font-black italic">â€”</div>
+            <div id="meta-team" class="text-lg font-black italic">—</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Position</div>
-            <div id="meta-role" class="text-lg font-black italic">â€”</div>
+            <div id="meta-role" class="text-lg font-black italic">—</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Jersey</div>
-            <div id="meta-jersey" class="text-lg font-black italic">â€”</div>
+            <div id="meta-jersey" class="text-lg font-black italic">—</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Age</div>
-            <div id="meta-age" class="text-lg font-black italic">â€”</div>
+            <div id="meta-age" class="text-lg font-black italic">—</div>
           </div>
           <div class="glass-card rounded-2xl border border-white/5 p-4">
             <div class="text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-2">Status</div>
-            <div id="meta-status" class="text-lg font-black italic">â€”</div>
+            <div id="meta-status" class="text-lg font-black italic">—</div>
           </div>
         </div>
 
@@ -273,7 +273,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.10"></script>
+<script src="js/script.js?v=1.0.12"></script>
 <script>
   const FALLBACK_AVATAR = '/icons/icon-192.png';
 
@@ -439,8 +439,8 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               ${entries.map(s => `
                 <div class="rounded-xl border border-white/5 bg-white/5 p-3 text-center">
-                  <div class="text-lg font-black text-primary">${s.value || s.displayValue || 'â€”'}</div>
-                  <div class="text-[9px] font-bold uppercase tracking-widest text-on-surface/40 mt-1">${s.name || s.label || s.abbreviation || 'â€”'}</div>
+                  <div class="text-lg font-black text-primary">${s.value || s.displayValue || '—'}</div>
+                  <div class="text-[9px] font-bold uppercase tracking-widest text-on-surface/40 mt-1">${s.name || s.label || s.abbreviation || '—'}</div>
                 </div>
               `).join('')}
             </div>
@@ -473,7 +473,7 @@
           ${article.image ? `<img src="${article.image}" class="w-20 h-20 rounded-xl object-cover shrink-0" onerror="this.style.display='none'" alt="Image description">` : ''}
           <div class="flex-1 min-w-0">
             <h4 class="text-sm font-black uppercase tracking-tight leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">${article.headline || article.title}</h4>
-            <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${article.published ? new Date(article.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} ${article.byline ? `â€¢ ${article.byline}` : ''}</p>
+            <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${article.published ? new Date(article.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} ${article.byline ? `• ${article.byline}` : ''}</p>
           </div>
         </div>
       </a>
@@ -501,7 +501,7 @@
           ${athlete.team.logo ? `<img src="${athlete.team.logo}" class="w-12 h-12 object-contain" onerror="this.src='${FALLBACK_AVATAR}'" alt="Image description">` : ''}
           <div>
             <h4 class="text-lg font-black uppercase tracking-tight group-hover:text-primary transition-colors">${athlete.team.name}</h4>
-            <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${up(athlete.league)} â€¢ ${up(athlete.sport)}</p>
+            <p class="text-[10px] text-on-surface/40 uppercase tracking-widest">${up(athlete.league)} • ${up(athlete.sport)}</p>
           </div>
         </div>
         <div class="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1">
@@ -670,6 +670,7 @@
 </script>
 </body>
 </html>
+
 
 
 

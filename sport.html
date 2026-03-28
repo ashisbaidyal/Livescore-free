@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
@@ -228,6 +228,23 @@
                     <div class="h-48 bg-white/5 rounded-xl animate-pulse"></div>
                 </div>
             </section>
+
+            <section>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-black italic uppercase border-l-4 border-primary pl-4">Evergreen Fan Blog</h2>
+                    <a id="sport-blog-link" href="blog_hub.html" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Editorial Hub</a>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    <div id="sport-blog-featured-container" class="xl:col-span-2">
+                        <div class="h-[360px] bg-white/5 rounded-[1.75rem] animate-pulse"></div>
+                    </div>
+                    <div id="sport-blog-stack-container" class="space-y-4">
+                        <div class="h-28 bg-white/5 rounded-[1.5rem] animate-pulse"></div>
+                        <div class="h-28 bg-white/5 rounded-[1.5rem] animate-pulse"></div>
+                        <div class="h-28 bg-white/5 rounded-[1.5rem] animate-pulse"></div>
+                    </div>
+                </div>
+            </section>
         </div>
 
         <!-- Sidebar: Standings + Live -->
@@ -346,7 +363,7 @@
 </div>
 </footer>
 
-<script src="js/script.js?v=1.0.10"></script>
+<script src="js/script.js?v=1.0.12"></script>
 <script>
 const sportStoreSubscriptions = {
     standings: null,
@@ -366,10 +383,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const desc = document.getElementById('sport-desc');
 
     const sportMeta = {
-        'soccer':     { title: 'SOCCER',     desc: 'The Beautiful Game Ã¢â‚¬â€ Global Football Coverage', icon: 'sports_soccer' },
+        'soccer':     { title: 'SOCCER',     desc: 'The Beautiful Game â€” Global Football Coverage', icon: 'sports_soccer' },
         'basketball': { title: 'BASKETBALL', desc: 'NBA, WNBA & Global Basketball Coverage', icon: 'sports_basketball' },
-        'football':   { title: 'NFL',        desc: 'American Football Ã¢â‚¬â€ Gridiron Action', icon: 'sports_football' },
-        'american-football': { title: 'NFL', desc: 'American Football Ã¢â‚¬â€ Gridiron Action', icon: 'sports_football' },
+        'football':   { title: 'NFL',        desc: 'American Football â€” Gridiron Action', icon: 'sports_football' },
+        'american-football': { title: 'NFL', desc: 'American Football â€” Gridiron Action', icon: 'sports_football' },
         'tennis':     { title: 'TENNIS',     desc: 'ATP, WTA & Grand Slam Coverage', icon: 'sports_tennis' },
         'mma':        { title: 'MMA',        desc: 'UFC, Bellator & Combat Sports', icon: 'sports_mma' },
         'hockey':     { title: 'HOCKEY',     desc: 'NHL & International Ice Hockey', icon: 'sports_hockey' },
@@ -684,10 +701,4 @@ function fetchSportPlayers(sport, league) {
 </script>
 </body>
 </html>
-</CodeContent>
-<parameter name="EmptyFile">false
-
-
-
-
 

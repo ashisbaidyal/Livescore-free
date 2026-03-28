@@ -23,6 +23,7 @@ const API_MATCH = LSF_CONFIG.api.match;
 const API_UPCOMING = LSF_CONFIG.api.upcoming;
 const API_RESULTS = LSF_CONFIG.api.results || "/api/results";
 const API_INFO = LSF_CONFIG.api.info;
+const API_BLOG = LSF_CONFIG.api.blog || "/api/blog";
 const API_NEWS = API_INFO;
 const DATA_SOURCES = LSF_CONFIG.sources || [];
 const PWA_MANIFEST = '/manifest.webmanifest';
@@ -36,6 +37,11 @@ const reminderTimerHandles = new Map();
 
 window._cachedNews = [];
 window._cachedUpcoming = [];
+window._cachedResults = [];
+window._cachedBlogPosts = [];
+window._lsfHeroAutoplayHandle = null;
+window._lsfTickerAutoplayHandle = null;
+window._lsfHeroActiveKey = '';
 
 // --- REALTIME MANAGER (WebSocket/SSE Hybrid) ---
 class RealtimeManager {
@@ -207,11 +213,27 @@ function broadcastLiveMatches(matches) {
   if (typeof renderMatches === 'function' && currentPageFilter === 'live') {
     renderMatches(sortMatchesForDisplay(liveMatches, 'live'));
   }
+  if (typeof renderMatches === 'function' && window.location.pathname.includes('trending.html')) {
+    renderMatches(combineMatchPools(liveMatches, window._cachedUpcoming || window._cachedUpcomingMatches || [], window._cachedResults || []).slice(0, 18));
+  }
   if (typeof renderSidebarLive === 'function') renderSidebarLive(liveMatches.slice(0, 5));
   
   // Update Hubs/Sliders
   if (typeof renderHeroSlider === 'function' && typeof heroSliderContainer !== 'undefined' && heroSliderContainer && currentPageFilter !== 'upcoming') {
-      renderHeroSlider(normalizedMatches.slice(0, 5), currentPageFilter);
+      const heroPool = buildHeroMatchPool({
+        liveMatches,
+        upcomingMatches: window._cachedUpcoming || window._cachedUpcomingMatches || [],
+        finishedMatches: window._cachedResults || [],
+        statusFilter: currentPageFilter,
+        limit: 5,
+        isHomePage: window.location.pathname === '/' || window.location.pathname.endsWith('index.html')
+      });
+      renderHeroSlider(heroPool, currentPageFilter, {
+        isHomePage: window.location.pathname === '/' || window.location.pathname.endsWith('index.html'),
+        upcomingMatches: window._cachedUpcoming || window._cachedUpcomingMatches || [],
+        newsList: window._cachedNews || [],
+        finishedMatches: window._cachedResults || []
+      });
   }
   
   if (typeof renderIndexHeroHub === 'function' && (window.location.pathname === '/' || window.location.pathname.endsWith('index.html'))) {
@@ -260,18 +282,13 @@ async function fetchLiveCount() {
 
 function renderTicker(matches = []) {
   if (!tickerContainer) return;
-  
-  // Logic: prioritize live, then the next scheduled fixtures, then recent finals.
-  let tickerMatches = matches.filter(m => m.status === "live");
-  if (tickerMatches.length === 0) {
-    tickerMatches = matches.filter(m => m.status === "upcoming" || m.status === "finished").slice(0, 10);
-  } else {
-    tickerMatches = tickerMatches.slice(0, 10);
-  }
+
+  const tickerMatches = buildTickerMatchPool(matches);
+  clearInterval(window._lsfTickerAutoplayHandle);
 
   if (tickerMatches.length === 0) {
     tickerContainer.innerHTML = `
-      <div class="flex items-center gap-8 animate-marquee whitespace-nowrap">
+      <div class="flex items-center gap-8 px-2 sm:px-6">
         <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/40">
           <span class="w-1.5 h-1.5 rounded-full bg-white/10"></span>
           Stay tuned for upcoming sports action across 17 global categories.
@@ -280,19 +297,107 @@ function renderTicker(matches = []) {
     `;
     return;
   }
-  
+
   tickerContainer.innerHTML = `
-    <div class="flex items-center gap-12 animate-marquee whitespace-nowrap">
-      ${tickerMatches.map(m => `
-        <div class="flex items-center gap-3 px-4 py-1.5 bg-white/5 border border-white/5 rounded-full">
-          <span class="w-1.5 h-1.5 rounded-full ${m.status === "live" ? "bg-primary animate-pulse" : "bg-white/20"}"></span>
-          <span class="text-[10px] font-black uppercase tracking-widest text-on-surface/60">${(m.league || m.sport || "MATCH").toUpperCase()}</span>
-          <span class="text-[10px] font-bold text-on-surface">${m.homeTeam.abbreviation || m.homeTeam.name} ${m.homeTeam.score || "0"} - ${m.awayTeam.score || "0"} ${m.awayTeam.abbreviation || m.awayTeam.name}</span>
-          <span class="text-[10px] font-black text-primary italic">${m.status === "live" ? (m.time || "LIVE") : (m.status === "upcoming" ? "UPCOMING" : "FINAL")}</span>
+    <div class="lsf-ticker-shell relative flex items-center gap-3 px-1 sm:px-3">
+      <button type="button" class="lsf-ticker-nav hidden sm:inline-flex items-center justify-center w-10 h-10 rounded-full border border-white/10 bg-white/5 text-on-surface/60 hover:text-white hover:bg-white/10" data-ticker-dir="-1" aria-label="Previous matches">
+        <span class="material-symbols-outlined text-lg">chevron_left</span>
+      </button>
+      <div class="lsf-ticker-rail flex-1 overflow-x-auto whitespace-nowrap snap-x snap-mandatory scroll-smooth px-0.5" data-ticker-rail>
+        <div class="inline-flex items-center gap-3 min-w-full">
+          ${tickerMatches.map((match) => {
+            const statusText = match.status === 'live'
+              ? (match.time || 'LIVE')
+              : (match.status === 'upcoming' ? formatTickerDate(match) : 'FINAL');
+            const statusTone = match.status === 'live'
+              ? 'bg-primary animate-pulse'
+              : (match.status === 'upcoming' ? 'bg-amber-400/80' : 'bg-white/20');
+            return `
+              <a href="${buildMatchUrl(match)}"
+                 class="lsf-ticker-card inline-flex snap-start shrink-0 min-w-[280px] sm:min-w-[340px] items-center gap-3 px-4 py-3 bg-white/5 border border-white/5 rounded-full hover:bg-white/10 hover:border-primary/30 transition-all group"
+                 data-ticker-card>
+                <span class="w-1.5 h-1.5 rounded-full ${statusTone}"></span>
+                <span class="text-[10px] font-black uppercase tracking-widest text-on-surface/50">${(match.league || match.sport || 'MATCH').toUpperCase()}</span>
+                <span class="flex items-center gap-2 min-w-0 flex-1">
+                  <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" class="w-4 h-4 object-contain opacity-70 group-hover:opacity-100" onerror="this.src='${FALLBACK_LOGO}'">
+                  <span class="text-[10px] font-bold text-on-surface truncate">${match.homeTeam.abbreviation || match.homeTeam.name} ${match.homeTeam.score || '0'} - ${match.awayTeam.score || '0'} ${match.awayTeam.abbreviation || match.awayTeam.name}</span>
+                  <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" class="w-4 h-4 object-contain opacity-70 group-hover:opacity-100" onerror="this.src='${FALLBACK_LOGO}'">
+                </span>
+                <span class="text-[10px] font-black text-primary italic uppercase">${statusText}</span>
+              </a>
+            `;
+          }).join('')}
         </div>
-      `).join("")}
+      </div>
+      <button type="button" class="lsf-ticker-nav hidden sm:inline-flex items-center justify-center w-10 h-10 rounded-full border border-white/10 bg-white/5 text-on-surface/60 hover:text-white hover:bg-white/10" data-ticker-dir="1" aria-label="Next matches">
+        <span class="material-symbols-outlined text-lg">chevron_right</span>
+      </button>
     </div>
   `;
+
+  const rail = tickerContainer.querySelector('[data-ticker-rail]');
+  if (!rail) return;
+
+  tickerContainer.querySelectorAll('[data-ticker-dir]').forEach((button) => {
+    button.addEventListener('click', () => advanceTickerRail(rail, Number(button.dataset.tickerDir || '1')));
+  });
+
+  const pauseTicker = () => clearInterval(window._lsfTickerAutoplayHandle);
+  const resumeTicker = () => {
+    clearInterval(window._lsfTickerAutoplayHandle);
+    if (tickerMatches.length < 2) return;
+    window._lsfTickerAutoplayHandle = setInterval(() => advanceTickerRail(rail, 1), 4500);
+  };
+
+  rail.addEventListener('mouseenter', pauseTicker);
+  rail.addEventListener('mouseleave', resumeTicker);
+  rail.addEventListener('focusin', pauseTicker);
+  rail.addEventListener('focusout', resumeTicker);
+  rail.addEventListener('touchstart', pauseTicker, { passive: true });
+  rail.addEventListener('touchend', resumeTicker, { passive: true });
+  resumeTicker();
+}
+
+function buildTickerMatchPool(matches = []) {
+  const mixedMatches = combineMatchPools(
+    filterRenderableMatches(matches),
+    window._cachedLiveMatches || [],
+    window._cachedUpcoming || [],
+    window._cachedUpcomingMatches || [],
+    window._cachedResults || []
+  );
+  const liveMatches = mixedMatches.filter((match) => match.status === 'live').slice(0, 5);
+  const upcomingMatches = mixedMatches.filter((match) => match.status === 'upcoming').slice(0, 4);
+  const finishedMatches = mixedMatches.filter((match) => match.status === 'finished').slice(0, 3);
+  return combineMatchPools(liveMatches, upcomingMatches, finishedMatches).slice(0, 12);
+}
+
+function advanceTickerRail(rail, direction = 1) {
+  if (!rail) return;
+  const cards = rail.querySelectorAll('[data-ticker-card]');
+  if (!cards.length) return;
+  const cardWidth = (cards[0].getBoundingClientRect().width || 320) + 12;
+  const maxScroll = Math.max(rail.scrollWidth - rail.clientWidth, 0);
+  let nextLeft = rail.scrollLeft + (cardWidth * direction);
+  if (direction > 0 && nextLeft >= maxScroll - 8) {
+    nextLeft = 0;
+  } else if (direction < 0 && rail.scrollLeft <= 8) {
+    nextLeft = maxScroll;
+  }
+  rail.scrollTo({ left: nextLeft, behavior: 'smooth' });
+}
+
+function formatTickerDate(match = {}) {
+  if (!match?.date) return match?.time || 'UPCOMING';
+  const parsedDate = new Date(match.date);
+  if (Number.isNaN(parsedDate.getTime())) return match?.time || 'UPCOMING';
+  return parsedDate.toLocaleString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }).replace(',', ' -').toUpperCase();
 }
 
 function getSafeImageUrl(url, fallback = FALLBACK_HERO_IMAGE) {
@@ -689,6 +794,84 @@ function buildSportHubUrl(sport = '', league = '') {
   return `/sport.html?${params.toString()}`;
 }
 
+function buildBlogHubUrl(sport = '', league = '') {
+  const params = new URLSearchParams();
+  const normalizedSport = normalizeSportSlug(sport || 'all', league);
+  const normalizedLeague = normalizeLeagueSlug(league);
+  if (normalizedSport) params.set('s', normalizedSport);
+  if (normalizedLeague) params.set('l', normalizedLeague);
+  return `/blog_hub.html?${params.toString()}`;
+}
+
+function buildBlogArticleUrl(post = {}) {
+  const params = new URLSearchParams();
+  if (post.slug) params.set('slug', post.slug);
+  if (post.sport) params.set('sport', post.sport);
+  if (post.league) params.set('league', post.league);
+  return `/blog_article.html?${params.toString()}`;
+}
+
+function escapeHtml(value = '') {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getSourceFaviconUrl(source = {}) {
+  if (source?.favicon) return source.favicon;
+  const sourceUrl = source?.url || '';
+  try {
+    const domain = new URL(sourceUrl).hostname.replace(/^www\./, '');
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+  } catch (error) {
+    return FALLBACK_LOGO;
+  }
+}
+
+function upsertHeadMeta(name, content, attribute = 'name') {
+  if (!content) return;
+  let node = document.head.querySelector(`meta[${attribute}="${name}"]`);
+  if (!node) {
+    node = document.createElement('meta');
+    node.setAttribute(attribute, name);
+    document.head.appendChild(node);
+  }
+  node.setAttribute('content', content);
+}
+
+function upsertHeadLink(rel, href) {
+  if (!href) return;
+  let node = document.head.querySelector(`link[rel="${rel}"]`);
+  if (!node) {
+    node = document.createElement('link');
+    node.setAttribute('rel', rel);
+    document.head.appendChild(node);
+  }
+  node.setAttribute('href', href);
+}
+
+function updateBlogSeo(post = {}, type = 'article') {
+  const title = post?.seoTitle || post?.title || post?.headline || 'LivescoreFree sports blog';
+  const description = post?.seoDescription || post?.excerpt || 'Evergreen sports fan guides and editorial recaps.';
+  const image = post?.image || FALLBACK_HERO_IMAGE;
+  const canonical = type === 'article' ? buildBlogArticleUrl(post) : buildBlogHubUrl(post?.sport || 'all', post?.league || '');
+
+  document.title = title;
+  upsertHeadMeta('description', description);
+  upsertHeadMeta('og:title', title, 'property');
+  upsertHeadMeta('og:description', description, 'property');
+  upsertHeadMeta('og:image', new URL(image, window.location.origin).toString(), 'property');
+  upsertHeadMeta('og:type', type === 'article' ? 'article' : 'website', 'property');
+  upsertHeadMeta('twitter:card', 'summary_large_image', 'name');
+  upsertHeadMeta('twitter:title', title, 'name');
+  upsertHeadMeta('twitter:description', description, 'name');
+  upsertHeadMeta('twitter:image', new URL(image, window.location.origin).toString(), 'name');
+  upsertHeadLink('canonical', new URL(canonical, window.location.origin).toString());
+}
+
 function getCurrentFeedParams(overrides = {}) {
   return {
     sport: overrides.sport ?? currentTab ?? 'all',
@@ -957,6 +1140,269 @@ function getArticleLinkUrl(article = {}) {
   return article.url || article.links?.web?.href || article.links?.api?.news?.href || '#';
 }
 
+function dedupeMatchesById(matches = []) {
+  const uniqueMatches = new Map();
+  matches.forEach((match) => {
+    if (!match?.id) return;
+    const key = String(match.id);
+    if (!uniqueMatches.has(key)) {
+      uniqueMatches.set(key, match);
+    }
+  });
+  return Array.from(uniqueMatches.values());
+}
+
+function getMatchDateValue(match = {}) {
+  const parsed = new Date(match?.date || 0).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getMatchStatusPriority(match = {}) {
+  if (match?.status === 'live') return 0;
+  if (match?.status === 'upcoming') return 1;
+  if (match?.status === 'finished') return 2;
+  return 3;
+}
+
+function combineMatchPools(...lists) {
+  const uniqueMatches = dedupeMatchesById(
+    lists.flat().filter((match) => match?.id && match?.homeTeam && match?.awayTeam)
+  );
+
+  return uniqueMatches.sort((left, right) => {
+    const priorityDiff = getMatchStatusPriority(left) - getMatchStatusPriority(right);
+    if (priorityDiff !== 0) return priorityDiff;
+    if (left.status === 'finished' && right.status === 'finished') {
+      return getMatchDateValue(right) - getMatchDateValue(left);
+    }
+    return getMatchDateValue(left) - getMatchDateValue(right);
+  });
+}
+
+function getHeroSlideKey(entry = {}) {
+  if (entry.kind === 'news') {
+    return `news:${entry.article?.headline || entry.article?.url || 'headline'}`;
+  }
+  const match = entry.kind === 'match' ? entry.match : entry;
+  return `match:${match?.id || ''}`;
+}
+
+function getHeroAccentColor(team = {}, fallback = 'rgba(204, 22, 22, 0.35)') {
+  const rawColor = String(team?.color || '').trim();
+  if (/^[0-9a-f]{3}$/i.test(rawColor) || /^[0-9a-f]{6}$/i.test(rawColor)) {
+    return `#${rawColor}`;
+  }
+  return fallback;
+}
+
+function buildMatchBackdropStyle(match = {}) {
+  const homeLogo = getSafeImageUrl(match?.homeTeam?.logo, FALLBACK_LOGO);
+  const awayLogo = getSafeImageUrl(match?.awayTeam?.logo, FALLBACK_LOGO);
+  const homeColor = getHeroAccentColor(match?.homeTeam, 'rgba(32, 64, 122, 0.35)');
+  const awayColor = getHeroAccentColor(match?.awayTeam, 'rgba(18, 32, 54, 0.24)');
+  return `
+    background-image:
+      linear-gradient(180deg, rgba(8,10,15,0.16) 0%, rgba(8,10,15,0.86) 88%),
+      linear-gradient(90deg, rgba(10,13,21,0.92) 0%, rgba(10,13,21,0.52) 45%, rgba(10,13,21,0.78) 100%),
+      radial-gradient(circle at 24% 36%, ${homeColor} 0%, transparent 32%),
+      radial-gradient(circle at 78% 34%, ${awayColor} 0%, transparent 30%),
+      url('${awayLogo}'),
+      url('${homeLogo}');
+    background-position:
+      center,
+      center,
+      center,
+      center,
+      110% center,
+      -10% center;
+    background-size:
+      cover,
+      cover,
+      cover,
+      cover,
+      42% auto,
+      42% auto;
+    background-repeat:
+      no-repeat,
+      no-repeat,
+      no-repeat,
+      no-repeat,
+      no-repeat,
+      no-repeat;
+  `.replace(/\s+/g, ' ').trim();
+}
+
+function buildNewsBackdropStyle(article = {}) {
+  const articleImage = getArticleImageUrl(article);
+  return `
+    background-image:
+      linear-gradient(180deg, rgba(8,10,15,0.24) 0%, rgba(8,10,15,0.88) 88%),
+      linear-gradient(90deg, rgba(10,13,21,0.92) 0%, rgba(10,13,21,0.36) 45%, rgba(10,13,21,0.82) 100%),
+      url('${articleImage}');
+    background-position: center, center, center;
+    background-size: cover, cover, cover;
+    background-repeat: no-repeat, no-repeat, no-repeat;
+  `.replace(/\s+/g, ' ').trim();
+}
+
+function getHeroScoreText(match = {}) {
+  const homeScore = match?.homeTeam?.score ?? '0';
+  const awayScore = match?.awayTeam?.score ?? '0';
+  if (match?.status === 'upcoming') return '0-0';
+  return `${homeScore}-${awayScore}`;
+}
+
+function getHeroTeamLabel(team = {}) {
+  return team?.abbreviation || team?.shortName || team?.name?.slice(0, 3) || 'TEAM';
+}
+
+function formatHeroClock(match = {}) {
+  if (match?.status === 'live') return match?.time || 'LIVE';
+  if (match?.status === 'finished') return match?.time || match?.statusText || 'FINAL';
+  if (!match?.date) return match?.time || 'SCHEDULED';
+  const parsedDate = new Date(match.date);
+  if (Number.isNaN(parsedDate.getTime())) return match?.time || 'SCHEDULED';
+  return parsedDate.toLocaleString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short'
+  }).toUpperCase();
+}
+
+function getHeroPagerLabel(entry = {}, index = 0) {
+  if (entry?.pagerLabel) return entry.pagerLabel;
+  if (entry.kind === 'news') return 'Latest News';
+  const match = entry.kind === 'match' ? entry.match : entry;
+  if (match?.status === 'live') return index === 0 ? 'Live Now' : 'Hot Match';
+  if (match?.status === 'upcoming') return index === 0 ? 'Countdown' : 'Next Up';
+  if (match?.status === 'finished') return 'Finals';
+  return 'Spotlight';
+}
+
+function buildHeroMatchPool({
+  liveMatches = [],
+  upcomingMatches = [],
+  finishedMatches = [],
+  statusFilter = null,
+  limit = 5,
+  isHomePage = false
+} = {}) {
+  const livePool = sortMatchesForDisplay(liveMatches.filter((match) => match.status === 'live'), 'live');
+  const upcomingPool = sortMatchesForDisplay(upcomingMatches.filter((match) => match.status === 'upcoming'), 'upcoming');
+  const finishedPool = sortMatchesForDisplay(finishedMatches.filter((match) => match.status === 'finished'), 'finished');
+
+  if (statusFilter === 'upcoming') {
+    return combineMatchPools(upcomingPool, livePool.slice(0, 1), finishedPool.slice(0, 1)).slice(0, limit);
+  }
+  if (statusFilter === 'finished') {
+    return combineMatchPools(finishedPool, livePool.slice(0, 1), upcomingPool.slice(0, 1)).slice(0, limit);
+  }
+  if (statusFilter === 'live') {
+    return combineMatchPools(livePool, upcomingPool.slice(0, 2), finishedPool.slice(0, 1)).slice(0, limit);
+  }
+
+  const homeMix = isHomePage
+    ? [
+        ...livePool.slice(0, 2),
+        ...upcomingPool.slice(0, 2),
+        ...finishedPool.slice(0, 1)
+      ]
+    : [
+        ...livePool.slice(0, 3),
+        ...upcomingPool.slice(0, 2),
+        ...finishedPool.slice(0, 2)
+      ];
+
+  return combineMatchPools(homeMix).slice(0, limit);
+}
+
+function buildHomeHeroSlides(liveMatches = [], upcomingMatches = [], finishedMatches = [], newsList = []) {
+  const slides = [];
+  const seen = new Set();
+  const pushMatchSlide = (match, pagerLabel) => {
+    if (!match?.id || seen.has(String(match.id))) return;
+    seen.add(String(match.id));
+    slides.push({ kind: 'match', match, pagerLabel });
+  };
+
+  pushMatchSlide(liveMatches[0], 'Live Now');
+  pushMatchSlide(upcomingMatches[0], 'Countdown');
+  pushMatchSlide(finishedMatches[0], 'Finals');
+  pushMatchSlide(combineMatchPools(liveMatches, upcomingMatches, finishedMatches)[1], 'Spotlight');
+
+  const article = newsList[0];
+  if (article?.headline) {
+    slides.push({ kind: 'news', article, pagerLabel: 'Latest News' });
+  }
+
+  return slides.slice(0, 5);
+}
+
+async function fetchCompositeMatchFeeds(options = {}) {
+  const sport = normalizeSportSlug(options.sport ?? currentTab ?? 'all', options.league ?? currentLeagueFilter ?? '');
+  const league = normalizeLeagueSlug(options.league ?? currentLeagueFilter ?? '');
+  const upcomingDays = options.upcomingDays ?? 4;
+  const resultsDays = options.resultsDays ?? 4;
+  const includeNews = Boolean(options.includeNews);
+
+  const [liveResult, upcomingResult, resultsResult, newsResult] = await Promise.allSettled([
+    fetch(buildApiUrl(API_LIVE, { sport, league: league || undefined }), { cache: 'no-store' }),
+    fetch(buildApiUrl(API_UPCOMING, { sport, league: league || undefined, days: upcomingDays }), { cache: 'no-store' }),
+    fetchFinishedResultsFeed({ sport, league, days: resultsDays }),
+    includeNews
+      ? fetch(buildApiUrl(API_INFO, { type: 'news', sport, league: league || undefined }), { cache: 'no-store' })
+      : Promise.resolve(null)
+  ]);
+
+  let liveMatches = [];
+  let upcomingMatches = [];
+  let finishedMatches = [];
+  let newsList = [];
+  const meta = {};
+
+  if (liveResult.status === 'fulfilled' && liveResult.value?.ok) {
+    const payload = await liveResult.value.json();
+    meta.live = payload.meta || {};
+    liveMatches = filterRenderableMatches(payload.matches || []).filter((match) => match.status === 'live');
+  }
+
+  if (upcomingResult.status === 'fulfilled' && upcomingResult.value?.ok) {
+    const payload = await upcomingResult.value.json();
+    meta.upcoming = payload.meta || {};
+    upcomingMatches = filterRenderableMatches(payload.matches || []).filter((match) => match.status === 'upcoming');
+  }
+
+  if (resultsResult.status === 'fulfilled') {
+    meta.results = resultsResult.value?.meta || {};
+    finishedMatches = filterRenderableMatches(resultsResult.value?.matches || []).filter((match) => match.status === 'finished');
+  }
+
+  if (includeNews && newsResult.status === 'fulfilled' && newsResult.value?.ok) {
+    const payload = await newsResult.value.json();
+    newsList = payload.articles || [];
+  }
+
+  const mixedMatches = combineMatchPools(liveMatches, upcomingMatches, finishedMatches);
+
+  window._cachedLiveMatches = liveMatches;
+  window._cachedUpcoming = upcomingMatches;
+  window._cachedUpcomingMatches = upcomingMatches;
+  window._cachedResults = finishedMatches;
+  if (includeNews) window._cachedNews = newsList;
+
+  return {
+    liveMatches,
+    upcomingMatches,
+    finishedMatches,
+    mixedMatches,
+    newsList,
+    meta
+  };
+}
+
 function sortMatchesForDisplay(matches = [], statusFilter = null) {
   const list = [...matches];
   if (statusFilter === 'finished') {
@@ -968,6 +1414,7 @@ function sortMatchesForDisplay(matches = [], statusFilter = null) {
 async function fetchFinishedResultsFeed(options = {}) {
   const sport = normalizeSportSlug(options.sport ?? currentTab ?? 'all', options.league ?? currentLeagueFilter ?? '');
   const league = normalizeLeagueSlug(options.league ?? currentLeagueFilter ?? '');
+  const days = Math.max(1, Math.min(parseInt(options.days || '4', 10) || 4, 7));
   const candidates = [];
   const seen = new Set();
   const pushCandidate = (path, params = {}) => {
@@ -977,9 +1424,9 @@ async function fetchFinishedResultsFeed(options = {}) {
     candidates.push({ path, params });
   };
 
-  pushCandidate(API_RESULTS, { sport, league: league || undefined, days: 4 });
+  pushCandidate(API_RESULTS, { sport, league: league || undefined, days });
   if (sport !== 'all' && !league) {
-    pushCandidate(API_RESULTS, { sport: 'all', days: 4 });
+    pushCandidate(API_RESULTS, { sport: 'all', days });
   }
   pushCandidate(API_LIVE, { sport, league: league || undefined });
   if (sport !== 'all' && !league) {
@@ -1888,6 +2335,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (playersContainer) fetchPlayers(currentTab);
     }, 600000);
   }
+
+  initSportEditorialSection();
+  initBlogHubPage();
+  initBlogArticlePage();
 });
 
 // --- NOTIFICATION HANDLER ---
@@ -2248,318 +2699,340 @@ async function fetchHeroData(statusFilter = null) {
   if (!heroSliderContainer) return;
   try {
     const isIndexPage = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
-    
+    const feed = await fetchCompositeMatchFeeds({
+      sport: isIndexPage ? 'all' : (currentTab || 'all'),
+      league: isIndexPage ? '' : (currentLeagueFilter || ''),
+      upcomingDays: isIndexPage ? 5 : 4,
+      resultsDays: 4,
+      includeNews: isIndexPage
+    });
+
+    const heroMatches = buildHeroMatchPool({
+      liveMatches: feed.liveMatches,
+      upcomingMatches: feed.upcomingMatches,
+      finishedMatches: feed.finishedMatches,
+      statusFilter,
+      limit: isIndexPage ? 4 : 5,
+      isHomePage: isIndexPage
+    });
+
+    const metaSource = statusFilter === 'finished'
+      ? (feed.meta.results || {})
+      : statusFilter === 'upcoming'
+        ? (feed.meta.upcoming || {})
+        : (feed.meta.live || feed.meta.upcoming || feed.meta.results || {});
+
+    updateFeedRibbon(metaSource, {
+      feedLabel: isIndexPage ? 'Homepage spotlight' : 'Hero spotlight',
+      matchCount: heroMatches.length,
+      liveCount: feed.liveMatches.length
+    });
+    if (tickerContainer) {
+      renderTicker(feed.mixedMatches);
+    }
+
     if (isIndexPage) {
-      // 1. Fetch live matches for featured match
-      const liveRes = await fetch(`${API_LIVE}?sport=all`);
-      const liveData = await liveRes.json();
-      const allLiveMatches = filterRenderableMatches(liveData.matches || []);
-      let liveMatches = allLiveMatches.filter(m => m.status === 'live');
-      if (liveMatches.length === 0) liveMatches = allLiveMatches.slice(0, 3);
-      updateFeedRibbon(liveData.meta || {}, {
-        feedLabel: 'Homepage live board',
-        matchCount: (liveData.matches || []).length,
-        liveCount: liveMatches.length
-      });
-      
-      // 2. Fetch upcoming matches for "Next Major Event"
-      const upRes = await fetch(`${API_UPCOMING}?sport=all&days=3`);
-      const upData = await upRes.json();
-      let upMatches = filterRenderableMatches(upData.matches || []);
-      upMatches.sort((a,b) => new Date(a.date) - new Date(b.date));
-
-      // 3. Fetch news for "Breaking Now"
-      const newsRes = await fetch(`${API_INFO}?type=news&sport=all`);
-      const newsData = await newsRes.json();
-      let newsList = newsData.articles || [];
-
-      window._cachedUpcoming = upMatches;
-      window._cachedNews = newsList;
-      renderIndexHeroHub(liveMatches, upMatches, newsList);
+      renderIndexHeroHub(feed.liveMatches, feed.upcomingMatches, feed.newsList);
       return;
     }
 
-    const heroFeedPath = statusFilter === 'finished' ? API_RESULTS : API_LIVE;
-    const heroFeedParams = {
-      sport: currentTab || 'all',
-      league: currentLeagueFilter || undefined
-    };
-    if (statusFilter === 'finished') {
-      heroFeedParams.days = 4;
-    }
-
-    const res = await fetch(buildApiUrl(heroFeedPath, heroFeedParams), { cache: 'no-store' });
-    const data = await res.json();
-    let matches = filterRenderableMatches(data.matches || []);
-    updateFeedRibbon(data.meta || {}, {
-      feedLabel: 'Hero spotlight',
-      matchCount: matches.length,
-      liveCount: matches.filter((match) => match.status === 'live').length
+    renderHeroSlider(heroMatches, statusFilter, {
+      liveMatches: feed.liveMatches,
+      upcomingMatches: feed.upcomingMatches,
+      finishedMatches: feed.finishedMatches,
+      newsList: feed.newsList,
+      isHomePage: false
     });
-
-    if (statusFilter === 'live') {
-      // Strictly live for pages that request it (like Leagues or when user wants strict Live)
-      matches = matches.filter(m => m.status === 'live');
-    } else if (statusFilter === 'upcoming') {
-      matches = matches.filter(m => m.status === 'upcoming');
-      // Sort upcoming by date (soonest first)
-      matches.sort((a,b) => new Date(a.date) - new Date(b.date));
-    } else if (statusFilter) {
-      matches = matches.filter(m => m.status === statusFilter);
-    } else {
-      // On Home/Trending, prioritize Live. 
-      matches = (data.matches || []).filter(m => m.status === 'live');
-    }
-
-    // Fallback: If no matches for statusFilter, and we really need A hero, maybe show any
-    if (matches.length === 0 && !statusFilter) {
-        matches = (data.matches || []).slice(0, 3);
-    }
-
-    renderHeroSlider(matches.slice(0, 5), statusFilter);
   } catch (err) {
     console.error('Hero Slider error:', err);
     if (heroSliderContainer) heroSliderContainer.style.display = 'none';
   }
 }
 
-function renderHeroSlider(matches, statusFilter) {
-  if (!heroSliderContainer) return;
-
-  if (!matches || matches.length === 0) {
-    // Show a static fallback or clean empty state
-    heroSliderContainer.style.display = 'none';
-    return;
+function buildHeroPrimaryAction(match = {}) {
+  if (match.status === 'upcoming') {
+    return {
+      type: 'button',
+      label: 'Set Reminder',
+      icon: 'notifications',
+      action: `handleNotification('${String(match.id).replace(/'/g, "\\'")}', '${encodeURIComponent(`${match.homeTeam?.name || ''} vs ${match.awayTeam?.name || ''}`)}');`
+    };
   }
-  
-  // Explicitly show the container as we have matches
-  heroSliderContainer.style.display = 'block';
+  if (match.status === 'finished' && match.highlightUrl) {
+    return {
+      type: 'link',
+      href: match.highlightUrl,
+      target: '_blank',
+      label: 'Watch Highlights',
+      icon: 'video_library'
+    };
+  }
+  return {
+    type: 'link',
+    href: buildMatchUrl(match),
+    target: '_self',
+    label: match.status === 'finished' ? 'View Final Recap' : 'Open Match Center',
+    icon: match.status === 'finished' ? 'description' : 'radio_button_checked'
+  };
+}
 
-  let currentSlide = 0;
-  const slides = matches.map((match, idx) => {
-    const ctaText = match.status === 'live'
-      ? 'Open Match Center'
-      : match.status === 'finished'
-        ? (match.highlightUrl ? 'Watch Highlights' : 'View Final Recap')
-        : 'Set Reminder';
-    const ctaIcon = match.status === 'live'
-      ? 'radio_button_checked'
-      : match.status === 'finished'
-        ? (match.highlightUrl ? 'video_library' : 'description')
-        : 'notifications';
-    const link = match.highlightUrl && match.status === 'finished' ? match.highlightUrl : buildMatchUrl(match);
-    const target = match.highlightUrl && match.status === 'finished' ? '_blank' : '_self';
-
+function renderHeroPrimaryAction(match = {}) {
+  const action = buildHeroPrimaryAction(match);
+  if (action.type === 'button') {
     return `
-    <div class="absolute inset-0 z-10 transition-opacity duration-1000 ${idx === 0 ? 'opacity-100' : 'opacity-0'}" id="hero-slide-${idx}">
-      <div class="absolute inset-0 bg-cover bg-center" style="background-image: linear-gradient(to top, rgba(19, 19, 19, 0.9) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${match.homeTeam.logo}'); filter: brightness(0.4) blur(4px);"></div>
-      <div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
-        <div class="flex items-center gap-3 mb-6">
-          <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
-            <span class="w-2 h-2 bg-white rounded-full ${match.status === 'live' ? 'animate-pulse' : ''}"></span> ${match.status.toUpperCase()}
-          </span>
-          <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${match.league}</span>
-        </div>
-        <div class="flex items-end gap-6 mb-8">
-          <h1 class="font-headline font-black text-5xl md:text-7xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
-            ${match.homeTeam.name.slice(0, 3)} <span class="text-primary">${match.homeTeam.score}-${match.awayTeam.score}</span> ${match.awayTeam.name.slice(0, 3)}
-          </h1>
-          <div class="mb-2 hidden sm:block">
-            <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">${match.status === 'upcoming' ? 'Kickoff' : 'Elapsed'}</div>
-            <div class="text-3xl font-black italic">${match.time}</div>
+      <button type="button"
+              onclick="${action.action}"
+              class="bg-primary hover:bg-primary/90 px-8 sm:px-10 py-4 sm:py-5 rounded-lg text-white font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)]">
+        <span class="material-symbols-outlined">${action.icon}</span> ${action.label}
+      </button>
+    `;
+  }
+  return `
+    <a href="${action.href}" target="${action.target}"
+       class="bg-primary hover:bg-primary/90 px-8 sm:px-10 py-4 sm:py-5 rounded-lg text-white font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)]">
+      <span class="material-symbols-outlined">${action.icon}</span> ${action.label}
+    </a>
+  `;
+}
+
+function renderHeroMatchSlide(entry, index, isHomePage = false) {
+  const match = entry.match || entry;
+  const homeCode = getHeroTeamLabel(match.homeTeam).toUpperCase();
+  const awayCode = getHeroTeamLabel(match.awayTeam).toUpperCase();
+  const scoreText = getHeroScoreText(match);
+  const clockLabel = match.status === 'upcoming' ? 'Kickoff' : (match.status === 'finished' ? 'Final' : 'Live Clock');
+  const badgeLabel = match.status === 'live' ? 'Live Match' : (match.status === 'finished' ? 'Final Result' : 'Upcoming Match');
+  return `
+    <article class="absolute inset-0 transition-opacity duration-700 ${index === 0 ? 'opacity-100 z-20' : 'opacity-0 pointer-events-none z-10'}"
+             data-hero-slide="${index}"
+             data-hero-key="${getHeroSlideKey(entry)}">
+      <div class="absolute inset-0" style="${buildMatchBackdropStyle(match)}"></div>
+      <div class="absolute inset-0 opacity-60" style="background-image: radial-gradient(circle at 50% 72%, rgba(255,77,61,0.12) 0%, transparent 38%);"></div>
+      <div class="relative h-full max-w-[1600px] mx-auto px-6 md:px-20 py-12 sm:py-16 flex items-center">
+        <div class="w-full max-w-5xl pr-0 ${isHomePage ? 'xl:pr-[28rem]' : ''}">
+          <div class="flex flex-wrap items-center gap-3 mb-6">
+            <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
+              <span class="w-2 h-2 bg-white rounded-full ${match.status === 'live' ? 'animate-pulse' : ''}"></span> ${badgeLabel}
+            </span>
+            <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${match.league || match.sport || 'Feature'}</span>
+          </div>
+          <div class="flex flex-col lg:flex-row lg:items-end gap-6 mb-6">
+            <h1 class="font-headline font-black text-5xl sm:text-6xl md:text-8xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
+              ${homeCode} <span class="text-primary">${scoreText}</span> ${awayCode}
+            </h1>
+            <div class="lg:mb-3">
+              <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">${clockLabel}</div>
+              <div class="text-2xl sm:text-4xl font-black italic leading-tight">${formatHeroClock(match)}</div>
+            </div>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 max-w-3xl mb-8">
+            <div class="bg-black/20 border border-white/10 rounded-2xl px-5 py-4 backdrop-blur-md">
+              <div class="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/40 mb-2">Matchup</div>
+              <p class="text-sm sm:text-base font-black uppercase leading-tight">${match.homeTeam.name} vs ${match.awayTeam.name}</p>
+            </div>
+            <div class="bg-black/20 border border-white/10 rounded-2xl px-5 py-4 backdrop-blur-md">
+              <div class="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/40 mb-2">Venue</div>
+              <p class="text-sm sm:text-base font-black uppercase leading-tight">${match.venue || match.broadcast || 'Global Coverage'}</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-4">
+            ${renderHeroPrimaryAction(match)}
+            <a href="${buildMatchUrl(match)}" class="bg-white/5 backdrop-blur-md border border-white/20 px-8 sm:px-10 py-4 sm:py-5 rounded-lg text-on-surface font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-colors">
+              Full Match Center
+            </a>
           </div>
         </div>
-        <div class="flex flex-wrap gap-4">
-          <a href="${link}" target="${target}" class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)]">
-            <span class="material-symbols-outlined">${ctaIcon}</span> ${ctaText}
-          </a>
-          <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="bg-white/5 backdrop-blur-md border border-white/20 px-10 py-5 rounded-lg text-on-surface font-black uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-colors">
-            Match Center
-          </a>
+      </div>
+    </article>
+  `;
+}
+
+function renderHeroNewsSlide(entry, index) {
+  const article = entry.article || {};
+  return `
+    <article class="absolute inset-0 transition-opacity duration-700 ${index === 0 ? 'opacity-100 z-20' : 'opacity-0 pointer-events-none z-10'}"
+             data-hero-slide="${index}"
+             data-hero-key="${getHeroSlideKey(entry)}">
+      <div class="absolute inset-0" style="${buildNewsBackdropStyle(article)}"></div>
+      <div class="relative h-full max-w-[1600px] mx-auto px-6 md:px-20 py-12 sm:py-16 flex items-center">
+        <div class="w-full max-w-4xl">
+          <div class="flex flex-wrap items-center gap-3 mb-6">
+            <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
+              <span class="w-2 h-2 bg-white rounded-full"></span> Latest News
+            </span>
+          </div>
+          <h1 class="font-headline font-black text-4xl sm:text-6xl md:text-7xl tracking-tighter leading-[0.9] uppercase italic text-on-surface max-w-4xl">
+            ${article.headline || 'Breaking Sports Update'}
+          </h1>
+          <p class="mt-6 text-base sm:text-lg max-w-3xl text-on-surface/65 font-bold leading-relaxed">
+            ${article.description || article.summary || 'The homepage hero now rotates live action, upcoming fixtures, recent finals, and the latest headline feed.'}
+          </p>
+          <div class="flex flex-wrap gap-4 mt-8">
+            <a href="${getArticleLinkUrl(article)}" target="_blank" class="bg-primary hover:bg-primary/90 px-8 sm:px-10 py-4 sm:py-5 rounded-lg text-white font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)]">
+              <span class="material-symbols-outlined">open_in_new</span> Read Story
+            </a>
+            <a href="/news.html" class="bg-white/5 backdrop-blur-md border border-white/20 px-8 sm:px-10 py-4 sm:py-5 rounded-lg text-on-surface font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-colors">
+              Open News Hub
+            </a>
+          </div>
         </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderHomeHeroWidgets(upcomingMatches = [], newsList = []) {
+  const nextUpMatch = sortMatchesForDisplay(upcomingMatches.filter((match) => match.status === 'upcoming'), 'upcoming')[0];
+  const newsItem = newsList[0];
+  return `
+    <div class="absolute right-6 xl:right-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 z-30 pointer-events-auto">
+      ${nextUpMatch ? `
+        <a href="${buildMatchUrl(nextUpMatch)}" class="glass-card block p-6 rounded-2xl border border-white/10 w-80 shadow-2xl group hover:border-primary transition-all cursor-pointer bg-surface/30 backdrop-blur-md">
+          <div class="flex justify-between items-start mb-4">
+            <div class="text-[10px] font-black uppercase tracking-widest text-on-surface/40">Next Major Event</div>
+            <div class="bg-white/10 px-2 py-0.5 rounded text-[9px] font-black">${formatHeroClock(nextUpMatch)}</div>
+          </div>
+          <div class="text-2xl font-black italic uppercase leading-none mb-1">${nextUpMatch.homeTeam?.name || ''} vs ${nextUpMatch.awayTeam?.name || ''}</div>
+          <div class="text-[10px] font-bold text-primary tracking-widest uppercase">${nextUpMatch.league || ''}</div>
+        </a>
+      ` : ''}
+      <div class="glass-card p-6 rounded-2xl border border-white/10 w-80 shadow-2xl bg-surface/30 backdrop-blur-md">
+        <div class="text-[10px] font-black uppercase tracking-widest text-on-surface/40 mb-4">The Multiverse Quick-Jump</div>
+        <div class="grid grid-cols-4 gap-3">
+          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=soccer"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_soccer</span></a>
+          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=basketball&l=nba"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_basketball</span></a>
+          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=football&l=nfl"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_football</span></a>
+          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/results.html"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">history</span></a>
+        </div>
+      </div>
+      ${newsItem ? `
+        <a href="/news.html" class="glass-card block p-5 rounded-2xl border border-white/10 w-80 shadow-2xl overflow-hidden relative group bg-surface/30 backdrop-blur-md">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+            <span class="text-[10px] font-black uppercase tracking-widest">Breaking Now</span>
+          </div>
+          <p class="text-[11px] font-bold leading-tight uppercase opacity-80 group-hover:text-primary transition-colors line-clamp-3">${newsItem.headline}</p>
+          <span class="inline-block mt-3 text-[9px] font-black uppercase tracking-widest border-b border-primary text-primary pb-0.5">Read More</span>
+        </a>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderHeroControls(slides = [], currentSlide = 0) {
+  if (slides.length < 2) return '';
+  return `
+    <div class="absolute bottom-10 left-6 md:left-20 z-30 flex flex-col gap-5">
+      <div class="flex items-center gap-3">
+        <button type="button" class="inline-flex items-center justify-center w-11 h-11 rounded-full border border-white/10 bg-black/20 backdrop-blur-md text-on-surface/70 hover:text-white hover:bg-white/10 transition-colors" data-hero-step="-1" aria-label="Previous hero slide"><span class="material-symbols-outlined text-lg">chevron_left</span></button>
+        <button type="button" class="inline-flex items-center justify-center w-11 h-11 rounded-full border border-white/10 bg-black/20 backdrop-blur-md text-on-surface/70 hover:text-white hover:bg-white/10 transition-colors" data-hero-step="1" aria-label="Next hero slide"><span class="material-symbols-outlined text-lg">chevron_right</span></button>
+      </div>
+      <div class="flex flex-wrap gap-4">
+        ${slides.map((entry, index) => `
+          <button type="button" class="group cursor-pointer text-left ${index === currentSlide ? 'opacity-100' : 'opacity-40 hover:opacity-100'} transition-opacity" data-hero-goto="${index}">
+            <div class="w-16 h-1.5 ${index === currentSlide ? 'bg-primary' : 'bg-white/10'} rounded-full"></div>
+            <span class="text-[9px] font-black uppercase mt-2 block tracking-widest ${index === currentSlide ? 'text-primary' : 'text-on-surface'}">${getHeroPagerLabel(entry, index)}</span>
+          </button>
+        `).join('')}
       </div>
     </div>
   `;
-  }).join('');
+}
+
+function renderHeroSlider(items, statusFilter, options = {}) {
+  if (!heroSliderContainer) return;
+  const slides = (items || [])
+    .map((entry) => (entry?.kind ? entry : { kind: 'match', match: entry }))
+    .filter((entry) => entry.kind === 'news' ? Boolean(entry.article?.headline) : Boolean(entry.match?.id));
+  clearInterval(window._lsfHeroAutoplayHandle);
+
+  if (!slides.length) {
+    heroSliderContainer.style.display = 'none';
+    return;
+  }
+  heroSliderContainer.style.display = 'block';
+  const isHomePage = Boolean(options.isHomePage);
+  const activeIndex = Math.max(slides.findIndex((entry) => getHeroSlideKey(entry) === window._lsfHeroActiveKey), 0);
 
   heroSliderContainer.innerHTML = `
-    <div class="relative w-full h-[500px]">
-      ${slides}
+    <div class="lsf-hero-shell relative w-full h-full min-h-[600px] overflow-hidden">
+      ${slides.map((entry, index) => entry.kind === 'news' ? renderHeroNewsSlide(entry, index) : renderHeroMatchSlide(entry, index, isHomePage)).join('')}
+      ${renderHeroControls(slides, activeIndex)}
+      ${isHomePage ? renderHomeHeroWidgets(options.upcomingMatches || [], options.newsList || []) : ''}
     </div>
   `;
 
-  // Auto-advance logic
-  if (matches.length > 1) {
-    setInterval(() => {
-      document.getElementById(`hero-slide-${currentSlide}`).classList.replace('opacity-100', 'opacity-0');
-      currentSlide = (currentSlide + 1) % matches.length;
-      document.getElementById(`hero-slide-${currentSlide}`).classList.replace('opacity-0', 'opacity-100');
-    }, 8000);
+  let currentSlide = activeIndex;
+  const slideNodes = Array.from(heroSliderContainer.querySelectorAll('[data-hero-slide]'));
+  const pagerNodes = Array.from(heroSliderContainer.querySelectorAll('[data-hero-goto]'));
+  const shell = heroSliderContainer.querySelector('.lsf-hero-shell');
+
+  const setActiveSlide = (index) => {
+    currentSlide = (index + slides.length) % slides.length;
+    slideNodes.forEach((slideNode, slideIndex) => {
+      slideNode.classList.toggle('opacity-100', slideIndex === currentSlide);
+      slideNode.classList.toggle('opacity-0', slideIndex !== currentSlide);
+      slideNode.classList.toggle('pointer-events-none', slideIndex !== currentSlide);
+      slideNode.classList.toggle('z-20', slideIndex === currentSlide);
+      slideNode.classList.toggle('z-10', slideIndex !== currentSlide);
+    });
+    pagerNodes.forEach((pagerNode, pagerIndex) => {
+      pagerNode.classList.toggle('opacity-100', pagerIndex === currentSlide);
+      pagerNode.classList.toggle('opacity-40', pagerIndex !== currentSlide);
+      const bar = pagerNode.querySelector('div');
+      if (bar) {
+        bar.classList.toggle('bg-primary', pagerIndex === currentSlide);
+        bar.classList.toggle('bg-white/10', pagerIndex !== currentSlide);
+      }
+      const label = pagerNode.querySelector('span');
+      if (label) {
+        label.classList.toggle('text-primary', pagerIndex === currentSlide);
+        label.classList.toggle('text-on-surface', pagerIndex !== currentSlide);
+      }
+    });
+    window._lsfHeroActiveKey = getHeroSlideKey(slides[currentSlide]);
+  };
+
+  setActiveSlide(currentSlide);
+  heroSliderContainer.querySelectorAll('[data-hero-goto]').forEach((button) => {
+    button.addEventListener('click', () => setActiveSlide(Number(button.dataset.heroGoto || '0')));
+  });
+  heroSliderContainer.querySelectorAll('[data-hero-step]').forEach((button) => {
+    button.addEventListener('click', () => setActiveSlide(currentSlide + Number(button.dataset.heroStep || '1')));
+  });
+
+  const stopAutoplay = () => clearInterval(window._lsfHeroAutoplayHandle);
+  const startAutoplay = () => {
+    clearInterval(window._lsfHeroAutoplayHandle);
+    if (slides.length < 2) return;
+    window._lsfHeroAutoplayHandle = setInterval(() => setActiveSlide(currentSlide + 1), isHomePage ? 7000 : 8000);
+  };
+
+  if (shell) {
+    shell.addEventListener('mouseenter', stopAutoplay);
+    shell.addEventListener('mouseleave', startAutoplay);
+    shell.addEventListener('focusin', stopAutoplay);
+    shell.addEventListener('focusout', startAutoplay);
+    shell.addEventListener('touchstart', stopAutoplay, { passive: true });
+    shell.addEventListener('touchend', startAutoplay, { passive: true });
   }
+  startAutoplay();
 }
 
 function renderIndexHeroHub(liveMatches, upMatches, newsList) {
   if (!heroSliderContainer) return;
-
-  const featuredMatch = liveMatches[0] || upMatches[0];
-  const nextUpMatch = upMatches.find(m => m.id !== featuredMatch?.id) || upMatches[0];
-  const newsItem = newsList[0];
-
-  if (!featuredMatch) {
+  const slides = buildHomeHeroSlides(liveMatches, upMatches, window._cachedResults || [], newsList || []);
+  if (!slides.length) {
     heroSliderContainer.style.display = 'none';
     return;
   }
-
-  heroSliderContainer.style.display = 'block';
-
-  const homePoss = featuredMatch.stats?.possession?.home || '50%';
-  const awayPoss = featuredMatch.stats?.possession?.away || '50%';
-  const homeShots = featuredMatch.stats?.shots?.home || '0';
-  const awayShots = featuredMatch.stats?.shots?.away || '0';
-
-  const formatUpcomingDate = (dateStr) => {
-    try {
-      const d = new Date(dateStr);
-      let hours = d.getHours();
-      let minutes = d.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
-    } catch(e) { return 'TBD'; }
-  }
-
-  const featuredLink = featuredMatch.status === 'finished'
-    ? (featuredMatch.highlightUrl || buildMatchUrl(featuredMatch))
-    : buildMatchUrl(featuredMatch);
-  const upLink = nextUpMatch ? buildMatchUrl(nextUpMatch) : '#';
-  const ctaText = featuredMatch.status === 'live'
-    ? 'Open Match Center'
-    : featuredMatch.status === 'finished'
-      ? (featuredMatch.highlightUrl ? 'Watch Highlights' : 'View Final Recap')
-      : 'Set Reminder';
-  const ctaIcon = featuredMatch.status === 'live'
-    ? 'radio_button_checked'
-    : featuredMatch.status === 'finished'
-      ? (featuredMatch.highlightUrl ? 'video_library' : 'description')
-      : 'notifications';
-
-  heroSliderContainer.innerHTML = `
-<!-- Multi-Slide Hub Container -->
-<div class="relative w-full h-full">
-  <div class="absolute inset-0 z-10">
-    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110" style="background-image: linear-gradient(to top, rgb(19, 19, 19) 10%, transparent 60%), linear-gradient(to right, rgba(14, 14, 14, 0.9), rgba(14, 14, 14, 0.2)), url('${featuredMatch.homeTeam.logo}');"></div>
-    <div class="relative h-full flex flex-col justify-center px-8 md:px-20 max-w-7xl mx-auto">
-      <div class="flex items-center gap-3 mb-6">
-        <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
-          <span class="w-2 h-2 bg-white rounded-full ${featuredMatch.status === 'live' ? 'animate-pulse' : ''}"></span> ${featuredMatch.status === 'live' ? 'FEATURED LIVE' : (featuredMatch.status === 'finished' ? 'FINISHED EVENT' : 'UPCOMING MATCH')}
-        </span>
-        <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${featuredMatch.league || 'Game of the Week'}</span>
-      </div>
-      <div class="flex items-end gap-6 mb-8">
-        <h1 class="font-headline font-black text-6xl md:text-9xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
-          ${featuredMatch.homeTeam.name.slice(0, 3)} <span class="text-primary">${featuredMatch.homeTeam.score}-${featuredMatch.awayTeam.score}</span> ${featuredMatch.awayTeam.name.slice(0, 3)}
-        </h1>
-        <div class="mb-2 hidden sm:block">
-          <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">${featuredMatch.status === 'live' ? 'Elapsed' : (featuredMatch.status==='finished'?'Final':'Kickoff')}</div>
-          <div class="text-3xl font-black italic">${featuredMatch.time || 'SCHEDULED'}</div>
-        </div>
-      </div>
-      
-      ${featuredMatch.status === 'live' ? `
-      <div class="flex gap-10 mb-12">
-        <div class="glass-card p-4 rounded-lg flex items-center gap-4 border border-white/5">
-          <div class="text-center">
-            <div class="text-[10px] font-black text-on-surface/40 uppercase">Possession</div>
-            <div class="text-xl font-black italic">${homePoss} - ${awayPoss}</div>
-          </div>
-          <div class="w-[1px] h-8 bg-white/10"></div>
-          <div class="text-center">
-            <div class="text-[10px] font-black text-on-surface/40 uppercase">Shots (On)</div>
-            <div class="text-xl font-black italic">${homeShots} - ${awayShots}</div>
-          </div>
-        </div>
-      </div>` : '<div class="mb-12"></div>'}
-
-      <div class="flex flex-wrap gap-4">
-        <a href="${featuredLink}" class="bg-primary hover:bg-primary/90 px-10 py-5 rounded-lg text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)] relative z-20">
-          <span class="material-symbols-outlined">${ctaIcon}</span> ${ctaText}
-        </a>
-        <a href="${featuredLink}" class="bg-white/5 backdrop-blur-md border border-white/20 px-10 py-5 rounded-lg text-on-surface font-black uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-colors relative z-20">
-          Full Match Center
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Slide Navigation Controls -->
-  <div class="absolute bottom-12 left-8 md:left-20 z-30 flex flex-col gap-6 hidden sm:flex">
-    <div class="flex gap-4">
-      <a href="/live.html" class="group cursor-pointer">
-        <div class="w-16 h-1.5 bg-primary relative overflow-hidden rounded-full">
-          <div class="absolute inset-0 bg-white/30 animate-[progress_5s_linear_infinite]"></div>
-        </div>
-        <span class="text-[9px] font-black uppercase mt-2 block tracking-widest text-primary">LIVE NOW</span>
-      </a>
-      <a href="/upcoming.html" class="group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
-        <div class="w-16 h-1.5 bg-white/10 rounded-full"></div>
-        <span class="text-[9px] font-black uppercase mt-2 block tracking-widest text-on-surface">COUNTDOWN</span>
-      </a>
-      <a href="/leagues.html" class="group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
-        <div class="w-16 h-1.5 bg-white/10 rounded-full"></div>
-        <span class="text-[9px] font-black uppercase mt-2 block tracking-widest text-on-surface">SPORTS HUB</span>
-      </a>
-      <a href="/news.html" class="group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
-        <div class="w-16 h-1.5 bg-white/10 rounded-full"></div>
-        <span class="text-[9px] font-black uppercase mt-2 block tracking-widest text-on-surface">LATEST NEWS</span>
-      </a>
-    </div>
-  </div>
-
-  <!-- Side Widgets -->
-  <div class="absolute right-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 z-30 pointer-events-auto">
-    <!-- Upcoming Highlight -->
-    ${nextUpMatch ? `
-    <a href="${upLink}" class="glass-card block p-6 rounded-2xl border-l-4 border-white/20 w-80 shadow-2xl group hover:border-primary transition-all cursor-pointer bg-surface/30 backdrop-blur-md relative z-40">
-      <div class="flex justify-between items-start mb-4">
-        <div class="text-[10px] font-black uppercase tracking-widest text-on-surface/40">Next Major Event</div>
-        <div class="bg-white/10 px-2 py-0.5 rounded text-[9px] font-black">${formatUpcomingDate(nextUpMatch.date)}</div>
-      </div>
-      <div class="text-xl font-black italic uppercase leading-none mb-1">${nextUpMatch.homeTeam?.name || ''} vs ${nextUpMatch.awayTeam?.name || ''}</div>
-      <div class="text-[10px] font-bold text-primary tracking-widest uppercase">${nextUpMatch.league || ''}</div>
-    </a>
-    ` : ''}
-
-    <!-- Quick Access -->
-    <div class="glass-card p-6 rounded-2xl border border-white/5 w-80 shadow-2xl bg-surface/30 backdrop-blur-md relative z-40">
-      <div class="text-[10px] font-black uppercase tracking-widest text-on-surface/40 mb-4">The Multiverse Quick-Jump</div>
-      <div class="grid grid-cols-4 gap-3">
-        <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=soccer">
-          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_soccer</span>
-        </a>
-        <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=basketball&l=nba">
-          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_basketball</span>
-        </a>
-        <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=football&l=nfl">
-          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_football</span>
-        </a>
-        <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=mma">
-          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_mma</span>
-        </a>
-      </div>
-    </div>
-
-    <!-- Breaking News -->
-    ${newsItem ? `
-    <a href="/news.html" class="glass-card block p-5 rounded-2xl border border-white/5 w-80 shadow-2xl overflow-hidden relative group bg-surface/30 backdrop-blur-md relative z-40">
-      <div class="flex items-center gap-2 mb-3">
-        <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
-        <span class="text-[10px] font-black uppercase tracking-widest">Breaking Now</span>
-      </div>
-      <p class="text-[11px] font-bold leading-tight uppercase opacity-80 group-hover:text-primary transition-colors line-clamp-2">${newsItem.headline}</p>
-      <span class="inline-block mt-3 text-[9px] font-black uppercase tracking-widest border-b border-primary text-primary pb-0.5">Read More</span>
-    </a>
-    ` : ''}
-  </div>
-</div>
-  `;
+  renderHeroSlider(slides, null, {
+    isHomePage: true,
+    upcomingMatches: upMatches,
+    newsList: newsList || [],
+    liveMatches,
+    finishedMatches: window._cachedResults || []
+  });
 }
 
 
@@ -3040,22 +3513,21 @@ async function fetchTrendingUpcoming() {
   if (!trendingList) return;
 
   try {
-    // Always fetch from upcoming API to ensure we have scheduled matches
-    const res = await fetch(buildApiUrl(API_UPCOMING, {
+    const feed = await fetchCompositeMatchFeeds({
       sport: currentTab || 'all',
-      league: currentLeagueFilter || undefined,
-      days: 3
-    }));
-    const data = await res.json();
-    let matches = filterRenderableMatches(data.matches || []);
-    window._cachedUpcomingMatches = matches;
-    
-    // Sort chronologically and take next 3
-    matches.sort((a, b) => new Date(a.date) - new Date(b.date));
-    renderTrendingUpcoming(matches.slice(0, 3));
+      league: currentLeagueFilter || '',
+      upcomingDays: 4,
+      resultsDays: 4
+    });
+    const matches = combineMatchPools(
+      feed.liveMatches.slice(0, 3),
+      feed.upcomingMatches.slice(0, 4),
+      feed.finishedMatches.slice(0, 3)
+    ).slice(0, 6);
+    renderTrendingUpcoming(matches);
   } catch(e) {
     console.error('Trending matches fetch error:', e);
-    trendingList.innerHTML = '<p class="text-[10px] font-black uppercase tracking-widest opacity-20 py-10">Failed to load trending scheduled events.</p>';
+    trendingList.innerHTML = '<p class="text-[10px] font-black uppercase tracking-widest opacity-20 py-10">Failed to load trending scoreboard.</p>';
   }
 }
 
@@ -3064,7 +3536,7 @@ function renderTrendingUpcoming(matches) {
   if (!trendingList) return;
 
   if (matches.length === 0) {
-    trendingList.innerHTML = '<p class="text-[10px] font-black uppercase tracking-widest opacity-20 py-10">No upcoming matches discovered</p>';
+    trendingList.innerHTML = '<p class="text-[10px] font-black uppercase tracking-widest opacity-20 py-10">No trending matches discovered</p>';
     return;
   }
 
@@ -3075,11 +3547,14 @@ function renderTrendingUpcoming(matches) {
         <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" class="w-8 h-8 object-contain opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all" onerror="this.src='${FALLBACK_LOGO}'">
       </div>
       <div class="flex-1 min-w-0">
-        <div class="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-1 line-clamp-1">${match.league || 'UPCOMING EVENT'}</div>
+        <div class="flex items-center gap-2 mb-1">
+          <div class="text-[9px] font-black text-primary uppercase tracking-[0.2em] line-clamp-1">${match.league || 'TRENDING EVENT'}</div>
+          <span class="text-[8px] font-black uppercase tracking-widest ${match.status === 'live' ? 'text-primary' : 'text-on-surface/40'}">${match.status === 'live' ? 'LIVE' : (match.status === 'upcoming' ? 'NEXT' : 'FINAL')}</span>
+        </div>
         <h4 class="text-xs font-bold uppercase truncate mb-1">${match.homeTeam.name} VS ${match.awayTeam.name}</h4>
         <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-[10px] text-on-surface/40">schedule</span>
-          <span class="text-[10px] font-black text-on-surface/40 uppercase tracking-widest">${match.time || 'SCHEDULED'}</span>
+          <span class="material-symbols-outlined text-[10px] text-on-surface/40">${match.status === 'finished' ? 'history' : 'schedule'}</span>
+          <span class="text-[10px] font-black text-on-surface/40 uppercase tracking-widest">${match.status === 'upcoming' ? formatHeroClock(match) : (match.time || match.statusText || 'FINAL')}</span>
         </div>
       </div>
     </a>
@@ -3374,7 +3849,7 @@ async function fetchSidebarLive() {
     }
 
     if (tickerContainer) {
-      renderTicker(allLive);
+      renderTicker(combineMatchPools(allLive, window._cachedUpcoming || [], window._cachedResults || []));
       updatePageTitle(allLive);
     }
   } catch (err) {
@@ -3443,9 +3918,42 @@ window.switchTab = function (tabId) {
 // --- FETCH & UPDATE HOME DATA ---
 async function fetchMatches(statusFilter = null, sidebarOnly = false) {
   const isUpcomingPage = window.location.pathname.includes('upcoming');
+  const isTrendingPage = window.location.pathname.includes('trending');
   const feedParams = getCurrentFeedParams();
   
   try {
+    if (isTrendingPage && !isUpcomingPage) {
+      const feed = await fetchCompositeMatchFeeds({
+        sport: feedParams.sport,
+        league: feedParams.league,
+        upcomingDays: 4,
+        resultsDays: 4
+      });
+      const matches = combineMatchPools(
+        feed.liveMatches,
+        feed.upcomingMatches,
+        feed.finishedMatches
+      );
+      window._cachedMatches = matches;
+
+      updateFeedRibbon(feed.meta.live || feed.meta.upcoming || feed.meta.results || {}, {
+        feedLabel: 'Trending scoreboard',
+        matchCount: matches.length,
+        liveCount: feed.liveMatches.length
+      });
+
+      if (sidebarLiveContainer) {
+        renderSidebarLive(feed.liveMatches.slice(0, 5));
+      }
+      if (tickerContainer) {
+        renderTicker(matches);
+        updatePageTitle(feed.liveMatches);
+      }
+      if (sidebarOnly) return;
+      renderMatches(matches.slice(0, 18));
+      return;
+    }
+
     // On upcoming page, use dedicated upcoming API for real fixture data
     let apiUrl;
     if (isUpcomingPage && statusFilter === 'upcoming') {
@@ -3473,6 +3981,7 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
         matchCount: matches.length,
         liveCount: 0
       });
+      window._cachedUpcoming = matches;
       window._cachedUpcomingMatches = matches;
       // Fetch live data for sidebar/ticker only
       if (sidebarLiveContainer || tickerContainer) {
@@ -3485,7 +3994,7 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
           const liveMatches = filterRenderableMatches(liveData.matches || []).filter(m => m.status === 'live');
           window._cachedLiveMatches = liveMatches;
           if (sidebarLiveContainer) renderSidebarLive(liveMatches.slice(0, 5));
-          if (tickerContainer) { renderTicker(liveMatches); updatePageTitle(liveMatches); }
+          if (tickerContainer) { renderTicker(combineMatchPools(liveMatches, matches, window._cachedResults || [])); updatePageTitle(liveMatches); }
         } catch(e) { /* sidebar fetch failed silently */ }
       }
       
@@ -3499,18 +4008,23 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
       }
       if (tickerContainer) {
         const liveMatches = matches.filter(m => m.status === 'live');
-        renderTicker(liveMatches);
+        renderTicker(combineMatchPools(matches, window._cachedUpcoming || [], window._cachedResults || []));
         updatePageTitle(liveMatches);
       }
       if (sidebarOnly) return;
       if (statusFilter === 'finished') {
         const resultsFeed = await fetchFinishedResultsFeed(feedParams);
         matches = resultsFeed.matches;
+        window._cachedResults = matches;
+        window._cachedMatches = matches;
         updateFeedRibbon(resultsFeed.meta || data.meta || {}, {
           feedLabel: 'Results feed',
           matchCount: matches.length,
           liveCount: 0
         });
+        if (tickerContainer) {
+          renderTicker(combineMatchPools(window._cachedLiveMatches || [], window._cachedUpcoming || [], matches));
+        }
       } else {
         updateFeedRibbon(data.meta || {}, {
           feedLabel: statusFilter === 'finished' ? 'Results feed' : 'Match feed',
@@ -3567,6 +4081,422 @@ function renderSidebarLive(matches) {
       </div>
     </a>
   `).join('');
+}
+
+function formatBlogDate(value = '') {
+  const parsed = value ? new Date(value) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) return 'Fresh update';
+  return parsed.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+}
+
+function formatBlogMetaLine(post = {}) {
+  const parts = [
+    post.sportLabel || '',
+    post.vertical || '',
+    `${post.readingTime || 4} min read`
+  ].filter(Boolean);
+  return parts.join(' · ');
+}
+
+function renderBlogSportTabs(currentSport = 'all', league = '') {
+  const container = document.getElementById('blog-sport-tabs');
+  if (!container) return;
+  const tabs = SPORTS.filter((sport) =>
+    ['all', 'soccer', 'basketball', 'american-football', 'hockey', 'baseball', 'cricket', 'tennis', 'mma', 'racing', 'golf', 'rugby'].includes(sport.id)
+  );
+  container.innerHTML = tabs.map((sport) => {
+    const isActive = sport.id === currentSport;
+    return `
+      <a href="${buildBlogHubUrl(sport.id, sport.id === currentSport ? league : '')}"
+         class="flex-none px-5 py-3 rounded-full border text-[10px] font-black uppercase tracking-[0.2em] transition-all ${isActive ? 'border-primary bg-primary text-white' : 'border-white/10 bg-white/5 text-on-surface/55 hover:border-primary/40 hover:text-white'}">
+        ${sport.name}
+      </a>
+    `;
+  }).join('');
+}
+
+function buildBlogPostCard(post = {}, options = {}) {
+  const compact = options.compact === true;
+  const href = buildBlogArticleUrl(post);
+  return `
+    <article class="lsf-blog-card bg-surface-container rounded-[1.75rem] overflow-hidden border border-white/5 hover:border-primary/30 transition-all group">
+      <a href="${href}" class="block">
+        <div class="relative ${compact ? 'h-44' : 'h-56'} overflow-hidden">
+          <img src="${getSafeImageUrl(post.image, FALLBACK_HERO_IMAGE)}" alt="${escapeHtml(post.title || post.headline || 'Sports blog story')}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.src='${FALLBACK_HERO_IMAGE}'">
+          <div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-[#0e0e0e]/35 to-transparent"></div>
+          <div class="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-[#0e0e0e]/70 px-3 py-2 backdrop-blur-md">
+            <img src="${getSourceFaviconUrl(post.source)}" alt="" class="h-4 w-4 rounded-full object-cover" onerror="this.src='${FALLBACK_LOGO}'">
+            <span class="text-[9px] font-black uppercase tracking-[0.18em] text-primary">${escapeHtml(post.vertical || post.sportLabel || 'Fan Brief')}</span>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.24em] text-on-surface/35">
+            <span>${escapeHtml(post.sportLabel || 'Sports')}</span>
+            <span class="h-1 w-1 rounded-full bg-white/20"></span>
+            <span>${escapeHtml(formatBlogDate(post.published))}</span>
+          </div>
+          <h3 class="mt-4 text-2xl font-black italic uppercase tracking-tighter leading-[0.92] group-hover:text-primary transition-colors">${escapeHtml(post.title || post.headline || 'Editorial update')}</h3>
+          <p class="mt-4 text-sm leading-7 text-on-surface/65">${escapeHtml(post.excerpt || post.description || '')}</p>
+          <div class="mt-5 flex items-center justify-between gap-4">
+            <span class="text-[10px] font-black uppercase tracking-[0.24em] text-on-surface/35">${escapeHtml(formatBlogMetaLine(post))}</span>
+            <span class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Open Story <span class="material-symbols-outlined text-base">arrow_outward</span></span>
+          </div>
+        </div>
+      </a>
+    </article>
+  `;
+}
+
+function renderSportEditorialSection(payload = {}, sport = 'all', league = '') {
+  const featureContainer = document.getElementById('sport-blog-featured-container');
+  const listContainer = document.getElementById('sport-blog-stack-container');
+  const hubLink = document.getElementById('sport-blog-link');
+  if (!featureContainer || !listContainer) return;
+
+  if (hubLink) {
+    hubLink.href = buildBlogHubUrl(sport, league);
+  }
+
+  const posts = payload.posts || [];
+  const featured = payload.featured || posts[0];
+
+  if (!featured) {
+    featureContainer.innerHTML = '<div class="rounded-[1.75rem] border border-white/5 bg-white/5 px-6 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Editorial feed warming up</div>';
+    listContainer.innerHTML = '';
+    return;
+  }
+
+  featureContainer.innerHTML = `
+    <article class="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#09111b]">
+      <img src="${getSafeImageUrl(featured.image, FALLBACK_HERO_IMAGE)}" alt="${escapeHtml(featured.title || featured.headline || 'Featured editorial')}" class="absolute inset-0 h-full w-full object-cover opacity-35" onerror="this.src='${FALLBACK_HERO_IMAGE}'">
+      <div class="absolute inset-0 bg-gradient-to-br from-[#06101a] via-[#0e0e0e]/88 to-[#0e0e0e]"></div>
+      <div class="relative p-8 md:p-10">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="rounded-full border border-primary/30 bg-primary/15 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-primary">${escapeHtml(featured.vertical || 'Editorial Pulse')}</span>
+          <span class="text-[10px] font-black uppercase tracking-[0.24em] text-on-surface/40">${escapeHtml(featured.leagueLabel || featured.sportLabel || 'Sports')}</span>
+        </div>
+        <h3 class="mt-6 max-w-3xl text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-[0.92]">${escapeHtml(featured.title || featured.headline || 'Featured editorial')}</h3>
+        <p class="mt-5 max-w-2xl text-base leading-8 text-on-surface/72">${escapeHtml(featured.excerpt || '')}</p>
+        <div class="mt-8 flex flex-wrap items-center gap-4">
+          <a href="${buildBlogArticleUrl(featured)}" class="kinetic-gradient inline-flex items-center gap-3 rounded-xl px-7 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-white">Read blog story <span class="material-symbols-outlined text-base">north_east</span></a>
+          <a href="${buildBlogHubUrl(sport, league)}" class="inline-flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-7 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-on-surface hover:bg-white/10">Open full hub</a>
+        </div>
+      </div>
+    </article>
+  `;
+
+  listContainer.innerHTML = posts.slice(1, 5).map((post) => `
+    <a href="${buildBlogArticleUrl(post)}" class="block rounded-[1.5rem] border border-white/5 bg-surface-container p-5 hover:border-primary/30 hover:bg-surface-container-high transition-all group">
+      <div class="flex gap-4">
+        <img src="${getSafeImageUrl(post.image, FALLBACK_HERO_IMAGE)}" alt="${escapeHtml(post.title || post.headline || 'Editorial story')}" class="h-24 w-24 rounded-2xl object-cover" onerror="this.src='${FALLBACK_HERO_IMAGE}'">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-on-surface/35">
+            <img src="${getSourceFaviconUrl(post.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+            <span>${escapeHtml(post.vertical || post.sportLabel || 'Editorial')}</span>
+          </div>
+          <h4 class="mt-3 text-lg font-black italic uppercase leading-tight tracking-tighter group-hover:text-primary transition-colors line-clamp-3">${escapeHtml(post.title || post.headline || 'Editorial story')}</h4>
+          <p class="mt-3 text-[11px] font-bold uppercase tracking-[0.2em] text-on-surface/35">${escapeHtml(formatBlogMetaLine(post))}</p>
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+function renderBlogHubPage(payload = {}, sport = 'all', league = '') {
+  const featuredContainer = document.getElementById('blog-featured-spotlight');
+  const trendingContainer = document.getElementById('blog-trending-list');
+  const gridContainer = document.getElementById('blog-grid-container');
+  const sectionsContainer = document.getElementById('blog-sections-container');
+  const sectionLabel = document.getElementById('blog-hub-section-label');
+  const sectionCopy = document.getElementById('blog-hub-section-copy');
+  if (!featuredContainer || !trendingContainer || !gridContainer || !sectionsContainer) return;
+
+  renderBlogSportTabs(sport, league);
+
+  const posts = payload.posts || [];
+  const featured = payload.featured || posts[0];
+
+  if (sectionLabel) {
+    sectionLabel.textContent = payload.meta?.sportLabel ? `${payload.meta.sportLabel} editorial hub` : 'Evergreen sports editorial';
+  }
+
+  if (sectionCopy) {
+    sectionCopy.textContent = featured?.excerpt || 'Long-form fan guides, evergreen analysis, and rewritten sports blog coverage built from public updates.';
+  }
+
+  if (featured) {
+    updateBlogSeo({
+      ...featured,
+      sport,
+      league,
+      seoTitle: `${payload.meta?.sportLabel || featured.sportLabel || 'Sports'} editorial hub | LivescoreFree`,
+      seoDescription: payload.meta?.leagueLabel
+        ? `Evergreen ${payload.meta.sportLabel || featured.sportLabel || 'sports'} blog coverage and fan guides for ${payload.meta.leagueLabel}.`
+        : (featured.excerpt || featured.seoDescription || 'Evergreen sports fan guides and editorial blog coverage.')
+    }, 'website');
+    featuredContainer.innerHTML = `
+      <article class="relative min-h-[540px] overflow-hidden rounded-[2rem] border border-white/10 bg-[#08141d]">
+        <img src="${getSafeImageUrl(featured.image, FALLBACK_HERO_IMAGE)}" alt="${escapeHtml(featured.title || featured.headline || 'Featured story')}" class="absolute inset-0 h-full w-full object-cover opacity-40" onerror="this.src='${FALLBACK_HERO_IMAGE}'">
+        <div class="absolute inset-0 bg-gradient-to-b from-[#163947]/70 via-[#071019]/88 to-[#05080d]"></div>
+        <div class="relative flex h-full flex-col justify-end p-8 md:p-10">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="rounded-full bg-primary px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-white">Trending now</span>
+            <span class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/65">${escapeHtml(featured.vertical || 'Fan Brief')}</span>
+          </div>
+          <h1 class="mt-6 max-w-4xl text-4xl md:text-6xl font-black uppercase tracking-tighter leading-[0.92]">${escapeHtml(featured.title || featured.headline || 'Featured blog story')}</h1>
+          <p class="mt-5 max-w-3xl text-base md:text-lg leading-8 text-on-surface/72">${escapeHtml(featured.excerpt || '')}</p>
+          <div class="mt-6 flex flex-wrap items-center gap-5 text-[10px] font-black uppercase tracking-[0.22em] text-on-surface/38">
+            <span>${escapeHtml(formatBlogDate(featured.published))}</span>
+            <span>${escapeHtml(formatBlogMetaLine(featured))}</span>
+            <span class="inline-flex items-center gap-2">
+              <img src="${getSourceFaviconUrl(featured.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+              ${escapeHtml(featured.source?.domain || featured.source?.name || 'Source')}
+            </span>
+          </div>
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a href="${buildBlogArticleUrl(featured)}" class="kinetic-gradient inline-flex items-center gap-3 rounded-xl px-7 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-white">Read feature <span class="material-symbols-outlined text-base">north_east</span></a>
+            <a href="${buildSportHubUrl(sport, league)}" class="inline-flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-7 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-on-surface hover:bg-white/10">Open sport hub</a>
+          </div>
+        </div>
+      </article>
+    `;
+  } else {
+    featuredContainer.innerHTML = '<div class="rounded-[2rem] border border-white/5 bg-white/5 px-8 py-24 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No editorial stories available</div>';
+  }
+
+  trendingContainer.innerHTML = (payload.trending || posts.slice(0, 4)).map((post, index) => `
+    <a href="${buildBlogArticleUrl(post)}" class="flex items-start gap-4 rounded-[1.5rem] border border-white/5 bg-surface-container p-4 hover:border-primary/30 hover:bg-surface-container-high transition-all group">
+      <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white/5">
+        <img src="${getSafeImageUrl(post.image, FALLBACK_HERO_IMAGE)}" alt="${escapeHtml(post.title || post.headline || 'Trending story')}" class="h-full w-full object-cover" onerror="this.src='${FALLBACK_HERO_IMAGE}'">
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-primary">
+          <span>#${index + 1}</span>
+          <span>${escapeHtml(post.sportLabel || 'Sports')}</span>
+        </div>
+        <h4 class="mt-2 text-lg font-black italic uppercase leading-tight tracking-tighter group-hover:text-primary transition-colors line-clamp-3">${escapeHtml(post.title || post.headline || 'Trending story')}</h4>
+        <p class="mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/35">${escapeHtml(formatBlogMetaLine(post))}</p>
+      </div>
+    </a>
+  `).join('');
+
+  gridContainer.innerHTML = posts.slice(1, 7).map((post) => buildBlogPostCard(post)).join('');
+
+  sectionsContainer.innerHTML = (payload.sections || []).map((section) => `
+    <section class="rounded-[2rem] border border-white/5 bg-[#08111b] p-6 md:p-8">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h2 class="text-2xl font-black italic uppercase tracking-tighter text-on-surface">${escapeHtml(section.title || 'Editorial focus')}</h2>
+        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-primary">${(section.items || []).length} stories</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        ${(section.items || []).map((post) => buildBlogPostCard(post, { compact: true })).join('')}
+      </div>
+    </section>
+  `).join('');
+}
+
+function renderBlogArticlePage(post = {}, relatedPosts = []) {
+  const hero = document.getElementById('blog-article-hero');
+  const eyebrow = document.getElementById('blog-article-eyebrow');
+  const title = document.getElementById('blog-article-title');
+  const excerpt = document.getElementById('blog-article-excerpt');
+  const meta = document.getElementById('blog-article-meta');
+  const body = document.getElementById('blog-article-body');
+  const source = document.getElementById('blog-source-card');
+  const related = document.getElementById('blog-related-list');
+  const nextStories = document.getElementById('blog-next-stories');
+  const schema = document.getElementById('blog-jsonld');
+  if (!hero || !title || !body) return;
+
+  updateBlogSeo(post, 'article');
+
+  hero.innerHTML = `
+    <div class="absolute inset-0">
+      <img src="${getSafeImageUrl(post.image, FALLBACK_HERO_IMAGE)}" alt="${escapeHtml(post.title || post.headline || 'Article artwork')}" class="h-full w-full object-cover opacity-40" onerror="this.src='${FALLBACK_HERO_IMAGE}'">
+      <div class="absolute inset-0 bg-gradient-to-b from-[#04111c]/40 via-[#05070b]/82 to-[#0e0e0e]"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(204,22,22,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(47,110,255,0.12),transparent_35%)]"></div>
+    </div>
+  `;
+
+  if (eyebrow) eyebrow.textContent = post.vertical || `${post.sportLabel || 'Sports'} editorial`;
+  title.textContent = post.title || post.headline || 'Editorial story';
+  if (excerpt) excerpt.textContent = post.excerpt || post.description || '';
+  if (meta) {
+    meta.innerHTML = `
+      <span>${escapeHtml(formatBlogDate(post.published))}</span>
+      <span class="h-1 w-1 rounded-full bg-white/20"></span>
+      <span>${escapeHtml(formatBlogMetaLine(post))}</span>
+      <span class="h-1 w-1 rounded-full bg-white/20"></span>
+      <span class="inline-flex items-center gap-2">
+        <img src="${getSourceFaviconUrl(post.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+        ${escapeHtml(post.source?.domain || post.source?.name || 'Source')}
+      </span>
+    `;
+  }
+
+  body.innerHTML = `
+    ${(post.sections || []).map((section, index) => `
+      <section class="lsf-article-section ${index === 0 ? '' : 'mt-14'}">
+        <h2>${escapeHtml(section.heading || 'Editorial section')}</h2>
+        ${(section.paragraphs || []).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+      </section>
+    `).join('')}
+    <blockquote>${escapeHtml(post.quote || 'The headline matters, but the trend behind it matters more for supporters.')}</blockquote>
+  `;
+
+  if (source) {
+    source.innerHTML = `
+      <div class="flex items-start gap-4">
+        <img src="${getSourceFaviconUrl(post.source)}" alt="" class="h-12 w-12 rounded-2xl bg-white p-2 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
+        <div class="min-w-0 flex-1">
+          <div class="text-[10px] font-black uppercase tracking-[0.22em] text-primary">Source reference</div>
+          <h3 class="mt-2 text-xl font-black uppercase tracking-tighter">${escapeHtml(post.source?.name || post.source?.domain || 'Public sports source')}</h3>
+          <p class="mt-3 text-sm leading-7 text-on-surface/65">This evergreen blog version rewrites the public update into a long-form fan brief while linking back to the original reporting source.</p>
+          <div class="mt-5 flex flex-wrap gap-3">
+            ${post.source?.url ? `<a href="${post.source.url}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-on-surface hover:bg-white/10">Visit original source <span class="material-symbols-outlined text-base">open_in_new</span></a>` : ''}
+            <span class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-primary">${escapeHtml(post.source?.domain || 'trusted sports feed')}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (related) {
+    const matches = [post.relatedMatch, ...(post.relatedMatches || [])].filter(Boolean);
+    related.innerHTML = matches.length ? matches.map((match) => `
+      <a href="${buildMatchUrl(match)}" class="block rounded-[1.5rem] border border-white/5 bg-surface-container p-4 hover:border-primary/30 hover:bg-surface-container-high transition-all group">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="text-[9px] font-black uppercase tracking-[0.2em] text-primary">${escapeHtml(match.league || 'Match watch')}</div>
+            <h4 class="mt-2 text-lg font-black uppercase tracking-tighter">${escapeHtml(match.homeTeam.name)} vs ${escapeHtml(match.awayTeam.name)}</h4>
+            <p class="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/35">${escapeHtml(match.status === 'upcoming' ? formatTickerDate(match) : (match.time || match.statusText || 'FINAL'))}</p>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" class="h-8 w-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
+            <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" class="h-8 w-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
+          </div>
+        </div>
+      </a>
+    `).join('') : '<div class="rounded-[1.5rem] border border-white/5 bg-white/5 px-5 py-10 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Match context loading</div>';
+  }
+
+  if (nextStories) {
+    nextStories.innerHTML = relatedPosts.map((entry) => `
+      <a href="${buildBlogArticleUrl(entry)}" class="block rounded-[1.5rem] border border-white/5 bg-surface-container p-5 hover:border-primary/30 transition-all group">
+        <div class="flex items-center gap-4">
+          <img src="${getSafeImageUrl(entry.image, FALLBACK_HERO_IMAGE)}" alt="${escapeHtml(entry.title || entry.headline || 'Next story')}" class="h-20 w-20 rounded-2xl object-cover" onerror="this.src='${FALLBACK_HERO_IMAGE}'">
+          <div class="min-w-0 flex-1">
+            <div class="text-[9px] font-black uppercase tracking-[0.2em] text-primary">${escapeHtml(entry.vertical || entry.sportLabel || 'Editorial')}</div>
+            <h4 class="mt-2 text-lg font-black italic uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors line-clamp-3">${escapeHtml(entry.title || entry.headline || 'Next story')}</h4>
+          </div>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  if (schema) {
+    schema.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: post.title || post.headline || 'LivescoreFree blog article',
+      description: post.excerpt || post.description || '',
+      image: [new URL(post.image || FALLBACK_HERO_IMAGE, window.location.origin).toString()],
+      datePublished: post.published || new Date().toISOString(),
+      author: {
+        "@type": "Organization",
+        name: "LivescoreFree Editorial Desk"
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "LivescoreFree.online",
+        logo: {
+          "@type": "ImageObject",
+          url: new URL(FALLBACK_LOGO, window.location.origin).toString()
+        }
+      },
+      mainEntityOfPage: new URL(buildBlogArticleUrl(post), window.location.origin).toString()
+    });
+  }
+}
+
+function initSportEditorialSection() {
+  const featureContainer = document.getElementById('sport-blog-featured-container');
+  if (!featureContainer || !window.LSFDataStore) return;
+  const feedSport = currentTab || 'all';
+  const feedLeague = currentLeagueFilter || getDefaultLeagueForSport(feedSport);
+  window.LSFDataStore.subscribe({
+    path: API_BLOG,
+    params: { sport: feedSport, league: feedLeague, limit: 8 },
+    refreshMs: 300000,
+    maxAgeMs: 120000
+  }, (snapshot) => {
+    if (snapshot.status === 'loading' && !snapshot.data) {
+      featureContainer.innerHTML = '<div class="rounded-[1.75rem] border border-white/5 bg-white/5 px-6 py-16 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Loading editorial pulse</div>';
+      return;
+    }
+    if (!snapshot.data) return;
+    window._cachedBlogPosts = snapshot.data.posts || [];
+    renderSportEditorialSection(snapshot.data, feedSport, feedLeague);
+  });
+}
+
+function initBlogHubPage() {
+  const root = document.getElementById('blog-hub-page');
+  if (!root || !window.LSFDataStore) return;
+  const sport = currentTab || 'all';
+  const league = currentLeagueFilter || '';
+  window.LSFDataStore.subscribe({
+    path: API_BLOG,
+    params: { sport, league, limit: 14 },
+    refreshMs: 300000,
+    maxAgeMs: 120000
+  }, (snapshot) => {
+    const featuredContainer = document.getElementById('blog-featured-spotlight');
+    if (snapshot.status === 'loading' && !snapshot.data) {
+      if (featuredContainer) {
+        featuredContainer.innerHTML = '<div class="rounded-[2rem] border border-white/5 bg-white/5 px-8 py-24 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Loading editorial hub</div>';
+      }
+      return;
+    }
+    if (!snapshot.data) return;
+    window._cachedBlogPosts = snapshot.data.posts || [];
+    renderBlogHubPage(snapshot.data, sport, league);
+  });
+}
+
+function initBlogArticlePage() {
+  const root = document.getElementById('blog-article-page');
+  if (!root || !window.LSFDataStore) return;
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+  if (!slug) return;
+  const sport = currentTab || 'all';
+  const league = currentLeagueFilter || '';
+  window.LSFDataStore.subscribe({
+    path: API_BLOG,
+    params: { sport, league, slug, limit: 8 },
+    refreshMs: 300000,
+    maxAgeMs: 120000
+  }, (snapshot) => {
+    const title = document.getElementById('blog-article-title');
+    if (snapshot.status === 'loading' && !snapshot.data) {
+      if (title) title.textContent = 'Loading editorial story';
+      return;
+    }
+    if (!snapshot.data?.post) {
+      const body = document.getElementById('blog-article-body');
+      if (title) title.textContent = 'Editorial story unavailable';
+      if (body) {
+        body.innerHTML = '<div class="rounded-[1.5rem] border border-white/5 bg-white/5 px-6 py-16 text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">This story is not available right now.</div>';
+      }
+      return;
+    }
+    renderBlogArticlePage(snapshot.data.post, snapshot.data.relatedPosts || []);
+  });
 }
 
 function setMatchUnavailableState(primary = 'Match unavailable', secondary = 'Please try again shortly') {

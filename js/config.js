@@ -8,7 +8,8 @@ window.LSF_CONFIG = {
         match: '/api/match',
         upcoming: '/api/upcoming',
         results: '/api/results',
-        info: '/api/info'
+        info: '/api/info',
+        blog: '/api/blog'
     },
     ws: {
         url: (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/api/ws'
