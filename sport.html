@@ -363,7 +363,7 @@
 </div>
 </footer>
 
-<script src="js/script.js?v=1.0.12"></script>
+<script src="js/script.js?v=1.0.13"></script>
 <script>
 const sportStoreSubscriptions = {
     standings: null,
@@ -569,10 +569,10 @@ function fetchSportNews(sport, league) {
 
     if (sportStoreSubscriptions.news) sportStoreSubscriptions.news();
     sportStoreSubscriptions.news = window.LSFDataStore.subscribe({
-        path: '/api/info',
-        params: { type: 'news', sport, league },
-        refreshMs: 120000,
-        maxAgeMs: 45000
+        path: '/api/blog',
+        params: { sport, league, limit: 8 },
+        refreshMs: 300000,
+        maxAgeMs: 120000
     }, (snapshot) => {
         if (snapshot.status === 'loading' && !snapshot.data) {
             container.innerHTML = '<div class="col-span-full h-48 rounded-2xl bg-white/5 animate-pulse"></div>';
@@ -586,20 +586,27 @@ function fetchSportNews(sport, league) {
             return;
         }
 
-        const articles = snapshot.data.articles || [];
+        const articles = snapshot.data.posts || snapshot.data.trending || [];
         if (articles.length === 0) {
             container.innerHTML = '<div class="col-span-full text-center text-on-surface/30 text-[10px] font-black uppercase tracking-widest py-8">No news available</div>';
             return;
         }
 
         container.innerHTML = articles.slice(0, 4).map(a => `
-            <article class="relative bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${getArticleLinkUrl(a)}', '_blank')">
+            <a href="${getArticleLinkUrl(a)}" target="${getArticleLinkTarget(a)}" class="relative bg-surface-container rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full block">
                 <div class="aspect-video bg-cover bg-center transition-transform duration-[1.5s] group-hover:scale-110" style="background-image: linear-gradient(to top, rgba(14,14,14,0.9), transparent), url('${getArticleImageUrl(a)}')"></div>
                 <div class="p-4 relative flex flex-col flex-1">
-                    <span class="bg-primary text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm self-start mb-2">${a.categories?.[0]?.name || 'SPORTS'}</span>
-                    <h3 class="text-sm font-black italic uppercase leading-tight group-hover:text-primary transition-colors line-clamp-2">${a.headline}</h3>
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <span class="bg-primary text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm self-start">${a.vertical || a.categories?.[0]?.name || 'SPORTS'}</span>
+                        <span class="inline-flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.18em] text-on-surface/40">
+                            <img src="${getSourceFaviconUrl(a.source)}" class="w-4 h-4 rounded-full object-cover" onerror="this.src='${FALLBACK_LOGO}'" alt="">
+                            ${(a.source?.domain || a.source?.name || a.sportLabel || 'SOURCE')}
+                        </span>
+                    </div>
+                    <h3 class="text-sm font-black italic uppercase leading-tight group-hover:text-primary transition-colors line-clamp-2">${a.title || a.headline}</h3>
+                    <p class="mt-3 text-[11px] text-on-surface/60 leading-relaxed line-clamp-3">${a.excerpt || a.description || ''}</p>
                 </div>
-            </article>
+            </a>
         `).join('');
     });
 }

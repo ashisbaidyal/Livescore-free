@@ -800,7 +800,7 @@ function buildBlogHubUrl(sport = '', league = '') {
   const normalizedLeague = normalizeLeagueSlug(league);
   if (normalizedSport) params.set('s', normalizedSport);
   if (normalizedLeague) params.set('l', normalizedLeague);
-  return `/blog_hub.html?${params.toString()}`;
+  return `/news.html?${params.toString()}`;
 }
 
 function buildBlogArticleUrl(post = {}) {
@@ -1137,7 +1137,12 @@ function getArticleImageUrl(article = {}) {
 }
 
 function getArticleLinkUrl(article = {}) {
+  if (article?.slug) return buildBlogArticleUrl(article);
   return article.url || article.links?.web?.href || article.links?.api?.news?.href || '#';
+}
+
+function getArticleLinkTarget(article = {}) {
+  return article?.slug ? '_self' : '_blank';
 }
 
 function dedupeMatchesById(matches = []) {
@@ -1335,7 +1340,7 @@ function buildHomeHeroSlides(liveMatches = [], upcomingMatches = [], finishedMat
 
   const article = newsList[0];
   if (article?.headline) {
-    slides.push({ kind: 'news', article, pagerLabel: 'Latest News' });
+    slides.push({ kind: 'news', article, pagerLabel: 'News Blog' });
   }
 
   return slides.slice(0, 5);
@@ -1353,7 +1358,7 @@ async function fetchCompositeMatchFeeds(options = {}) {
     fetch(buildApiUrl(API_UPCOMING, { sport, league: league || undefined, days: upcomingDays }), { cache: 'no-store' }),
     fetchFinishedResultsFeed({ sport, league, days: resultsDays }),
     includeNews
-      ? fetch(buildApiUrl(API_INFO, { type: 'news', sport, league: league || undefined }), { cache: 'no-store' })
+      ? fetch(buildApiUrl(API_BLOG, { sport, league: league || undefined, limit: 10 }), { cache: 'no-store' })
       : Promise.resolve(null)
   ]);
 
@@ -1382,7 +1387,7 @@ async function fetchCompositeMatchFeeds(options = {}) {
 
   if (includeNews && newsResult.status === 'fulfilled' && newsResult.value?.ok) {
     const payload = await newsResult.value.json();
-    newsList = payload.articles || [];
+    newsList = payload.posts || payload.trending || [];
   }
 
   const mixedMatches = combineMatchPools(liveMatches, upcomingMatches, finishedMatches);
@@ -2858,7 +2863,11 @@ function renderHeroNewsSlide(entry, index) {
         <div class="w-full max-w-4xl">
           <div class="flex flex-wrap items-center gap-3 mb-6">
             <span class="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-sm text-[10px] font-black tracking-widest uppercase">
-              <span class="w-2 h-2 bg-white rounded-full"></span> Latest News
+              <span class="w-2 h-2 bg-white rounded-full"></span> News Blog
+            </span>
+            <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/60">
+              <img src="${getSourceFaviconUrl(article.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+              ${(article.source?.domain || article.source?.name || article.sportLabel || 'Source')}
             </span>
           </div>
           <h1 class="font-headline font-black text-4xl sm:text-6xl md:text-7xl tracking-tighter leading-[0.9] uppercase italic text-on-surface max-w-4xl">
@@ -2868,10 +2877,10 @@ function renderHeroNewsSlide(entry, index) {
             ${article.description || article.summary || 'The homepage hero now rotates live action, upcoming fixtures, recent finals, and the latest headline feed.'}
           </p>
           <div class="flex flex-wrap gap-4 mt-8">
-            <a href="${getArticleLinkUrl(article)}" target="_blank" class="bg-primary hover:bg-primary/90 px-8 sm:px-10 py-4 sm:py-5 rounded-lg text-white font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)]">
-              <span class="material-symbols-outlined">open_in_new</span> Read Story
+            <a href="${getArticleLinkUrl(article)}" target="${getArticleLinkTarget(article)}" class="bg-primary hover:bg-primary/90 px-8 sm:px-10 py-4 sm:py-5 rounded-lg text-white font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(204,22,22,0.4)]">
+              <span class="material-symbols-outlined">article</span> Read Blog Story
             </a>
-            <a href="/news.html" class="bg-white/5 backdrop-blur-md border border-white/20 px-8 sm:px-10 py-4 sm:py-5 rounded-lg text-on-surface font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-colors">
+            <a href="${buildBlogHubUrl(article.sport || currentTab || 'all', article.league || currentLeagueFilter || '')}" class="bg-white/5 backdrop-blur-md border border-white/20 px-8 sm:px-10 py-4 sm:py-5 rounded-lg text-on-surface font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-colors">
               Open News Hub
             </a>
           </div>
@@ -2906,13 +2915,17 @@ function renderHomeHeroWidgets(upcomingMatches = [], newsList = []) {
         </div>
       </div>
       ${newsItem ? `
-        <a href="/news.html" class="glass-card block p-5 rounded-2xl border border-white/10 w-80 shadow-2xl overflow-hidden relative group bg-surface/30 backdrop-blur-md">
+        <a href="${getArticleLinkUrl(newsItem)}" target="${getArticleLinkTarget(newsItem)}" class="glass-card block p-5 rounded-2xl border border-white/10 w-80 shadow-2xl overflow-hidden relative group bg-surface/30 backdrop-blur-md">
           <div class="flex items-center gap-2 mb-3">
             <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
-            <span class="text-[10px] font-black uppercase tracking-widest">Breaking Now</span>
+            <span class="text-[10px] font-black uppercase tracking-widest">News Blog</span>
+          </div>
+          <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-on-surface/45">
+            <img src="${getSourceFaviconUrl(newsItem.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+            ${(newsItem.source?.domain || newsItem.source?.name || newsItem.sportLabel || 'Source')}
           </div>
           <p class="text-[11px] font-bold leading-tight uppercase opacity-80 group-hover:text-primary transition-colors line-clamp-3">${newsItem.headline}</p>
-          <span class="inline-block mt-3 text-[9px] font-black uppercase tracking-widest border-b border-primary text-primary pb-0.5">Read More</span>
+          <span class="inline-block mt-3 text-[9px] font-black uppercase tracking-widest border-b border-primary text-primary pb-0.5">Read Blog</span>
         </a>
       ` : ''}
     </div>
@@ -3568,19 +3581,30 @@ async function fetchNews() {
   if (!document.getElementById('news-grid-container') && !document.getElementById('latest-headlines-container') && !isNewsPage) return;
   
   try {
-    const res = await fetch(buildApiUrl(API_INFO, {
-      type: 'news',
+    const res = await fetch(buildApiUrl(API_BLOG, {
       sport: currentTab || 'all',
       league: currentLeagueFilter || undefined,
       limit: 40
     }));
     const data = await res.json();
-    let articles = data.articles || [];
+    let articles = data.posts || data.trending || [];
+    window._cachedNews = articles;
     
     // Sort or filter if needed
     renderNews(articles);
 
     if (isNewsPage) {
+       if (data.meta) {
+         updateBlogSeo({
+           sport: currentTab || 'all',
+           league: currentLeagueFilter || '',
+           sportLabel: data.meta.sportLabel || '',
+           seoTitle: `${data.meta.sportLabel || 'Sports'} news blog hub | LivescoreFree`,
+           seoDescription: data.meta.leagueLabel
+             ? `Permanent ${data.meta.sportLabel || 'sports'} blog coverage and fan stories for ${data.meta.leagueLabel}.`
+             : 'Permanent sports blog coverage and fan stories generated from public source updates.'
+         }, 'website');
+       }
        renderNewsHero(articles.slice(0, 4));
        renderNewsVideos(articles.slice(4, 8));
        renderTrendingSidebar(articles.slice(8, 12));
@@ -3714,21 +3738,28 @@ function renderNewsHero(articles) {
     <div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
     <div class="relative h-full flex flex-col justify-end p-8 md:p-16 space-y-6">
       <div class="flex items-center gap-3">
-        <span class="bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">BREAKING NEWS</span>
-        <span class="text-white/60 text-xs font-bold uppercase tracking-tighter">${a.categories?.[0]?.name || 'Sports'}</span>
+        <span class="bg-primary text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm">NEWS BLOG HUB</span>
+        <span class="text-white/60 text-xs font-bold uppercase tracking-tighter">${a.vertical || a.categories?.[0]?.name || 'Sports'}</span>
+        <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/60">
+          <img src="${getSourceFaviconUrl(a.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+          ${(a.source?.domain || a.source?.name || a.sportLabel || 'Source')}
+        </span>
       </div>
       <div class="space-y-2">
         <h1 class="text-5xl md:text-7xl font-black font-headline uppercase leading-tight tracking-tighter text-white drop-shadow-2xl max-w-4xl">
-            ${a.headline}
+            ${a.title || a.headline}
         </h1>
       </div>
       <p class="max-w-2xl text-on-surface-variant text-sm md:text-lg font-medium opacity-80 border-l-4 border-primary pl-4">
-          ${a.description || 'Follow the latest unfolding stories from the sports world.'}
+          ${a.excerpt || a.description || 'Follow the latest rewritten stories from the sports world.'}
       </p>
       <div class="flex gap-4 pt-4">
-        <button class="bg-primary text-on-primary px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2" onclick="window.open('${getArticleLinkUrl(a)}', '_blank')">
-          <span class="material-symbols-outlined">article</span> Read Full Story
-        </button>
+        <a href="${getArticleLinkUrl(a)}" target="${getArticleLinkTarget(a)}" class="bg-primary text-on-primary px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2">
+          <span class="material-symbols-outlined">article</span> Read Blog Story
+        </a>
+        <a href="${buildBlogHubUrl(a.sport || currentTab || 'all', a.league || currentLeagueFilter || '')}" class="bg-white/5 border border-white/10 px-10 py-4 font-black uppercase text-xs tracking-widest hover:bg-white/10 transition-transform flex items-center gap-2">
+          <span class="material-symbols-outlined">grid_view</span> View Hub
+        </a>
       </div>
     </div>
   `;
@@ -3738,15 +3769,19 @@ function renderNewsVideos(articles) {
   const container = document.getElementById('video-highlights-gallery');
   if (!container) return;
   container.innerHTML = articles.map(a => `
-    <div class="group cursor-pointer" onclick="window.open('${getArticleLinkUrl(a)}', '_blank')">
+    <a class="group cursor-pointer block" href="${getArticleLinkUrl(a)}" target="${getArticleLinkTarget(a)}">
       <div class="relative aspect-video bg-cover bg-center rounded-lg overflow-hidden border border-white/10" style="background-image: url('${getArticleImageUrl(a)}')">
         <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
         <div class="absolute inset-0 flex items-center justify-center">
-          <span class="material-symbols-outlined text-4xl text-white opacity-80 group-hover:scale-125 transition-transform" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+          <span class="material-symbols-outlined text-4xl text-white opacity-80 group-hover:scale-125 transition-transform" style="font-variation-settings: 'FILL' 1;">article</span>
         </div>
       </div>
-      <p class="mt-2 text-[10px] font-black uppercase tracking-tighter line-clamp-2">${a.headline}</p>
-    </div>
+      <div class="mt-3 flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-on-surface/40">
+        <img src="${getSourceFaviconUrl(a.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+        <span>${a.source?.domain || a.source?.name || a.sportLabel || 'Source'}</span>
+      </div>
+      <p class="mt-2 text-[10px] font-black uppercase tracking-tighter line-clamp-2">${a.title || a.headline}</p>
+    </a>
   `).join('');
 }
 
@@ -3754,9 +3789,12 @@ function renderTrendingSidebar(articles) {
   const container = document.getElementById('trending-sidebar-list');
   if (!container) return;
   container.innerHTML = articles.map(a => `
-    <a class="block group" href="${getArticleLinkUrl(a)}" target="_blank">
-      <span class="text-[8px] font-black uppercase text-on-surface/30">#${(a.categories?.[0]?.name || 'TRENDING').replace(/\\s+/g, '')}</span>
-      <p class="text-sm font-bold uppercase group-hover:text-primary transition-colors mt-1 line-clamp-2">${a.headline}</p>
+    <a class="block group" href="${getArticleLinkUrl(a)}" target="${getArticleLinkTarget(a)}">
+      <div class="flex items-center gap-2 text-[8px] font-black uppercase text-on-surface/30">
+        <img src="${getSourceFaviconUrl(a.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+        <span>#${(a.vertical || a.categories?.[0]?.name || 'TRENDING').replace(/\\s+/g, '')}</span>
+      </div>
+      <p class="text-sm font-bold uppercase group-hover:text-primary transition-colors mt-1 line-clamp-2">${a.title || a.headline}</p>
     </a>
   `).join('');
 }
@@ -3776,34 +3814,43 @@ function renderNews(articles) {
 
   if (nc) {
     nc.innerHTML = articles.slice(0, 4).map(article => `
-      <article class="relative bg-surface-container rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full" onclick="window.open('${getArticleLinkUrl(article)}', '_blank')">
+      <a href="${getArticleLinkUrl(article)}" target="${getArticleLinkTarget(article)}" class="relative bg-surface-container rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full block">
         <div class="aspect-video bg-cover bg-center transition-transform duration-[1.5s] group-hover:scale-110" 
              style="background-image: linear-gradient(to top, rgba(14,14,14,0.9), transparent), url('${getArticleImageUrl(article)}')"></div>
         <div class="p-6 relative flex flex-col flex-1">
-          <div class="flex justify-between items-center mb-4">
-            <span class="bg-primary text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm">${article.categories?.[0]?.name || 'SPORTS'}</span>
+          <div class="flex justify-between items-center mb-4 gap-3">
+            <span class="bg-primary text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm">${article.vertical || article.categories?.[0]?.name || 'SPORTS'}</span>
+            <span class="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-on-surface/40">
+              <img src="${getSourceFaviconUrl(article.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+              ${(article.source?.domain || article.source?.name || article.sportLabel || 'Source')}
+            </span>
           </div>
           <h3 class="text-xl font-black italic uppercase leading-tight group-hover:text-primary transition-colors line-clamp-2 mb-4 drop-shadow-md">
-            ${article.headline}
+            ${article.title || article.headline}
           </h3>
+          <p class="text-sm text-on-surface/60 leading-relaxed line-clamp-3">${article.excerpt || article.description || ''}</p>
         </div>
-      </article>
+      </a>
     `).join('');
   }
 
   if (hc) {
     hc.innerHTML = articles.slice(4).map((article, idx) => `
-      <article class="flex flex-col md:flex-row gap-8 group cursor-pointer border-b border-white/5 pb-12 last:border-0 opacity-0 translate-y-10 transition-all duration-700 headline-expansion-item" onclick="window.open('${getArticleLinkUrl(article)}', '_blank')">
+      <a href="${getArticleLinkUrl(article)}" target="${getArticleLinkTarget(article)}" class="flex flex-col md:flex-row gap-8 group cursor-pointer border-b border-white/5 pb-12 last:border-0 opacity-0 translate-y-10 transition-all duration-700 headline-expansion-item">
         <div class="md:w-1/4 aspect-[16/9] bg-cover bg-center rounded-xl overflow-hidden border border-white/10 shrink-0 shadow-lg" 
              style="background-image: url('${getArticleImageUrl(article)}')"></div>
         <div class="flex-1 space-y-4">
-          <div class="flex items-center gap-3">
-             <span class="text-primary text-[10px] font-black uppercase tracking-widest">${article.categories?.[0]?.name || 'HUB'}</span>
+          <div class="flex items-center gap-3 flex-wrap">
+             <span class="text-primary text-[10px] font-black uppercase tracking-widest">${article.vertical || article.categories?.[0]?.name || 'HUB'}</span>
+             <span class="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-on-surface/40">
+               <img src="${getSourceFaviconUrl(article.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+               ${(article.source?.domain || article.source?.name || article.sportLabel || 'Source')}
+             </span>
           </div>
-          <h4 class="text-2xl font-black italic uppercase leading-none group-hover:text-primary transition-all tracking-tighter">${article.headline}</h4>
-          <p class="text-sm text-on-surface/60 font-medium leading-relaxed line-clamp-2 max-w-3xl">${article.description || ''}</p>
+          <h4 class="text-2xl font-black italic uppercase leading-none group-hover:text-primary transition-all tracking-tighter">${article.title || article.headline}</h4>
+          <p class="text-sm text-on-surface/60 font-medium leading-relaxed line-clamp-2 max-w-3xl">${article.excerpt || article.description || ''}</p>
         </div>
-      </article>
+      </a>
     `).join('');
     setupNewsExpansion();
   }
@@ -5614,9 +5661,9 @@ if (window.location.pathname.includes('upcoming')) {
 async function fetchLeaguesHero() {
   if (!heroSliderContainer || !window.location.pathname.includes('leagues.html')) return;
   try {
-    const res = await fetch(buildApiUrl(API_INFO, { type: 'news', sport: 'all' }));
+    const res = await fetch(buildApiUrl(API_BLOG, { sport: 'all', limit: 6 }));
     const data = await res.json();
-    const featured = (data.articles || []).slice(0, 3);
+    const featured = (data.posts || data.trending || []).slice(0, 3);
     
     if (featured.length > 0) {
       heroSliderContainer.innerHTML = featured.map((item, i) => `
@@ -5628,10 +5675,14 @@ async function fetchLeaguesHero() {
               <span class="material-symbols-outlined text-xs">star</span>
               Featured League Coverage
             </div>
+            <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/60">
+              <img src="${getSourceFaviconUrl(item.source)}" alt="" class="h-4 w-4 rounded-full" onerror="this.src='${FALLBACK_LOGO}'">
+              ${(item.source?.domain || item.source?.name || item.sportLabel || 'Source')}
+            </div>
             <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-on-surface mb-4 leading-none">${item.title || item.headline}</h1>
-            <p class="text-sm text-on-surface/60 font-medium max-w-md mb-6 leading-relaxed">${item.description || item.summary || 'Deep tactical analysis and live coverage from the multiverse elite.'}</p>
+            <p class="text-sm text-on-surface/60 font-medium max-w-md mb-6 leading-relaxed">${item.excerpt || item.description || item.summary || 'Deep tactical analysis and live coverage from the multiverse elite.'}</p>
             <div class="flex gap-4">
-              <button onclick="window.open('${getArticleLinkUrl(item)}', '_blank')" class="px-8 py-4 kinetic-gradient text-xs font-black uppercase tracking-widest rounded active:scale-95 transition-all">Read Analysis</button>
+              <a href="${getArticleLinkUrl(item)}" target="${getArticleLinkTarget(item)}" class="px-8 py-4 kinetic-gradient text-xs font-black uppercase tracking-widest rounded active:scale-95 transition-all inline-flex items-center gap-2">Read Analysis</a>
             </div>
           </div>
         </div>
