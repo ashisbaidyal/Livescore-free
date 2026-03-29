@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LivescoreFree.online | IPL 2026 League Hub</title>
+<meta name="description" content="Follow the IPL 2026 league hub with live scores, full team list, player squads, match schedule, recent results, and the latest points table in one place."/>
+<meta property="og:title" content="IPL 2026 League Hub | LivescoreFree.online"/>
+<meta property="og:description" content="Live scores, team squads, schedule, results, and points table for IPL 2026."/>
+<meta property="og:image" content="https://livescorefree.online/logo.png"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://livescorefree.online/ipl.html"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<script src="js/config.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          primary: "#CC1616",
+          surface: "#131313",
+          "on-surface": "#e5e2e1",
+          "surface-container-lowest": "#0e0e0e",
+          "surface-container-low": "#1c1b1b",
+          "surface-container": "#201f1f",
+          "surface-container-high": "#2a2a2a",
+          "surface-container-highest": "#353534"
+        },
+        fontFamily: {
+          body: ["Lexend"]
+        }
+      }
+    }
+  };
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: #0E0E0E; }
+  ::-webkit-scrollbar-thumb { background: #CC1616; }
+  .pulse-red { animation: pulse-red 2s infinite; }
+  .glass-card { background: rgba(42, 42, 42, 0.72); backdrop-filter: blur(14px); }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .ticker-scroll {
+    width: max-content;
+    animation: ticker-scroll 52s linear infinite;
+  }
+  .ticker-scroll:hover {
+    animation-play-state: paused;
+  }
+  .ipl-hero-glow {
+    background:
+      radial-gradient(circle at top left, rgba(204, 22, 22, 0.24), transparent 36%),
+      radial-gradient(circle at top right, rgba(255, 189, 57, 0.12), transparent 28%),
+      linear-gradient(135deg, rgba(11, 16, 32, 0.96), rgba(20, 12, 20, 0.94));
+  }
+  @keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(204, 22, 22, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(204, 22, 22, 0); }
+  }
+  @keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+</style>
+<link rel="manifest" href="/manifest.webmanifest"/>
+<meta name="theme-color" content="#0e0e0e"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="stylesheet" href="/css/runtime-enhancements.css"/>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body overflow-x-hidden">
+<nav id="main-header" class="fixed top-0 w-full z-[100] border-b border-white/10 bg-[#0E0E0E]/90 backdrop-blur-xl transition-transform duration-300">
+  <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
+    <div class="flex items-center gap-4">
+      <button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full transition-all">menu</button>
+      <a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+        <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
+        <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
+      </a>
+    </div>
+    <div class="hidden lg:flex gap-8 items-center font-bold uppercase tracking-tighter" id="top-nav-links">
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="live.html">Live</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">Upcoming</a>
+      <a class="text-on-surface/60 hover:text-primary transition-all" href="results.html">Results</a>
+      <div class="relative group cursor-pointer h-full flex items-center">
+        <span class="nav-link text-on-surface/60 hover:text-primary transition-all uppercase flex items-center gap-1">More <span class="material-symbols-outlined text-sm">expand_more</span></span>
+        <div class="absolute top-full left-0 mt-2 w-48 bg-surface-container-high border border-white/10 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-[200]">
+          <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="trending.html">Trending</a>
+          <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="news.html?s=cricket&amp;l=ipl">News</a>
+          <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="leagues.html">Top League</a>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="hidden sm:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+        <span class="material-symbols-outlined text-sm text-primary animate-pulse">radio_button_checked</span>
+        <span id="live-count-text" class="text-[10px] font-black tracking-widest uppercase">IPL LIVE</span>
+      </div>
+      <button onclick="openSearchModal()" class="material-symbols-outlined text-on-surface hover:text-primary transition-all">search</button>
+      <button class="material-symbols-outlined text-on-surface hover:text-primary transition-all relative">
+        notifications
+        <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] hidden transition-opacity duration-300 opacity-0"></div>
+
+<div class="flex pt-16 min-h-screen">
+  <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto">
+    <nav class="flex flex-col gap-1 font-medium text-xs">
+      <div class="px-6 mb-8 space-y-1">
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-primary transition-all duration-300 border-l-[3px] border-primary bg-white/5" href="ipl.html"><span class="material-symbols-outlined text-lg">sports_cricket</span><span class="font-black uppercase tracking-widest text-[10px]">IPL 2026 Hub</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="#ipl-points-section"><span class="material-symbols-outlined text-lg">leaderboard</span><span class="font-black uppercase tracking-widest text-[10px]">Points Table</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="#ipl-live-section"><span class="material-symbols-outlined text-lg">sports_score</span><span class="font-black uppercase tracking-widest text-[10px]">Live Scores</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="#ipl-schedule-section"><span class="material-symbols-outlined text-lg">calendar_month</span><span class="font-black uppercase tracking-widest text-[10px]">Schedule</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="#ipl-teams-section"><span class="material-symbols-outlined text-lg">groups</span><span class="font-black uppercase tracking-widest text-[10px]">All Teams</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="#ipl-rosters-section"><span class="material-symbols-outlined text-lg">person</span><span class="font-black uppercase tracking-widest text-[10px]">Players</span></a>
+      </div>
+      <div class="px-6 mb-8">
+        <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">IPL Feed</div>
+        <div id="ipl-sidebar-live-container" class="space-y-3">
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+        </div>
+      </div>
+      <div class="px-6">
+        <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Quick Paths</div>
+        <div class="space-y-1">
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="standings.html?sport=cricket&amp;league=ipl"><span class="material-symbols-outlined text-lg">table_chart</span><span class="font-black uppercase tracking-widest text-[10px]">Standings Centre</span></a>
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="teams.html?sport=cricket&amp;league=ipl"><span class="material-symbols-outlined text-lg">shield</span><span class="font-black uppercase tracking-widest text-[10px]">Teams Hub</span></a>
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="players.html?sport=cricket&amp;league=ipl"><span class="material-symbols-outlined text-lg">manage_accounts</span><span class="font-black uppercase tracking-widest text-[10px]">Players Hub</span></a>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="flex-1 w-full bg-surface relative min-h-screen">
+    <div class="bg-surface-container-low border-b border-white/5 py-3 overflow-hidden">
+      <div class="relative overflow-hidden">
+        <div id="ipl-ticker-track" class="ticker-scroll flex items-center gap-4 whitespace-nowrap px-6">
+          <div class="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-on-surface/50">
+            <span class="material-symbols-outlined text-primary text-sm">radio_button_checked</span>
+            Loading IPL live board
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="relative overflow-hidden border-b border-white/5">
+      <div id="ipl-hero-backdrop" class="absolute inset-0 overflow-hidden"></div>
+      <div class="absolute inset-0 ipl-hero-glow"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#0E0E0E]/25 to-[#0E0E0E]"></div>
+      <div class="max-w-7xl mx-auto px-8 pt-16 pb-14 relative">
+        <div class="grid gap-10 xl:grid-cols-[1.15fr_0.85fr] items-start">
+          <div>
+            <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
+              <span class="material-symbols-outlined text-primary text-sm">sports_cricket</span>
+              <span class="text-[10px] font-black uppercase tracking-[0.3em]">IPL 2026 League Hub</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">Indian Premier League <span class="text-primary">2026</span></h1>
+            <p id="ipl-hero-copy" class="max-w-3xl text-sm md:text-base text-on-surface/65 leading-relaxed">Track every IPL signal in one destination: live scorecards, full fixture list, updated points table, all ten teams, and player squads that refresh from the public data feed.</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+              <div class="glass-card rounded-2xl border border-white/5 p-5">
+                <div class="text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-2">Live Games</div>
+                <div id="ipl-stat-live" class="text-3xl font-black italic">0</div>
+                <div class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">In progress</div>
+              </div>
+              <div class="glass-card rounded-2xl border border-white/5 p-5">
+                <div class="text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-2">Schedule</div>
+                <div id="ipl-stat-upcoming" class="text-3xl font-black italic">0</div>
+                <div class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">Upcoming fixtures</div>
+              </div>
+              <div class="glass-card rounded-2xl border border-white/5 p-5">
+                <div class="text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-2">Teams</div>
+                <div id="ipl-stat-teams" class="text-3xl font-black italic">10</div>
+                <div class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">League clubs</div>
+              </div>
+              <div class="glass-card rounded-2xl border border-white/5 p-5">
+                <div class="text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-2">Players</div>
+                <div id="ipl-stat-players" class="text-3xl font-black italic">0</div>
+                <div class="text-[10px] uppercase tracking-[0.2em] text-on-surface/40">Roster pool</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card rounded-[2rem] border border-white/10 p-7 shadow-2xl">
+            <div class="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Featured Match</div>
+                <h2 id="ipl-featured-league" class="text-xl font-black italic uppercase tracking-tight">Loading fixture</h2>
+              </div>
+              <span id="ipl-featured-badge" class="rounded-full border border-primary/30 bg-primary/15 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-primary">LIVE</span>
+            </div>
+            <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4 mb-7">
+              <div class="text-center">
+                <img id="ipl-featured-home-logo" src="/public/logo.png" alt="" class="w-20 h-20 object-contain mx-auto mb-4"/>
+                <div id="ipl-featured-home-name" class="text-lg font-black italic uppercase tracking-tight">Home</div>
+              </div>
+              <div class="text-center">
+                <div id="ipl-featured-score" class="text-4xl font-black italic text-primary">0-0</div>
+                <div id="ipl-featured-time" class="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface/45 mt-3">Loading</div>
+              </div>
+              <div class="text-center">
+                <img id="ipl-featured-away-logo" src="/public/logo.png" alt="" class="w-20 h-20 object-contain mx-auto mb-4"/>
+                <div id="ipl-featured-away-name" class="text-lg font-black italic uppercase tracking-tight">Away</div>
+              </div>
+            </div>
+            <div id="ipl-featured-meta" class="rounded-2xl border border-white/5 bg-white/5 px-5 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-on-surface/45 mb-6">Awaiting live data</div>
+            <div class="grid grid-cols-2 gap-3">
+              <a id="ipl-featured-link" href="upcoming.html?s=cricket&amp;l=ipl" class="rounded-2xl bg-primary px-5 py-4 text-center text-[10px] font-black uppercase tracking-[0.24em] text-white hover:scale-[1.02] transition-transform">Open Match Centre</a>
+              <a href="#ipl-schedule-section" class="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-center text-[10px] font-black uppercase tracking-[0.24em] text-on-surface hover:bg-white/10 transition-colors">View Schedule</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-8 py-10">
+      <div class="grid gap-8 xl:grid-cols-[1.3fr_0.85fr]">
+        <div class="space-y-10">
+          <section id="ipl-live-section">
+            <div class="flex items-end justify-between gap-4 mb-6 border-l-4 border-primary pl-4">
+              <div>
+                <h2 class="text-3xl font-black italic uppercase tracking-tighter">Live Scoreboard</h2>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Live and next-up matches in the league</p>
+              </div>
+              <a href="live.html?s=cricket&amp;l=ipl" class="text-[10px] font-black text-primary uppercase tracking-[0.24em] hover:underline">Full live page</a>
+            </div>
+            <div id="ipl-live-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div class="h-56 rounded-3xl bg-white/5 animate-pulse"></div>
+              <div class="h-56 rounded-3xl bg-white/5 animate-pulse"></div>
+            </div>
+          </section>
+
+          <section id="ipl-schedule-section">
+            <div class="flex items-end justify-between gap-4 mb-6 border-l-4 border-primary pl-4">
+              <div>
+                <h2 class="text-3xl font-black italic uppercase tracking-tighter">2026 Schedule</h2>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Upcoming fixtures with direct links into match centre pages</p>
+              </div>
+              <a href="upcoming.html?s=cricket&amp;l=ipl" class="text-[10px] font-black text-primary uppercase tracking-[0.24em] hover:underline">Schedule centre</a>
+            </div>
+            <div id="ipl-schedule-grid" class="space-y-4">
+              <div class="h-24 rounded-3xl bg-white/5 animate-pulse"></div>
+              <div class="h-24 rounded-3xl bg-white/5 animate-pulse"></div>
+              <div class="h-24 rounded-3xl bg-white/5 animate-pulse"></div>
+            </div>
+          </section>
+
+          <section id="ipl-teams-section">
+            <div class="flex items-end justify-between gap-4 mb-6 border-l-4 border-primary pl-4">
+              <div>
+                <h2 class="text-3xl font-black italic uppercase tracking-tighter">All Teams</h2>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Every franchise linked to its team page and roster feed</p>
+              </div>
+              <a href="teams.html?sport=cricket&amp;league=ipl" class="text-[10px] font-black text-primary uppercase tracking-[0.24em] hover:underline">Open teams hub</a>
+            </div>
+            <div id="ipl-teams-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div class="h-60 rounded-3xl bg-white/5 animate-pulse"></div>
+              <div class="h-60 rounded-3xl bg-white/5 animate-pulse"></div>
+              <div class="h-60 rounded-3xl bg-white/5 animate-pulse"></div>
+            </div>
+          </section>
+
+          <section id="ipl-rosters-section">
+            <div class="flex items-end justify-between gap-4 mb-6 border-l-4 border-primary pl-4">
+              <div>
+                <h2 class="text-3xl font-black italic uppercase tracking-tighter">Team Squads</h2>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Full squad cards grouped by franchise for longer-term browsing</p>
+              </div>
+              <a href="players.html?sport=cricket&amp;league=ipl" class="text-[10px] font-black text-primary uppercase tracking-[0.24em] hover:underline">Players hub</a>
+            </div>
+            <div id="ipl-rosters-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+              <div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div>
+              <div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div>
+            </div>
+          </section>
+
+          <section id="ipl-results-section">
+            <div class="flex items-end justify-between gap-4 mb-6 border-l-4 border-primary pl-4">
+              <div>
+                <h2 class="text-3xl font-black italic uppercase tracking-tighter">Recent Results</h2>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Latest finished scorelines from the league</p>
+              </div>
+              <a href="results.html?s=cricket&amp;l=ipl" class="text-[10px] font-black text-primary uppercase tracking-[0.24em] hover:underline">Results page</a>
+            </div>
+            <div id="ipl-results-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="h-44 rounded-3xl bg-white/5 animate-pulse"></div>
+              <div class="h-44 rounded-3xl bg-white/5 animate-pulse"></div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="space-y-6">
+          <section id="ipl-points-section" class="glass-card rounded-3xl border border-white/5 overflow-hidden">
+            <div class="flex items-center justify-between gap-4 p-6 border-b border-white/5">
+              <div>
+                <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">IPL 2026</div>
+                <h2 class="text-2xl font-black italic uppercase tracking-tighter">Points Table</h2>
+              </div>
+              <span class="material-symbols-outlined text-primary text-3xl">table_chart</span>
+            </div>
+            <div id="ipl-points-table" class="p-6">
+              <div class="h-80 rounded-3xl bg-white/5 animate-pulse"></div>
+            </div>
+          </section>
+
+          <section class="glass-card rounded-3xl border border-white/5 p-6">
+            <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Player Radar</div>
+            <div id="ipl-player-spotlights" class="space-y-3">
+              <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+              <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+              <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+            </div>
+          </section>
+
+          <section class="glass-card rounded-3xl border border-white/5 p-6">
+            <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">IPL Fan Blog</div>
+            <div id="ipl-blog-list" class="space-y-4">
+              <div class="h-24 rounded-2xl bg-white/5 animate-pulse"></div>
+              <div class="h-24 rounded-2xl bg-white/5 animate-pulse"></div>
+            </div>
+          </section>
+
+          <section class="glass-card rounded-3xl border border-white/5 p-6">
+            <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Quick Jump</div>
+            <div class="grid grid-cols-2 gap-3">
+              <a href="sport.html?s=cricket" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+                <div class="text-xs font-black uppercase tracking-widest">Cricket Hub</div>
+                <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">All cricket feeds</div>
+              </a>
+              <a href="news.html?s=cricket&amp;l=ipl" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+                <div class="text-xs font-black uppercase tracking-widest">Fan News</div>
+                <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Internal blog hub</div>
+              </a>
+              <a href="standings.html?sport=cricket&amp;league=ipl" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+                <div class="text-xs font-black uppercase tracking-widest">Standings</div>
+                <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Dedicated table page</div>
+              </a>
+              <a href="teams.html?sport=cricket&amp;league=ipl" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+                <div class="text-xs font-black uppercase tracking-widest">Team Pages</div>
+                <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Profiles and rosters</div>
+              </a>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <footer class="border-t border-white/10 bg-[#0E0E0E] px-8 py-10">
+      <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div>
+          <div class="text-2xl font-black italic tracking-tighter text-primary">LIVESCOREFREE</div>
+          <p class="text-[10px] uppercase tracking-[0.3em] text-on-surface/35 mt-2">&copy; <span class="copyright-year">2026</span> IPL league hub</p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/45">
+          <a href="live.html?s=cricket&amp;l=ipl" class="hover:text-primary transition-colors">Live</a>
+          <a href="upcoming.html?s=cricket&amp;l=ipl" class="hover:text-primary transition-colors">Schedule</a>
+          <a href="standings.html?sport=cricket&amp;league=ipl" class="hover:text-primary transition-colors">Points Table</a>
+          <a href="teams.html?sport=cricket&amp;league=ipl" class="hover:text-primary transition-colors">Teams</a>
+          <a href="players.html?sport=cricket&amp;league=ipl" class="hover:text-primary transition-colors">Players</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<div id="search-modal" class="fixed inset-0 z-[200] hidden">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeSearchModal()"></div>
+  <div class="relative max-w-2xl mx-auto mt-24 px-6">
+    <div class="bg-surface-container border border-white/10 rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center gap-4 mb-6">
+        <span class="material-symbols-outlined text-primary text-2xl">search</span>
+        <input id="search-input" type="text" placeholder="Search matches, teams, leagues..." class="flex-1 bg-transparent text-xl font-bold outline-none placeholder:text-on-surface/30 text-on-surface"/>
+        <button onclick="closeSearchModal()" class="material-symbols-outlined text-on-surface/40 hover:text-primary transition-all">close</button>
+      </div>
+      <div id="search-results" class="max-h-96 overflow-y-auto space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/script.js?v=1.0.15"></script>
+<script src="js/ipl-hub.js?v=1.0.15"></script>
+</body>
+</html>

@@ -363,7 +363,7 @@
 </div>
 </footer>
 
-<script src="js/script.js?v=1.0.13"></script>
+<script src="js/script.js?v=1.0.15"></script>
 <script>
 const sportStoreSubscriptions = {
     standings: null,
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hockey: [{ league: 'nhl', label: 'NHL' }],
         baseball: [{ league: 'mlb', label: 'MLB' }],
         cricket: [
-            { league: 'ipl', label: 'IPL' },
+            { league: 'ipl', label: 'IPL 2026' },
             { league: '8039', label: 'ICC World Cup' }
         ],
         tennis: [
@@ -480,7 +480,7 @@ function renderSportLeagueTabs(sport, activeLeague) {
 
     container.innerHTML = options.map((option) => `
         <a
-            href="sport.html?s=${encodeURIComponent(sport)}&l=${encodeURIComponent(option.league)}"
+            href="${typeof buildSportHubUrl === 'function' ? buildSportHubUrl(sport, option.league) : `sport.html?s=${encodeURIComponent(sport)}&l=${encodeURIComponent(option.league)}`}"
             class="flex-none px-5 py-3 rounded-full border text-[10px] font-black uppercase tracking-[0.25em] transition-all ${option.league === activeLeague ? 'border-primary bg-primary text-white' : 'border-white/10 bg-white/5 text-on-surface/55 hover:border-primary/40 hover:text-white'}"
         >
             ${option.label}
@@ -708,4 +708,3 @@ function fetchSportPlayers(sport, league) {
 </script>
 </body>
 </html>
-

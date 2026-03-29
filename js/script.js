@@ -789,6 +789,9 @@ function buildSportHubUrl(sport = '', league = '') {
   const params = new URLSearchParams();
   const normalizedSport = normalizeSportSlug(sport, league);
   const normalizedLeague = normalizeLeagueSlug(league);
+  if (normalizedSport === 'cricket' && normalizedLeague === 'ipl') {
+    return '/ipl.html';
+  }
   if (normalizedSport) params.set('s', normalizedSport);
   if (normalizedLeague) params.set('l', normalizedLeague);
   return `/sport.html?${params.toString()}`;
@@ -882,6 +885,7 @@ function getCurrentFeedParams(overrides = {}) {
 function getCachedMatches() {
   return [
     ...(window._cachedUpcomingMatches || []),
+    ...(window._cachedResults || []),
     ...(window._cachedMatches || []),
     ...(window._cachedLiveMatches || [])
   ];
@@ -1028,10 +1032,13 @@ async function resolveMatchDetailFromFeeds(id, sport = 'all', league = '') {
     candidates.push({ path, params });
   };
 
+  pushCandidate(API_RESULTS, { sport, league, days: 7 });
+  pushCandidate(API_RESULTS, { sport, days: 7 });
   pushCandidate(API_LIVE, { sport, league });
   pushCandidate(API_LIVE, { sport });
   pushCandidate(API_UPCOMING, { sport, league, days: 7 });
   pushCandidate(API_UPCOMING, { sport, days: 7 });
+  pushCandidate(API_RESULTS, { sport: 'all', days: 7 });
   pushCandidate(API_LIVE, { sport: 'all' });
   pushCandidate(API_UPCOMING, { sport: 'all', days: 7 });
 
@@ -1074,7 +1081,8 @@ async function fetchMatchPayload(id, sport = 'soccer', league = 'eng.1') {
     response = null;
   }
 
-  const fallback = await resolveMatchDetailFromFeeds(id, sport, league);
+  const fallback = await resolveMatchDetailFromFeeds(id, sport, league)
+    || await resolveMatchDetailFromFeeds(id, 'all', '');
   if (fallback && apiData) {
     return {
       data: mergeMatchDetailPayload(apiData, fallback),
@@ -3065,7 +3073,7 @@ async function fetchLeagues() {
       { name: 'NBA', slug: 'nba', country: 'USA', sport: 'basketball', icon: 'sports_basketball', category: 'top' },
       { name: 'NFL', slug: 'nfl', country: 'USA', sport: 'american-football', icon: 'sports_football', category: 'top' },
       { name: 'LALIGA', slug: 'esp.1', country: 'Spain', sport: 'soccer', icon: 'sports_soccer', category: 'top' },
-      { name: 'ICC Cricket', slug: 'icc-world-cup', country: 'Global', sport: 'cricket', icon: 'sports_cricket', category: 'top' },
+      { name: 'IPL 2026', slug: 'ipl', country: 'India', sport: 'cricket', icon: 'sports_cricket', category: 'top' },
       { name: 'NHL', slug: 'nhl', country: 'USA/Canada', sport: 'hockey', icon: 'sports_hockey', category: 'top' },
       { name: 'Serie A', slug: 'ita.1', country: 'Italy', sport: 'soccer', icon: 'sports_soccer', category: 'euro' },
       { name: 'Bundesliga', slug: 'ger.1', country: 'Germany', sport: 'soccer', icon: 'sports_soccer', category: 'euro' },
@@ -4549,6 +4557,29 @@ function initBlogArticlePage() {
 function setMatchUnavailableState(primary = 'Match unavailable', secondary = 'Please try again shortly') {
   if (homeTeamName) homeTeamName.textContent = primary;
   if (awayTeamName) awayTeamName.textContent = secondary;
+  if (homeTeamLogo) homeTeamLogo.src = FALLBACK_LOGO;
+  if (awayTeamLogo) awayTeamLogo.src = FALLBACK_LOGO;
+  if (homeScore) homeScore.textContent = '0';
+  if (awayScore) awayScore.textContent = '0';
+  if (matchClock) matchClock.textContent = '00:00';
+
+  const upcomingTime = document.getElementById('match-time');
+  const upcomingDate = document.getElementById('match-date');
+  const stadiumName = document.getElementById('stadium-name');
+  const leagueName = document.getElementById('league-name');
+  const h2hContainer = document.getElementById('h2h-container');
+
+  if (upcomingTime) upcomingTime.textContent = '--:--';
+  if (upcomingDate) upcomingDate.textContent = 'Unavailable';
+  if (stadiumName) stadiumName.textContent = 'Details unavailable';
+  if (leagueName) leagueName.textContent = 'Match centre unavailable';
+  if (h2hContainer) {
+    h2hContainer.innerHTML = `
+      <div class="py-8 text-center opacity-30 text-[10px] uppercase font-black tracking-widest">
+        Match details are not available right now
+      </div>
+    `;
+  }
 }
 
 // --- FETCH & UPDATE MATCH DETAIL ---
@@ -5034,6 +5065,11 @@ async function fetchUpcomingMatchDetail(id, sport = 'soccer', league = 'eng.1') 
     }
 
     console.log('Upcoming match data received:', data, 'source:', result.source);
+    updateFeedRibbon(data.meta || {}, {
+      feedLabel: 'Upcoming match centre',
+      matchCount: 1,
+      liveCount: 0
+    });
     renderUpcomingMatchDetail(data);
   } catch (err) {
     console.error('Failed to fetch upcoming match detail:', err);
@@ -5067,16 +5103,18 @@ function renderUpcomingMatchDetail(data) {
   const sName = document.getElementById('stadium-name');
   const lName = document.getElementById('league-name');
   const h2hContainer = document.getElementById('h2h-container');
+  const leagueInfo = document.getElementById('match-league-info');
   const { timeLabel, dateLabel } = formatUpcomingDatePresentation(data);
 
   if (hName) hName.textContent = data.homeTeam.name || 'TBD';
   if (aName) aName.textContent = data.awayTeam.name || 'TBD';
-  if (hLogo) hLogo.src = data.homeTeam.logo || 'https://raw.githubusercontent.com/ashisbaidya/Livescore-free/main/logo.png';
-  if (aLogo) aLogo.src = data.awayTeam.logo || 'https://raw.githubusercontent.com/ashisbaidya/Livescore-free/main/logo.png';
+  if (hLogo) hLogo.src = data.homeTeam.logo || FALLBACK_LOGO;
+  if (aLogo) aLogo.src = data.awayTeam.logo || FALLBACK_LOGO;
   if (mTime) mTime.textContent = timeLabel;
   if (mDate) mDate.textContent = dateLabel;
   if (sName) sName.textContent = data.venue || (data.league ? `${data.league} Arena` : 'TBD Stadium');
   if (lName) lName.textContent = data.league || 'Upcoming Event';
+  if (leagueInfo) leagueInfo.textContent = data.league || 'Scheduled Match';
 
   if (h2hContainer && Array.isArray(data.h2h) && data.h2h.length) {
     h2hContainer.innerHTML = data.h2h.map(match => `

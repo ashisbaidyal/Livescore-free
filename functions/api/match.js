@@ -288,10 +288,13 @@ async function findFeedFallback(request, id, sport, league) {
     candidates.push({ key, path, params });
   };
 
+  pushCandidate("/api/results", { sport: normalizedSport, league: normalizedLeague, days: 7 });
+  pushCandidate("/api/results", { sport: normalizedSport, days: 7 });
   pushCandidate("/api/live", { sport: normalizedSport, league: normalizedLeague });
   pushCandidate("/api/live", { sport: normalizedSport });
   pushCandidate("/api/upcoming", { sport: normalizedSport, league: normalizedLeague, days: 7 });
   pushCandidate("/api/upcoming", { sport: normalizedSport, days: 7 });
+  pushCandidate("/api/results", { sport: "all", days: 7 });
   pushCandidate("/api/live", { sport: "all" });
   pushCandidate("/api/upcoming", { sport: "all", days: 7 });
 
