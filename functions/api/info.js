@@ -4,6 +4,13 @@ import {
   coreApiUrl,
   dedupeById,
   fetchJson,
+  fetchLeagueScoreboard,
+  fetchLeagueStandings,
+  fetchText,
+  getIplScoreboardUrl,
+  getIplSquadArticleUrl,
+  getIplStandingsUrl,
+  isIplLeague,
   jsonResponse,
   normalizeArticle,
   normalizeAthlete,
@@ -48,6 +55,356 @@ function toTimestamp(value = "") {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+const IPL_ROLE_LABELS = {
+  batters: "Batter",
+  wicketkeepers: "Wicketkeeper",
+  allrounders: "All-rounder",
+  spinners: "Spinner",
+  "fast bowlers": "Fast bowler"
+};
+
+function normalizeIplKey(value = "") {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/&amp;/g, "and")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function decodeHtmlEntities(value = "") {
+  return String(value || "")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&rsquo;/gi, "'")
+    .replace(/&lsquo;/gi, "'")
+    .replace(/&ndash;/gi, "-")
+    .replace(/&mdash;/gi, "-")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+}
+
+function stripHtml(value = "") {
+  return decodeHtmlEntities(String(value || "").replace(/<[^>]+>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function slugify(value = "") {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function deriveShortName(fullName = "") {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return parts.join(" ");
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
+function getIplRoleMeta(category = "") {
+  const normalized = String(category || "").trim().toLowerCase();
+  const displayName = IPL_ROLE_LABELS[normalized] || "Squad";
+  const abbreviation = displayName
+    .split(/[\s-]+/)
+    .map((chunk) => chunk[0] || "")
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+
+  return {
+    name: displayName,
+    displayName,
+    abbreviation
+  };
+}
+
+function extractIplPlayerNames(playersHtml = "") {
+  const plain = stripHtml(playersHtml)
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\.+$/g, "");
+
+  return plain
+    .split(",")
+    .map((name) => name.replace(/\s+/g, " ").trim().replace(/\.$/, ""))
+    .filter(Boolean);
+}
+
+function buildIplPlayer(team, fullName, category = "", order = 0) {
+  const cleanedName = String(fullName || "").replace(/\s+/g, " ").trim().replace(/\.$/, "");
+  const parts = cleanedName.split(/\s+/);
+  const role = getIplRoleMeta(category);
+
+  return {
+    id: `ipl-${team.id}-${slugify(cleanedName)}`,
+    firstName: parts[0] || cleanedName,
+    lastName: parts.slice(1).join(" "),
+    fullName: cleanedName,
+    shortName: deriveShortName(cleanedName),
+    age: "",
+    displayHeight: "",
+    displayWeight: "",
+    jersey: "",
+    active: true,
+    order,
+    position: role,
+    experience: {},
+    citizenship: "",
+    birthPlace: {},
+    status: { name: "Active" },
+    headshot: { href: team.logo || "" },
+    team: {
+      id: team.id,
+      name: team.name,
+      abbreviation: team.abbreviation,
+      logo: team.logo
+    },
+    sport: "cricket",
+    league: "ipl"
+  };
+}
+
+function aliasIplStandingEntry(entry = {}) {
+  const stats = Array.isArray(entry.stats) ? [...entry.stats] : [];
+  const existingNames = new Set(stats.map((stat) => String(stat?.name || "").toLowerCase()));
+  const aliases = [
+    ["matchesPlayed", ["gamesplayed", "games_played"]],
+    ["matchesWon", ["wins", "winsoverall"]],
+    ["matchesLost", ["losses", "loss"]],
+    ["matchPoints", ["points"]],
+    ["netrr", ["netrunrate", "nrr"]]
+  ];
+
+  aliases.forEach(([sourceName, aliasNames]) => {
+    const source = stats.find((stat) => String(stat?.name || "").toLowerCase() === sourceName.toLowerCase());
+    if (!source) return;
+    aliasNames.forEach((alias) => {
+      if (existingNames.has(alias)) return;
+      stats.push({
+        ...source,
+        name: alias
+      });
+      existingNames.add(alias);
+    });
+  });
+
+  return {
+    ...entry,
+    stats
+  };
+}
+
+function findIplStat(entry = {}, names = []) {
+  const stats = Array.isArray(entry.stats) ? entry.stats : [];
+  return (
+    stats.find((stat) => names.includes(String(stat?.name || "").toLowerCase())) || null
+  );
+}
+
+function formatIplRecord(entry = {}) {
+  const played = findIplStat(entry, ["matchesplayed", "gamesplayed", "games_played"])?.displayValue || "0";
+  const won = findIplStat(entry, ["matcheswon", "wins", "winsoverall"])?.displayValue || "0";
+  const lost = findIplStat(entry, ["matcheslost", "losses", "loss"])?.displayValue || "0";
+  const points = findIplStat(entry, ["matchpoints", "points"])?.displayValue || "0";
+  return `${played} Mat | ${won}W-${lost}L | ${points} Pts`;
+}
+
+async function getIplScoreboardData() {
+  return fetchJson(getIplScoreboardUrl());
+}
+
+async function getIplStandingsData() {
+  return fetchJson(getIplStandingsUrl());
+}
+
+async function getIplTeamsDirectory() {
+  const [scoreboard, standingsData] = await Promise.all([
+    getIplScoreboardData(),
+    getIplStandingsData().catch(() => ({ children: [], standings: [] }))
+  ]);
+
+  const standingsEntries = normalizeStandingsEntries(standingsData).map(aliasIplStandingEntry);
+  const standingsByTeamId = new Map(
+    standingsEntries
+      .filter((entry) => entry?.team?.id)
+      .map((entry) => [String(entry.team.id), entry])
+  );
+
+  const matches = (scoreboard.events || []).map((event) =>
+    normalizeScoreboardEvent(event, "cricket", "ipl", scoreboard.leagues?.[0]?.name || "Indian Premier League")
+  );
+
+  const teams = dedupeById((scoreboard.teams || []).map((team) => normalizeTeamEntry(team, "cricket", "ipl"))).map((team) => {
+    const standing = standingsByTeamId.get(String(team.id));
+    const teamSchedule = matches
+      .filter((match) => String(match.homeTeam?.id) === String(team.id) || String(match.awayTeam?.id) === String(team.id))
+      .sort((left, right) => new Date(left.date) - new Date(right.date));
+    const venue = teamSchedule.find((match) => match.status === "upcoming")?.venue || teamSchedule[0]?.venue || team.venue || "";
+
+    return {
+      ...team,
+      venue,
+      record: standing ? formatIplRecord(standing) : team.record || "IPL 2026 squad",
+      sport: "cricket",
+      league: "ipl"
+    };
+  });
+
+  return {
+    scoreboard,
+    matches,
+    teams,
+    standingsEntries
+  };
+}
+
+async function getIplRosterDirectory() {
+  const { teams } = await getIplTeamsDirectory();
+  const teamByKey = new Map(teams.map((team) => [normalizeIplKey(team.name), team]));
+  const rostersByTeamId = new Map();
+  const athletes = [];
+  const seenAthletes = new Set();
+
+  let html = "";
+  try {
+    html = await fetchText(getIplSquadArticleUrl());
+  } catch (error) {
+    return {
+      teams,
+      athletes,
+      rostersByTeamId
+    };
+  }
+
+  const headings = Array.from(html.matchAll(/<h2>([\s\S]*?)<\/h2>/gi));
+  headings.forEach((headingMatch, index) => {
+    const teamName = stripHtml(headingMatch[1]);
+    const team = teamByKey.get(normalizeIplKey(teamName));
+    if (!team) return;
+
+    const sectionStart = (headingMatch.index || 0) + headingMatch[0].length;
+    const sectionEnd = headings[index + 1]?.index || html.length;
+    const sectionHtml = html.slice(sectionStart, sectionEnd);
+    const rosterMatch = sectionHtml.match(/<p><b>Full(?:\s+[^<]+)?\s+squad<\/b><\/p>\s*<ul>([\s\S]*?)<\/ul>/i);
+    const rosterHtml = rosterMatch?.[1] || "";
+    const categoryMatches = Array.from(rosterHtml.matchAll(/<li>\s*<p><b>([^<]+)<\/b>:\s*([\s\S]*?)<\/li>/gi));
+
+    const roster = [];
+    let order = 0;
+    categoryMatches.forEach((categoryMatch) => {
+      const category = stripHtml(categoryMatch[1]);
+      const playerNames = extractIplPlayerNames(categoryMatch[2]);
+      playerNames.forEach((playerName) => {
+        order += 1;
+        const athlete = buildIplPlayer(team, playerName, category, order);
+        roster.push(athlete);
+        if (!seenAthletes.has(athlete.id)) {
+          seenAthletes.add(athlete.id);
+          athletes.push(athlete);
+        }
+      });
+    });
+
+    rostersByTeamId.set(String(team.id), roster);
+  });
+
+  return {
+    teams,
+    athletes,
+    rostersByTeamId
+  };
+}
+
+async function getNormalizedIplStandings() {
+  const data = await getIplStandingsData();
+  const entries = normalizeStandingsEntries(data).map(aliasIplStandingEntry);
+  return {
+    standings: data.standings,
+    children: data.children,
+    entries
+  };
+}
+
+async function getNormalizedIplTeams() {
+  const { teams } = await getIplTeamsDirectory();
+  return {
+    teams,
+    rawTeams: []
+  };
+}
+
+async function getNormalizedIplPlayers(limit = 16) {
+  const { athletes } = await getIplRosterDirectory();
+  return {
+    athletes: athletes.slice(0, limit)
+  };
+}
+
+async function getNormalizedIplTeamProfile(id = "", name = "") {
+  const [{ teams, matches }, { rostersByTeamId }] = await Promise.all([
+    getIplTeamsDirectory(),
+    getIplRosterDirectory()
+  ]);
+
+  const normalizedName = normalizeIplKey(name);
+  const team = teams.find((entry) => String(entry.id) === String(id)) || teams.find((entry) => normalizeIplKey(entry.name) === normalizedName);
+  if (!team) {
+    return {
+      team: null,
+      roster: [],
+      injuries: [],
+      schedule: []
+    };
+  }
+
+  const schedule = matches
+    .filter((match) => String(match.homeTeam?.id) === String(team.id) || String(match.awayTeam?.id) === String(team.id))
+    .sort((left, right) => new Date(left.date) - new Date(right.date));
+
+  return {
+    team,
+    roster: rostersByTeamId.get(String(team.id)) || [],
+    injuries: [],
+    schedule
+  };
+}
+
+async function getNormalizedIplAthleteProfile(athleteId = "") {
+  const { athletes } = await getIplRosterDirectory();
+  const athlete = athletes.find((entry) => String(entry.id) === String(athleteId));
+  if (!athlete) {
+    return {
+      athlete: null,
+      bio: null,
+      news: []
+    };
+  }
+
+  const bio = {
+    summary: `${athlete.fullName} is part of the ${athlete.team?.name || "IPL"} squad for the 2026 Indian Premier League season.`,
+    sections: [
+      {
+        title: "Squad Snapshot",
+        stats: [
+          { name: "Team", value: athlete.team?.abbreviation || athlete.team?.name || "IPL" },
+          { name: "Role", value: athlete.position?.displayName || "Squad" },
+          { name: "Season", value: "IPL 2026" }
+        ]
+      }
+    ]
+  };
+
+  return {
+    athlete,
+    bio,
+    news: []
+  };
+}
+
 async function getNormalizedNews(sport, league, teamId = "") {
   const leaguePairs = getLeaguePairs(sport, league, sport === "all" ? 12 : 4);
   const responses = await Promise.all(
@@ -77,8 +434,12 @@ async function getNormalizedNews(sport, league, teamId = "") {
 }
 
 async function getNormalizedStandings(sport, league) {
+  if (isIplLeague(sport, league)) {
+    return getNormalizedIplStandings();
+  }
+
   try {
-    const data = await fetchJson(siteApiUrl(sport, league, "standings"));
+    const data = await fetchLeagueStandings(sport, league);
     return {
       standings: data.standings,
       children: data.children,
@@ -90,6 +451,10 @@ async function getNormalizedStandings(sport, league) {
 }
 
 async function getNormalizedTeams(sport, league) {
+  if (isIplLeague(sport, league)) {
+    return getNormalizedIplTeams();
+  }
+
   const leaguePairs = getLeaguePairs(sport, league, sport === "all" ? 8 : 2);
   const responses = await Promise.all(
     leaguePairs.map(async ({ sport: pairSport, league: pairLeague }) => {
@@ -110,6 +475,10 @@ async function getNormalizedTeams(sport, league) {
 }
 
 async function getNormalizedPlayers(sport, league, limit = 16) {
+  if (isIplLeague(sport, league)) {
+    return getNormalizedIplPlayers(limit);
+  }
+
   try {
     const athletesList = await fetchJson(coreApiUrl(sport, league, "athletes", { limit, active: "true" }));
     const refs = (athletesList.items || athletesList.entries || athletesList.athletes || [])
@@ -164,6 +533,10 @@ async function resolveTeamId(sport, league, id, name) {
 }
 
 async function getNormalizedTeamProfile(sport, league, id = "", name = "") {
+  if (isIplLeague(sport, league)) {
+    return getNormalizedIplTeamProfile(id, name);
+  }
+
   const teamId = await resolveTeamId(sport, league, id, name);
   if (!teamId) {
     return {
@@ -212,6 +585,10 @@ async function getNormalizedTeamProfile(sport, league, id = "", name = "") {
 }
 
 async function getNormalizedAthleteProfile(sport, league, athleteId) {
+  if (isIplLeague(sport, league)) {
+    return getNormalizedIplAthleteProfile(athleteId);
+  }
+
   if (!athleteId) {
     return { athlete: null, bio: null, news: [] };
   }
@@ -243,11 +620,28 @@ async function getNormalizedAthleteProfile(sport, league, athleteId) {
 }
 
 async function getNormalizedScores(sport, league, date = "") {
+  if (isIplLeague(sport, league)) {
+    const data = await getIplScoreboardData();
+    const leagueName = data.leagues?.[0]?.name || "Indian Premier League";
+    const matches = (data.events || []).map((event) => normalizeScoreboardEvent(event, "cricket", "ipl", leagueName));
+    const filteredMatches = date
+      ? matches.filter((match) => {
+          const parsed = new Date(match.date);
+          const matchDate = `${parsed.getFullYear()}${String(parsed.getMonth() + 1).padStart(2, "0")}${String(parsed.getDate()).padStart(2, "0")}`;
+          return matchDate === date;
+        })
+      : matches;
+
+    return {
+      matches: dedupeById(filteredMatches).sort((left, right) => new Date(left.date) - new Date(right.date))
+    };
+  }
+
   const leaguePairs = getLeaguePairs(sport, league, sport === "all" ? 10 : 4);
   const responses = await Promise.all(
     leaguePairs.map(async ({ sport: pairSport, league: pairLeague }) => {
       try {
-        const data = await fetchJson(siteApiUrl(pairSport, pairLeague, "scoreboard", date ? { dates: date } : {}));
+        const data = await fetchLeagueScoreboard(pairSport, pairLeague, date ? { dates: date } : {});
         const leagueName = data.leagues?.[0]?.name || pairLeague.toUpperCase();
         return (data.events || []).map((event) => normalizeScoreboardEvent(event, pairSport, pairLeague, leagueName));
       } catch (error) {

@@ -3,7 +3,7 @@ import {
   SPORT_LEAGUES,
   calculateTTL,
   dedupeById,
-  fetchJson,
+  fetchLeagueScoreboard,
   getTargetSports,
   jsonResponse,
   normalizeLeagueParam,
@@ -75,7 +75,7 @@ export async function onRequest(context) {
     const results = await Promise.all(
       endpoints.map(async ({ sport, league }) => {
         try {
-          const data = await fetchJson(siteApiUrl(sport, league, "scoreboard", { limit: 50 }));
+          const data = await fetchLeagueScoreboard(sport, league, { limit: 50 });
           const leagueName = data.leagues?.[0]?.name || league.toUpperCase();
           return (data.events || []).map((event) => normalizeScoreboardEvent(event, sport, league, leagueName));
         } catch (error) {

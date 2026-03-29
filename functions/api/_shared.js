@@ -1,12 +1,16 @@
 export const FALLBACK_LOGO = "/icons/icon-192.png";
 export const FALLBACK_HERO = "/icons/hero-fallback.svg";
+export const IPL_SERIES_ID = "8048";
+export const IPL_SEASON = "2026";
+export const IPL_SQUAD_ARTICLE_URL = "https://www.espn.in/cricket/story/_/id/47324999/ipl-2026-how-csk-dc-gt-kkr-lsg-mi-pbks-rcb-rr-srh-stack-auction";
 
 // Centralized Backend Configuration
 export const BACKEND_CONFIG = {
   sources: {
     espn_site: "https://site.api.espn.com/apis/site/v2",
     espn_core: "https://sports.core.api.espn.com/v2",
-    espn_web: "https://site.web.api.espn.com/apis/site/v2"
+    espn_web: "https://site.web.api.espn.com/apis/site/v2",
+    espn_web_v2: "https://site.web.api.espn.com/apis/v2"
   },
   defaults: {
     sport: "soccer",
@@ -17,6 +21,7 @@ export const BACKEND_CONFIG = {
 // Global cache for in-flight requests within the same isolate
 // Helps prevent 'thundering herd' when multiple requests hit the same worker instance
 const IN_FLIGHT_REQUESTS = new Map();
+const IN_FLIGHT_TEXT_REQUESTS = new Map();
 
 export const SPORT_LEAGUES = {
   soccer: [
@@ -164,6 +169,55 @@ export function coreApiUrl(sport, league, resource, query = {}) {
   return url.toString();
 }
 
+export function siteWebApiUrl(path, query = {}, version = "site") {
+  const base = version === "v2" ? BACKEND_CONFIG.sources.espn_web_v2 : BACKEND_CONFIG.sources.espn_web;
+  const safePath = String(path || "").replace(/^\/+/, "");
+  const url = new URL(`${base}/${safePath}`);
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, value);
+    }
+  });
+  return url.toString();
+}
+
+export function isIplLeague(sport = "", league = "") {
+  const normalizedSport = normalizeSportParam(sport, league);
+  const normalizedLeague = String(league || "").trim().toLowerCase();
+  return normalizedSport === "cricket" && normalizedLeague === "ipl";
+}
+
+export function getIplScoreboardUrl(query = {}) {
+  const { dates, ...safeQuery } = query || {};
+  return siteWebApiUrl(`sports/cricket/${IPL_SERIES_ID}/scoreboard`, {
+    contentorigin: "espn",
+    lang: "en",
+    limit: 300,
+    region: "us",
+    season: IPL_SEASON,
+    section: "cricinfo",
+    sort: "events:asc",
+    tz: "America/New_York",
+    ...safeQuery
+  });
+}
+
+export function getIplStandingsUrl(query = {}) {
+  return siteWebApiUrl(`sports/cricket/${IPL_SERIES_ID}/standings`, {
+    lang: "en",
+    region: "us",
+    season: IPL_SEASON,
+    seasontype: 1,
+    sort: "rank:asc",
+    type: 0,
+    ...query
+  }, "v2");
+}
+
+export function getIplSquadArticleUrl() {
+  return IPL_SQUAD_ARTICLE_URL;
+}
+
 export async function fetchJson(url, init = {}) {
   // Deduplicate in-flight requests for the same URL in the same isolate
   if (IN_FLIGHT_REQUESTS.has(url)) {
@@ -194,6 +248,50 @@ export async function fetchJson(url, init = {}) {
 
   IN_FLIGHT_REQUESTS.set(url, promise);
   return promise;
+}
+
+export async function fetchText(url, init = {}) {
+  if (IN_FLIGHT_TEXT_REQUESTS.has(url)) {
+    return IN_FLIGHT_TEXT_REQUESTS.get(url);
+  }
+
+  const promise = (async () => {
+    try {
+      const response = await fetch(url, {
+        ...init,
+        headers: {
+          ...init.headers,
+          Accept: "text/html, text/plain;q=0.9, */*;q=0.8",
+          "User-Agent": "LivescoreFree-Bot/2.0"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status} for ${url}`);
+      }
+
+      return await response.text();
+    } finally {
+      IN_FLIGHT_TEXT_REQUESTS.delete(url);
+    }
+  })();
+
+  IN_FLIGHT_TEXT_REQUESTS.set(url, promise);
+  return promise;
+}
+
+export async function fetchLeagueScoreboard(sport, league, query = {}) {
+  if (isIplLeague(sport, league)) {
+    return fetchJson(getIplScoreboardUrl(query));
+  }
+  return fetchJson(siteApiUrl(sport, league, "scoreboard", query));
+}
+
+export async function fetchLeagueStandings(sport, league, query = {}) {
+  if (isIplLeague(sport, league)) {
+    return fetchJson(getIplStandingsUrl(query));
+  }
+  return fetchJson(siteApiUrl(sport, league, "standings", query));
 }
 
 export function jsonResponse(payload, cacheSeconds = 30, status = 200, reason = "") {

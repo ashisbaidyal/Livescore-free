@@ -3,8 +3,9 @@ import {
   SPORT_LEAGUES,
   calculateTTL,
   dedupeById,
-  fetchJson,
+  fetchLeagueScoreboard,
   getTargetSports,
+  isIplLeague,
   jsonResponse,
   normalizeLeagueParam,
   normalizeScoreboardEvent,
@@ -33,6 +34,9 @@ function buildUpcomingEndpoints(sportParam, leagueParam, daysAhead) {
 
   if (normalizedLeague) {
     const sport = normalizeSportParam(sportParam, normalizedLeague);
+    if (isIplLeague(sport, normalizedLeague)) {
+      return [{ sport, league: normalizedLeague, date: "" }];
+    }
     return dates.map((date) => ({ sport, league: normalizedLeague, date }));
   }
 
@@ -41,14 +45,22 @@ function buildUpcomingEndpoints(sportParam, leagueParam, daysAhead) {
     return targetSports.flatMap((sport) =>
       (SPORT_LEAGUES[sport] || [])
         .slice(0, UPCOMING_SPORT_LIMITS[sport] || 1)
-        .flatMap((league) => dates.slice(0, Math.min(daysAhead + 1, sport === "soccer" ? 4 : 2)).map((date) => ({ sport, league, date })))
+        .flatMap((league) =>
+          isIplLeague(sport, league)
+            ? [{ sport, league, date: "" }]
+            : dates.slice(0, Math.min(daysAhead + 1, sport === "soccer" ? 4 : 2)).map((date) => ({ sport, league, date }))
+        )
     );
   }
 
   return targetSports.flatMap((sport) =>
     (SPORT_LEAGUES[sport] || [normalizeLeagueParam("", sport)])
       .slice(0, UPCOMING_SPORT_LIMITS[sport] || 3)
-      .flatMap((league) => dates.slice(0, Math.min(daysAhead + 1, 6)).map((date) => ({ sport, league, date })))
+      .flatMap((league) =>
+        isIplLeague(sport, league)
+          ? [{ sport, league, date: "" }]
+          : dates.slice(0, Math.min(daysAhead + 1, 6)).map((date) => ({ sport, league, date }))
+      )
   );
 }
 
@@ -65,7 +77,7 @@ export async function onRequest(context) {
     const results = await Promise.all(
       endpoints.map(async ({ sport, league, date }) => {
         try {
-          const data = await fetchJson(siteApiUrl(sport, league, "scoreboard", { dates: date, limit: 50 }));
+          const data = await fetchLeagueScoreboard(sport, league, { dates: date, limit: 50 });
           const leagueName = data.leagues?.[0]?.name || league.toUpperCase();
           return (data.events || [])
             .map((event) => normalizeScoreboardEvent(event, sport, league, leagueName))
