@@ -643,6 +643,87 @@ function normalizeFeedFallbackSummary(match = {}, h2h = []) {
   };
 }
 
+function hasUsefulSummaryText(value = "", blocked = []) {
+  const text = String(value || "").trim();
+  if (!text) return false;
+  return !blocked.some((entry) => text.toLowerCase() === String(entry || "").trim().toLowerCase());
+}
+
+function isGenericTeam(team = {}) {
+  const name = String(team.name || team.fullName || "").trim().toLowerCase();
+  const abbreviation = String(team.abbreviation || "").trim().toLowerCase();
+  return !name || ["home team", "away team", "home", "away", "tbd"].includes(name)
+    || ["hom", "awa", "tbd"].includes(abbreviation);
+}
+
+function needsSummaryHydration(summary = {}) {
+  if (!summary?.homeTeam || !summary?.awayTeam) return true;
+  if (isGenericTeam(summary.homeTeam) || isGenericTeam(summary.awayTeam)) return true;
+  if (!hasUsefulSummaryText(summary.league, ["sports event", "upcoming event"])) return true;
+  if (!hasUsefulSummaryText(summary.date, ["scheduled event"])) return true;
+  if (summary.status === "upcoming" && !hasUsefulSummaryText(summary.venue, ["tbd", "tbd stadium"])) return true;
+
+  const hasStats = Array.isArray(summary.stats) && summary.stats.length > 0;
+  const hasTimeline = Array.isArray(summary.timeline) && summary.timeline.length > 0;
+  const hasLineups = (Array.isArray(summary.homeTeam?.lineup) && summary.homeTeam.lineup.length > 0)
+    || (Array.isArray(summary.awayTeam?.lineup) && summary.awayTeam.lineup.length > 0);
+
+  if ((summary.status === "live" || summary.status === "finished") && (!hasStats || !hasTimeline || !hasLineups)) return true;
+  if (summary.status === "upcoming" && (!Array.isArray(summary.h2h) || !summary.h2h.length)) return true;
+  return false;
+}
+
+function pickSummaryText(primary, fallback, blocked = []) {
+  if (hasUsefulSummaryText(primary, blocked)) return String(primary).trim();
+  if (hasUsefulSummaryText(fallback, blocked)) return String(fallback).trim();
+  return String(primary || fallback || "").trim();
+}
+
+function mergeSummaryPayload(primary = {}, fallback = {}) {
+  const primaryHome = primary.homeTeam || {};
+  const primaryAway = primary.awayTeam || {};
+  const fallbackHome = fallback.homeTeam || {};
+  const fallbackAway = fallback.awayTeam || {};
+
+  return {
+    ...fallback,
+    ...primary,
+    sport: primary.sport || fallback.sport || "soccer",
+    leagueSlug: primary.leagueSlug || fallback.leagueSlug || "eng.1",
+    league: pickSummaryText(primary.league, fallback.league, ["sports event", "upcoming event"]),
+    status: primary.status || fallback.status || "upcoming",
+    statusText: pickSummaryText(primary.statusText, fallback.statusText),
+    time: pickSummaryText(primary.time, fallback.time, ["00:00"]),
+    date: pickSummaryText(primary.date, fallback.date, ["scheduled event"]),
+    venue: pickSummaryText(primary.venue, fallback.venue, ["tbd", "tbd stadium"]),
+    broadcast: pickSummaryText(primary.broadcast, fallback.broadcast),
+    stats: Array.isArray(primary.stats) && primary.stats.length ? primary.stats : (fallback.stats || []),
+    timeline: Array.isArray(primary.timeline) && primary.timeline.length ? primary.timeline : (fallback.timeline || []),
+    commentary: Array.isArray(primary.commentary) && primary.commentary.length ? primary.commentary : (fallback.commentary || []),
+    odds: primary.odds || fallback.odds || null,
+    h2h: Array.isArray(primary.h2h) && primary.h2h.length ? primary.h2h : (fallback.h2h || []),
+    situation: primary.situation || fallback.situation || null,
+    homeTeam: {
+      ...fallbackHome,
+      ...primaryHome,
+      name: !isGenericTeam(primaryHome) ? (primaryHome.name || fallbackHome.name || "Home Team") : (fallbackHome.name || primaryHome.name || "Home Team"),
+      fullName: !isGenericTeam(primaryHome) ? (primaryHome.fullName || fallbackHome.fullName || primaryHome.name || fallbackHome.name || "Home Team") : (fallbackHome.fullName || primaryHome.fullName || fallbackHome.name || primaryHome.name || "Home Team"),
+      logo: primaryHome.logo || fallbackHome.logo || FALLBACK_LOGO,
+      score: primaryHome.score ?? fallbackHome.score ?? "0",
+      lineup: Array.isArray(primaryHome.lineup) && primaryHome.lineup.length ? primaryHome.lineup : (fallbackHome.lineup || [])
+    },
+    awayTeam: {
+      ...fallbackAway,
+      ...primaryAway,
+      name: !isGenericTeam(primaryAway) ? (primaryAway.name || fallbackAway.name || "Away Team") : (fallbackAway.name || primaryAway.name || "Away Team"),
+      fullName: !isGenericTeam(primaryAway) ? (primaryAway.fullName || fallbackAway.fullName || primaryAway.name || fallbackAway.name || "Away Team") : (fallbackAway.fullName || primaryAway.fullName || fallbackAway.name || primaryAway.name || "Away Team"),
+      logo: primaryAway.logo || fallbackAway.logo || FALLBACK_LOGO,
+      score: primaryAway.score ?? fallbackAway.score ?? "0",
+      lineup: Array.isArray(primaryAway.lineup) && primaryAway.lineup.length ? primaryAway.lineup : (fallbackAway.lineup || [])
+    }
+  };
+}
+
 function buildTeamKeySet(team = {}) {
   return new Set(
     [
@@ -818,7 +899,20 @@ export async function onRequest(context) {
       return jsonResponse({ ...fallback, meta: buildFeedMeta() }, 15);
     }
 
-    return jsonResponse({ ...normalizeSummary(summaryData, sport, league), meta: buildFeedMeta() }, 15);
+    const normalizedSummary = normalizeSummary(summaryData, sport, league);
+    if (needsSummaryHydration(normalizedSummary)) {
+      const feedFallback = await findFeedFallback(request, id, sport, league);
+      if (feedFallback) {
+        return jsonResponse({ ...mergeSummaryPayload(normalizedSummary, feedFallback), meta: buildFeedMeta({ fallback: "summary+feed" }) }, 15);
+      }
+
+      const scoreboardFallback = await findScoreboardFallback(id, sport, league);
+      if (scoreboardFallback) {
+        return jsonResponse({ ...mergeSummaryPayload(normalizedSummary, scoreboardFallback), meta: buildFeedMeta({ fallback: "summary+scoreboard" }) }, 15);
+      }
+    }
+
+    return jsonResponse({ ...normalizedSummary, meta: buildFeedMeta() }, 15);
   } catch (error) {
     return jsonResponse({ error: error.message, meta: buildFeedMeta({ degraded: true }) }, 15, 500);
   }

@@ -1048,6 +1048,22 @@ function buildSyntheticHeadToHead(match = {}) {
   }));
 }
 
+function formatHeroScoreMarkup(rawScore = '', sport = '') {
+  const scoreText = String(rawScore || '0').trim();
+  if (!scoreText) return '0';
+
+  if (sport === 'cricket' || scoreText.includes('(') || scoreText.length > 8) {
+    const [primary, remainder] = scoreText.split(/\s*\(/, 2);
+    const trailing = remainder ? `(${remainder}` : '';
+    return `
+      <span class="block leading-none">${primary || '0'}</span>
+      ${trailing ? `<span class="mt-2 block text-[0.28em] leading-tight tracking-normal text-on-surface/70">${trailing}</span>` : ''}
+    `;
+  }
+
+  return scoreText;
+}
+
 function normalizeMatchDetailFallback(match = {}) {
   return {
     id: match.id || '',
@@ -4873,12 +4889,13 @@ function applyMatchScoreboardState(data = {}) {
   scoreNodes.forEach((node) => {
     if (!node) return;
     const rawScore = String(node.dataset.rawScore || node.textContent || '0');
-    const compactScore = data.sport === 'cricket' || rawScore.length > 6;
-    node.textContent = compactScore ? rawScore.replace(' (', '\n(') : rawScore;
-    node.style.whiteSpace = compactScore ? 'pre-line' : '';
+    const compactScore = data.sport === 'cricket' || rawScore.includes('(') || rawScore.length > 6;
+    node.innerHTML = formatHeroScoreMarkup(rawScore, data.sport || '');
+    node.style.whiteSpace = compactScore ? 'normal' : '';
     node.style.textAlign = 'center';
-    node.style.lineHeight = compactScore ? '0.88' : '';
-    node.style.fontSize = compactScore ? 'clamp(2.4rem, 6vw, 5.5rem)' : '';
+    node.style.lineHeight = compactScore ? '0.92' : '1';
+    node.style.fontSize = compactScore ? 'clamp(2rem, 4.6vw, 4.5rem)' : 'clamp(3rem, 7vw, 6.75rem)';
+    node.style.maxWidth = compactScore ? '6.8ch' : '';
   });
 
   if (!badge || !badgeLabel) return;

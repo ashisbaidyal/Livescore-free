@@ -253,8 +253,8 @@
 <img alt="Cinematic wide shot of a full football stadium at night under bright lights" class="w-full h-full object-cover opacity-20 scale-105" src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=1600">
 <div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-surface/90"></div>
 </div>
-<div class="relative z-10 w-full max-w-6xl px-4 sm:px-6 md:px-8">
-<div class="flex flex-col md:grid md:grid-cols-12 md:gap-4 items-center">
+<div class="relative z-10 w-full max-w-7xl px-4 sm:px-6 md:px-8">
+<div class="flex flex-col md:grid md:grid-cols-12 md:gap-8 items-center">
 <!-- Status Badge -->
 <div class="flex items-center justify-center space-x-4 mb-8 md:mb-12 w-full md:col-span-12">
 <span id="match-status-badge" class="bg-[#CC1616] text-white px-4 py-1.5 rounded-sm text-xs font-black tracking-[0.2em] animate-pulse flex items-center shadow-[0_0_15px_rgba(204,22,22,0.5)]">
@@ -265,20 +265,20 @@
 <!-- Main Scoreboard Grid -->
 <div class="flex flex-col md:contents gap-4 md:gap-0 w-full md:col-span-12">
 <!-- Home Team -->
-<div class="flex flex-col items-center md:col-span-4 md:flex-col md:items-end md:text-right">
+<div class="flex flex-col items-center md:col-span-3 md:flex-col md:items-end md:text-right">
 <div class="relative mb-4 md:mb-6">
 <div class="absolute inset-0 bg-white/5 rounded-full blur-2xl"></div>
-<img id="home-team-logo" alt="Home Team Logo" class="relative w-16 sm:w-20 md:w-24 lg:w-40 h-16 sm:h-20 md:h-24 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
+<img id="home-team-logo" alt="Home Team Logo" class="relative w-16 sm:w-20 md:w-24 lg:w-32 h-16 sm:h-20 md:h-24 lg:h-32 object-contain drop-shadow-2xl" src="/public/logo.png">
 </div>
 <h1 id="home-team-name" class="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow text-center md:text-right">Loading...</h1>
 <div id="home-events" class="flex flex-col items-center md:items-end mt-2 space-y-1 opacity-70"></div>
 </div>
 <!-- Scoreboard Central -->
-<div class="flex flex-col items-center md:col-span-4 md:flex-col md:items-center">
-<div class="glass-panel p-4 sm:p-6 md:p-8 lg:p-12 rounded-xl border-white/5 shadow-2xl flex flex-col items-center min-w-[280px] sm:min-w-[320px]">
-<div class="flex items-baseline space-x-3 sm:space-x-6">
+<div class="flex flex-col items-center md:col-span-6 md:flex-col md:items-center w-full">
+<div class="glass-panel p-4 sm:p-6 md:p-8 lg:p-10 rounded-xl border-white/5 shadow-2xl flex flex-col items-center w-full max-w-[560px]">
+<div class="flex items-center justify-center gap-3 sm:gap-5 md:gap-6 w-full">
 <span id="home-score" class="text-5xl sm:text-6xl md:text-8xl lg:text-[140px] font-digital font-bold tracking-tighter text-on-surface digital-glow">0</span>
-<span class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-digital font-light text-white/10">:</span>
+<span class="shrink-0 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-digital font-light text-white/10">:</span>
 <span id="away-score" class="text-5xl sm:text-6xl md:text-8xl lg:text-[140px] font-digital font-bold tracking-tighter text-on-surface digital-glow">0</span>
 </div>
 <div class="mt-4 sm:mt-6 md:mt-8 flex flex-col items-center">
@@ -290,10 +290,10 @@
 </div>
 </div>
 <!-- Away Team -->
-<div class="flex flex-col items-center md:col-span-4 md:flex-col md:items-start md:text-left">
+<div class="flex flex-col items-center md:col-span-3 md:flex-col md:items-start md:text-left">
 <div class="relative mb-4 md:mb-6">
 <div class="absolute inset-0 bg-sky-500/10 rounded-full blur-2xl"></div>
-<img id="away-team-logo" alt="Away Team Logo" class="relative w-16 sm:w-20 md:w-24 lg:w-40 h-16 sm:h-20 md:h-24 lg:h-40 object-contain drop-shadow-2xl" src="/public/logo.png">
+<img id="away-team-logo" alt="Away Team Logo" class="relative w-16 sm:w-20 md:w-24 lg:w-32 h-16 sm:h-20 md:h-24 lg:h-32 object-contain drop-shadow-2xl" src="/public/logo.png">
 </div>
 <h2 id="away-team-name" class="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-black italic tracking-tighter uppercase scoreboard-glow text-center md:text-left">Loading...</h2>
 <div id="away-events" class="flex flex-col items-center md:items-start mt-2 space-y-1 opacity-70"></div>
@@ -470,6 +470,6 @@
 </div>
 </div>
 </div>
-<script src="js/script.js?v=1.0.16"></script>
+<script src="js/script.js?v=1.0.17"></script>
 </body>
 </html>
