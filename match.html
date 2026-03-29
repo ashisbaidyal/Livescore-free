@@ -257,8 +257,8 @@
 <div class="flex flex-col md:grid md:grid-cols-12 md:gap-4 items-center">
 <!-- Status Badge -->
 <div class="flex items-center justify-center space-x-4 mb-8 md:mb-12 w-full md:col-span-12">
-<span class="bg-[#CC1616] text-white px-4 py-1.5 rounded-sm text-xs font-black tracking-[0.2em] animate-pulse flex items-center shadow-[0_0_15px_rgba(204,22,22,0.5)]">
-<span class="w-1.5 h-1.5 rounded-full bg-white mr-2"></span> LIVE
+<span id="match-status-badge" class="bg-[#CC1616] text-white px-4 py-1.5 rounded-sm text-xs font-black tracking-[0.2em] animate-pulse flex items-center shadow-[0_0_15px_rgba(204,22,22,0.5)]">
+<span id="match-status-dot" class="w-1.5 h-1.5 rounded-full bg-white mr-2"></span><span id="match-status-label">LIVE</span>
                     </span>
 <span id="match-league-info" class="text-on-surface font-bold text-xs sm:text-sm uppercase tracking-widest opacity-80">Loading League Info...</span>
 </div>
@@ -470,8 +470,6 @@
 </div>
 </div>
 </div>
-<script src="js/script.js?v=1.0.15"></script>
+<script src="js/script.js?v=1.0.16"></script>
 </body>
 </html>
-
-

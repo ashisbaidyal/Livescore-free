@@ -913,6 +913,141 @@ function filterRenderableMatches(matches = []) {
   });
 }
 
+function buildTeamIdentitySet(team = {}) {
+  return new Set(
+    [
+      team.id,
+      team.abbreviation,
+      team.name,
+      team.fullName
+    ]
+      .map((value) => String(value || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+function isSameMatchup(match = {}, homeTeam = {}, awayTeam = {}) {
+  const homeKeys = buildTeamIdentitySet(homeTeam);
+  const awayKeys = buildTeamIdentitySet(awayTeam);
+  const matchHomeKeys = buildTeamIdentitySet(match.homeTeam || {});
+  const matchAwayKeys = buildTeamIdentitySet(match.awayTeam || {});
+  const intersects = (left, right) => [...left].some((value) => right.has(value));
+  return (intersects(homeKeys, matchHomeKeys) && intersects(awayKeys, matchAwayKeys))
+    || (intersects(homeKeys, matchAwayKeys) && intersects(awayKeys, matchHomeKeys));
+}
+
+function formatMatchDateLabel(value = '') {
+  const parsed = value ? new Date(value) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) return '';
+  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function buildSyntheticMatchLineup(team = {}) {
+  if (!team?.leader?.name && !team?.leader?.value) return [];
+  return [{
+    name: team.leader?.name || team.name || 'Key Player',
+    number: '',
+    position: 'Key Player',
+    starter: true,
+    face: team.logo || FALLBACK_LOGO
+  }];
+}
+
+function buildSyntheticMatchStats(match = {}) {
+  const stats = [];
+  if (match.homeTeam?.record || match.awayTeam?.record) {
+    stats.push({
+      label: 'Record',
+      home: match.homeTeam?.record || '—',
+      away: match.awayTeam?.record || '—'
+    });
+  }
+  if (match.homeTeam?.leader || match.awayTeam?.leader) {
+    stats.push({
+      label: 'Top Performer',
+      home: [match.homeTeam?.leader?.name, match.homeTeam?.leader?.value].filter(Boolean).join(' ') || '—',
+      away: [match.awayTeam?.leader?.name, match.awayTeam?.leader?.value].filter(Boolean).join(' ') || '—'
+    });
+  }
+  if (match.statusText || match.time) {
+    stats.push({
+      label: 'Match Status',
+      home: match.statusText || match.time || match.status || 'Update',
+      away: match.league || match.leagueSlug || 'League'
+    });
+  }
+  return stats.slice(0, 6);
+}
+
+function buildSyntheticMatchTimeline(match = {}) {
+  const items = [];
+  if (match.statusText || match.time) {
+    const text = match.statusText || match.time || `${match.status || 'scheduled'} update`;
+    items.push({
+      time: match.time || String(match.status || 'update').toUpperCase(),
+      type: match.status === 'finished' ? 'result' : 'event',
+      text,
+      player: text,
+      side: 'neutral'
+    });
+  }
+  if (match.date) {
+    const scheduled = new Date(match.date);
+    if (!Number.isNaN(scheduled.getTime())) {
+      const text = `Scheduled for ${scheduled.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+      items.push({
+        time: 'DATE',
+        type: 'event',
+        text,
+        player: text,
+        side: 'neutral'
+      });
+    }
+  }
+  if (match.venue) {
+    const text = `Venue: ${match.venue}`;
+    items.push({
+      time: 'VENUE',
+      type: 'event',
+      text,
+      player: text,
+      side: 'neutral'
+    });
+  }
+  [
+    { side: 'home', team: match.homeTeam || {} },
+    { side: 'away', team: match.awayTeam || {} }
+  ].forEach(({ side, team }) => {
+    if (!team?.leader?.name && !team?.leader?.value) return;
+    const text = [team.leader?.name, team.leader?.value].filter(Boolean).join(' ');
+    items.push({
+      time: 'STAR',
+      type: 'event',
+      text,
+      player: text,
+      side
+    });
+  });
+  return items.slice(0, 6);
+}
+
+function buildSyntheticHeadToHead(match = {}) {
+  const candidates = filterRenderableMatches(getCachedMatches())
+    .filter((entry) => entry.status === 'finished')
+    .filter((entry) => String(entry.id) !== String(match.id))
+    .filter((entry) => isSameMatchup(entry, match.homeTeam || {}, match.awayTeam || {}))
+    .sort((left, right) => new Date(right.date) - new Date(left.date))
+    .slice(0, 5);
+
+  return candidates.map((entry) => ({
+    date: formatMatchDateLabel(entry.date),
+    home: entry.homeTeam?.abbreviation || entry.homeTeam?.name || 'Home',
+    away: entry.awayTeam?.abbreviation || entry.awayTeam?.name || 'Away',
+    score: `${entry.homeTeam?.score || '0'} - ${entry.awayTeam?.score || '0'}`,
+    result: entry.statusText || 'Final'
+  }));
+}
+
 function normalizeMatchDetailFallback(match = {}) {
   return {
     id: match.id || '',
@@ -930,20 +1065,28 @@ function normalizeMatchDetailFallback(match = {}) {
       name: match.homeTeam?.name || 'Home Team',
       logo: match.homeTeam?.logo || FALLBACK_LOGO,
       score: match.homeTeam?.score || '0',
-      lineup: Array.isArray(match.homeTeam?.lineup) ? match.homeTeam.lineup : []
+      lineup: Array.isArray(match.homeTeam?.lineup) && match.homeTeam.lineup.length
+        ? match.homeTeam.lineup
+        : buildSyntheticMatchLineup(match.homeTeam || {})
     },
     awayTeam: {
       ...(match.awayTeam || {}),
       name: match.awayTeam?.name || 'Away Team',
       logo: match.awayTeam?.logo || FALLBACK_LOGO,
       score: match.awayTeam?.score || '0',
-      lineup: Array.isArray(match.awayTeam?.lineup) ? match.awayTeam.lineup : []
+      lineup: Array.isArray(match.awayTeam?.lineup) && match.awayTeam.lineup.length
+        ? match.awayTeam.lineup
+        : buildSyntheticMatchLineup(match.awayTeam || {})
     },
-    stats: [],
-    timeline: [],
-    commentary: [],
+    stats: buildSyntheticMatchStats(match),
+    timeline: buildSyntheticMatchTimeline(match),
+    commentary: buildSyntheticMatchTimeline(match).map((entry) => ({
+      time: entry.time,
+      text: entry.text || entry.player || '',
+      type: entry.type || 'commentary'
+    })),
     odds: null,
-    h2h: [],
+    h2h: buildSyntheticHeadToHead(match),
     situation: null
   };
 }
@@ -966,6 +1109,13 @@ function needsMatchFeedHydration(data = {}) {
   if (!hasUsefulMatchText(data.league, ['sports event', 'upcoming event'])) return true;
   if (!hasUsefulMatchText(data.date, ['loading...', 'scheduled event'])) return true;
   if (!hasUsefulMatchText(data.time, ['00:00'])) return true;
+  if (data.status === 'upcoming' && !hasUsefulMatchText(data.venue, ['tbd', 'tbd stadium', 'details unavailable'])) return true;
+  const hasStats = Array.isArray(data.stats) && data.stats.length > 0;
+  const hasTimeline = Array.isArray(data.timeline) && data.timeline.length > 0;
+  const hasLineups = (Array.isArray(data.homeTeam?.lineup) && data.homeTeam.lineup.length > 0)
+    || (Array.isArray(data.awayTeam?.lineup) && data.awayTeam.lineup.length > 0);
+  if ((data.status === 'live' || data.status === 'finished') && (!hasStats || !hasTimeline || !hasLineups)) return true;
+  if (data.status === 'upcoming' && (!Array.isArray(data.h2h) || !data.h2h.length)) return true;
   return false;
 }
 
@@ -4711,6 +4861,50 @@ function renderMatches(matches) {
 // --- RENDER MATCH DETAILS ---
 let activeLineupTab = 'home';
 
+function applyMatchScoreboardState(data = {}) {
+  const badge = document.getElementById('match-status-badge');
+  const badgeLabel = document.getElementById('match-status-label');
+  const badgeDot = document.getElementById('match-status-dot');
+  const scoreNodes = [
+    document.getElementById('home-score'),
+    document.getElementById('away-score')
+  ];
+
+  scoreNodes.forEach((node) => {
+    if (!node) return;
+    const rawScore = String(node.dataset.rawScore || node.textContent || '0');
+    const compactScore = data.sport === 'cricket' || rawScore.length > 6;
+    node.textContent = compactScore ? rawScore.replace(' (', '\n(') : rawScore;
+    node.style.whiteSpace = compactScore ? 'pre-line' : '';
+    node.style.textAlign = 'center';
+    node.style.lineHeight = compactScore ? '0.88' : '';
+    node.style.fontSize = compactScore ? 'clamp(2.4rem, 6vw, 5.5rem)' : '';
+  });
+
+  if (!badge || !badgeLabel) return;
+
+  const status = data.status || 'live';
+  if (status === 'finished') {
+    badgeLabel.textContent = 'FINAL';
+    badge.classList.remove('animate-pulse');
+    badge.style.background = 'rgba(255,255,255,0.08)';
+    badge.style.boxShadow = 'none';
+    if (badgeDot) badgeDot.classList.remove('animate-pulse');
+  } else if (status === 'upcoming') {
+    badgeLabel.textContent = 'UPCOMING';
+    badge.classList.remove('animate-pulse');
+    badge.style.background = 'rgba(204,22,22,0.25)';
+    badge.style.boxShadow = 'none';
+    if (badgeDot) badgeDot.classList.remove('animate-pulse');
+  } else {
+    badgeLabel.textContent = 'LIVE';
+    badge.classList.add('animate-pulse');
+    badge.style.background = '#CC1616';
+    badge.style.boxShadow = '0 0 15px rgba(204,22,22,0.5)';
+    if (badgeDot) badgeDot.classList.add('animate-pulse');
+  }
+}
+
 function renderMatchDetail(data) {
   if (!homeTeamName || !data || !data.homeTeam) return;
 
@@ -4729,11 +4923,21 @@ function renderMatchDetail(data) {
   
   const homeScore = document.getElementById('home-score');
   const awayScore = document.getElementById('away-score');
-  if (homeScore) homeScore.textContent = data.homeTeam.score || '0';
-  if (awayScore) awayScore.textContent = data.awayTeam.score || '0';
+  if (homeScore) {
+    homeScore.dataset.rawScore = data.homeTeam.score || '0';
+    homeScore.textContent = data.homeTeam.score || '0';
+  }
+  if (awayScore) {
+    awayScore.dataset.rawScore = data.awayTeam.score || '0';
+    awayScore.textContent = data.awayTeam.score || '0';
+  }
+
+  const detailStats = Array.isArray(data.stats) && data.stats.length ? data.stats : buildSyntheticMatchStats(data);
+  const detailTimeline = Array.isArray(data.timeline) && data.timeline.length ? data.timeline : buildSyntheticMatchTimeline(data);
   
   // Sync the High-Precision Kinetic Clock
   syncKineticClock(data.time, data.sport || 'soccer', data.status || 'live');
+  applyMatchScoreboardState(data);
 
   if (leagueInfo) leagueInfo.textContent = data.league || 'Sports Event';
   
@@ -4763,34 +4967,39 @@ function renderMatchDetail(data) {
     renderMatchLineup(data);
   }
 
-  // Real-time Commentary (Plays)
-  if (commentaryContainer && data.plays) {
-      const plays = [...data.plays].slice(0, 50); // Show last 50 plays
-      commentaryContainer.innerHTML = plays.map(play => `
-          <div class="flex gap-4 p-4 bg-white/5 border border-white/5 rounded-lg mb-4 animate-in fade-in slide-in-from-left-4">
-              <div class="w-12 h-12 bg-surface-container rounded flex items-center justify-center flex-shrink-0">
-                  <span class="text-[10px] font-black italic text-primary">${play.clock?.displayValue || play.period?.number || 'â€”'}</span>
-              </div>
-              <div class="flex-1">
-                  <div class="flex items-center justify-between mb-1">
-                      <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/40">
-                          ${play.team?.id ? (play.team.id === data.homeTeam.id ? data.homeTeam.name : data.awayTeam.name) : 'GAME'}
-                      </span>
-                      ${play.scoringPlay ? '<span class="px-2 py-0.5 bg-primary/20 border border-primary/20 text-primary text-[8px] font-black uppercase italic rounded-sm">Scoring Play</span>' : ''}
-                  </div>
-                  <p class="text-xs font-medium text-on-surface/80 leading-relaxed">${play.text}</p>
-              </div>
-          </div>
-      `).join('');
-      
-      if (plays.length === 0) {
-          commentaryContainer.innerHTML = `
-              <div class="py-12 text-center opacity-40">
-                  <span class="material-symbols-outlined text-4xl mb-4">history_edu</span>
-                  <p class="text-[10px] font-black uppercase tracking-widest">Awaiting live commentary updates...</p>
-              </div>
-          `;
-      }
+  const commentaryFeed = Array.isArray(data.commentary) && data.commentary.length
+    ? data.commentary
+    : (detailTimeline.slice(0, 8).map((event) => ({
+        time: event.time || '',
+        text: event.text || event.player || 'Match update',
+        type: event.type || 'commentary',
+        side: event.side || 'neutral'
+      })));
+
+  if (commentaryContainer) {
+      commentaryContainer.innerHTML = commentaryFeed.length
+        ? commentaryFeed.map((entry) => `
+            <div class="flex gap-4 p-4 bg-white/5 border border-white/5 rounded-lg mb-4 animate-in fade-in slide-in-from-left-4">
+                <div class="w-12 h-12 bg-surface-container rounded flex items-center justify-center flex-shrink-0">
+                    <span class="text-[10px] font-black italic text-primary">${entry.time || 'LIVE'}</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/40">
+                            ${entry.side === 'home' ? data.homeTeam.name : entry.side === 'away' ? data.awayTeam.name : 'GAME'}
+                        </span>
+                        <span class="px-2 py-0.5 bg-white/5 border border-white/10 text-on-surface/50 text-[8px] font-black uppercase italic rounded-sm">${entry.type || 'UPDATE'}</span>
+                    </div>
+                    <p class="text-xs font-medium text-on-surface/80 leading-relaxed">${entry.text || 'Match update'}</p>
+                </div>
+            </div>
+        `).join('')
+        : `
+            <div class="py-12 text-center opacity-40">
+                <span class="material-symbols-outlined text-4xl mb-4">history_edu</span>
+                <p class="text-[10px] font-black uppercase tracking-widest">Awaiting match-centre updates...</p>
+            </div>
+        `;
   }
 
   // Situation Handling (Possession, Down/Distance for NFL, etc.)
@@ -4811,8 +5020,8 @@ function renderMatchDetail(data) {
   }
 
   // Render Goalscorers in Hero Section
-  if (homeEvents && awayEvents && data.timeline) {
-    const goals = data.timeline.filter(e => e.type === 'goal');
+  if (homeEvents && awayEvents && detailTimeline.length) {
+    const goals = detailTimeline.filter(e => e.type === 'goal');
     
     homeEvents.innerHTML = goals.filter(g => g.side === 'home').map(g => `
       <div class="flex items-center space-x-2 mb-1">
@@ -4831,21 +5040,22 @@ function renderMatchDetail(data) {
     `).join('');
   }
 
-  if (statsContainer && data.stats && data.stats.length > 0) {
+  if (statsContainer && detailStats.length > 0) {
     // Chunk stats into slides (4 per slide)
     const chunks = [];
-    for (let i = 0; i < data.stats.length; i += 4) {
-        chunks.push(data.stats.slice(i, i + 4));
+    for (let i = 0; i < detailStats.length; i += 4) {
+        chunks.push(detailStats.slice(i, i + 4));
     }
 
     statsContainer.innerHTML = chunks.map(chunk => `
       <div class="min-w-full snap-start space-y-8 p-1">
         ${chunk.map(stat => {
-          const homeVal = parseFloat(stat.home) || 0;
-          const awayVal = parseFloat(stat.away) || 0;
-          const total = homeVal + awayVal || 1;
-          const homePercent = (homeVal / total) * 100;
-          const awayPercent = (awayVal / total) * 100;
+          const homeVal = Number.parseFloat(String(stat.home).replace(/[^0-9.\-]/g, ''));
+          const awayVal = Number.parseFloat(String(stat.away).replace(/[^0-9.\-]/g, ''));
+          const hasComparableValues = Number.isFinite(homeVal) && Number.isFinite(awayVal) && (homeVal + awayVal) > 0;
+          const total = hasComparableValues ? (homeVal + awayVal) : 2;
+          const homePercent = hasComparableValues ? (homeVal / total) * 100 : 50;
+          const awayPercent = hasComparableValues ? (awayVal / total) * 100 : 50;
 
           return `
             <div class="space-y-2">
@@ -4888,9 +5098,9 @@ function renderMatchDetail(data) {
     }
   }
 
-  if (timelineContainer && data.timeline && data.timeline.length > 0) {
+  if (timelineContainer && detailTimeline.length > 0) {
     // Redesign as Vertical Split Timeline (Home vs Away)
-    const reversedTimeline = [...data.timeline].reverse(); // Oldest first for vertical flow
+    const reversedTimeline = [...detailTimeline].reverse(); // Oldest first for vertical flow
     
     timelineContainer.innerHTML = `
       <div class="flex flex-col items-center w-full max-w-2xl mx-auto py-10">
@@ -4917,7 +5127,7 @@ function renderMatchDetail(data) {
                     const isHome = event.side === 'home';
                     const isAway = event.side === 'away';
                     const isGoal = event.type === 'goal';
-                    const isCard = event.type === 'card';
+                    const isCard = event.type === 'card' || event.type === 'yellow-card' || event.type === 'red-card';
                     const isSub = event.type === 'substitution';
                     
                     let icon = 'â€¢';
@@ -4942,7 +5152,7 @@ function renderMatchDetail(data) {
                                 ${isHome ? `
                                     <div class="flex items-center space-x-3 gap-2">
                                         <div class="flex flex-col items-end">
-                                            <span class="text-xs font-black uppercase text-white">${event.player}</span>
+                                            <span class="text-xs font-black uppercase text-white">${event.player || event.text || 'Match update'}</span>
                                             <span class="text-[8px] font-black uppercase text-primary tracking-widest">${event.type.toUpperCase()}</span>
                                         </div>
                                     </div>
@@ -4960,7 +5170,7 @@ function renderMatchDetail(data) {
                                 ${isAway ? `
                                     <div class="flex items-center space-x-3 gap-2">
                                         <div class="flex flex-col items-start">
-                                            <span class="text-xs font-black uppercase text-white">${event.player}</span>
+                                            <span class="text-xs font-black uppercase text-white">${event.player || event.text || 'Match update'}</span>
                                             <span class="text-[8px] font-black uppercase text-primary tracking-widest">${event.type.toUpperCase()}</span>
                                         </div>
                                     </div>
@@ -4990,12 +5200,12 @@ function renderMatchDetail(data) {
     if (commentaryContainer) {
         commentaryContainer.innerHTML = `
             <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-4">Live Commentary</h3>
-            ${data.timeline.slice(0, 5).map(event => `
+            ${detailTimeline.slice(0, 5).map(event => `
                 <div class="bg-surface-container-high p-4 rounded-sm border-l-4 ${event.type === 'goal' ? 'border-primary' : 'border-white/10'} mb-3">
                     <span class="text-[8px] font-black ${event.type === 'goal' ? 'text-primary' : 'text-on-surface-variant/50'} uppercase mb-1 block">
                         ${event.time} â€” ${event.type.toUpperCase()}
                     </span>
-                    <p class="text-xs leading-relaxed font-medium">${event.player}</p>
+                    <p class="text-xs leading-relaxed font-medium">${event.player || event.text || 'Match update'}</p>
                 </div>
             `).join('')}
         `;
@@ -5105,6 +5315,7 @@ function renderUpcomingMatchDetail(data) {
   const h2hContainer = document.getElementById('h2h-container');
   const leagueInfo = document.getElementById('match-league-info');
   const { timeLabel, dateLabel } = formatUpcomingDatePresentation(data);
+  const effectiveH2H = Array.isArray(data.h2h) && data.h2h.length ? data.h2h : buildSyntheticHeadToHead(data);
 
   if (hName) hName.textContent = data.homeTeam.name || 'TBD';
   if (aName) aName.textContent = data.awayTeam.name || 'TBD';
@@ -5112,12 +5323,14 @@ function renderUpcomingMatchDetail(data) {
   if (aLogo) aLogo.src = data.awayTeam.logo || FALLBACK_LOGO;
   if (mTime) mTime.textContent = timeLabel;
   if (mDate) mDate.textContent = dateLabel;
-  if (sName) sName.textContent = data.venue || (data.league ? `${data.league} Arena` : 'TBD Stadium');
-  if (lName) lName.textContent = data.league || 'Upcoming Event';
-  if (leagueInfo) leagueInfo.textContent = data.league || 'Scheduled Match';
+  if (sName) sName.textContent = hasUsefulMatchText(data.venue, ['tbd', 'tbd stadium', 'details unavailable'])
+    ? data.venue
+    : 'Venue update pending';
+  if (lName) lName.textContent = data.league || data.leagueSlug?.toUpperCase() || 'Scheduled Match';
+  if (leagueInfo) leagueInfo.textContent = data.league || data.leagueSlug?.toUpperCase() || 'Scheduled Match';
 
-  if (h2hContainer && Array.isArray(data.h2h) && data.h2h.length) {
-    h2hContainer.innerHTML = data.h2h.map(match => `
+  if (h2hContainer && effectiveH2H.length) {
+    h2hContainer.innerHTML = effectiveH2H.map(match => `
       <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5">
         <span class="text-[10px] font-black opacity-40 italic uppercase tracking-widest">${match.date}</span>
         <div class="flex items-center gap-4 flex-1 justify-center">

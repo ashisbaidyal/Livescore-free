@@ -88,40 +88,377 @@ function buildScoreboardCandidates(sport, league) {
   );
 }
 
-function normalizeStats(data = {}) {
-  const stats = [];
-  const boxscoreTeams = data.boxscore?.teams || [];
-  const homeStats = boxscoreTeams.find((team) => team.homeAway === "home")?.statistics || [];
-  const awayStats = boxscoreTeams.find((team) => team.homeAway === "away")?.statistics || [];
+function getCompetitionContext(data = {}) {
+  const header = data.header || {};
+  const competition = header.competitions?.[0] || data.competitions?.[0] || {};
+  const competitors = competition.competitors || [];
+  return {
+    header,
+    competition,
+    competitors,
+    home: competitors.find((entry) => entry.homeAway === "home") || {},
+    away: competitors.find((entry) => entry.homeAway === "away") || {}
+  };
+}
 
-  homeStats.forEach((homeStat) => {
-    const awayStat = awayStats.find((entry) => entry.name === homeStat.name);
+function uniqueBy(items = [], keyBuilder = (item) => JSON.stringify(item)) {
+  const seen = new Set();
+  return items.filter((item) => {
+    const key = keyBuilder(item);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function normalizeStatValue(entry = {}) {
+  const value = entry.displayValue ?? entry.value ?? entry.summary ?? entry.display ?? "";
+  return String(value || "").trim();
+}
+
+function buildStatPairs(homeStats = [], awayStats = []) {
+  const awayMap = new Map();
+  awayStats.forEach((entry) => {
+    const key = String(entry.name || entry.label || entry.displayName || entry.abbreviation || "").trim().toLowerCase();
+    if (key) awayMap.set(key, entry);
+  });
+
+  const stats = [];
+  homeStats.forEach((entry) => {
+    const key = String(entry.name || entry.label || entry.displayName || entry.abbreviation || "").trim().toLowerCase();
+    const label = entry.label || entry.displayName || entry.name || entry.abbreviation || "";
+    const homeValue = normalizeStatValue(entry);
+    const awayValue = normalizeStatValue(awayMap.get(key) || {});
+    if (!label || (!homeValue && !awayValue)) return;
     stats.push({
-      label: homeStat.label,
-      home: homeStat.displayValue,
-      away: awayStat?.displayValue || "0"
+      label,
+      home: homeValue || "—",
+      away: awayValue || "—"
     });
   });
 
-  return stats;
+  if (!stats.length) {
+    awayStats.forEach((entry) => {
+      const label = entry.label || entry.displayName || entry.name || entry.abbreviation || "";
+      const awayValue = normalizeStatValue(entry);
+      if (!label || !awayValue) return;
+      stats.push({
+        label,
+        home: "—",
+        away: awayValue
+      });
+    });
+  }
+
+  return uniqueBy(stats, (entry) => `${entry.label}:${entry.home}:${entry.away}`);
+}
+
+function formatLeaderValue(leader = {}) {
+  const name = leader.athlete?.shortName || leader.athlete?.displayName || "";
+  const value = leader.displayValue || leader.value || "";
+  return [name, value].filter(Boolean).join(" ").trim();
+}
+
+function buildSyntheticStatsFromContext(data = {}) {
+  const { competition, home, away } = getCompetitionContext(data);
+  const stats = [];
+
+  const directStats = buildStatPairs(home.statistics || [], away.statistics || []);
+  if (directStats.length) return directStats.slice(0, 8);
+
+  const homeRecord = home.records?.[0]?.summary || "";
+  const awayRecord = away.records?.[0]?.summary || "";
+  if (homeRecord || awayRecord) {
+    stats.push({
+      label: "Record",
+      home: homeRecord || "—",
+      away: awayRecord || "—"
+    });
+  }
+
+  const maxLeaderGroups = Math.max(home.leaders?.length || 0, away.leaders?.length || 0);
+  for (let index = 0; index < maxLeaderGroups; index += 1) {
+    const homeGroup = home.leaders?.[index] || {};
+    const awayGroup = away.leaders?.[index] || {};
+    const label = homeGroup.displayName || awayGroup.displayName || homeGroup.name || awayGroup.name || "";
+    const homeValue = formatLeaderValue(homeGroup.leaders?.[0] || {});
+    const awayValue = formatLeaderValue(awayGroup.leaders?.[0] || {});
+    if (!label || (!homeValue && !awayValue)) continue;
+    stats.push({
+      label,
+      home: homeValue || "—",
+      away: awayValue || "—"
+    });
+  }
+
+  const lastPlayText = competition.situation?.lastPlay?.text || data.situation?.lastPlay?.text || "";
+  const statusText = competition.status?.type?.detail || competition.status?.type?.shortDetail || "";
+  if (lastPlayText || statusText) {
+    stats.push({
+      label: "Latest Update",
+      home: (lastPlayText || statusText || "Match update").slice(0, 54),
+      away: statusText || mapStatus(competition.status?.type?.state)
+    });
+  }
+
+  return uniqueBy(stats, (entry) => `${entry.label}:${entry.home}:${entry.away}`).slice(0, 8);
+}
+
+function buildSyntheticLineupFromLeaders(competitor = {}) {
+  const players = (competitor.leaders || [])
+    .flatMap((group, groupIndex) =>
+      (group.leaders || []).map((leader, leaderIndex) => ({
+        name: leader.athlete?.displayName || leader.athlete?.shortName || "",
+        number: leader.athlete?.jersey || "",
+        position: group.displayName || group.name || "Key Player",
+        starter: groupIndex === 0 || leaderIndex === 0,
+        face: leader.athlete?.headshot?.href || FALLBACK_LOGO
+      }))
+    )
+    .filter((entry) => entry.name);
+
+  return uniqueBy(players, (entry) => entry.name.toLowerCase()).slice(0, 8);
+}
+
+function buildLineupFromBoxscore(data = {}, side = "home", teamId = "") {
+  const boxes = data.boxscore?.players || [];
+  const box = boxes.find((entry) => {
+    const boxTeamId = String(entry.team?.id || entry.team?.$ref || "");
+    return (teamId && boxTeamId.includes(String(teamId))) || entry.homeAway === side;
+  });
+
+  if (!box?.statistics?.length) return [];
+
+  const players = box.statistics
+    .flatMap((group, groupIndex) =>
+      (group.athletes || []).map((athlete, athleteIndex) => ({
+        name: athlete.athlete?.displayName || athlete.displayName || athlete.name || "",
+        number: athlete.athlete?.jersey || athlete.jersey || "",
+        position: athlete.athlete?.position?.abbreviation || athlete.position?.abbreviation || group.displayName || "Player",
+        starter: athlete.starter ?? (groupIndex === 0 && athleteIndex < 5),
+        face: athlete.athlete?.headshot?.href || athlete.headshot?.href || FALLBACK_LOGO
+      }))
+    )
+    .filter((entry) => entry.name);
+
+  return uniqueBy(players, (entry) => entry.name.toLowerCase()).slice(0, 12);
+}
+
+function inferTimelineSide(teamId = "", homeId = "", awayId = "") {
+  if (teamId && String(teamId) === String(homeId)) return "home";
+  if (teamId && String(teamId) === String(awayId)) return "away";
+  return "neutral";
+}
+
+function formatTimelineDate(value = "") {
+  const parsed = value ? new Date(value) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) return "";
+  return parsed.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function buildSyntheticTimelineFromContext(data = {}, homeId = "", awayId = "") {
+  const { header, competition, home, away } = getCompetitionContext(data);
+  const items = [];
+  const statusType = competition.status?.type || {};
+  const displayClock = competition.status?.displayClock || statusType.shortDetail || statusType.detail || "";
+  const lastPlayText = competition.situation?.lastPlay?.text || data.situation?.lastPlay?.text || "";
+  const lastPlayTeamId = competition.situation?.lastPlay?.team?.id || data.situation?.lastPlay?.team?.id || "";
+
+  if (lastPlayText) {
+    items.push({
+      time: displayClock || "LIVE",
+      type: "event",
+      text: lastPlayText,
+      player: lastPlayText,
+      side: inferTimelineSide(lastPlayTeamId, homeId, awayId)
+    });
+  }
+
+  const statusText = statusType.detail || statusType.shortDetail || statusType.description || "";
+  if (statusText) {
+    items.push({
+      time: displayClock || mapStatus(statusType.state).toUpperCase(),
+      type: mapStatus(statusType.state) === "finished" ? "result" : "event",
+      text: statusText,
+      player: statusText,
+      side: "neutral"
+    });
+  }
+
+  const scheduledText = formatTimelineDate(competition.date || header.date || "");
+  if (scheduledText) {
+    items.push({
+      time: "DATE",
+      type: "event",
+      text: `Scheduled for ${scheduledText}`,
+      player: `Scheduled for ${scheduledText}`,
+      side: "neutral"
+    });
+  }
+
+  if (competition.venue?.fullName) {
+    items.push({
+      time: "VENUE",
+      type: "event",
+      text: `Venue: ${competition.venue.fullName}`,
+      player: `Venue: ${competition.venue.fullName}`,
+      side: "neutral"
+    });
+  }
+
+  [
+    { side: "home", competitor: home },
+    { side: "away", competitor: away }
+  ].forEach(({ side, competitor }) => {
+    const leaderGroup = competitor.leaders?.[0];
+    const leader = leaderGroup?.leaders?.[0];
+    const leaderText = formatLeaderValue(leader);
+    if (!leaderText) return;
+    items.push({
+      time: "STAR",
+      type: "event",
+      text: leaderText,
+      player: leaderText,
+      side
+    });
+  });
+
+  return uniqueBy(items, (entry) => `${entry.time}:${entry.text}:${entry.side}`).slice(0, 8);
+}
+
+function buildSyntheticLineupFromTeam(team = {}) {
+  const leader = team.leader || null;
+  if (!leader?.name && !leader?.value) return [];
+  return [
+    {
+      name: leader.name || team.name || "Key Player",
+      number: "",
+      position: "Key Player",
+      starter: true,
+      face: team.logo || FALLBACK_LOGO
+    }
+  ];
+}
+
+function buildSyntheticStatsFromMatch(match = {}) {
+  const stats = [];
+  if (match.homeTeam?.record || match.awayTeam?.record) {
+    stats.push({
+      label: "Record",
+      home: match.homeTeam?.record || "—",
+      away: match.awayTeam?.record || "—"
+    });
+  }
+
+  if (match.homeTeam?.leader || match.awayTeam?.leader) {
+    stats.push({
+      label: "Top Performer",
+      home: [match.homeTeam?.leader?.name, match.homeTeam?.leader?.value].filter(Boolean).join(" ") || "—",
+      away: [match.awayTeam?.leader?.name, match.awayTeam?.leader?.value].filter(Boolean).join(" ") || "—"
+    });
+  }
+
+  if (match.statusText || match.time) {
+    stats.push({
+      label: "Match Status",
+      home: match.statusText || match.time || match.status || "Update",
+      away: match.league || match.leagueSlug || "League"
+    });
+  }
+
+  return uniqueBy(stats, (entry) => `${entry.label}:${entry.home}:${entry.away}`).slice(0, 6);
+}
+
+function buildSyntheticTimelineFromMatch(match = {}) {
+  const items = [];
+  if (match.statusText || match.time) {
+    const statusText = match.statusText || match.time || `${match.status || "scheduled"} update`;
+    items.push({
+      time: match.time || match.status?.toUpperCase() || "UPDATE",
+      type: match.status === "finished" ? "result" : "event",
+      text: statusText,
+      player: statusText,
+      side: "neutral"
+    });
+  }
+
+  const scheduledText = formatTimelineDate(match.date || "");
+  if (scheduledText) {
+    items.push({
+      time: "DATE",
+      type: "event",
+      text: `Scheduled for ${scheduledText}`,
+      player: `Scheduled for ${scheduledText}`,
+      side: "neutral"
+    });
+  }
+
+  if (match.venue) {
+    items.push({
+      time: "VENUE",
+      type: "event",
+      text: `Venue: ${match.venue}`,
+      player: `Venue: ${match.venue}`,
+      side: "neutral"
+    });
+  }
+
+  [
+    { side: "home", team: match.homeTeam || {} },
+    { side: "away", team: match.awayTeam || {} }
+  ].forEach(({ side, team }) => {
+    if (!team.leader?.name && !team.leader?.value) return;
+    const leaderText = [team.leader?.name, team.leader?.value].filter(Boolean).join(" ");
+    items.push({
+      time: "STAR",
+      type: "event",
+      text: leaderText,
+      player: leaderText,
+      side
+    });
+  });
+
+  return uniqueBy(items, (entry) => `${entry.time}:${entry.text}:${entry.side}`).slice(0, 6);
+}
+
+function normalizeStats(data = {}) {
+  const boxscoreTeams = data.boxscore?.teams || [];
+  const homeStats = boxscoreTeams.find((team) => team.homeAway === "home")?.statistics || [];
+  const awayStats = boxscoreTeams.find((team) => team.homeAway === "away")?.statistics || [];
+  const boxscoreStats = buildStatPairs(homeStats, awayStats);
+  if (boxscoreStats.length) return boxscoreStats.slice(0, 8);
+  return buildSyntheticStatsFromContext(data);
 }
 
 function normalizeLineup(data = {}, side = "home") {
   const roster = data.rosters?.find((entry) => entry.homeAway === side);
-  if (!roster?.roster) return [];
+  if (roster?.roster?.length) {
+    return roster.roster.map((entry) => ({
+      name: entry.athlete?.displayName || "",
+      number: entry.jersey || "",
+      position: entry.position?.abbreviation || "",
+      starter: Boolean(entry.starter),
+      face: entry.athlete?.headshot?.href || FALLBACK_LOGO
+    }));
+  }
 
-  return roster.roster.map((entry) => ({
-    name: entry.athlete?.displayName || "",
-    number: entry.jersey || "",
-    position: entry.position?.abbreviation || "",
-    starter: Boolean(entry.starter),
-    face: entry.athlete?.headshot?.href || FALLBACK_LOGO
-  }));
+  const { home, away } = getCompetitionContext(data);
+  const competitor = side === "home" ? home : away;
+  const teamId = competitor.team?.id || "";
+  const boxscoreLineup = buildLineupFromBoxscore(data, side, teamId);
+  if (boxscoreLineup.length) return boxscoreLineup;
+
+  return buildSyntheticLineupFromLeaders(competitor);
 }
 
 function normalizeTimeline(data = {}, homeId = "", awayId = "") {
   const plays = data.plays || data.header?.competitions?.[0]?.details || [];
-  return (plays || [])
+  const timeline = (plays || [])
     .slice(-50) // Increased from 40 to 50 for more history
     .reverse()
     .map((play) => {
@@ -152,6 +489,9 @@ function normalizeTimeline(data = {}, homeId = "", awayId = "") {
         score: play.homeScore !== undefined ? `${play.homeScore} - ${play.awayScore}` : null
       };
     });
+
+  if (timeline.length) return timeline;
+  return buildSyntheticTimelineFromContext(data, homeId, awayId);
 }
 
 function normalizeOdds(data = {}) {
@@ -172,6 +512,21 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
   const home = competition.competitors?.find((entry) => entry.homeAway === "home") || {};
   const away = competition.competitors?.find((entry) => entry.homeAway === "away") || {};
   const statusType = competition.status?.type || {};
+  const timeline = normalizeTimeline(data, home.team?.id || "", away.team?.id || "");
+  const commentary = (data.commentary || []).map((entry) => ({
+    time: entry.time || entry.clock?.displayValue || "",
+    text: entry.text || "",
+    type: entry.type?.text || "commentary"
+  }));
+  if (!commentary.length && timeline.length) {
+    timeline.slice(0, 6).forEach((entry) => {
+      commentary.push({
+        time: entry.time || "",
+        text: entry.text || entry.player || "",
+        type: entry.type || "commentary"
+      });
+    });
+  }
 
   return {
     id: header.id || competition.id || "",
@@ -201,12 +556,8 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
       lineup: normalizeLineup(data, "away")
     },
     stats: normalizeStats(data),
-    timeline: normalizeTimeline(data, home.team?.id || "", away.team?.id || ""),
-    commentary: (data.commentary || []).map((entry) => ({
-      time: entry.time || entry.clock?.displayValue || "",
-      text: entry.text || "",
-      type: entry.type?.text || "commentary"
-    })).concat((data.news || []).map(n => ({ text: n.headline, type: "news" }))), // Merge news and commentary
+    timeline,
+    commentary: commentary.concat((data.news || []).map((entry) => ({ text: entry.headline, type: "news" }))),
     odds: normalizeOdds(data),
     h2h: [],
     situation: data.situation || null
@@ -215,6 +566,7 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
 
 function normalizeFallbackScoreboardSummary(event = {}, sport = "soccer", league = "eng.1", leagueName = "") {
   const normalized = normalizeScoreboardEvent(event, sport, league, leagueName);
+  const syntheticTimeline = buildSyntheticTimelineFromMatch(normalized);
   return {
     id: normalized.id,
     sport: normalized.sport,
@@ -228,22 +580,27 @@ function normalizeFallbackScoreboardSummary(event = {}, sport = "soccer", league
     broadcast: normalized.broadcast,
     homeTeam: {
       ...normalized.homeTeam,
-      lineup: []
+      lineup: buildSyntheticLineupFromTeam(normalized.homeTeam)
     },
     awayTeam: {
       ...normalized.awayTeam,
-      lineup: []
+      lineup: buildSyntheticLineupFromTeam(normalized.awayTeam)
     },
-    stats: [],
-    timeline: [],
-    commentary: [],
+    stats: buildSyntheticStatsFromMatch(normalized),
+    timeline: syntheticTimeline,
+    commentary: syntheticTimeline.map((entry) => ({
+      time: entry.time,
+      text: entry.text || entry.player || "",
+      type: entry.type || "commentary"
+    })),
     odds: null,
     h2h: [],
     situation: null
   };
 }
 
-function normalizeFeedFallbackSummary(match = {}) {
+function normalizeFeedFallbackSummary(match = {}, h2h = []) {
+  const syntheticTimeline = buildSyntheticTimelineFromMatch(match);
   return {
     id: match.id || "",
     sport: match.sport || "soccer",
@@ -260,22 +617,107 @@ function normalizeFeedFallbackSummary(match = {}) {
       name: match.homeTeam?.name || "Home Team",
       logo: match.homeTeam?.logo || FALLBACK_LOGO,
       score: match.homeTeam?.score || "0",
-      lineup: []
+      lineup: Array.isArray(match.homeTeam?.lineup) && match.homeTeam.lineup.length
+        ? match.homeTeam.lineup
+        : buildSyntheticLineupFromTeam(match.homeTeam || {})
     },
     awayTeam: {
       ...(match.awayTeam || {}),
       name: match.awayTeam?.name || "Away Team",
       logo: match.awayTeam?.logo || FALLBACK_LOGO,
       score: match.awayTeam?.score || "0",
-      lineup: []
+      lineup: Array.isArray(match.awayTeam?.lineup) && match.awayTeam.lineup.length
+        ? match.awayTeam.lineup
+        : buildSyntheticLineupFromTeam(match.awayTeam || {})
     },
-    stats: [],
-    timeline: [],
-    commentary: [],
+    stats: buildSyntheticStatsFromMatch(match),
+    timeline: syntheticTimeline,
+    commentary: syntheticTimeline.map((entry) => ({
+      time: entry.time,
+      text: entry.text || entry.player || "",
+      type: entry.type || "commentary"
+    })),
     odds: null,
-    h2h: [],
+    h2h,
     situation: null
   };
+}
+
+function buildTeamKeySet(team = {}) {
+  return new Set(
+    [
+      team.id,
+      team.abbreviation,
+      team.name,
+      team.fullName
+    ]
+      .map((value) => String(value || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+function isSameMatchup(match = {}, homeTeam = {}, awayTeam = {}) {
+  const homeKeys = buildTeamKeySet(homeTeam);
+  const awayKeys = buildTeamKeySet(awayTeam);
+  const candidateHomeKeys = buildTeamKeySet(match.homeTeam || {});
+  const candidateAwayKeys = buildTeamKeySet(match.awayTeam || {});
+
+  const hasKeyMatch = (left, right) => [...left].some((value) => right.has(value));
+  const direct = hasKeyMatch(homeKeys, candidateHomeKeys) && hasKeyMatch(awayKeys, candidateAwayKeys);
+  const reverse = hasKeyMatch(homeKeys, candidateAwayKeys) && hasKeyMatch(awayKeys, candidateHomeKeys);
+  return direct || reverse;
+}
+
+function formatHeadToHeadDate(value = "") {
+  const parsed = value ? new Date(value) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) return "";
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function normalizeHeadToHead(matches = [], homeTeam = {}, awayTeam = {}, excludeId = "") {
+  return uniqueBy(
+    matches
+      .filter((match) => String(match.id) !== String(excludeId))
+      .filter((match) => match.status === "finished")
+      .filter((match) => isSameMatchup(match, homeTeam, awayTeam))
+      .sort((left, right) => new Date(right.date) - new Date(left.date))
+      .slice(0, 5)
+      .map((match) => ({
+        date: formatHeadToHeadDate(match.date),
+        home: match.homeTeam?.abbreviation || match.homeTeam?.name || "Home",
+        away: match.awayTeam?.abbreviation || match.awayTeam?.name || "Away",
+        score: `${match.homeTeam?.score || "0"} - ${match.awayTeam?.score || "0"}`,
+        result: match.statusText || "Final"
+      })),
+    (entry) => `${entry.date}:${entry.home}:${entry.away}:${entry.score}`
+  );
+}
+
+async function buildHeadToHeadFallback(request, match = {}, sport = "soccer", league = "eng.1") {
+  if (!match.homeTeam || !match.awayTeam) return [];
+
+  const candidates = [];
+  const pushCandidate = (path, params = {}) => {
+    const key = `${path}:${JSON.stringify(params)}`;
+    if (candidates.some((entry) => entry.key === key)) return;
+    candidates.push({ key, path, params });
+  };
+
+  pushCandidate("/api/results", { sport, league, days: 7 });
+  pushCandidate("/api/results", { sport, days: 7 });
+  pushCandidate("/api/results", { sport: "all", days: 7 });
+
+  const matches = [];
+  for (const candidate of candidates) {
+    try {
+      const data = await fetchInternalJson(request, candidate.path, candidate.params);
+      matches.push(...(data.matches || []));
+    } catch (error) {
+      continue;
+    }
+  }
+
+  return normalizeHeadToHead(matches, match.homeTeam, match.awayTeam, match.id);
 }
 
 async function findFeedFallback(request, id, sport, league) {
@@ -303,7 +745,8 @@ async function findFeedFallback(request, id, sport, league) {
       const data = await fetchInternalJson(request, candidate.path, candidate.params);
       const match = (data.matches || []).find((entry) => String(entry.id) === String(id));
       if (match) {
-        return normalizeFeedFallbackSummary(match);
+        const h2h = await buildHeadToHeadFallback(request, match, normalizedSport, normalizedLeague);
+        return normalizeFeedFallbackSummary(match, h2h);
       }
     } catch (error) {
       continue;
