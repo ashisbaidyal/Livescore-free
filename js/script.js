@@ -1,19 +1,38 @@
-﻿// --- CONFIGURATION ---
+// --- CONFIGURATION ---
 // Synchronized with HTML-level externalized config
 const LSF_CONFIG = window.LSF_CONFIG || {
   api: {
     live: "/api/live",
     match: "/api/match",
     upcoming: "/api/upcoming",
-    info: "/api/info"
+    results: "/api/results",
+    info: "/api/info",
+    blog: "/api/blog",
+    standings: "/api/standings",
+    teams: "/api/teams",
+    players: "/api/players",
+    news: "/api/news"
   },
   ws: {
     url: (window.location.protocol === "https:" ? "wss:" : "ws:") + "//" + window.location.host + "/api/ws"
   },
+  refresh: {
+    live: 8000,
+    results: 60000,
+    upcoming: 90000,
+    standings: 300000,
+    teams: 300000,
+    players: 600000,
+    news: 600000,
+    blog: 600000,
+    ticker: 15000,
+    sidebar: 20000,
+    hero: 60000
+  },
   sources: [
-    "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-    "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
-    "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+    "https://site.api.espn.com/apis/site/v2/sports",
+    "https://core.api.espn.com/v1/sports",
+    "https://cdn.espn.com/core"
   ]
 };
 
@@ -24,7 +43,11 @@ const API_UPCOMING = LSF_CONFIG.api.upcoming;
 const API_RESULTS = LSF_CONFIG.api.results || "/api/results";
 const API_INFO = LSF_CONFIG.api.info;
 const API_BLOG = LSF_CONFIG.api.blog || "/api/blog";
-const API_NEWS = API_INFO;
+const API_NEWS = LSF_CONFIG.api.news || "/api/news";
+const API_STANDINGS = LSF_CONFIG.api.standings || "/api/standings";
+const API_TEAMS = LSF_CONFIG.api.teams || "/api/teams";
+const API_PLAYERS = LSF_CONFIG.api.players || "/api/players";
+const REFRESH = LSF_CONFIG.refresh || {};
 const DATA_SOURCES = LSF_CONFIG.sources || [];
 const PWA_MANIFEST = '/manifest.webmanifest';
 const SERVICE_WORKER_PATH = '/sw.js';
@@ -126,6 +149,38 @@ class RealtimeManager {
       const match = message?.data;
       if (!match || match.notFound || !match.homeTeam || !match.awayTeam) return;
       if (typeof renderMatchDetail === 'function') renderMatchDetail(match);
+    } else if (message.type === 'results') {
+      const matches = Array.isArray(message?.data?.matches) ? message.data.matches : null;
+      if (!matches) return;
+      window._cachedResults = filterRenderableMatches(matches).filter((m) => m.status === 'finished');
+      if (typeof renderMatches === 'function' && currentPageFilter === 'finished') {
+        renderMatches(sortMatchesForDisplay(window._cachedResults, 'finished'));
+      }
+      if (typeof updateResultsSectionMeta === 'function') updateResultsSectionMeta(window._cachedResults);
+    } else if (message.type === 'upcoming') {
+      const matches = Array.isArray(message?.data?.matches) ? message.data.matches : null;
+      if (!matches) return;
+      window._cachedUpcoming = filterRenderableMatches(matches).filter((m) => m.status === 'upcoming');
+      window._cachedUpcomingMatches = window._cachedUpcoming;
+      if (typeof renderArenaSchedule === 'function' && document.getElementById('arena-schedule-container')) {
+        renderArenaSchedule(window._cachedUpcoming.slice(0, 12));
+      }
+    } else if (message.type === 'standings') {
+      if (typeof window._lsfDataBus !== 'undefined') {
+        window._lsfDataBus._broadcast('standings', message.data);
+      }
+    } else if (message.type === 'teams') {
+      if (typeof window._lsfDataBus !== 'undefined') {
+        window._lsfDataBus._broadcast('teams', message.data);
+      }
+    } else if (message.type === 'players') {
+      if (typeof window._lsfDataBus !== 'undefined') {
+        window._lsfDataBus._broadcast('players', message.data);
+      }
+    } else if (message.type === 'news' || message.type === 'blog') {
+      if (typeof window._lsfDataBus !== 'undefined') {
+        window._lsfDataBus._broadcast('news', message.data);
+      }
     }
   }
 
