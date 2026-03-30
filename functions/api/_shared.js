@@ -284,7 +284,12 @@ export async function fetchLeagueScoreboard(sport, league, query = {}) {
   if (isIplLeague(sport, league)) {
     return fetchJson(getIplScoreboardUrl(query));
   }
-  return fetchJson(siteApiUrl(sport, league, "scoreboard", query));
+  const response = await fetchWithFallback(buildFallbackUrls(sport, league, "scoreboard", query), {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+  return response.json();
 }
 
 export async function fetchLeagueStandings(sport, league, query = {}) {

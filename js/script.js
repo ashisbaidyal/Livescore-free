@@ -2022,6 +2022,81 @@ function appendHeaderActions() {
   notifyButton.setAttribute('title', 'Open alerts');
 }
 
+function createMobileTopNavLink(sourceLink, extraClass = '') {
+  const href = sourceLink.getAttribute('href');
+  if (!href) return null;
+
+  const link = document.createElement('a');
+  link.href = href;
+  link.textContent = (sourceLink.textContent || '').trim();
+  link.className = `lsf-mobile-top-nav-link ${extraClass}`.trim();
+  link.dataset.pageLink = 'true';
+  return link;
+}
+
+function ensureMobileTopNav() {
+  const header = document.getElementById('main-header');
+  const desktopNav = document.getElementById('top-nav-links');
+  if (!header || !desktopNav || document.getElementById('lsf-mobile-top-nav')) return;
+
+  const mobileNav = document.createElement('div');
+  mobileNav.id = 'lsf-mobile-top-nav';
+  mobileNav.className = 'lsf-mobile-top-nav lg:hidden';
+
+  const rail = document.createElement('div');
+  rail.className = 'lsf-mobile-top-nav-scroll';
+
+  Array.from(desktopNav.children).forEach((item) => {
+    if (item.matches('a[href]')) {
+      const link = createMobileTopNavLink(item);
+      if (link) rail.append(link);
+    }
+  });
+
+  const moreGroup = desktopNav.querySelector('.group');
+  const moreLinks = moreGroup ? Array.from(moreGroup.querySelectorAll('a[href]')) : [];
+  if (moreLinks.length) {
+    const moreShell = document.createElement('div');
+    moreShell.className = 'lsf-mobile-more';
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'lsf-mobile-top-nav-trigger';
+    trigger.dataset.navMoreTrigger = 'true';
+    trigger.innerHTML = 'More <span class="material-symbols-outlined">expand_more</span>';
+    trigger.setAttribute('aria-haspopup', 'true');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const menu = document.createElement('div');
+    menu.className = 'lsf-mobile-more-menu';
+
+    moreLinks.forEach((item) => {
+      const link = createMobileTopNavLink(item, 'lsf-mobile-more-link');
+      if (link) menu.append(link);
+    });
+
+    trigger.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const nextState = !moreShell.classList.contains('is-open');
+      moreShell.classList.toggle('is-open', nextState);
+      trigger.setAttribute('aria-expanded', nextState ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!moreShell.contains(event.target)) {
+        moreShell.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    moreShell.append(trigger, menu);
+    rail.append(moreShell);
+  }
+
+  mobileNav.append(rail);
+  header.append(mobileNav);
+}
+
 function readStoredReminders() {
   try {
     const reminders = JSON.parse(localStorage.getItem(REMINDER_STORAGE_KEY) || '[]');
