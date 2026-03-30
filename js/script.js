@@ -2810,7 +2810,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mainContent) {
       mainContent.innerHTML = `
         <div class="py-20 px-6 max-w-4xl mx-auto text-center">
-          <span class="material-symbols-outlined text-6xl text-primary mb-6 block animate-pulse">sports_score</span>
+          <span class="material-symbols-outlined text-6xl text-primary mb-6 block animate-pulse">${sportParams.endIcon}</span>
           <h2 class="text-4xl font-black italic uppercase tracking-tighter mb-4">Select a Match</h2>
           <p class="text-sm font-bold text-on-surface/40 uppercase tracking-widest mb-12">Choose a match from the live scores below for full details</p>
           <div id="empty-state-matches" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
@@ -3059,7 +3059,7 @@ function renderArenaLiveFallback(matches) {
       <div class="space-y-3">
         <div class="w-full bg-white/5 h-[1px]"></div>
         <div class="w-full py-3 bg-primary/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white transition-all">
-          <span class="material-symbols-outlined text-sm">sports_score</span>
+          <span class="material-symbols-outlined text-sm">${sportParams.endIcon}</span>
           Match Center
         </div>
       </div>
@@ -3103,7 +3103,7 @@ function renderArenaFinishedFallback(matches) {
       <div class="space-y-3">
         <div class="w-full bg-white/5 h-[1px]"></div>
         <div class="w-full py-3 bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest text-on-surface/40 flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white transition-all">
-          <span class="material-symbols-outlined text-sm">sports_score</span>
+          <span class="material-symbols-outlined text-sm">${sportParams.endIcon}</span>
           View Details
         </div>
       </div>
@@ -5287,14 +5287,104 @@ function renderMatches(matches) {
 // --- RENDER MATCH DETAILS ---
 let activeLineupTab = 'home';
 
+const sportTerminologyConfig = {
+    cricket: {
+        performanceLabel: 'Innings Summary',
+        timelineLabel: 'Match Timeline',
+        lineupsLabel: 'Squads',
+        hasClock: false,
+        hasColon: false,
+        timelineParams: {
+            startText: 'MATCH START',
+            midText: 'INNINGS BREAK',
+            endText: 'STUMPS / MATCH END',
+            startIcon: 'sports_cricket',
+            midIcon: 'timer',
+            endIcon: 'sports_score'
+        }
+    },
+    basketball: {
+        performanceLabel: 'Box Score',
+        timelineLabel: 'Play-by-Play',
+        lineupsLabel: 'Starting Lineup',
+        hasClock: true,
+        hasColon: true,
+        timelineParams: {
+            startText: 'TIP OFF',
+            midText: 'HALF TIME',
+            endText: 'FULL TIME',
+            startIcon: 'sports_basketball',
+            midIcon: 'whistle',
+            endIcon: 'sports_score'
+        }
+    },
+    tennis: {
+        performanceLabel: 'Match Stats',
+        timelineLabel: 'Point-by-Point',
+        lineupsLabel: 'Players',
+        hasClock: false,
+        hasColon: true,
+        timelineParams: {
+            startText: 'FIRST SERVE',
+            midText: 'SET BREAK',
+            endText: 'GAME SET MATCH',
+            startIcon: 'sports_tennis',
+            midIcon: 'pause',
+            endIcon: 'emoji_events'
+        }
+    },
+    baseball: {
+        performanceLabel: 'Box Score',
+        timelineLabel: 'Play-by-Play',
+        lineupsLabel: 'Lineups',
+        hasClock: false,
+        hasColon: true,
+        timelineParams: {
+            startText: 'FIRST PITCH',
+            midText: 'INNING BREAK',
+            endText: 'GAME OVER',
+            startIcon: 'sports_baseball',
+            midIcon: 'pause',
+            endIcon: 'sports_score'
+        }
+    },
+    default: {
+        performanceLabel: 'Match Performance',
+        timelineLabel: 'Tactical Timeline',
+        lineupsLabel: 'Lineups',
+        hasClock: true,
+        hasColon: true,
+        timelineParams: {
+            startText: 'Kick off',
+            midText: 'Half time',
+            endText: 'Full Time',
+            startIcon: 'sports',
+            midIcon: 'whistle',
+            endIcon: 'sports_score'
+        }
+    }
+};
+
+function getSportParams(sport) {
+    const key = (sport || '').toLowerCase().trim();
+    if (sportTerminologyConfig[key]) return sportTerminologyConfig[key];
+    return sportTerminologyConfig.default;
+}
+
 function applyMatchScoreboardState(data = {}) {
   const badge = document.getElementById('match-status-badge');
   const badgeLabel = document.getElementById('match-status-label');
   const badgeDot = document.getElementById('match-status-dot');
+  const scoreSeparator = document.getElementById('score-separator');
+  const matchClockContainer = document.getElementById('match-clock-container');
   const scoreNodes = [
     document.getElementById('home-score'),
     document.getElementById('away-score')
   ];
+
+  const params = getSportParams(data.sport);
+  if (scoreSeparator) scoreSeparator.style.display = params.hasColon ? '' : 'none';
+  if (matchClockContainer) matchClockContainer.style.display = params.hasClock ? 'flex' : 'none';
 
   scoreNodes.forEach((node) => {
     if (!node) return;
@@ -5342,6 +5432,15 @@ function renderMatchDetail(data) {
   const lineupAwayTab = document.getElementById('lineup-away-tab');
   const lineupContainer = document.getElementById('lineup-players-container');
   const commentaryContainer = document.getElementById('commentary-container');
+
+  const params = getSportParams(data.sport);
+  const perfTitle = document.getElementById('performance-title');
+  const timeTitle = document.getElementById('timeline-title');
+  const lineTitle = document.getElementById('lineups-title');
+  
+  if (perfTitle) perfTitle.textContent = params.performanceLabel;
+  if (timeTitle) timeTitle.textContent = params.timelineLabel;
+  if (lineTitle) lineTitle.textContent = params.lineupsLabel;
 
   homeTeamName.textContent = data.homeTeam.name || 'Home Team';
   awayTeamName.textContent = data.awayTeam.name || 'Away Team';
@@ -5528,6 +5627,7 @@ function renderMatchDetail(data) {
   if (timelineContainer && detailTimeline.length > 0) {
     // Redesign as Vertical Split Timeline (Home vs Away)
     const reversedTimeline = [...detailTimeline].reverse(); // Oldest first for vertical flow
+    const sportParams = getSportParams(data.sport).timelineParams;
     
     timelineContainer.innerHTML = `
       <div class="flex flex-col items-center w-full max-w-2xl mx-auto py-10">
@@ -5544,8 +5644,8 @@ function renderMatchDetail(data) {
             
             <!-- Kick Off Marker -->
             <div class="relative z-10 flex flex-col items-center mb-12">
-                <span class="material-symbols-outlined text-white/40 text-2xl mb-2">sports</span>
-                <span class="text-[10px] font-black uppercase tracking-widest text-white/60">Kick off</span>
+                <span class="material-symbols-outlined text-white/40 text-2xl mb-2">${sportParams.startIcon}</span>
+                <span class="text-[10px] font-black uppercase tracking-widest text-white/60">${sportParams.startText}</span>
             </div>
 
             <!-- Timeline Events -->
@@ -5568,8 +5668,8 @@ function renderMatchDetail(data) {
                     return `
                         ${showHT ? `
                             <div class="relative z-10 flex flex-col items-center my-12">
-                                <span class="material-symbols-outlined text-white/40 text-2xl mb-2">whistle</span>
-                                <span class="text-[10px] font-black uppercase tracking-widest text-white/60">Half time</span>
+                                <span class="material-symbols-outlined text-white/40 text-2xl mb-2">${sportParams.midIcon}</span>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-white/60">${sportParams.midText}</span>
                             </div>
                         ` : ''}
                         
@@ -5615,8 +5715,8 @@ function renderMatchDetail(data) {
                     <div class="w-2 h-2 rounded-full bg-primary animate-pulse mb-2"></div>
                     <span class="text-[10px] font-black uppercase tracking-widest text-white/60 italic">In Progress</span>
                 ` : `
-                    <span class="material-symbols-outlined text-white/40 text-2xl mb-2">sports_score</span>
-                    <span class="text-[10px] font-black uppercase tracking-widest text-white/60">Full Time</span>
+                    <span class="material-symbols-outlined text-white/40 text-2xl mb-2">${sportParams.endIcon}</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-white/60">${sportParams.endText}</span>
                 `}
             </div>
         </div>
@@ -6266,7 +6366,7 @@ if (window.location.pathname.includes('news.html')) {
               </div>
               <div class="flex gap-4 pt-4">
                 <a href="/match.html?id=${heroMatch.id}&sport=${heroMatch.sport}&league=${heroMatch.leagueSlug}" class="bg-primary text-white px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2 rounded">
-                  <span class="material-symbols-outlined">sports_score</span> Match Center
+                  <span class="material-symbols-outlined">${sportParams.endIcon}</span> Match Center
                 </a>
                 <a href="/live.html" class="bg-white/5 backdrop-blur-md border border-white/10 text-on-surface px-10 py-4 font-black uppercase text-xs tracking-widest rounded hover:bg-white/10 transition-colors">All Live Scores</a>
               </div>
@@ -6578,4 +6678,7 @@ setInterval(() => {
     fetchSidebarLive();
   }
 }, 20000);
+
+
+
 
