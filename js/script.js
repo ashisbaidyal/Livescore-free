@@ -468,6 +468,109 @@ const TEAM_PROFILE_SPORT_BY_LEAGUE = {
   pga: 'golf',
   afl: 'australian-football'
 };
+const RESULTS_LEAGUE_CATALOG = {
+  soccer: [
+    'eng.1', 'esp.1', 'ger.1', 'ita.1', 'fra.1', 'usa.1', 'mex.1',
+    'ned.1', 'por.1', 'bel.1', 'tur.1', 'arg.1', 'bra.1', 'ksa.1', 'jpn.1',
+    'uefa.champions', 'uefa.europa', 'uefa.europa.conf', 'uefa.nations',
+    'fifa.world', 'fifa.worldq.uefa', 'fifa.friendly', 'conmebol.america',
+    'caf.nations', 'afc.asian.cup', 'concacaf.gold'
+  ],
+  football: ['nfl', 'college-football', 'ufl', 'xfl', 'cfl'],
+  basketball: ['nba', 'wnba', 'mens-college-basketball', 'womens-college-basketball', 'fiba', 'nba-development', 'nbl', 'euroleague'],
+  baseball: ['mlb', 'college-baseball', 'mexican-winter-league', 'dominican-winter-league', 'caribbean-series'],
+  hockey: ['nhl', 'mens-college-hockey', 'womens-college-hockey', 'hockey-world-cup'],
+  cricket: ['icc.t20', 'ipl', 'icc.odi', 'icc.test', 'bbl', 'psl', 'cpl'],
+  tennis: ['atp', 'wta'],
+  mma: ['ufc', 'bellator', 'ifc', 'lfa', 'ksw', 'cage-warriors'],
+  racing: ['f1', 'irl', 'nascar-premier', 'nascar-secondary', 'nascar-truck'],
+  golf: ['pga', 'lpga', 'champions-tour', 'dp-world-tour', 'liv', 'korn-ferry-tour'],
+  rugby: ['164205', '180659', '267979', '242041', '289262'],
+  'rugby-league': ['3'],
+  volleyball: ['mens-college-volleyball', 'womens-college-volleyball'],
+  'water-polo': ['mens-college-water-polo', 'womens-college-water-polo'],
+  lacrosse: ['nll', 'pll', 'mens-college-lacrosse', 'womens-college-lacrosse'],
+  'field-hockey': ['ncaa-womens-field-hockey'],
+  'australian-football': ['afl']
+};
+const RESULTS_LEAGUE_LABELS = {
+  'eng.1': 'Premier League',
+  'esp.1': 'La Liga',
+  'ger.1': 'Bundesliga',
+  'ita.1': 'Serie A',
+  'fra.1': 'Ligue 1',
+  'usa.1': 'MLS',
+  'mex.1': 'Liga MX',
+  'ned.1': 'Eredivisie',
+  'por.1': 'Primeira Liga',
+  'bel.1': 'Belgian Pro League',
+  'tur.1': 'Super Lig',
+  'arg.1': 'Liga Profesional',
+  'bra.1': 'Brasileirao',
+  'ksa.1': 'Saudi Pro League',
+  'jpn.1': 'J1 League',
+  'uefa.champions': 'UEFA Champions League',
+  'uefa.europa': 'UEFA Europa League',
+  'uefa.europa.conf': 'UEFA Conference League',
+  'uefa.nations': 'UEFA Nations League',
+  'fifa.world': 'FIFA World Cup',
+  'conmebol.america': 'Copa America',
+  'caf.nations': 'Africa Cup of Nations',
+  'afc.asian.cup': 'AFC Asian Cup',
+  'concacaf.gold': 'Gold Cup',
+  nfl: 'NFL',
+  'college-football': 'College Football',
+  ufl: 'UFL',
+  xfl: 'XFL',
+  cfl: 'CFL',
+  nba: 'NBA',
+  wnba: 'WNBA',
+  'mens-college-basketball': 'Men\'s College Basketball',
+  'womens-college-basketball': 'Women\'s College Basketball',
+  fiba: 'FIBA',
+  'nba-development': 'G League',
+  nbl: 'NBL',
+  euroleague: 'EuroLeague',
+  mlb: 'MLB',
+  'college-baseball': 'College Baseball',
+  nhl: 'NHL',
+  'mens-college-hockey': 'Men\'s College Hockey',
+  'womens-college-hockey': 'Women\'s College Hockey',
+  'icc.t20': 'ICC T20',
+  ipl: 'IPL',
+  'icc.odi': 'ICC ODI',
+  'icc.test': 'ICC Test',
+  bbl: 'Big Bash League',
+  psl: 'PSL',
+  cpl: 'CPL',
+  atp: 'ATP Tour',
+  wta: 'WTA Tour',
+  ufc: 'UFC',
+  bellator: 'Bellator',
+  lfa: 'LFA',
+  ksw: 'KSW',
+  'cage-warriors': 'Cage Warriors',
+  f1: 'Formula 1',
+  irl: 'IndyCar',
+  'nascar-premier': 'NASCAR Cup',
+  'nascar-secondary': 'NASCAR Xfinity',
+  'nascar-truck': 'NASCAR Truck',
+  pga: 'PGA Tour',
+  lpga: 'LPGA Tour',
+  'champions-tour': 'Champions Tour',
+  'dp-world-tour': 'DP World Tour',
+  liv: 'LIV Golf',
+  'korn-ferry-tour': 'Korn Ferry Tour',
+  '164205': 'Premiership Rugby',
+  '180659': 'United Rugby Championship',
+  '267979': 'Top 14',
+  '242041': 'Super Rugby Pacific',
+  '289262': 'Six Nations',
+  '3': 'Rugby League',
+  nll: 'NLL',
+  pll: 'PLL',
+  afl: 'AFL'
+};
 
 let currentTab = 'all';
 let currentLeagueFilter = '';
@@ -499,6 +602,10 @@ const trendingUpcomingContainer = document.getElementById('trending-upcoming-con
 const trendingMatchesList = document.getElementById('trending-matches-list');
 const recentResultsContainer = document.getElementById('recent-results-container');
 const upcomingTodayContainer = document.getElementById('upcoming-today-container');
+const resultsSectionTitle = document.getElementById('results-section-title');
+const resultsSectionSubtitle = document.getElementById('results-section-subtitle');
+const resultsLeagueFilter = document.getElementById('results-league-filter');
+const resultsCountPill = document.getElementById('results-count-pill');
 const upcomingPrev = document.getElementById('upcoming-prev');
 const upcomingNext = document.getElementById('upcoming-next');
 
@@ -531,6 +638,30 @@ function normalizeLeagueSlug(value = '') {
   return LEAGUE_ALIASES[String(value || '').toLowerCase()] || String(value || '');
 }
 
+function formatLeagueSlugLabel(slug = '') {
+  const normalized = normalizeLeagueSlug(slug);
+  if (!normalized) return 'League';
+  if (RESULTS_LEAGUE_LABELS[normalized]) return RESULTS_LEAGUE_LABELS[normalized];
+  return normalized
+    .replace(/[._]/g, ' ')
+    .replace(/\buefa\b/gi, 'UEFA')
+    .replace(/\bfifa\b/gi, 'FIFA')
+    .replace(/\bicc\b/gi, 'ICC')
+    .replace(/\bnba\b/gi, 'NBA')
+    .replace(/\bmlb\b/gi, 'MLB')
+    .replace(/\bnfl\b/gi, 'NFL')
+    .replace(/\bnhl\b/gi, 'NHL')
+    .replace(/\batp\b/gi, 'ATP')
+    .replace(/\bwta\b/gi, 'WTA')
+    .replace(/\bufc\b/gi, 'UFC')
+    .replace(/\bafl\b/gi, 'AFL')
+    .replace(/\bipl\b/gi, 'IPL')
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => /^[A-Z0-9.]+$/.test(part) ? part : `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ');
+}
+
 function normalizeSportSlug(value = '', league = '') {
   const sport = String(value || 'all').toLowerCase();
   if (sport === 'all') return 'all';
@@ -559,6 +690,142 @@ function getDefaultLeagueForSport(sport = 'soccer') {
   if (normalizedSport === 'lacrosse') return 'nll';
   if (normalizedSport === 'australian-football') return 'afl';
   return 'eng.1';
+}
+
+function getSportDisplayName(sportId = 'all') {
+  const normalized = normalizeSportSlug(sportId);
+  const match = SPORTS.find((sport) => normalizeSportSlug(sport.id) === normalized);
+  return match?.name || (normalized === 'all' ? 'All Sports' : formatLeagueSlugLabel(normalized));
+}
+
+function inferSportForLeague(league = '', fallbackSport = 'all') {
+  const normalizedLeague = normalizeLeagueSlug(league);
+  if (!normalizedLeague) return normalizeSportSlug(fallbackSport);
+  const cachedMatch = getCachedMatches().find((match) => normalizeLeagueSlug(match.leagueSlug || '') === normalizedLeague);
+  if (cachedMatch?.sport) return normalizeSportSlug(cachedMatch.sport, normalizedLeague);
+  const catalogEntry = Object.entries(RESULTS_LEAGUE_CATALOG).find(([, leagues]) => leagues.includes(normalizedLeague));
+  return catalogEntry?.[0] || normalizeSportSlug(fallbackSport, normalizedLeague);
+}
+
+function getLeagueDisplayName(slug = '', fallbackLabel = '', sport = '') {
+  if (fallbackLabel && hasUsefulMatchText(fallbackLabel, ['event', 'match'])) return fallbackLabel;
+  return formatLeagueSlugLabel(slug || getDefaultLeagueForSport(sport));
+}
+
+function buildResultLeagueOptions(matches = []) {
+  const sourceMatches = currentTab === 'all'
+    ? (window._cachedAllResultsMatches || matches)
+    : matches;
+  const map = new Map();
+  const addOption = (slug, label, sport) => {
+    const normalizedLeague = normalizeLeagueSlug(slug);
+    const normalizedSport = normalizeSportSlug(sport, normalizedLeague);
+    if (!normalizedLeague || !normalizedSport || normalizedSport === 'all') return;
+    if (map.has(normalizedLeague)) return;
+    const displayLabel = currentTab === 'all'
+      ? `${label} · ${getSportDisplayName(normalizedSport)}`
+      : label;
+    map.set(normalizedLeague, {
+      slug: normalizedLeague,
+      label: displayLabel,
+      sport: normalizedSport
+    });
+  };
+
+  if (currentTab === 'all') {
+    Object.entries(RESULTS_LEAGUE_CATALOG).forEach(([sport, leagues]) => {
+      leagues.slice(0, sport === 'soccer' ? 5 : 2).forEach((leagueSlug) => {
+        addOption(leagueSlug, getLeagueDisplayName(leagueSlug, '', sport), sport);
+      });
+    });
+  } else {
+    (RESULTS_LEAGUE_CATALOG[currentTab] || []).forEach((leagueSlug) => {
+      addOption(leagueSlug, getLeagueDisplayName(leagueSlug, '', currentTab), currentTab);
+    });
+  }
+
+  sourceMatches.forEach((match) => {
+    addOption(
+      match.leagueSlug || '',
+      getLeagueDisplayName(match.leagueSlug, match.league, match.sport),
+      match.sport || currentTab
+    );
+  });
+
+  return [...map.values()].sort((left, right) => left.label.localeCompare(right.label));
+}
+
+function updateResultsSectionMeta(matches = []) {
+  if (resultsSectionTitle) {
+    resultsSectionTitle.textContent = 'All Results';
+  }
+
+  if (resultsSectionSubtitle) {
+    if (currentLeagueFilter) {
+      resultsSectionSubtitle.textContent = `Recent final scorelines from ${getLeagueDisplayName(currentLeagueFilter, '', currentTab)}`;
+    } else if (currentTab === 'all') {
+      resultsSectionSubtitle.textContent = 'Recent final scorelines across every sport';
+    } else {
+      resultsSectionSubtitle.textContent = `Recent ${getSportDisplayName(currentTab).toLowerCase()} results across every league`;
+    }
+  }
+
+  if (resultsCountPill) {
+    const count = Array.isArray(matches) ? matches.length : 0;
+    if (!count) {
+      resultsCountPill.textContent = 'Waiting for result feed';
+    } else if (currentLeagueFilter) {
+      resultsCountPill.textContent = `${getLeagueDisplayName(currentLeagueFilter, '', currentTab)} · ${count} results`;
+    } else if (currentTab !== 'all') {
+      resultsCountPill.textContent = `${getSportDisplayName(currentTab)} · ${count} results`;
+    } else {
+      resultsCountPill.textContent = `${count} results loaded`;
+    }
+  }
+}
+
+function renderResultsLeagueFilter(matches = []) {
+  if (!resultsLeagueFilter) return;
+  if (currentTab === 'all' && !currentLeagueFilter && Array.isArray(matches) && matches.length) {
+    window._cachedAllResultsMatches = matches;
+  }
+
+  const options = buildResultLeagueOptions(matches);
+  resultsLeagueFilter.innerHTML = [
+    '<option value="">All leagues</option>',
+    ...options.map((option) => `<option value="${option.slug}" data-sport="${option.sport}">${option.label}</option>`)
+  ].join('');
+  resultsLeagueFilter.disabled = !options.length;
+  resultsLeagueFilter.value = currentLeagueFilter || '';
+  updateResultsSectionMeta(matches);
+}
+
+function initResultsLeagueFilter() {
+  if (!resultsLeagueFilter || resultsLeagueFilter.dataset.bound === 'true') return;
+  resultsLeagueFilter.dataset.bound = 'true';
+  resultsLeagueFilter.addEventListener('change', (event) => {
+    const selected = event.target.selectedOptions?.[0] || null;
+    const nextLeague = normalizeLeagueSlug(event.target.value || '');
+    const nextSport = nextLeague
+      ? normalizeSportSlug(selected?.dataset?.sport || inferSportForLeague(nextLeague, currentTab), nextLeague)
+      : currentTab;
+
+    currentLeagueFilter = nextLeague;
+    if (nextLeague && currentTab === 'all' && nextSport !== 'all') {
+      currentTab = nextSport;
+    }
+
+    const url = new URL(window.location);
+    url.searchParams.set('sport', currentTab || 'all');
+    if (currentLeagueFilter) url.searchParams.set('league', currentLeagueFilter);
+    else url.searchParams.delete('league');
+    url.searchParams.delete('l');
+    window.history.pushState({}, '', url);
+
+    renderTabs();
+    renderResultsLeagueFilter([]);
+    fetchMatches('finished');
+  });
 }
 
 function buildMatchUrl(match) {
@@ -876,9 +1143,11 @@ function updateBlogSeo(post = {}, type = 'article') {
 }
 
 function getCurrentFeedParams(overrides = {}) {
+  const league = normalizeLeagueSlug(overrides.league ?? currentLeagueFilter ?? '');
+  const rawSport = overrides.sport ?? currentTab ?? 'all';
   return {
-    sport: overrides.sport ?? currentTab ?? 'all',
-    league: overrides.league ?? currentLeagueFilter ?? ''
+    sport: league ? inferSportForLeague(league, rawSport) : normalizeSportSlug(rawSport, league),
+    league
   };
 }
 
@@ -2456,6 +2725,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle Hub Pages (Home, Live, Upcoming, Trending, Results)
   if (matchesContainer || sidebarLiveContainer || newsContainer) {
     if (tabsContainer) renderTabs();
+    if (window.location.pathname.includes('results.html')) initResultsLeagueFilter();
 
     // Set page filter based on current file
     if (path.includes('upcoming.html')) {
@@ -4095,7 +4365,7 @@ function renderTabs() {
     <button 
       onclick="switchTab('${sport.id}')"
       class="flex-none px-6 py-2 rounded font-black text-[10px] uppercase tracking-widest transition-all
-      ${currentTab === sport.id
+      ${currentTab === normalizeSportSlug(sport.id)
       ? 'bg-primary text-white'
       : 'bg-white/5 text-on-surface/60 hover:bg-white/10 hover:text-white'
     }"
@@ -4118,6 +4388,7 @@ window.switchTab = function (tabId) {
   window.history.pushState({}, '', url);
 
   renderTabs();
+  if (resultsLeagueFilter) renderResultsLeagueFilter([]);
   
   // Update Realtime subscription
   realtime.updateSubscription('live', { sport: currentTab, isLive: true });
@@ -4234,7 +4505,10 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
       }
       if (sidebarOnly) return;
       if (statusFilter === 'finished') {
-        const resultsFeed = await fetchFinishedResultsFeed(feedParams);
+        const resultsFeed = await fetchFinishedResultsFeed({
+          ...feedParams,
+          days: window.location.pathname.includes('results.html') ? 6 : 4
+        });
         matches = resultsFeed.matches;
         window._cachedResults = matches;
         window._cachedMatches = matches;
@@ -4243,6 +4517,9 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
           matchCount: matches.length,
           liveCount: 0
         });
+        if (window.location.pathname.includes('results.html')) {
+          renderResultsLeagueFilter(matches);
+        }
         if (tickerContainer) {
           renderTicker(combineMatchPools(window._cachedLiveMatches || [], window._cachedUpcoming || [], matches));
         }
@@ -4257,6 +4534,9 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
         matches = matches.filter(m => m.status === statusFilter);
       }
       matches = sortMatchesForDisplay(matches, statusFilter);
+      if (window.location.pathname.includes('results.html')) {
+        updateResultsSectionMeta(matches);
+      }
       renderMatches(matches);
     }
 

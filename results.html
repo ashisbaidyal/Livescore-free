@@ -265,12 +265,20 @@
 <div class="max-w-7xl mx-auto w-full px-12 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
 <!-- All Matches Result Grid -->
 <div class="lg:col-span-8 space-y-8">
-<div class="flex justify-between items-end">
+<div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
 <div>
-<h2 class="text-4xl font-black italic uppercase tracking-tighter text-white">Live &amp; Final</h2>
-<p class="text-neutral-500 font-bold uppercase tracking-widest text-xs">Latest results across all divisions</p>
+<h2 id="results-section-title" class="text-4xl font-black italic uppercase tracking-tighter text-white">All Results</h2>
+<p id="results-section-subtitle" class="text-neutral-500 font-bold uppercase tracking-widest text-xs">Recent final scorelines across every sport</p>
 </div>
-<button class="text-primary font-bold uppercase tracking-widest text-xs flex items-center gap-2 hover:underline">View All Schedule <span class="material-symbols-outlined text-sm">arrow_forward</span></button>
+<div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+<div id="results-count-pill" class="px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest text-on-surface/50 whitespace-nowrap">Loading results feed</div>
+<label class="flex flex-col gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-on-surface/35" for="results-league-filter">
+League Filter
+<select id="results-league-filter" class="min-w-[220px] rounded-xl border border-white/10 bg-surface-container-high px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface outline-none transition-colors hover:border-primary/30 focus:border-primary/40">
+<option value="">All leagues</option>
+</select>
+</label>
+</div>
 </div>
 <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <!-- Dynamic match results insected here by script.ss -->
@@ -392,6 +400,6 @@
 </div>
 </div>
 </div>
-<script src="js/script.js?v=1.0.18"></script>
+  <script src="js/script.js?v=1.0.19"></script>
 </body>
 </html>
