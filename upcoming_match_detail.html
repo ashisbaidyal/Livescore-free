@@ -199,7 +199,7 @@
           <div class="lg:col-span-2 space-y-8">
             <div class="bg-surface-container p-8 rounded-[1.5rem] border border-white/5">
               <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary mb-8 italic">Match Information</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
                 <div class="flex items-center gap-4">
                   <span class="material-symbols-outlined text-on-surface/20">stadium</span>
                   <div>
@@ -212,6 +212,20 @@
                   <div>
                     <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-widest">League</div>
                     <div id="league-name" class="text-sm font-bold">Upcoming Event</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <span class="material-symbols-outlined text-on-surface/20">schedule</span>
+                  <div>
+                    <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-widest">Kickoff</div>
+                    <div id="kickoff-detail" class="text-sm font-bold">Awaiting feed</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <span class="material-symbols-outlined text-on-surface/20">tv</span>
+                  <div>
+                    <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-widest">Broadcast</div>
+                    <div id="broadcast-name" class="text-sm font-bold">Channel update pending</div>
                   </div>
                 </div>
               </div>
@@ -236,14 +250,28 @@
               <h4 class="text-xs font-black uppercase tracking-[0.3em] mb-8 italic">Win Probability</h4>
               <div class="space-y-6">
                 <div class="flex justify-between items-end mb-2 font-black italic text-xs">
-                  <span>HOME</span>
-                  <span>DRAW</span>
-                  <span>AWAY</span>
+                  <span id="win-home-label">HOME</span>
+                  <span id="win-draw-label">DRAW</span>
+                  <span id="win-away-label">AWAY</span>
                 </div>
                 <div class="h-4 w-full bg-white/5 rounded-full overflow-hidden flex shadow-inner">
-                  <div class="h-full bg-primary border-r border-white/10" style="width: 45%"></div>
-                  <div class="h-full bg-white/10 border-r border-white/10" style="width: 25%"></div>
-                  <div class="h-full bg-on-surface" style="width: 30%"></div>
+                  <div id="win-home-bar" class="h-full bg-primary border-r border-white/10" style="width: 45%"></div>
+                  <div id="win-draw-bar" class="h-full bg-white/10 border-r border-white/10" style="width: 25%"></div>
+                  <div id="win-away-bar" class="h-full bg-on-surface" style="width: 30%"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-3 text-center">
+                  <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-3">
+                    <div class="text-[9px] font-black uppercase tracking-widest text-on-surface/35 mb-1">Home</div>
+                    <div id="win-home-value" class="text-sm font-black italic">45%</div>
+                  </div>
+                  <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-3">
+                    <div class="text-[9px] font-black uppercase tracking-widest text-on-surface/35 mb-1">Draw</div>
+                    <div id="win-draw-value" class="text-sm font-black italic">25%</div>
+                  </div>
+                  <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-3">
+                    <div class="text-[9px] font-black uppercase tracking-widest text-on-surface/35 mb-1">Away</div>
+                    <div id="win-away-value" class="text-sm font-black italic">30%</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -322,6 +350,6 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.17"></script>
+<script src="js/script.js?v=1.0.18"></script>
 </body>
 </html>

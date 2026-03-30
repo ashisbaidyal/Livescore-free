@@ -5318,6 +5318,130 @@ function formatUpcomingDatePresentation(data = {}) {
   return { timeLabel, dateLabel };
 }
 
+function parseUpcomingRecord(record = '') {
+  const match = String(record || '').trim().match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
+  if (!match) return null;
+  const wins = Number(match[1] || 0);
+  const losses = Number(match[2] || 0);
+  const draws = Number(match[3] || 0);
+  const total = wins + losses + draws;
+  if (!total) return null;
+  return {
+    wins,
+    losses,
+    draws,
+    total,
+    strength: (wins + (draws * 0.5)) / total
+  };
+}
+
+function parseUpcomingMoneyline(value) {
+  const text = String(value ?? '').trim();
+  if (!text || text === '-' || text.toLowerCase() === 'pk') return null;
+  const normalized = Number(text.replace(/[^0-9+-]/g, ''));
+  if (!Number.isFinite(normalized) || normalized === 0) return null;
+  return normalized;
+}
+
+function convertMoneylineToProbability(value) {
+  const moneyline = parseUpcomingMoneyline(value);
+  if (moneyline === null) return null;
+  if (moneyline > 0) return 100 / (moneyline + 100);
+  return Math.abs(moneyline) / (Math.abs(moneyline) + 100);
+}
+
+function computeUpcomingWinProbabilities(data = {}) {
+  const sport = normalizeSportSlug(data?.sport || '', data?.leagueSlug || '');
+  const drawFriendlySports = new Set(['soccer']);
+  const allowDraw = drawFriendlySports.has(sport);
+  const odds = data?.odds || {};
+  const homeOddsProbability = convertMoneylineToProbability(odds.homeOdds);
+  const awayOddsProbability = convertMoneylineToProbability(odds.awayOdds);
+  const drawOddsProbability = allowDraw ? convertMoneylineToProbability(odds.drawOdds) : null;
+
+  if (homeOddsProbability !== null || awayOddsProbability !== null || drawOddsProbability !== null) {
+    const rawHome = homeOddsProbability ?? 0.5;
+    const rawAway = awayOddsProbability ?? 0.5;
+    const rawDraw = allowDraw ? (drawOddsProbability ?? 0.12) : 0;
+    const total = rawHome + rawAway + rawDraw || 1;
+    const normalized = {
+      home: Math.round((rawHome / total) * 100),
+      draw: Math.round((rawDraw / total) * 100),
+      away: Math.round((rawAway / total) * 100)
+    };
+    const diff = 100 - (normalized.home + normalized.draw + normalized.away);
+    normalized.away += diff;
+    return normalized;
+  }
+
+  const homeRecord = parseUpcomingRecord(data?.homeTeam?.record);
+  const awayRecord = parseUpcomingRecord(data?.awayTeam?.record);
+  if (homeRecord || awayRecord) {
+    const homeStrength = homeRecord?.strength ?? 0.5;
+    const awayStrength = awayRecord?.strength ?? 0.5;
+    const combined = homeStrength + awayStrength || 1;
+    const draw = allowDraw
+      ? Math.max(8, Math.min(18, Math.round((((homeRecord?.draws || 0) + (awayRecord?.draws || 0)) / ((homeRecord?.total || 0) + (awayRecord?.total || 0) || 1)) * 100) || 12))
+      : 0;
+    const remaining = 100 - draw;
+    const home = Math.round((homeStrength / combined) * remaining);
+    return {
+      home,
+      draw,
+      away: remaining - home
+    };
+  }
+
+  if (Array.isArray(data?.h2h) && data.h2h.length) {
+    const recent = data.h2h.slice(0, 3);
+    let homeWins = 0;
+    let awayWins = 0;
+    recent.forEach((entry) => {
+      const scoreValues = String(entry?.score || '').match(/\d+/g)?.map((value) => Number(value)) || [];
+      if (scoreValues.length < 2) return;
+      const homeEntry = String(entry?.home || '').trim().toLowerCase();
+      const homeName = String(data?.homeTeam?.name || '').trim().toLowerCase();
+      const awayName = String(data?.awayTeam?.name || '').trim().toLowerCase();
+      const didHomeTeamStart = homeEntry === homeName;
+      if (scoreValues[0] === scoreValues[1]) return;
+      const listedHomeWon = scoreValues[0] > scoreValues[1];
+      const actualHomeWon = didHomeTeamStart ? listedHomeWon : !listedHomeWon;
+      if (actualHomeWon) homeWins += 1;
+      else awayWins += 1;
+    });
+    if (homeWins || awayWins) {
+      const total = homeWins + awayWins;
+      const home = Math.round((homeWins / total) * 100);
+      return {
+        home,
+        draw: 0,
+        away: 100 - home
+      };
+    }
+  }
+
+  return {
+    home: allowDraw ? 44 : 50,
+    draw: allowDraw ? 12 : 0,
+    away: allowDraw ? 44 : 50
+  };
+}
+
+function formatUpcomingKickoffDetail(data = {}, presentation = {}) {
+  const detailParts = [];
+  if (hasUsefulMatchText(data?.statusText, ['loading...', 'scheduled event'])) {
+    detailParts.push(String(data.statusText).trim());
+  }
+  if (hasUsefulMatchText(presentation.timeLabel, ['00:00'])) {
+    detailParts.push(presentation.timeLabel);
+  }
+  if (hasUsefulMatchText(presentation.dateLabel, ['scheduled event', 'loading...'])) {
+    detailParts.push(presentation.dateLabel);
+  }
+  const uniqueParts = Array.from(new Set(detailParts.filter(Boolean)));
+  return uniqueParts.length ? uniqueParts.join(' · ') : 'Awaiting schedule update';
+}
+
 function renderUpcomingMatchDetail(data) {
   if (!homeTeamName || !data || !data.homeTeam) return;
 
@@ -5331,11 +5455,32 @@ function renderUpcomingMatchDetail(data) {
   const lName = document.getElementById('league-name');
   const h2hContainer = document.getElementById('h2h-container');
   const leagueInfo = document.getElementById('match-league-info');
+  const kickoffDetail = document.getElementById('kickoff-detail');
+  const broadcastName = document.getElementById('broadcast-name');
+  const winHomeLabel = document.getElementById('win-home-label');
+  const winDrawLabel = document.getElementById('win-draw-label');
+  const winAwayLabel = document.getElementById('win-away-label');
+  const winHomeBar = document.getElementById('win-home-bar');
+  const winDrawBar = document.getElementById('win-draw-bar');
+  const winAwayBar = document.getElementById('win-away-bar');
+  const winHomeValue = document.getElementById('win-home-value');
+  const winDrawValue = document.getElementById('win-draw-value');
+  const winAwayValue = document.getElementById('win-away-value');
   const { timeLabel, dateLabel } = formatUpcomingDatePresentation(data);
   const effectiveH2H = Array.isArray(data.h2h) && data.h2h.length ? data.h2h : buildSyntheticHeadToHead(data);
+  const upcomingProbabilities = computeUpcomingWinProbabilities({
+    ...data,
+    h2h: effectiveH2H
+  });
+  const homeDisplayName = data.homeTeam.fullName || data.homeTeam.name || 'TBD';
+  const awayDisplayName = data.awayTeam.fullName || data.awayTeam.name || 'TBD';
+  const homeProbabilityLabel = data.homeTeam.abbreviation || data.homeTeam.shortName || data.homeTeam.name || 'HOME';
+  const awayProbabilityLabel = data.awayTeam.abbreviation || data.awayTeam.shortName || data.awayTeam.name || 'AWAY';
+  const drawLabel = upcomingProbabilities.draw > 0 ? 'DRAW' : 'EDGE';
+  const drawValue = `${upcomingProbabilities.draw}%`;
 
-  if (hName) hName.textContent = data.homeTeam.name || 'TBD';
-  if (aName) aName.textContent = data.awayTeam.name || 'TBD';
+  if (hName) hName.textContent = homeDisplayName;
+  if (aName) aName.textContent = awayDisplayName;
   if (hLogo) hLogo.src = data.homeTeam.logo || FALLBACK_LOGO;
   if (aLogo) aLogo.src = data.awayTeam.logo || FALLBACK_LOGO;
   if (mTime) mTime.textContent = timeLabel;
@@ -5345,6 +5490,20 @@ function renderUpcomingMatchDetail(data) {
     : 'Venue update pending';
   if (lName) lName.textContent = data.league || data.leagueSlug?.toUpperCase() || 'Scheduled Match';
   if (leagueInfo) leagueInfo.textContent = data.league || data.leagueSlug?.toUpperCase() || 'Scheduled Match';
+  if (kickoffDetail) kickoffDetail.textContent = formatUpcomingKickoffDetail(data, { timeLabel, dateLabel });
+  if (broadcastName) broadcastName.textContent = hasUsefulMatchText(data.broadcast, ['details unavailable'])
+    ? data.broadcast
+    : 'Broadcast update pending';
+  if (winHomeLabel) winHomeLabel.textContent = homeProbabilityLabel.toUpperCase();
+  if (winDrawLabel) winDrawLabel.textContent = drawLabel;
+  if (winAwayLabel) winAwayLabel.textContent = awayProbabilityLabel.toUpperCase();
+  if (winHomeBar) winHomeBar.style.width = `${upcomingProbabilities.home}%`;
+  if (winDrawBar) winDrawBar.style.width = `${upcomingProbabilities.draw}%`;
+  if (winAwayBar) winAwayBar.style.width = `${upcomingProbabilities.away}%`;
+  if (winHomeValue) winHomeValue.textContent = `${upcomingProbabilities.home}%`;
+  if (winDrawValue) winDrawValue.textContent = drawValue;
+  if (winAwayValue) winAwayValue.textContent = `${upcomingProbabilities.away}%`;
+  document.title = `${homeDisplayName} vs ${awayDisplayName} | Upcoming Match Centre`;
 
   if (h2hContainer && effectiveH2H.length) {
     h2hContainer.innerHTML = effectiveH2H.map(match => `
