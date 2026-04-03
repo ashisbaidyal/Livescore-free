@@ -2152,6 +2152,225 @@ function ensureMobileTopNav() {
   header.append(mobileNav);
 }
 
+// Pretext-inspired canvas fitting: prepare text metrics once, then relayout on resize/update.
+const PRETEXT_BASE_FONT_SIZE = 100;
+const pretextPreparedCache = new Map();
+const pretextMeasureCache = new Map();
+let pretextCanvasContext = null;
+let pretextLayoutFrame = 0;
+
+function getPretextCanvasContext() {
+  if (!pretextCanvasContext) {
+    const canvas = document.createElement('canvas');
+    pretextCanvasContext = canvas.getContext('2d');
+  }
+  return pretextCanvasContext;
+}
+
+function buildPretextFont(style, sizePx) {
+  const fontStyle = style.fontStyle && style.fontStyle !== 'normal' ? `${style.fontStyle} ` : '';
+  const fontWeight = style.fontWeight || '700';
+  const fontFamily = style.fontFamily || 'Lexend, sans-serif';
+  return `${fontStyle}${fontWeight} ${sizePx}px ${fontFamily}`;
+}
+
+function measurePretextText(text, font) {
+  const cacheKey = `${font}::${text}`;
+  if (pretextMeasureCache.has(cacheKey)) return pretextMeasureCache.get(cacheKey);
+  const context = getPretextCanvasContext();
+  if (!context) return text.length * PRETEXT_BASE_FONT_SIZE * 0.5;
+  context.font = font;
+  const width = context.measureText(text).width;
+  pretextMeasureCache.set(cacheKey, width);
+  return width;
+}
+
+function splitPretextTokens(text = '') {
+  return String(text)
+    .replace(/\r/g, '')
+    .split(/(\n|\s+)/)
+    .filter((token) => token.length);
+}
+
+function preparePretextText(text, style) {
+  const normalizedText = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!normalizedText) return null;
+
+  const font = buildPretextFont(style, PRETEXT_BASE_FONT_SIZE);
+  const cacheKey = `${font}::${normalizedText}`;
+  if (pretextPreparedCache.has(cacheKey)) return pretextPreparedCache.get(cacheKey);
+
+  const prepared = {
+    text: normalizedText,
+    baseFontSize: PRETEXT_BASE_FONT_SIZE,
+    font,
+    totalWidth: measurePretextText(normalizedText, font),
+    tokens: splitPretextTokens(normalizedText).map((token) => ({
+      text: token,
+      isSpace: /^\s+$/.test(token),
+      isBreak: token === '\n',
+      width: measurePretextText(token, font)
+    }))
+  };
+
+  pretextPreparedCache.set(cacheKey, prepared);
+  return prepared;
+}
+
+function layoutPretext(prepared, options) {
+  if (!prepared) return { fits: true, size: 0, width: 0, lines: 0, height: 0 };
+
+  const {
+    fontSize,
+    maxWidth,
+    maxHeight = 0,
+    maxLines = 1,
+    mode = 'single',
+    lineHeight = 1.05
+  } = options;
+
+  const scale = fontSize / prepared.baseFontSize;
+  if (mode === 'single') {
+    const width = prepared.totalWidth * scale;
+    const height = fontSize * lineHeight;
+    return {
+      fits: width <= maxWidth + 0.5 && (!maxHeight || height <= maxHeight + 0.5),
+      width,
+      height,
+      lines: 1
+    };
+  }
+
+  let lineWidth = 0;
+  let maxLineWidth = 0;
+  let lineCount = 1;
+
+  prepared.tokens.forEach((token) => {
+    if (token.isBreak) {
+      maxLineWidth = Math.max(maxLineWidth, lineWidth);
+      lineWidth = 0;
+      lineCount += 1;
+      return;
+    }
+
+    const tokenWidth = token.width * scale;
+    const wouldOverflow = !token.isSpace && lineWidth > 0 && lineWidth + tokenWidth > maxWidth;
+    if (wouldOverflow) {
+      maxLineWidth = Math.max(maxLineWidth, lineWidth);
+      lineWidth = tokenWidth;
+      lineCount += 1;
+      return;
+    }
+
+    lineWidth += tokenWidth;
+  });
+
+  maxLineWidth = Math.max(maxLineWidth, lineWidth);
+  const height = lineCount * fontSize * lineHeight;
+  return {
+    fits: maxLineWidth <= maxWidth + 0.5 && lineCount <= maxLines && (!maxHeight || height <= maxHeight + 0.5),
+    width: maxLineWidth,
+    height,
+    lines: lineCount
+  };
+}
+
+function primePretextTargets(root = document) {
+  const targetSets = [
+    ['#home-team-name, #away-team-name', { mode: 'single', min: '24' }],
+    ['#home-score, #away-score', { mode: 'block', maxLines: '2', min: '22' }],
+    ['#match-clock', { mode: 'single', min: '18' }],
+    ['#match-time, #match-date', { mode: 'single', min: '18' }],
+    ['#stadium-name, #league-name, #broadcast-name', { mode: 'block', maxLines: '2', min: '14' }],
+    ['#lineup-home-tab, #lineup-away-tab, #bet-home-team, #bet-away-team', { mode: 'single', min: '10' }],
+    ['.lsf-pretext-card-title', { mode: 'block', maxLines: '2', min: '9' }],
+    ['.lsf-pretext-card-meta', { mode: 'single', min: '8' }],
+    ['[data-hero-headline]', { mode: 'block', maxLines: '3', min: '24' }],
+    ['[data-hero-clock]', { mode: 'block', maxLines: '2', min: '18' }]
+  ];
+
+  targetSets.forEach(([selector, options]) => {
+    root.querySelectorAll(selector).forEach((node) => {
+      if (!node.dataset.pretextFit) node.dataset.pretextFit = 'true';
+      if (options.mode && !node.dataset.pretextMode) node.dataset.pretextMode = options.mode;
+      if (options.maxLines && !node.dataset.pretextMaxLines) node.dataset.pretextMaxLines = options.maxLines;
+      if (options.min && !node.dataset.pretextMin) node.dataset.pretextMin = options.min;
+    });
+  });
+}
+
+function fitElementWithPretext(element) {
+  if (!(element instanceof HTMLElement)) return;
+
+  const rawText = (element.textContent || '').replace(/\s+/g, ' ').trim();
+  if (!rawText) return;
+
+  const style = window.getComputedStyle(element);
+  const computedFontSize = Number.parseFloat(style.fontSize) || 16;
+  if (!element.dataset.pretextMax) {
+    element.dataset.pretextMax = String(computedFontSize);
+  }
+
+  const maxSize = Number.parseFloat(element.dataset.pretextMax || '') || computedFontSize;
+  const minSize = Number.parseFloat(element.dataset.pretextMin || '') || Math.max(10, maxSize * 0.55);
+  const mode = element.dataset.pretextMode || 'single';
+  const maxLines = Number.parseInt(element.dataset.pretextMaxLines || (mode === 'single' ? '1' : '2'), 10) || 1;
+  const declaredHeight = Number.parseFloat(element.dataset.pretextHeight || '');
+  const parentWidth = element.parentElement?.clientWidth || 0;
+  const availableWidth = element.clientWidth || parentWidth;
+  const availableHeight = Number.isFinite(declaredHeight) ? declaredHeight : 0;
+  if (!availableWidth) return;
+
+  const parsedLineHeight = Number.parseFloat(style.lineHeight);
+  const lineHeightRatio = Number.isFinite(parsedLineHeight)
+    ? parsedLineHeight / computedFontSize
+    : 1.02;
+  const prepared = preparePretextText(rawText, style);
+  if (!prepared) return;
+
+  let low = minSize;
+  let high = maxSize;
+  let best = minSize;
+
+  for (let iteration = 0; iteration < 12; iteration += 1) {
+    const probe = (low + high) / 2;
+    const layout = layoutPretext(prepared, {
+      fontSize: probe,
+      maxWidth: availableWidth,
+      maxHeight: availableHeight,
+      maxLines,
+      mode,
+      lineHeight: lineHeightRatio
+    });
+
+    if (layout.fits) {
+      best = probe;
+      low = probe;
+    } else {
+      high = probe;
+    }
+  }
+
+  element.style.fontSize = `${best.toFixed(2)}px`;
+  element.style.lineHeight = String(lineHeightRatio);
+}
+
+function runPretextLayout(root = document) {
+  const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+  primePretextTargets(scope);
+  scope.querySelectorAll('[data-pretext-fit]').forEach((element) => {
+    fitElementWithPretext(element);
+  });
+}
+
+function schedulePretextLayout(root = document) {
+  const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+  cancelAnimationFrame(pretextLayoutFrame);
+  pretextLayoutFrame = requestAnimationFrame(() => runPretextLayout(scope));
+}
+
+window.addEventListener('resize', () => schedulePretextLayout(document), { passive: true });
+
 function readStoredReminders() {
   try {
     const reminders = JSON.parse(localStorage.getItem(REMINDER_STORAGE_KEY) || '[]');
@@ -2671,10 +2890,15 @@ document.addEventListener('DOMContentLoaded', () => {
   hydrateNavigationLinks();
   patchLegacyImages();
   setupAppShell();
+  ensureMobileTopNav();
   updateFeedRibbon();
   registerServiceWorker();
   bootstrapSavedReminders();
   startReminderHeartbeat();
+  schedulePretextLayout(document);
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => schedulePretextLayout(document)).catch(() => {});
+  }
 
   // --- HEADER & NAVIGATION LOGIC ---
   const path = window.location.pathname;
@@ -2702,7 +2926,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 2. Highlight Active Top Nav Link (Glow Effect)
-  const topNavLinks = document.querySelectorAll('#top-nav-links a');
+  const topNavLinks = document.querySelectorAll('#top-nav-links a, #lsf-mobile-top-nav a[data-page-link]');
   topNavLinks.forEach(link => {
     const href = link.getAttribute('href');
     if (href) {
@@ -2710,11 +2934,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const cleanFileName = fileName.replace('.html', '').replace('/', '') || 'index';
 
       if (cleanHref === cleanFileName) {
-        link.classList.remove('text-on-surface/60');
-        link.classList.add('text-primary', 'border-b-2', 'border-primary', 'pb-1');
+        if (link.classList.contains('lsf-mobile-top-nav-link') || link.classList.contains('lsf-mobile-more-link')) {
+          link.classList.add('is-active');
+        } else {
+          link.classList.remove('text-on-surface/60');
+          link.classList.add('text-primary', 'border-b-2', 'border-primary', 'pb-1');
+        }
       }
     }
   });
+
+  const mobileMoreTrigger = document.querySelector('#lsf-mobile-top-nav [data-nav-more-trigger]');
+  if (mobileMoreTrigger) {
+    const hasActiveMoreLink = Array.from(document.querySelectorAll('#lsf-mobile-top-nav .lsf-mobile-more-link')).some((link) =>
+      link.classList.contains('is-active')
+    );
+    if (hasActiveMoreLink) mobileMoreTrigger.classList.add('is-active');
+  }
 
   // 3. Header Scroll Behavior (Hide on scroll down, show on scroll up)
   const header = document.getElementById('main-header');
@@ -3396,12 +3632,20 @@ function renderHeroMatchSlide(entry, index, isHomePage = false) {
             <span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">${match.league || match.sport || 'Feature'}</span>
           </div>
           <div class="flex flex-col lg:flex-row lg:items-end gap-6 mb-6">
-            <h1 class="font-headline font-black text-5xl sm:text-6xl md:text-8xl tracking-tighter leading-[0.85] uppercase italic text-on-surface">
+            <h1 class="font-headline font-black text-5xl sm:text-6xl md:text-8xl tracking-tighter leading-[0.85] uppercase italic text-on-surface"
+                data-hero-headline
+                data-pretext-mode="block"
+                data-pretext-max-lines="2"
+                data-pretext-min="26">
               ${homeCode} <span class="text-primary">${scoreText}</span> ${awayCode}
             </h1>
             <div class="lg:mb-3">
               <div class="text-xs font-black uppercase text-primary tracking-widest mb-1">${clockLabel}</div>
-              <div class="text-2xl sm:text-4xl font-black italic leading-tight">${formatHeroClock(match)}</div>
+              <div class="text-2xl sm:text-4xl font-black italic leading-tight"
+                   data-hero-clock
+                   data-pretext-mode="block"
+                   data-pretext-max-lines="2"
+                   data-pretext-min="18">${formatHeroClock(match)}</div>
             </div>
           </div>
           <div class="grid gap-3 sm:grid-cols-2 max-w-3xl mb-8">
@@ -3444,7 +3688,11 @@ function renderHeroNewsSlide(entry, index) {
               ${(article.source?.domain || article.source?.name || article.sportLabel || 'Source')}
             </span>
           </div>
-          <h1 class="font-headline font-black text-4xl sm:text-6xl md:text-7xl tracking-tighter leading-[0.9] uppercase italic text-on-surface max-w-4xl">
+          <h1 class="font-headline font-black text-4xl sm:text-6xl md:text-7xl tracking-tighter leading-[0.9] uppercase italic text-on-surface max-w-4xl"
+              data-hero-headline
+              data-pretext-mode="block"
+              data-pretext-max-lines="4"
+              data-pretext-min="24">
             ${article.headline || 'Breaking Sports Update'}
           </h1>
           <p class="mt-6 text-base sm:text-lg max-w-3xl text-on-surface/65 font-bold leading-relaxed">
@@ -3548,6 +3796,7 @@ function renderHeroSlider(items, statusFilter, options = {}) {
       ${isHomePage ? renderHomeHeroWidgets(options.upcomingMatches || [], options.newsList || []) : ''}
     </div>
   `;
+  schedulePretextLayout(heroSliderContainer);
 
   let currentSlide = activeIndex;
   const slideNodes = Array.from(heroSliderContainer.querySelectorAll('[data-hero-slide]'));
@@ -5229,7 +5478,10 @@ function renderMatches(matches) {
           
           <div class="flex justify-between items-center relative">
             <div class="flex items-center gap-2">
-              <span class="${isLive ? 'text-primary' : 'text-on-surface/50'} font-black italic text-[10px] tracking-widest truncate max-w-[150px]">
+              <span class="${isLive ? 'text-primary' : 'text-on-surface/50'} lsf-pretext-card-meta font-black italic text-[10px] tracking-widest truncate max-w-[150px]"
+                    data-pretext-fit
+                    data-pretext-mode="single"
+                    data-pretext-min="8">
                 ${currentTab === 'all' ? `<span class="bg-white/10 px-1.5 py-0.5 rounded text-[8px] mr-1.5 text-on-surface/60">${match.sport.toUpperCase()}</span>` : ''}${match.league || 'Event'}
               </span>
             </div>
@@ -5241,14 +5493,21 @@ function renderMatches(matches) {
               <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center font-black italic">
                 <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" alt="${match.homeTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
               </div>
-              <span class="text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2">
+              <span class="lsf-pretext-card-title text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2"
+                    data-pretext-fit
+                    data-pretext-mode="block"
+                    data-pretext-max-lines="2"
+                    data-pretext-min="9">
                 ${match.homeTeam.name}
               </span>
             </div>
             
             <div class="flex flex-col items-center justify-center">
               ${isLive || isFinished
-        ? `<span class="text-4xl font-black italic ${isLive ? 'text-primary' : 'text-on-surface/50'}">${match.homeTeam.score} - ${match.awayTeam.score}</span>`
+        ? `<span class="lsf-pretext-card-title text-4xl font-black italic ${isLive ? 'text-primary' : 'text-on-surface/50'}"
+                 data-pretext-fit
+                 data-pretext-mode="single"
+                 data-pretext-min="18">${match.homeTeam.score} - ${match.awayTeam.score}</span>`
         : `<span class="text-4xl font-black italic text-on-surface/20">VS</span>`
       }
               <span class="text-[10px] font-black text-on-surface-variant mt-2 tracking-widest uppercase truncate max-w-[80px]">
@@ -5260,7 +5519,11 @@ function renderMatches(matches) {
               <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center font-black italic">
                 <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" alt="${match.awayTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
               </div>
-              <span class="text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2">
+              <span class="lsf-pretext-card-title text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2"
+                    data-pretext-fit
+                    data-pretext-mode="block"
+                    data-pretext-max-lines="2"
+                    data-pretext-min="9">
                 ${match.awayTeam.name}
               </span>
             </div>
@@ -5283,6 +5546,7 @@ function renderMatches(matches) {
       </a>
     `;
   }).join('');
+  schedulePretextLayout(matchesContainer);
 }
 // --- RENDER MATCH DETAILS ---
 let activeLineupTab = 'home';
@@ -5764,6 +6028,7 @@ function renderMatchLineup(data) {
     
     if (!lineup || lineup.length === 0) {
         container.innerHTML = `<p class="text-[10px] font-black uppercase tracking-widest opacity-40">No lineup data available yet.</p>`;
+        schedulePretextLayout(container);
         return;
     }
 
@@ -5784,6 +6049,7 @@ function renderMatchLineup(data) {
             <button class="material-symbols-outlined text-white/20 group-hover:text-primary transition-colors text-lg">info</button>
         </div>
     `).join('');
+    schedulePretextLayout(container);
 }
 
 // --- FETCH UPCOMING MATCH DETAIL ---
@@ -5812,6 +6078,8 @@ async function fetchUpcomingMatchDetail(id, sport = 'soccer', league = 'eng.1') 
     console.error('Failed to fetch upcoming match detail:', err);
     setMatchUnavailableState('Error loading match', 'Check console for details');
   }
+
+  schedulePretextLayout(document);
 }
 
 function formatUpcomingDatePresentation(data = {}) {
@@ -6034,6 +6302,8 @@ function renderUpcomingMatchDetail(data) {
       </div>
     `;
   }
+
+  schedulePretextLayout(document);
 }
 
 // --- RECENT RESULTS (FINISHED MATCHES) ---
@@ -6064,15 +6334,16 @@ function renderRecentResults(matches) {
         <span class="text-primary font-black italic">FINAL</span>
       </div>
       <div class="flex justify-between items-center mb-2">
-        <span class="font-bold text-sm truncate max-w-[120px]">${match.homeTeam.name}</span>
+        <span class="lsf-pretext-card-title font-bold text-sm truncate max-w-[120px]" data-pretext-fit data-pretext-mode="single" data-pretext-min="11">${match.homeTeam.name}</span>
         <span class="font-black text-lg ${match.homeTeam.score > match.awayTeam.score ? 'text-primary' : ''}">${match.homeTeam.score}</span>
       </div>
       <div class="flex justify-between items-center">
-        <span class="font-bold text-sm truncate max-w-[120px]">${match.awayTeam.name}</span>
+        <span class="lsf-pretext-card-title font-bold text-sm truncate max-w-[120px]" data-pretext-fit data-pretext-mode="single" data-pretext-min="11">${match.awayTeam.name}</span>
         <span class="font-black text-lg ${match.awayTeam.score > match.homeTeam.score ? 'text-primary' : ''}">${match.awayTeam.score}</span>
       </div>
     </div>
   `).join('');
+  schedulePretextLayout(recentResultsContainer);
 }
 
 // --- UPCOMING TODAY (SCHEDULED) ---
@@ -6104,24 +6375,34 @@ function renderUpcomingToday(matches) {
 
   upcomingTodayContainer.innerHTML = matches.map(match => `
     <div class="flex-none w-72 bg-surface p-6 rounded-xl border-l-4 border-white/10 shadow-2xl group cursor-pointer hover:bg-surface-container transition-all hover:border-primary" onclick="window.location.href='${buildMatchUrl(match)}'">
-      <div class="text-[10px] font-black text-on-surface/40 group-hover:text-primary tracking-widest uppercase mb-4 transition-colors">${match.sport.toUpperCase()} / ${match.time}</div>
+      <div class="lsf-pretext-card-meta text-[10px] font-black text-on-surface/40 group-hover:text-primary tracking-widest uppercase mb-4 transition-colors"
+           data-pretext-fit
+           data-pretext-mode="single"
+           data-pretext-min="8">${match.sport.toUpperCase()} / ${match.time}</div>
       <div class="space-y-4 mb-6">
         <div class="flex items-center space-x-3">
           <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center border border-white/5">
             <img src="${match.homeTeam.logo}" class="w-5 h-5 object-contain" onerror="this.src='/public/logo.png'">
           </div>
-          <span class="font-bold uppercase tracking-tight text-sm truncate">${match.homeTeam.name}</span>
+          <span class="lsf-pretext-card-title font-bold uppercase tracking-tight text-sm truncate"
+                data-pretext-fit
+                data-pretext-mode="single"
+                data-pretext-min="11">${match.homeTeam.name}</span>
         </div>
         <div class="flex items-center space-x-3">
           <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center border border-white/5">
             <img src="${match.awayTeam.logo}" class="w-5 h-5 object-contain" onerror="this.src='/public/logo.png'">
           </div>
-          <span class="font-bold uppercase tracking-tight text-sm truncate">${match.awayTeam.name}</span>
+          <span class="lsf-pretext-card-title font-bold uppercase tracking-tight text-sm truncate"
+                data-pretext-fit
+                data-pretext-mode="single"
+                data-pretext-min="11">${match.awayTeam.name}</span>
         </div>
       </div>
       <button onclick="event.stopPropagation(); handleNotification('${match.id}', '${encodeURIComponent(`${match.homeTeam.name} vs ${match.awayTeam.name}`)}')" class="w-full py-2 border border-white/10 text-[10px] font-black tracking-widest uppercase group-hover:bg-primary group-hover:text-on-primary transition-all">SET REMINDER</button>
     </div>
   `).join('');
+  schedulePretextLayout(upcomingTodayContainer);
 }
 
 function setupUpcomingControls() {
