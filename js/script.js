@@ -58,7 +58,6 @@ const REMINDER_STORAGE_KEY = 'lsf-reminders';
 const INSTALL_BANNER_DISMISSED_KEY = 'lsf-install-banner-dismissed';
 const NETWORK_AD_SCRIPT_URL = 'https://pl28913139.profitablecpmratenetwork.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js';
 const NETWORK_AD_CONTAINER_ID = 'container-01fac86ec9e3085bcb989e025d13aa86';
-const NETWORK_AD_FALLBACK_HEIGHT = 192;
 const reminderTimerHandles = new Map();
 
 window._cachedNews = [];
@@ -68,76 +67,80 @@ window._cachedBlogPosts = [];
 window._lsfHeroAutoplayHandle = null;
 window._lsfTickerAutoplayHandle = null;
 window._lsfHeroActiveKey = '';
+window._lsfNetworkAdObserver = null;
 
-function buildNetworkAdSlotDoc(height) {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      min-height: ${height}px;
-      overflow: hidden;
-      background: #111;
-    }
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #${NETWORK_AD_CONTAINER_ID} {
-      width: 100%;
-      min-height: ${height}px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  </style>
-</head>
-<body>
-  <script async="async" data-cfasync="false" src="${NETWORK_AD_SCRIPT_URL}"><\/script>
-  <div id="${NETWORK_AD_CONTAINER_ID}"></div>
-</body>
-</html>`;
+function isResultsHubPage() {
+  return Boolean(
+    document.getElementById('results-section-title')
+    || document.getElementById('results-league-filter')
+    || window.location.pathname.includes('results')
+  );
+}
+
+function syncMirroredNetworkAds() {
+  const primarySlot = document.querySelector('[data-lsf-network-ad-primary="true"]');
+  const primaryContainer = primarySlot?.querySelector(`#${NETWORK_AD_CONTAINER_ID}`);
+  if (!primaryContainer) return;
+  const renderedNodes = Array.from(primaryContainer.childNodes || []);
+  if (!renderedNodes.length) return;
+
+  primarySlot.dataset.state = 'ready';
+  document.querySelectorAll('[data-lsf-network-ad-mirror="true"]').forEach((slot) => {
+    slot.replaceChildren(...renderedNodes.map((node) => node.cloneNode(true)));
+    slot.dataset.state = 'ready';
+  });
+}
+
+function ensureNetworkAdBootstrapped() {
+  if (document.querySelector('script[data-lsf-network-ad-script="true"]')) return;
+  const script = document.createElement('script');
+  script.async = true;
+  script.dataset.cfasync = 'false';
+  script.dataset.lsfNetworkAdScript = 'true';
+  script.src = NETWORK_AD_SCRIPT_URL;
+  document.body.appendChild(script);
 }
 
 function renderNetworkAdSlots(root = document) {
   if (!root?.querySelectorAll) return;
-  const slots = root.querySelectorAll('[data-lsf-network-ad]');
+  const slots = Array.from(root.querySelectorAll('[data-lsf-network-ad]'));
   if (!slots.length) return;
 
-  slots.forEach((slot, index) => {
+  const primarySlot = slots[0];
+  primarySlot.dataset.lsfAdReady = 'true';
+  primarySlot.dataset.lsfNetworkAdPrimary = 'true';
+  primarySlot.dataset.state = 'loading';
+
+  if (!primarySlot.querySelector(`#${NETWORK_AD_CONTAINER_ID}`)) {
+    const primaryContainer = document.createElement('div');
+    primaryContainer.id = NETWORK_AD_CONTAINER_ID;
+    primarySlot.replaceChildren(primaryContainer);
+  }
+
+  slots.slice(1).forEach((slot) => {
     if (slot.dataset.lsfAdReady === 'true') return;
-
-    const rectHeight = Math.round(slot.getBoundingClientRect().height || 0);
-    const declaredHeight = Number.parseInt(slot.dataset.adHeight || '', 10) || 0;
-    const height = Math.max(declaredHeight, rectHeight, NETWORK_AD_FALLBACK_HEIGHT);
-    const iframe = document.createElement('iframe');
-
-    iframe.className = 'lsf-network-ad-frame';
-    iframe.loading = 'lazy';
-    iframe.referrerPolicy = 'no-referrer-when-downgrade';
-    iframe.title = slot.dataset.adTitle || `Sponsored content ${index + 1}`;
-    iframe.setAttribute('aria-label', iframe.title);
-    iframe.setAttribute('scrolling', 'no');
-    iframe.setAttribute(
-      'sandbox',
-      'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation'
-    );
-    iframe.srcdoc = buildNetworkAdSlotDoc(height);
-
-    slot.dataset.state = 'loading';
-    iframe.addEventListener('load', () => {
-      slot.dataset.state = 'ready';
-    });
-
-    slot.replaceChildren(iframe);
     slot.dataset.lsfAdReady = 'true';
+    slot.dataset.lsfNetworkAdMirror = 'true';
+    slot.dataset.state = 'loading';
+    slot.replaceChildren();
   });
+
+  if (!window._lsfNetworkAdObserver) {
+    window._lsfNetworkAdObserver = new MutationObserver(() => {
+      syncMirroredNetworkAds();
+    });
+  } else {
+    window._lsfNetworkAdObserver.disconnect();
+  }
+
+  const observedContainer = primarySlot.querySelector(`#${NETWORK_AD_CONTAINER_ID}`);
+  if (observedContainer) {
+    window._lsfNetworkAdObserver.observe(observedContainer, { childList: true, subtree: true });
+  }
+
+  ensureNetworkAdBootstrapped();
+  window.setTimeout(syncMirroredNetworkAds, 2500);
+  window.setTimeout(syncMirroredNetworkAds, 5000);
 }
 
 // --- REALTIME MANAGER (WebSocket/SSE Hybrid) ---
@@ -2213,15 +2216,53 @@ function appendHeaderActions() {
   notifyButton.setAttribute('title', 'Open alerts');
 }
 
+function prepareHeaderShell() {
+  const header = document.getElementById('main-header');
+  if (!header) return;
+
+  const actionShell = header.querySelector(':scope > div > div:last-child');
+  if (actionShell) actionShell.id = 'lsf-header-actions';
+
+  const searchButton = Array.from(header.querySelectorAll('button')).find((button) =>
+    (button.getAttribute('onclick') || '').includes('openSearchModal')
+  );
+  if (searchButton) searchButton.id = 'lsf-search-trigger';
+
+  const liveText = document.getElementById('live-count-text');
+  const liveIndicator = liveText?.parentElement;
+  if (liveIndicator) {
+    liveIndicator.id = 'lsf-live-indicator';
+    const icon = liveIndicator.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = 'broadcast_on_personal';
+  }
+}
+
+const MOBILE_PRIMARY_NAV = {
+  index: { icon: 'home', label: 'Home' },
+  live: { icon: 'flag', label: 'Live Score' },
+  upcoming: { icon: 'calendar_month', label: 'Upcoming' },
+  results: { icon: 'history', label: 'Results' }
+};
+
 function createMobileTopNavLink(sourceLink, extraClass = '') {
   const href = sourceLink.getAttribute('href');
   if (!href) return null;
+  const pageKey = (href.split('/').pop() || 'index.html').replace('.html', '') || 'index';
+  const meta = MOBILE_PRIMARY_NAV[pageKey] || {
+    icon: 'link',
+    label: (sourceLink.textContent || '').trim()
+  };
 
   const link = document.createElement('a');
   link.href = href;
-  link.textContent = (sourceLink.textContent || '').trim();
+  link.innerHTML = `
+    <span class="material-symbols-outlined lsf-mobile-nav-icon">${meta.icon}</span>
+    <span class="lsf-mobile-nav-label">${meta.label}</span>
+  `;
   link.className = `lsf-mobile-top-nav-link ${extraClass}`.trim();
   link.dataset.pageLink = 'true';
+  link.dataset.pageKey = pageKey;
+  link.setAttribute('aria-label', meta.label);
   return link;
 }
 
@@ -2230,18 +2271,18 @@ function ensureMobileTopNav() {
   const desktopNav = document.getElementById('top-nav-links');
   if (!header || !desktopNav || document.getElementById('lsf-mobile-top-nav')) return;
 
-  const mobileNav = document.createElement('div');
+  const mobileNav = document.createElement('nav');
   mobileNav.id = 'lsf-mobile-top-nav';
   mobileNav.className = 'lsf-mobile-top-nav lg:hidden';
 
   const rail = document.createElement('div');
   rail.className = 'lsf-mobile-top-nav-scroll';
 
-  Array.from(desktopNav.children).forEach((item) => {
-    if (item.matches('a[href]')) {
-      const link = createMobileTopNavLink(item);
-      if (link) rail.append(link);
-    }
+  ['index.html', 'live.html', 'upcoming.html', 'results.html'].forEach((href) => {
+    const sourceLink = desktopNav.querySelector(`a[href="${href}"]`);
+    if (!sourceLink) return;
+    const link = createMobileTopNavLink(sourceLink);
+    if (link) rail.append(link);
   });
 
   const moreGroup = desktopNav.querySelector('.group');
@@ -2254,9 +2295,13 @@ function ensureMobileTopNav() {
     trigger.type = 'button';
     trigger.className = 'lsf-mobile-top-nav-trigger';
     trigger.dataset.navMoreTrigger = 'true';
-    trigger.innerHTML = 'More <span class="material-symbols-outlined">expand_more</span>';
+    trigger.innerHTML = `
+      <span class="material-symbols-outlined lsf-mobile-nav-icon">more_horiz</span>
+      <span class="lsf-mobile-nav-label">More</span>
+    `;
     trigger.setAttribute('aria-haspopup', 'true');
     trigger.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-label', 'Open more menu');
 
     const menu = document.createElement('div');
     menu.className = 'lsf-mobile-more-menu';
@@ -2285,7 +2330,12 @@ function ensureMobileTopNav() {
   }
 
   mobileNav.append(rail);
-  header.append(mobileNav);
+  document.body.append(mobileNav);
+  document.body.classList.add('lsf-mobile-nav-ready');
+}
+
+function isCompactMobileShell() {
+  return window.matchMedia('(max-width: 1023px)').matches;
 }
 
 // Pretext-inspired canvas fitting: prepare text metrics once, then relayout on resize/update.
@@ -2928,12 +2978,13 @@ function updateInstallUi() {
   const bannerButton = document.getElementById('lsf-install-banner-button');
   const fab = document.getElementById('lsf-install-fab');
   const canInstall = Boolean(deferredInstallPrompt);
+  const canShowInstall = canInstall && !isCompactMobileShell();
   const bannerDismissed = localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY) === '1';
 
-  if (installButton) installButton.hidden = !canInstall;
-  if (banner) banner.hidden = !canInstall || bannerDismissed;
-  if (bannerButton) bannerButton.hidden = !canInstall || bannerDismissed;
-  if (fab) fab.hidden = !canInstall;
+  if (installButton) installButton.hidden = !canShowInstall;
+  if (banner) banner.hidden = !canShowInstall || bannerDismissed;
+  if (bannerButton) bannerButton.hidden = !canShowInstall || bannerDismissed;
+  if (fab) fab.hidden = !canShowInstall;
 
   if (notificationPanelVisible) {
     renderNotificationPanel();
@@ -2965,6 +3016,7 @@ async function registerServiceWorker() {
 
 function setupAppShell() {
   appendHeaderActions();
+  prepareHeaderShell();
   appendInstallBanner();
   appendNotificationPanel();
   updateNotificationButton();
@@ -3017,6 +3069,11 @@ function setupAppShell() {
     updateInstallUi();
     showRuntimeToast('App installed');
   });
+
+  if (!document.body.dataset.lsfInstallResizeBound) {
+    document.body.dataset.lsfInstallResizeBound = 'true';
+    window.addEventListener('resize', updateInstallUi);
+  }
 }
 
 // --- INITIALIZATION ---
@@ -3228,13 +3285,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle Hub Pages (Home, Live, Upcoming, Trending, Results)
   if (matchesContainer || sidebarLiveContainer || newsContainer) {
     if (tabsContainer) renderTabs();
-    if (window.location.pathname.includes('results.html')) initResultsLeagueFilter();
+  if (isResultsHubPage()) initResultsLeagueFilter();
 
     // Set page filter based on current file
     if (path.includes('upcoming.html')) {
         currentPageFilter = 'upcoming';
         currentArenaTab = currentTab;
-    } else if (path.includes('results.html')) {
+    } else if (isResultsHubPage()) {
         currentPageFilter = 'finished';
     } else if (path.includes('trending.html')) {
         currentPageFilter = null;
@@ -5023,9 +5080,10 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
       if (statusFilter === 'finished') {
         const resultsFeed = await fetchFinishedResultsFeed({
           ...feedParams,
-          days: window.location.pathname.includes('results.html') ? 6 : 4
+          days: isResultsHubPage() ? 6 : 4
         });
         matches = resultsFeed.matches;
+        matches = matches.filter((match) => match.status === 'finished');
         window._cachedResults = matches;
         window._cachedMatches = matches;
         updateFeedRibbon(resultsFeed.meta || data.meta || {}, {
@@ -5033,7 +5091,7 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
           matchCount: matches.length,
           liveCount: 0
         });
-        if (window.location.pathname.includes('results.html')) {
+        if (isResultsHubPage()) {
           renderResultsLeagueFilter(matches);
         }
         if (tickerContainer) {
@@ -5050,10 +5108,10 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
         matches = matches.filter(m => m.status === statusFilter);
       }
       matches = sortMatchesForDisplay(matches, statusFilter);
-      if (window.location.pathname.includes('results.html')) {
+      if (isResultsHubPage()) {
         updateResultsSectionMeta(matches);
       }
-      renderMatches(matches);
+      renderMatches(isResultsHubPage() ? matches.filter((match) => match.status === 'finished') : matches);
     }
 
     // trendingMatchesList relies on the new fetchTrendingUpcoming which polls the dedicated upcoming API.
@@ -5575,9 +5633,12 @@ async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
 // --- RENDER MATCH CARDS (HOME) ---
 function renderMatches(matches) {
   if (!matchesContainer) return;
+  const isResults = isResultsHubPage();
+  const safeMatches = isResults
+    ? matches.filter((match) => match.status === 'finished')
+    : matches;
 
-  if (matches.length === 0) {
-    const isResults = window.location.pathname.includes('results') || (typeof currentTab !== 'undefined' && currentTab === 'results');
+  if (safeMatches.length === 0) {
     const msg = isResults ? "No recent results discovered" : "No active matches found";
     matchesContainer.innerHTML = `
       <div class="col-span-full py-24 text-center bg-surface-container rounded-lg border border-white/5">
@@ -5590,7 +5651,7 @@ function renderMatches(matches) {
     return;
   }
 
-  matchesContainer.innerHTML = matches.map(match => {
+  matchesContainer.innerHTML = safeMatches.map(match => {
     const isLive = match.status === 'live';
     const isFinished = match.status === 'finished';
 
