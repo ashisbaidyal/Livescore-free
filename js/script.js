@@ -68,6 +68,7 @@ window._lsfHeroAutoplayHandle = null;
 window._lsfTickerAutoplayHandle = null;
 window._lsfHeroActiveKey = '';
 window._lsfNetworkAdObserver = null;
+window._lsfNetworkAdViewportObserver = null;
 
 function isResultsHubPage() {
   return Boolean(
@@ -138,9 +139,32 @@ function renderNetworkAdSlots(root = document) {
     window._lsfNetworkAdObserver.observe(observedContainer, { childList: true, subtree: true });
   }
 
-  ensureNetworkAdBootstrapped();
-  window.setTimeout(syncMirroredNetworkAds, 2500);
-  window.setTimeout(syncMirroredNetworkAds, 5000);
+  const bootAdNetwork = () => {
+    if (primarySlot.dataset.lsfAdBootstrapped === 'true') return;
+    primarySlot.dataset.lsfAdBootstrapped = 'true';
+    ensureNetworkAdBootstrapped();
+    window.setTimeout(syncMirroredNetworkAds, 2500);
+    window.setTimeout(syncMirroredNetworkAds, 5000);
+  };
+
+  if (!window._lsfNetworkAdViewportObserver && 'IntersectionObserver' in window) {
+    window._lsfNetworkAdViewportObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        bootAdNetwork();
+        observer.disconnect();
+        window._lsfNetworkAdViewportObserver = null;
+      });
+    }, {
+      rootMargin: '320px 0px'
+    });
+  }
+
+  if (window._lsfNetworkAdViewportObserver) {
+    window._lsfNetworkAdViewportObserver.observe(primarySlot);
+  } else {
+    scheduleNonCritical(bootAdNetwork, 2400);
+  }
 }
 
 // --- REALTIME MANAGER (WebSocket/SSE Hybrid) ---
@@ -960,10 +984,118 @@ function initResultsLeagueFilter() {
   });
 }
 
+function buildCanonicalMatchPath({ id = '', sport = '', league = '', upcoming = false } = {}) {
+  const normalizedLeague = normalizeLeagueSlug(league || '') || 'all';
+  const normalizedSport = normalizeSportSlug(sport || 'all', normalizedLeague) || 'all';
+  const routeBase = upcoming ? '/upcoming-match' : '/match';
+  const normalizedId = String(id || '').trim();
+  if (!normalizedId) {
+    return upcoming ? '/upcoming' : '/live';
+  }
+  return `${routeBase}/${encodeURIComponent(normalizedSport)}/${encodeURIComponent(normalizedLeague)}/${encodeURIComponent(normalizedId)}`;
+}
+
+function parsePrettyMatchRoute(pathname = window.location.pathname) {
+  const segments = pathname
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => {
+      try {
+        return decodeURIComponent(segment);
+      } catch (error) {
+        return segment;
+      }
+    });
+
+  if (segments[0] === 'match' && segments.length >= 4) {
+    return {
+      id: segments[3],
+      sport: segments[1],
+      league: segments[2],
+      upcoming: false
+    };
+  }
+
+  if (segments[0] === 'upcoming-match' && segments.length >= 4) {
+    return {
+      id: segments[3],
+      sport: segments[1],
+      league: segments[2],
+      upcoming: true
+    };
+  }
+
+  return null;
+}
+
+function normalizeLegacyMatchHref(rawHref = '') {
+  if (!rawHref) return '';
+  try {
+    const url = new URL(rawHref, window.location.origin);
+    const isMatch = /\/match(?:\.html)?$/i.test(url.pathname);
+    const isUpcoming = /\/upcoming_match_detail(?:\.html)?$/i.test(url.pathname) || /\/upcoming-match$/i.test(url.pathname);
+    if (!isMatch && !isUpcoming) return rawHref;
+
+    const id = url.searchParams.get('id');
+    if (!id) return rawHref;
+    const sport = url.searchParams.get('sport') || url.searchParams.get('s') || 'all';
+    const league = url.searchParams.get('league') || url.searchParams.get('l') || 'all';
+
+    return buildCanonicalMatchPath({ id, sport, league, upcoming: isUpcoming });
+  } catch (error) {
+    return rawHref;
+  }
+}
+
+function normalizeLegacyMatchLinks(root = document) {
+  if (!root?.querySelectorAll) return;
+
+  root.querySelectorAll('a[href*="match.html?id="], a[href*="/match?id="], a[href*="upcoming_match_detail.html?id="], a[href*="/upcoming-match?id="]').forEach((link) => {
+    const existingHref = link.getAttribute('href') || '';
+    const normalized = normalizeLegacyMatchHref(existingHref);
+    if (normalized && normalized !== existingHref) {
+      link.setAttribute('href', normalized);
+    }
+  });
+
+  root.querySelectorAll('[onclick*="match.html?id="], [onclick*="/match?id="], [onclick*="upcoming_match_detail.html?id="], [onclick*="/upcoming-match?id="]').forEach((node) => {
+    const onclickValue = node.getAttribute('onclick') || '';
+    const legacyHref = onclickValue.match(/['"]([^'"]*(?:match(?:\.html)?|upcoming_match_detail(?:\.html)?|upcoming-match)\?[^'"]+)['"]/i)?.[1];
+    if (!legacyHref) return;
+    const normalized = normalizeLegacyMatchHref(legacyHref);
+    if (!normalized || normalized === legacyHref) return;
+    node.setAttribute('onclick', onclickValue.replace(legacyHref, normalized));
+  });
+}
+
+function observeLegacyMatchLinks() {
+  if (document.body.dataset.lsfMatchLinkObserverBound) return;
+  document.body.dataset.lsfMatchLinkObserverBound = 'true';
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        normalizeLegacyMatchLinks(node);
+      });
+    });
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
 function buildMatchUrl(match) {
-  const isUpcoming = match.status === 'upcoming';
-  const base = isUpcoming ? '/upcoming_match_detail.html' : '/match.html';
-  return `${base}?id=${encodeURIComponent(match.id)}&sport=${encodeURIComponent(match.sport)}&league=${encodeURIComponent(match.leagueSlug)}`;
+  if (!match?.id) {
+    if (match?.status === 'finished') return '/results';
+    if (match?.status === 'upcoming') return '/upcoming';
+    return '/live';
+  }
+  return buildCanonicalMatchPath({
+    id: match?.id,
+    sport: match?.sport,
+    league: match?.leagueSlug,
+    upcoming: match?.status === 'upcoming'
+  });
 }
 
 function buildTeamProfileUrl(team, sport = '', league = '') {
@@ -1752,8 +1884,19 @@ function showRuntimeToast(message, tone = 'success') {
 }
 
 function getPageKeyFromPath(pathname = window.location.pathname) {
+  if (/^\/match(?:\/|$)/.test(pathname)) return 'match';
+  if (/^\/upcoming-match(?:\/|$)/.test(pathname)) return 'upcoming_match_detail';
   const file = (pathname.split('/').pop() || 'index.html').replace('.html', '');
   return file || 'index';
+}
+
+function scheduleNonCritical(callback, timeout = 1200) {
+  if (typeof callback !== 'function') return;
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(() => callback(), { timeout });
+    return;
+  }
+  window.setTimeout(callback, Math.min(timeout, 350));
 }
 
 function ensureFeedRibbon() {
@@ -2118,6 +2261,21 @@ function patchLegacyImages(root = document) {
 }
 
 function ensureHeadEnhancements() {
+  [
+    ['preconnect', 'https://fonts.googleapis.com', false],
+    ['preconnect', 'https://fonts.gstatic.com', true],
+    ['dns-prefetch', 'https://fonts.googleapis.com', false],
+    ['dns-prefetch', 'https://fonts.gstatic.com', false],
+    ['dns-prefetch', 'https://pl28913139.profitablecpmratenetwork.com', false]
+  ].forEach(([rel, href, crossOrigin]) => {
+    if (document.head.querySelector(`link[rel="${rel}"][href="${href}"]`)) return;
+    const link = document.createElement('link');
+    link.rel = rel;
+    link.href = href;
+    if (crossOrigin) link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  });
+
   if (!document.querySelector('link[href="/css/runtime-enhancements.css"]')) {
     const styleLink = document.createElement('link');
     styleLink.rel = 'stylesheet';
@@ -2148,16 +2306,46 @@ function ensureHeadEnhancements() {
 }
 
 function hydrateNavigationLinks() {
+  const cleanHrefMap = {
+    'index.html': '/',
+    '/index.html': '/',
+    'live.html': '/live',
+    '/live.html': '/live',
+    'upcoming.html': '/upcoming',
+    '/upcoming.html': '/upcoming',
+    'results.html': '/results',
+    '/results.html': '/results',
+    'news.html': '/news',
+    '/news.html': '/news',
+    'trending.html': '/trending',
+    '/trending.html': '/trending',
+    'leagues.html': '/leagues',
+    '/leagues.html': '/leagues',
+    'teams.html': '/teams',
+    '/teams.html': '/teams',
+    'players.html': '/players',
+    '/players.html': '/players',
+    'standings.html': '/standings',
+    '/standings.html': '/standings',
+    'ipl.html': '/ipl',
+    '/ipl.html': '/ipl'
+  };
+
   document.querySelectorAll('a').forEach((link) => {
+    const href = (link.getAttribute('href') || '').trim();
+    if (cleanHrefMap[href]) {
+      link.setAttribute('href', cleanHrefMap[href]);
+    }
+
     const text = (link.textContent || '').trim().toLowerCase();
     if (!text) return;
 
-    if (text.includes('all leagues') || text.includes('top league')) link.setAttribute('href', 'leagues.html');
-    if (text.includes('standings')) link.setAttribute('href', 'standings.html');
-    if (text.includes('teams hub')) link.setAttribute('href', 'teams.html');
-    if (text.includes('team profile')) link.setAttribute('href', 'team.html');
-    if (text.includes('player profile')) link.setAttribute('href', 'player.html');
-    if (text === 'results') link.setAttribute('href', 'results.html');
+    if (text.includes('all leagues') || text.includes('top league')) link.setAttribute('href', '/leagues');
+    if (text.includes('standings')) link.setAttribute('href', '/standings');
+    if (text.includes('teams hub')) link.setAttribute('href', '/teams');
+    if (text.includes('team profile')) link.setAttribute('href', '/team.html');
+    if (text.includes('player profile')) link.setAttribute('href', '/player.html');
+    if (text === 'results') link.setAttribute('href', '/results');
   });
 }
 
@@ -3079,24 +3267,28 @@ function setupAppShell() {
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
   ensureHeadEnhancements();
-  document.body.dataset.lsfPage = getPageKeyFromPath();
+  document.body.dataset.lsfPage = getPageKeyFromPath(window.location.pathname);
   hydrateNavigationLinks();
   patchLegacyImages();
   setupAppShell();
   ensureMobileTopNav();
-  renderNetworkAdSlots(document);
+  normalizeLegacyMatchLinks(document);
+  observeLegacyMatchLinks();
   updateFeedRibbon();
-  registerServiceWorker();
-  bootstrapSavedReminders();
-  startReminderHeartbeat();
   schedulePretextLayout(document);
+  scheduleNonCritical(() => renderNetworkAdSlots(document), 1400);
+  scheduleNonCritical(() => registerServiceWorker(), 2200);
+  scheduleNonCritical(() => {
+    bootstrapSavedReminders();
+    startReminderHeartbeat();
+  }, 1800);
   if (document.fonts?.ready) {
     document.fonts.ready.then(() => schedulePretextLayout(document)).catch(() => {});
   }
 
   // --- HEADER & NAVIGATION LOGIC ---
   const path = window.location.pathname;
-  const fileName = path.split('/').pop() || 'index.html';
+  const pageKey = getPageKeyFromPath(path);
 
   // 1. Highlight Active Sidebar Link (Universal Matcher)
   const sidebarLinks = document.querySelectorAll('aside nav a');
@@ -3104,7 +3296,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const href = link.getAttribute('href');
     if (href) {
       const cleanHref = href.replace('.html', '').replace('/', '') || 'index';
-      const cleanFileName = fileName.replace('.html', '').replace('/', '') || 'index';
+      const cleanFileName = pageKey || 'index';
 
       if (cleanHref === cleanFileName) {
         link.classList.remove('text-on-surface/60', 'border-transparent');
@@ -3125,7 +3317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const href = link.getAttribute('href');
     if (href) {
       const cleanHref = href.replace('.html', '').replace('/', '') || 'index';
-      const cleanFileName = fileName.replace('.html', '').replace('/', '') || 'index';
+      const cleanFileName = pageKey || 'index';
 
       if (cleanHref === cleanFileName) {
         if (link.classList.contains('lsf-mobile-top-nav-link') || link.classList.contains('lsf-mobile-more-link')) {
@@ -3211,10 +3403,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // No JS required for sidebar visual feedback anymore.
 
   // Check for dynamic match detail (Live or Upcoming)
+  const prettyMatchRoute = parsePrettyMatchRoute(path);
   const urlParams = new URLSearchParams(window.location.search);
-  const matchId = urlParams.get('id');
-  const leagueParam = urlParams.get('league') || urlParams.get('l') || '';
-  const sportParam = urlParams.get('sport') || urlParams.get('s') || '';
+  const matchId = urlParams.get('id') || prettyMatchRoute?.id;
+  const leagueParam = urlParams.get('league') || urlParams.get('l') || prettyMatchRoute?.league || '';
+  const sportParam = urlParams.get('sport') || urlParams.get('s') || prettyMatchRoute?.sport || '';
   
   // Explicitly default to 'all' to show all sports by default
   currentTab = normalizeSportSlug(sportParam || 'all', leagueParam);
@@ -3222,9 +3415,21 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const sport = currentTab;
   const league = currentLeagueFilter || getDefaultLeagueForSport(sport);
+  const isUpcomingMatchPage = path.includes('upcoming_match_detail.html') || prettyMatchRoute?.upcoming;
 
   if (matchId) {
-    if (path.includes('upcoming_match_detail.html')) {
+    const canonicalMatchPath = buildCanonicalMatchPath({
+      id: matchId,
+      sport,
+      league,
+      upcoming: Boolean(isUpcomingMatchPage)
+    });
+
+    if (window.location.pathname !== canonicalMatchPath && (urlParams.get('id') || path.endsWith('.html'))) {
+      window.history.replaceState({}, '', canonicalMatchPath);
+    }
+
+    if (isUpcomingMatchPage) {
       fetchUpcomingMatchDetail(matchId, sport, league);
     } else if (homeTeamName) {
       fetchMatchDetail(matchId, sport, league);
@@ -3235,7 +3440,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Empty state for match.html without ?id - show live matches to pick from
-  if (path.includes('match.html') && !matchId) {
+  if (pageKey === 'match' && !matchId) {
     const mainContent = document.querySelector('main') || document.querySelector('.flex-1');
     if (mainContent) {
       mainContent.innerHTML = `
@@ -3257,7 +3462,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const container = document.getElementById('empty-state-matches');
           if (container && matches.length > 0) {
             container.innerHTML = matches.map(m => `
-              <a href="/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" class="block bg-surface-container p-6 rounded-xl border border-white/5 hover:border-primary/30 transition-all group">
+              <a href="${buildMatchUrl(m)}" class="block bg-surface-container p-6 rounded-xl border border-white/5 hover:border-primary/30 transition-all group">
                 <div class="flex justify-between items-center mb-4">
                   <span class="text-[10px] font-black text-on-surface/40 uppercase tracking-widest">${m.league || 'Match'}</span>
                   ${m.status === 'live' ? '<span class="flex items-center gap-1 bg-primary text-white px-2 py-0.5 text-[9px] font-black rounded"><span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE</span>' : '<span class="text-[9px] font-black text-on-surface/40 uppercase">FINAL</span>'}
@@ -3311,26 +3516,31 @@ document.addEventListener('DOMContentLoaded', () => {
       fetchHeroData(currentPageFilter);
       fetchLeaguesHero();
     }
-    setupNewsletter();
-    if (newsContainer) fetchNews(currentTab);
-    if (headlinesContainer) fetchNews(currentTab);
-    if (playersContainer || document.getElementById('trending-players-container')) fetchPlayers(currentTab);
-    if (leaguesContainer || topTierContainer) fetchLeagues && fetchLeagues(currentTab);
-    if (recentResultsContainer) fetchRecentResults();
-    if (document.getElementById("featured-match-analysis")) fetchFeaturedAnalysis();
-    
-    if (upcomingTodayContainer) {
-      fetchUpcomingToday();
-      setupUpcomingControls();
-    }
-    if (document.getElementById('arena-schedule-container')) {
-      fetchArenaSchedule(currentArenaTab);
-      setupArenaControls && setupArenaControls();
-      renderArenaTabs && renderArenaTabs();
-    }
-    if (document.getElementById('trending-matches-list')) {
-      fetchTrendingUpcoming();
-    }    // --- REFRESH LOGIC (WebSocket Powered) ---
+
+    scheduleNonCritical(() => {
+      setupNewsletter();
+      if (newsContainer) fetchNews(currentTab);
+      if (headlinesContainer) fetchNews(currentTab);
+      if (playersContainer || document.getElementById('trending-players-container')) fetchPlayers(currentTab);
+      if (leaguesContainer || topTierContainer) fetchLeagues && fetchLeagues(currentTab);
+      if (recentResultsContainer) fetchRecentResults();
+      if (document.getElementById("featured-match-analysis")) fetchFeaturedAnalysis();
+
+      if (upcomingTodayContainer) {
+        fetchUpcomingToday();
+        setupUpcomingControls();
+      }
+      if (document.getElementById('arena-schedule-container')) {
+        fetchArenaSchedule(currentArenaTab);
+        setupArenaControls && setupArenaControls();
+        renderArenaTabs && renderArenaTabs();
+      }
+      if (document.getElementById('trending-matches-list')) {
+        fetchTrendingUpcoming();
+      }
+    }, 900);
+
+    // --- REFRESH LOGIC (WebSocket Powered) ---
     realtime.subscribe('live', { sport: currentTab, isLive: true });
 
     // Secondary timers for less frequent data (News, Leagues)
@@ -3459,7 +3669,7 @@ function renderArenaLiveFallback(matches) {
   const container = document.getElementById('arena-schedule-container');
   if (!container) return;
   container.innerHTML = matches.slice(0, 8).map(m => `
-    <a href="/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" 
+    <a href="${buildMatchUrl(m)}" 
        class="bg-[#111111] p-6 rounded-2xl border border-primary/20 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[300px] group min-w-[280px] snap-center shrink-0 relative overflow-hidden">
       <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-red-400 to-primary animate-pulse"></div>
       <div>
@@ -3505,7 +3715,7 @@ function renderArenaFinishedFallback(matches) {
     const homeWin = Number(m.homeTeam.score) > Number(m.awayTeam.score);
     const awayWin = Number(m.awayTeam.score) > Number(m.homeTeam.score);
     return `
-    <a href="/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}" 
+    <a href="${buildMatchUrl(m)}" 
        class="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[300px] group min-w-[280px] snap-center shrink-0">
       <div>
         <div class="flex justify-between text-[10px] font-black mb-8 uppercase tracking-[0.2em]">
@@ -5139,7 +5349,7 @@ function renderSidebarLive(matches) {
   }
 
   sidebarLiveContainer.innerHTML = matches.map(match => `
-    <a href="/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}" class="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all group border border-white/5 hover:border-primary/20">
+    <a href="${buildMatchUrl(match)}" class="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all group border border-white/5 hover:border-primary/20">
       <div class="flex flex-col gap-2 flex-1">
         <div class="flex items-center gap-2">
           <img src="${match.homeTeam.logo}" class="w-3 h-3 object-contain opacity-60 group-hover:opacity-100">
@@ -5663,9 +5873,7 @@ function renderMatches(matches) {
         ? `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">FINAL</span>`
         : `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">UPCOMING</span>`;
 
-    const detailUrl = (!isLive && !isFinished) 
-      ? `/upcoming_match_detail.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}`
-      : `/match.html?id=${match.id}&sport=${match.sport}&league=${match.leagueSlug}`;
+    const detailUrl = buildMatchUrl(match);
 
     return `
       <a href="${detailUrl}" class="block group h-full">
@@ -6742,9 +6950,7 @@ async function performSearch(query) {
   resultsContainer.innerHTML = matches.slice(0, 10).map(m => {
     const isLive = m.status === 'live';
     const isFinished = m.status === 'finished';
-    const detailUrl = (isLive || isFinished)
-      ? `/match.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}`
-      : `/upcoming_match_detail.html?id=${m.id}&sport=${m.sport}&league=${m.leagueSlug}`;
+    const detailUrl = buildMatchUrl(m);
     return `
       <a href="${detailUrl}" class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-primary/20 transition-all group border border-transparent hover:border-primary/30">
         <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -6846,7 +7052,7 @@ if (window.location.pathname.includes('news.html')) {
                 </div>
               </div>
               <div class="flex gap-4 pt-4">
-                <a href="/match.html?id=${heroMatch.id}&sport=${heroMatch.sport}&league=${heroMatch.leagueSlug}" class="bg-primary text-white px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2 rounded">
+                <a href="${buildMatchUrl(heroMatch)}" class="bg-primary text-white px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2 rounded">
                   <span class="material-symbols-outlined">${sportParams.endIcon}</span> Match Center
                 </a>
                 <a href="/live.html" class="bg-white/5 backdrop-blur-md border border-white/10 text-on-surface px-10 py-4 font-black uppercase text-xs tracking-widest rounded hover:bg-white/10 transition-colors">All Live Scores</a>

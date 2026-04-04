@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /match?*
+Disallow: /match.html?*
+Disallow: /upcoming-match?*
+Disallow: /upcoming_match_detail.html?*
+
+Sitemap: https://livescorefree.online/sitemap.xml
