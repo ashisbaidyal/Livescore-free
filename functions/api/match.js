@@ -2,12 +2,14 @@ import {
   buildFallbackUrls,
   buildFeedMeta,
   FALLBACK_LOGO,
+  fetchJson,
   SPORT_LEAGUES,
   fetchWithFallback,
   getDefaultLeague,
   jsonResponse,
   mapStatus,
   normalizeLeagueParam,
+  normalizeRosterGroups,
   normalizeScoreboardEvent,
   normalizeSportParam,
   parseDateRange,
@@ -111,6 +113,36 @@ function uniqueBy(items = [], keyBuilder = (item) => JSON.stringify(item)) {
   });
 }
 
+function sanitizeDisplayText(value = "") {
+  if (typeof value !== "string") return value;
+  return value
+    .replace(/\u00c3\u0082\u00c2\u00b7|\u00c2\u00b7|\u00b7/g, " - ")
+    .replace(/\u00c3\u0083\u00c2\u00a2\u00c3\u00a2\u00e2\u20ac\u0161\u00c2\u00ac\u00c3\u00a2\u20ac\u201d\u00c2\u009d|\u00c3\u00a2\u20ac\u201d|\u2014|\u2013/g, " - ")
+    .replace(/\u00c3\u0083\u00c2\u00a2\u00c3\u00a2\u00e2\u20ac\u0161\u00c2\u00ac\u00c3\u201a\u00c2\u00a2|\u00c3\u00a2\u20ac\u00a2/g, " - ")
+    .replace(/\u00c3\u201a|\u00c2/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function sanitizeDisplayPayload(value, seen = new WeakMap()) {
+  if (typeof value === "string") return sanitizeDisplayText(value);
+  if (!value || typeof value !== "object") return value;
+  if (seen.has(value)) return seen.get(value);
+
+  if (Array.isArray(value)) {
+    const next = value.map((entry) => sanitizeDisplayPayload(entry, seen));
+    seen.set(value, next);
+    return next;
+  }
+
+  const next = {};
+  seen.set(value, next);
+  Object.entries(value).forEach(([key, entry]) => {
+    next[key] = sanitizeDisplayPayload(entry, seen);
+  });
+  return next;
+}
+
 function normalizeStatValue(entry = {}) {
   const value = entry.displayValue ?? entry.value ?? entry.summary ?? entry.display ?? "";
   return String(value || "").trim();
@@ -132,8 +164,8 @@ function buildStatPairs(homeStats = [], awayStats = []) {
     if (!label || (!homeValue && !awayValue)) return;
     stats.push({
       label,
-      home: homeValue || "—",
-      away: awayValue || "—"
+      home: homeValue || '-',
+      away: awayValue || '-'
     });
   });
 
@@ -144,7 +176,7 @@ function buildStatPairs(homeStats = [], awayStats = []) {
       if (!label || !awayValue) return;
       stats.push({
         label,
-        home: "—",
+        home: '-',
         away: awayValue
       });
     });
@@ -171,8 +203,8 @@ function buildSyntheticStatsFromContext(data = {}) {
   if (homeRecord || awayRecord) {
     stats.push({
       label: "Record",
-      home: homeRecord || "—",
-      away: awayRecord || "—"
+      home: homeRecord || '-',
+      away: awayRecord || '-'
     });
   }
 
@@ -186,8 +218,8 @@ function buildSyntheticStatsFromContext(data = {}) {
     if (!label || (!homeValue && !awayValue)) continue;
     stats.push({
       label,
-      home: homeValue || "—",
-      away: awayValue || "—"
+      home: homeValue || '-',
+      away: awayValue || '-'
     });
   }
 
@@ -350,16 +382,16 @@ function buildSyntheticStatsFromMatch(match = {}) {
   if (match.homeTeam?.record || match.awayTeam?.record) {
     stats.push({
       label: "Record",
-      home: match.homeTeam?.record || "—",
-      away: match.awayTeam?.record || "—"
+      home: match.homeTeam?.record || '-',
+      away: match.awayTeam?.record || '-'
     });
   }
 
   if (match.homeTeam?.leader || match.awayTeam?.leader) {
     stats.push({
       label: "Top Performer",
-      home: [match.homeTeam?.leader?.name, match.homeTeam?.leader?.value].filter(Boolean).join(" ") || "—",
-      away: [match.awayTeam?.leader?.name, match.awayTeam?.leader?.value].filter(Boolean).join(" ") || "—"
+      home: [match.homeTeam?.leader?.name, match.homeTeam?.leader?.value].filter(Boolean).join(' ') || '-',
+      away: [match.awayTeam?.leader?.name, match.awayTeam?.leader?.value].filter(Boolean).join(' ') || '-'
     });
   }
 
@@ -456,6 +488,52 @@ function normalizeLineup(data = {}, side = "home") {
   return buildSyntheticLineupFromLeaders(competitor);
 }
 
+function mapRosterToLineup(roster = []) {
+  return roster
+    .filter((athlete) => athlete?.fullName)
+    .slice(0, 18)
+    .map((athlete, index) => ({
+      name: athlete.fullName || athlete.shortName || "Player",
+      number: athlete.jersey || "",
+      position: athlete.position?.abbreviation || athlete.position?.displayName || "Player",
+      starter: index < 5,
+      face: athlete.headshot?.href || FALLBACK_LOGO
+    }));
+}
+
+async function fetchRosterFallback(sport = "soccer", league = "eng.1", teamId = "") {
+  if (!teamId) return [];
+  try {
+    const rosterData = await fetchJson(siteApiUrl(sport, league, `teams/${teamId}/roster`));
+    return mapRosterToLineup(normalizeRosterGroups(rosterData));
+  } catch (error) {
+    return [];
+  }
+}
+
+async function hydrateSummaryLineups(summary = {}, sport = "soccer", league = "eng.1") {
+  const needsHomeRoster = !(Array.isArray(summary.homeTeam?.lineup) && summary.homeTeam.lineup.length);
+  const needsAwayRoster = !(Array.isArray(summary.awayTeam?.lineup) && summary.awayTeam.lineup.length);
+  if (!needsHomeRoster && !needsAwayRoster) return summary;
+
+  const [homeRoster, awayRoster] = await Promise.all([
+    needsHomeRoster ? fetchRosterFallback(sport, league, summary.homeTeam?.id || "") : Promise.resolve([]),
+    needsAwayRoster ? fetchRosterFallback(sport, league, summary.awayTeam?.id || "") : Promise.resolve([])
+  ]);
+
+  return {
+    ...summary,
+    homeTeam: {
+      ...(summary.homeTeam || {}),
+      lineup: needsHomeRoster ? homeRoster : (summary.homeTeam?.lineup || [])
+    },
+    awayTeam: {
+      ...(summary.awayTeam || {}),
+      lineup: needsAwayRoster ? awayRoster : (summary.awayTeam?.lineup || [])
+    }
+  };
+}
+
 function normalizeTimeline(data = {}, homeId = "", awayId = "") {
   const plays = data.plays || data.header?.competitions?.[0]?.details || [];
   const timeline = (plays || [])
@@ -536,7 +614,7 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
     status: mapStatus(statusType.state),
     statusText: statusType.detail || statusType.description || statusType.shortDetail || "",
     time: statusType.shortDetail || statusType.detail || "",
-    date: header.competitions?.[0]?.date || header.season?.type?.name || "",
+    date: competition.date || header.competitions?.[0]?.date || "",
     venue: competition.venue?.fullName || "",
     broadcast: competition.broadcasts?.map((entry) => entry.media?.shortName || entry.names?.join(", ")).filter(Boolean).join(", "),
     homeTeam: {
@@ -545,6 +623,7 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
       abbreviation: home.team?.abbreviation || "",
       logo: home.team?.logos?.[0]?.href || home.team?.logo || FALLBACK_LOGO,
       score: home.score || "0",
+      record: home.records?.[0]?.summary || "",
       lineup: normalizeLineup(data, "home")
     },
     awayTeam: {
@@ -553,6 +632,7 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
       abbreviation: away.team?.abbreviation || "",
       logo: away.team?.logos?.[0]?.href || away.team?.logo || FALLBACK_LOGO,
       score: away.score || "0",
+      record: away.records?.[0]?.summary || "",
       lineup: normalizeLineup(data, "away")
     },
     stats: normalizeStats(data),
@@ -649,6 +729,16 @@ function hasUsefulSummaryText(value = "", blocked = []) {
   return !blocked.some((entry) => text.toLowerCase() === String(entry || "").trim().toLowerCase());
 }
 
+function isUsefulSummaryDate(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return false;
+  const normalized = text.toLowerCase();
+  if (["scheduled event", "regular season", "preseason", "postseason", "loading..."].includes(normalized)) {
+    return false;
+  }
+  return Number.isFinite(Date.parse(text));
+}
+
 function isGenericTeam(team = {}) {
   const name = String(team.name || team.fullName || "").trim().toLowerCase();
   const abbreviation = String(team.abbreviation || "").trim().toLowerCase();
@@ -660,7 +750,7 @@ function needsSummaryHydration(summary = {}) {
   if (!summary?.homeTeam || !summary?.awayTeam) return true;
   if (isGenericTeam(summary.homeTeam) || isGenericTeam(summary.awayTeam)) return true;
   if (!hasUsefulSummaryText(summary.league, ["sports event", "upcoming event"])) return true;
-  if (!hasUsefulSummaryText(summary.date, ["scheduled event"])) return true;
+  if (!isUsefulSummaryDate(summary.date)) return true;
   if (summary.status === "upcoming" && !hasUsefulSummaryText(summary.venue, ["tbd", "tbd stadium"])) return true;
 
   const hasStats = Array.isArray(summary.stats) && summary.stats.length > 0;
@@ -679,6 +769,12 @@ function pickSummaryText(primary, fallback, blocked = []) {
   return String(primary || fallback || "").trim();
 }
 
+function pickSummaryDate(primary, fallback) {
+  if (isUsefulSummaryDate(primary)) return String(primary).trim();
+  if (isUsefulSummaryDate(fallback)) return String(fallback).trim();
+  return pickSummaryText(primary, fallback, ["scheduled event", "regular season", "preseason", "postseason", "loading..."]);
+}
+
 function mergeSummaryPayload(primary = {}, fallback = {}) {
   const primaryHome = primary.homeTeam || {};
   const primaryAway = primary.awayTeam || {};
@@ -694,7 +790,7 @@ function mergeSummaryPayload(primary = {}, fallback = {}) {
     status: primary.status || fallback.status || "upcoming",
     statusText: pickSummaryText(primary.statusText, fallback.statusText),
     time: pickSummaryText(primary.time, fallback.time, ["00:00"]),
-    date: pickSummaryText(primary.date, fallback.date, ["scheduled event"]),
+    date: pickSummaryDate(primary.date, fallback.date),
     venue: pickSummaryText(primary.venue, fallback.venue, ["tbd", "tbd stadium"]),
     broadcast: pickSummaryText(primary.broadcast, fallback.broadcast),
     stats: Array.isArray(primary.stats) && primary.stats.length ? primary.stats : (fallback.stats || []),
@@ -889,26 +985,34 @@ export async function onRequest(context) {
     if (!summaryData?.header?.competitions?.length) {
       const feedFallback = await findFeedFallback(request, id, sport, league);
       if (feedFallback) {
-        return jsonResponse({ ...feedFallback, meta: buildFeedMeta({ fallback: "feed" }) }, 15);
+        const rosterHydratedFeed = await hydrateSummaryLineups(feedFallback, sport, league);
+        return jsonResponse({ ...sanitizeDisplayPayload(rosterHydratedFeed), meta: buildFeedMeta({ fallback: "feed" }) }, 15);
       }
 
       const fallback = await findScoreboardFallback(id, sport, league);
       if (!fallback) {
         return jsonResponse({ notFound: true, meta: buildFeedMeta({ degraded: true }) }, 30, 404);
       }
-      return jsonResponse({ ...fallback, meta: buildFeedMeta() }, 15);
+      const rosterHydratedFallback = await hydrateSummaryLineups(fallback, sport, league);
+      return jsonResponse({ ...sanitizeDisplayPayload(rosterHydratedFallback), meta: buildFeedMeta() }, 15);
     }
 
-    const normalizedSummary = normalizeSummary(summaryData, sport, league);
+    let normalizedSummary = normalizeSummary(summaryData, sport, league);
+    normalizedSummary = await hydrateSummaryLineups(normalizedSummary, sport, league);
+    normalizedSummary = sanitizeDisplayPayload(normalizedSummary);
     if (needsSummaryHydration(normalizedSummary)) {
       const feedFallback = await findFeedFallback(request, id, sport, league);
       if (feedFallback) {
-        return jsonResponse({ ...mergeSummaryPayload(normalizedSummary, feedFallback), meta: buildFeedMeta({ fallback: "summary+feed" }) }, 15);
+        const mergedSummary = mergeSummaryPayload(normalizedSummary, feedFallback);
+        const rosterHydratedMerged = await hydrateSummaryLineups(mergedSummary, sport, league);
+        return jsonResponse({ ...sanitizeDisplayPayload(rosterHydratedMerged), meta: buildFeedMeta({ fallback: "summary+feed" }) }, 15);
       }
 
       const scoreboardFallback = await findScoreboardFallback(id, sport, league);
       if (scoreboardFallback) {
-        return jsonResponse({ ...mergeSummaryPayload(normalizedSummary, scoreboardFallback), meta: buildFeedMeta({ fallback: "summary+scoreboard" }) }, 15);
+        const mergedSummary = mergeSummaryPayload(normalizedSummary, scoreboardFallback);
+        const rosterHydratedMerged = await hydrateSummaryLineups(mergedSummary, sport, league);
+        return jsonResponse({ ...sanitizeDisplayPayload(rosterHydratedMerged), meta: buildFeedMeta({ fallback: "summary+scoreboard" }) }, 15);
       }
     }
 

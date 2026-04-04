@@ -266,7 +266,7 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.20"></script>
+<script src="js/script.js?v=1.0.22"></script>
     <script src="js/databus.js?v=1.0.1"></script>
 <script>
   function safeUpper(value) {
@@ -344,7 +344,7 @@
       <p><span class="text-white font-black">${team.name}</span> is featured in <span class="text-white font-black">${safeUpper(team.league)}</span> under <span class="text-white font-black">${safeUpper(team.sport)}</span>.</p>
       <p>${team.venue ? `Home venue: <span class="text-white font-black">${team.venue}</span>.` : 'Venue data not available.'}</p>
       <p>${team.location ? `Location: <span class="text-white font-black">${team.location}</span>.` : ''}</p>
-      <p>${nextMatch ? `Next fixture: <a class="text-primary font-black hover:underline" href="${buildMatchUrl(nextMatch)}">${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}</a> — ${nextMatch.time || new Date(nextMatch.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}.` : 'No upcoming schedule item returned.'}</p>
+      <p>${nextMatch ? `Next fixture: <a class="text-primary font-black hover:underline" href="${buildMatchUrl(nextMatch)}">${nextMatch.homeTeam.name} vs ${nextMatch.awayTeam.name}</a> - ${nextMatch.time || new Date(nextMatch.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}.` : 'No upcoming schedule item returned.'}</p>
     `;
 
     // Signals
@@ -490,7 +490,7 @@
         <span class="material-symbols-outlined text-yellow-400 text-lg">healing</span>
         <div class="flex-1 min-w-0">
           <div class="text-sm font-black uppercase tracking-tight">${ins.athlete?.displayName || 'Unknown'}</div>
-          <div class="text-[9px] text-on-surface/40 uppercase tracking-widest">${ins.status || ''} ${ins.detail ? `• ${ins.detail}` : ''}</div>
+          <div class="text-[9px] text-on-surface/40 uppercase tracking-widest">${ins.status || ''} ${ins.detail ? `- ${ins.detail}` : ''}</div>
         </div>
         ${ins.date ? `<div class="text-[9px] text-on-surface/30 uppercase tracking-widest shrink-0">${new Date(ins.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>` : ''}
       </div>

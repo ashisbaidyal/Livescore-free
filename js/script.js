@@ -56,6 +56,9 @@ const FALLBACK_HERO_IMAGE = '/icons/hero-fallback.svg';
 const SITE_REDESIGN_STYLESHEET = '/css/site-redesign.css';
 const REMINDER_STORAGE_KEY = 'lsf-reminders';
 const INSTALL_BANNER_DISMISSED_KEY = 'lsf-install-banner-dismissed';
+const NETWORK_AD_SCRIPT_URL = 'https://pl28913139.profitablecpmratenetwork.com/01fac86ec9e3085bcb989e025d13aa86/invoke.js';
+const NETWORK_AD_CONTAINER_ID = 'container-01fac86ec9e3085bcb989e025d13aa86';
+const NETWORK_AD_FALLBACK_HEIGHT = 192;
 const reminderTimerHandles = new Map();
 
 window._cachedNews = [];
@@ -65,6 +68,77 @@ window._cachedBlogPosts = [];
 window._lsfHeroAutoplayHandle = null;
 window._lsfTickerAutoplayHandle = null;
 window._lsfHeroActiveKey = '';
+
+function buildNetworkAdSlotDoc(height) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: ${height}px;
+      overflow: hidden;
+      background: #111;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #${NETWORK_AD_CONTAINER_ID} {
+      width: 100%;
+      min-height: ${height}px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <script async="async" data-cfasync="false" src="${NETWORK_AD_SCRIPT_URL}"><\/script>
+  <div id="${NETWORK_AD_CONTAINER_ID}"></div>
+</body>
+</html>`;
+}
+
+function renderNetworkAdSlots(root = document) {
+  if (!root?.querySelectorAll) return;
+  const slots = root.querySelectorAll('[data-lsf-network-ad]');
+  if (!slots.length) return;
+
+  slots.forEach((slot, index) => {
+    if (slot.dataset.lsfAdReady === 'true') return;
+
+    const rectHeight = Math.round(slot.getBoundingClientRect().height || 0);
+    const declaredHeight = Number.parseInt(slot.dataset.adHeight || '', 10) || 0;
+    const height = Math.max(declaredHeight, rectHeight, NETWORK_AD_FALLBACK_HEIGHT);
+    const iframe = document.createElement('iframe');
+
+    iframe.className = 'lsf-network-ad-frame';
+    iframe.loading = 'lazy';
+    iframe.referrerPolicy = 'no-referrer-when-downgrade';
+    iframe.title = slot.dataset.adTitle || `Sponsored content ${index + 1}`;
+    iframe.setAttribute('aria-label', iframe.title);
+    iframe.setAttribute('scrolling', 'no');
+    iframe.setAttribute(
+      'sandbox',
+      'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation'
+    );
+    iframe.srcdoc = buildNetworkAdSlotDoc(height);
+
+    slot.dataset.state = 'loading';
+    iframe.addEventListener('load', () => {
+      slot.dataset.state = 'ready';
+    });
+
+    slot.replaceChildren(iframe);
+    slot.dataset.lsfAdReady = 'true';
+  });
+}
 
 // --- REALTIME MANAGER (WebSocket/SSE Hybrid) ---
 class RealtimeManager {
@@ -778,7 +852,7 @@ function buildResultLeagueOptions(matches = []) {
     if (!normalizedLeague || !normalizedSport || normalizedSport === 'all') return;
     if (map.has(normalizedLeague)) return;
     const displayLabel = currentTab === 'all'
-      ? `${label} · ${getSportDisplayName(normalizedSport)}`
+      ? `${label} - ${getSportDisplayName(normalizedSport)}`
       : label;
     map.set(normalizedLeague, {
       slug: normalizedLeague,
@@ -830,9 +904,9 @@ function updateResultsSectionMeta(matches = []) {
     if (!count) {
       resultsCountPill.textContent = 'Waiting for result feed';
     } else if (currentLeagueFilter) {
-      resultsCountPill.textContent = `${getLeagueDisplayName(currentLeagueFilter, '', currentTab)} · ${count} results`;
+      resultsCountPill.textContent = `${getLeagueDisplayName(currentLeagueFilter, '', currentTab)} - ${count} results`;
     } else if (currentTab !== 'all') {
-      resultsCountPill.textContent = `${getSportDisplayName(currentTab)} · ${count} results`;
+      resultsCountPill.textContent = `${getSportDisplayName(currentTab)} - ${count} results`;
     } else {
       resultsCountPill.textContent = `${count} results loaded`;
     }
@@ -1277,20 +1351,50 @@ function buildSyntheticMatchLineup(team = {}) {
   }];
 }
 
+function sanitizeDisplayText(value = '') {
+  if (typeof value !== 'string') return value;
+  return value
+    .replace(/\u00c3\u0082\u00c2\u00b7|\u00c2\u00b7|\u00b7/g, ' - ')
+    .replace(/\u00c3\u0083\u00c2\u00a2\u00c3\u00a2\u00e2\u20ac\u0161\u00c2\u00ac\u00c3\u00a2\u20ac\u201d\u00c2\u009d|\u00c3\u00a2\u20ac\u201d|\u2014|\u2013/g, ' - ')
+    .replace(/\u00c3\u0083\u00c2\u00a2\u00c3\u00a2\u00e2\u20ac\u0161\u00c2\u00ac\u00c3\u201a\u00c2\u00a2|\u00c3\u00a2\u20ac\u00a2/g, ' - ')
+    .replace(/\u00c3\u201a|\u00c2/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function sanitizePayloadText(value, seen = new WeakMap()) {
+  if (typeof value === 'string') return sanitizeDisplayText(value);
+  if (!value || typeof value !== 'object') return value;
+  if (seen.has(value)) return seen.get(value);
+
+  if (Array.isArray(value)) {
+    const next = value.map((entry) => sanitizePayloadText(entry, seen));
+    seen.set(value, next);
+    return next;
+  }
+
+  const next = {};
+  seen.set(value, next);
+  Object.entries(value).forEach(([key, entry]) => {
+    next[key] = sanitizePayloadText(entry, seen);
+  });
+  return next;
+}
+
 function buildSyntheticMatchStats(match = {}) {
   const stats = [];
   if (match.homeTeam?.record || match.awayTeam?.record) {
     stats.push({
       label: 'Record',
-      home: match.homeTeam?.record || '—',
-      away: match.awayTeam?.record || '—'
+      home: match.homeTeam?.record || '-',
+      away: match.awayTeam?.record || '-'
     });
   }
   if (match.homeTeam?.leader || match.awayTeam?.leader) {
     stats.push({
       label: 'Top Performer',
-      home: [match.homeTeam?.leader?.name, match.homeTeam?.leader?.value].filter(Boolean).join(' ') || '—',
-      away: [match.awayTeam?.leader?.name, match.awayTeam?.leader?.value].filter(Boolean).join(' ') || '—'
+      home: [match.homeTeam?.leader?.name, match.homeTeam?.leader?.value].filter(Boolean).join(' ') || '-',
+      away: [match.awayTeam?.leader?.name, match.awayTeam?.leader?.value].filter(Boolean).join(' ') || '-'
     });
   }
   if (match.statusText || match.time) {
@@ -1355,8 +1459,11 @@ function buildSyntheticMatchTimeline(match = {}) {
   return items.slice(0, 6);
 }
 
-function buildSyntheticHeadToHead(match = {}) {
-  const candidates = filterRenderableMatches(getCachedMatches())
+function buildSyntheticHeadToHead(match = {}, referenceMatches = []) {
+  const sourceMatches = Array.isArray(referenceMatches) && referenceMatches.length
+    ? referenceMatches
+    : getCachedMatches();
+  const candidates = filterRenderableMatches(sourceMatches)
     .filter((entry) => entry.status === 'finished')
     .filter((entry) => String(entry.id) !== String(match.id))
     .filter((entry) => isSameMatchup(entry, match.homeTeam || {}, match.awayTeam || {}))
@@ -1388,8 +1495,8 @@ function formatHeroScoreMarkup(rawScore = '', sport = '') {
   return scoreText;
 }
 
-function normalizeMatchDetailFallback(match = {}) {
-  return {
+function normalizeMatchDetailFallback(match = {}, referenceMatches = []) {
+  return sanitizePayloadText({
     id: match.id || '',
     sport: normalizeSportSlug(match.sport || '', match.leagueSlug || ''),
     leagueSlug: normalizeLeagueSlug(match.leagueSlug || ''),
@@ -1426,9 +1533,9 @@ function normalizeMatchDetailFallback(match = {}) {
       type: entry.type || 'commentary'
     })),
     odds: null,
-    h2h: buildSyntheticHeadToHead(match),
+    h2h: buildSyntheticHeadToHead(match, referenceMatches),
     situation: null
-  };
+  });
 }
 
 function hasUsefulMatchText(value, blocked = []) {
@@ -1437,17 +1544,33 @@ function hasUsefulMatchText(value, blocked = []) {
   return !blocked.some((candidate) => text.toLowerCase() === String(candidate || '').trim().toLowerCase());
 }
 
+function isUsefulMatchDateValue(value = '') {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  const normalized = text.toLowerCase();
+  if (['loading...', 'scheduled event', 'regular season', 'preseason', 'postseason'].includes(normalized)) {
+    return false;
+  }
+  return Number.isFinite(Date.parse(text));
+}
+
 function pickBestMatchText(primaryValue, fallbackValue, blocked = []) {
   if (hasUsefulMatchText(primaryValue, blocked)) return String(primaryValue).trim();
   if (hasUsefulMatchText(fallbackValue, blocked)) return String(fallbackValue).trim();
   return String(primaryValue || fallbackValue || '').trim();
 }
 
+function pickBestMatchDate(primaryValue, fallbackValue) {
+  if (isUsefulMatchDateValue(primaryValue)) return String(primaryValue).trim();
+  if (isUsefulMatchDateValue(fallbackValue)) return String(fallbackValue).trim();
+  return pickBestMatchText(primaryValue, fallbackValue, ['loading...', 'scheduled event', 'regular season', 'preseason', 'postseason']);
+}
+
 function needsMatchFeedHydration(data = {}) {
   if (!data?.homeTeam || !data?.awayTeam) return true;
   if (isPlaceholderTeam(data.homeTeam) || isPlaceholderTeam(data.awayTeam)) return true;
   if (!hasUsefulMatchText(data.league, ['sports event', 'upcoming event'])) return true;
-  if (!hasUsefulMatchText(data.date, ['loading...', 'scheduled event'])) return true;
+  if (!isUsefulMatchDateValue(data.date)) return true;
   if (!hasUsefulMatchText(data.time, ['00:00'])) return true;
   if (data.status === 'upcoming' && !hasUsefulMatchText(data.venue, ['tbd', 'tbd stadium', 'details unavailable'])) return true;
   const hasStats = Array.isArray(data.stats) && data.stats.length > 0;
@@ -1468,7 +1591,7 @@ function mergeMatchDetailPayload(primary = {}, fallback = {}) {
   const useFallbackHomeIdentity = isPlaceholderTeam(primaryHome) && !isPlaceholderTeam(fallbackHome);
   const useFallbackAwayIdentity = isPlaceholderTeam(primaryAway) && !isPlaceholderTeam(fallbackAway);
 
-  return {
+  return sanitizePayloadText({
     ...fallback,
     ...primary,
     sport: normalizeSportSlug(primary.sport || fallback.sport || '', primary.leagueSlug || fallback.leagueSlug || ''),
@@ -1477,7 +1600,7 @@ function mergeMatchDetailPayload(primary = {}, fallback = {}) {
     status: primary.status || fallback.status || 'upcoming',
     statusText: pickBestMatchText(primary.statusText, fallback.statusText),
     time: pickBestMatchText(primary.time, fallback.time, ['00:00']),
-    date: pickBestMatchText(primary.date, fallback.date, ['loading...', 'scheduled event']),
+    date: pickBestMatchDate(primary.date, fallback.date),
     venue: pickBestMatchText(primary.venue, fallback.venue, ['tbd', 'tbd stadium']),
     broadcast: pickBestMatchText(primary.broadcast, fallback.broadcast),
     commentary: Array.isArray(primary.commentary) && primary.commentary.length ? primary.commentary : (fallback.commentary || []),
@@ -1504,13 +1627,13 @@ function mergeMatchDetailPayload(primary = {}, fallback = {}) {
       score: primaryAway.score ?? fallbackAway.score ?? '0',
       lineup: Array.isArray(primaryAway.lineup) && primaryAway.lineup.length ? primaryAway.lineup : (fallbackAway.lineup || [])
     }
-  };
+  });
 }
 
 async function resolveMatchDetailFromFeeds(id, sport = 'all', league = '') {
   const cachedMatch = findCachedMatch(id);
   if (cachedMatch) {
-    return normalizeMatchDetailFallback(cachedMatch);
+    return normalizeMatchDetailFallback(cachedMatch, getCachedMatches());
   }
 
   const candidates = [];
@@ -1540,7 +1663,20 @@ async function resolveMatchDetailFromFeeds(id, sport = 'all', league = '') {
       const matches = filterRenderableMatches(payload.matches || []);
       const match = matches.find((entry) => String(entry.id) === String(id));
       if (match) {
-        return normalizeMatchDetailFallback(match);
+        let referenceMatches = matches;
+        if (match.status === 'upcoming' || !(referenceMatches || []).some((entry) => entry.status === 'finished')) {
+          try {
+            const finishedFeed = await fetchFinishedResultsFeed({
+              sport: normalizeSportSlug(match.sport || sport, match.leagueSlug || league),
+              league: normalizeLeagueSlug(match.leagueSlug || league || ''),
+              days: 14
+            });
+            referenceMatches = [...matches, ...(finishedFeed.matches || [])];
+          } catch (error) {
+            referenceMatches = matches;
+          }
+        }
+        return normalizeMatchDetailFallback(match, referenceMatches);
       }
     } catch (error) {
       continue;
@@ -1563,7 +1699,7 @@ async function fetchMatchPayload(id, sport = 'soccer', league = 'eng.1') {
       if (data && !data.notFound && data.homeTeam && data.awayTeam) {
         apiData = data;
         if (!needsMatchFeedHydration(apiData)) {
-          return { data: apiData, source: 'api', status: response.status };
+          return { data: sanitizePayloadText(apiData), source: 'api', status: response.status };
         }
       }
     }
@@ -1575,16 +1711,16 @@ async function fetchMatchPayload(id, sport = 'soccer', league = 'eng.1') {
     || await resolveMatchDetailFromFeeds(id, 'all', '');
   if (fallback && apiData) {
     return {
-      data: mergeMatchDetailPayload(apiData, fallback),
+      data: sanitizePayloadText(mergeMatchDetailPayload(apiData, fallback)),
       source: 'api+feed-fallback',
       status: response?.status || 200
     };
   }
   if (fallback) {
-    return { data: fallback, source: 'feed-fallback', status: response?.status || 200 };
+    return { data: sanitizePayloadText(fallback), source: 'feed-fallback', status: response?.status || 200 };
   }
   if (apiData) {
-    return { data: apiData, source: 'api-partial', status: response?.status || 200 };
+    return { data: sanitizePayloadText(apiData), source: 'api-partial', status: response?.status || 200 };
   }
 
   return {
@@ -2891,6 +3027,7 @@ document.addEventListener('DOMContentLoaded', () => {
   patchLegacyImages();
   setupAppShell();
   ensureMobileTopNav();
+  renderNetworkAdSlots(document);
   updateFeedRibbon();
   registerServiceWorker();
   bootstrapSavedReminders();
@@ -3040,7 +3177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Empty state for match.html without ?id â€” show live matches to pick from
+  // Empty state for match.html without ?id - show live matches to pick from
   if (path.includes('match.html') && !matchId) {
     const mainContent = document.querySelector('main') || document.querySelector('.flex-1');
     if (mainContent) {
@@ -3108,7 +3245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIAL FETCHES ---
     fetchSidebarLive();
     
-    // Skip fetchMatches on upcoming page â€” Schedule Centre module handles it
+    // Skip fetchMatches on upcoming page - Schedule Centre module handles it
     if (!window.location.pathname.includes('upcoming')) {
       fetchMatches(currentPageFilter);
     }
@@ -3942,7 +4079,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
           </div>
           <div class="flex-1">
             <h3 class="text-lg font-black uppercase tracking-tight mb-1 group-hover:text-primary transition-colors">${l.name}</h3>
-            <p class="text-[10px] text-on-surface/40 font-bold uppercase tracking-widest mb-6">${l.country} â€¢ ${l.sport}</p>
+            <p class="text-[10px] text-on-surface/40 font-bold uppercase tracking-widest mb-6">${l.country} - ${l.sport}</p>
           </div>
           <button onclick="window.location.href='${buildSportHubUrl(l.sport, l.slug)}'" class="w-full py-3 bg-white/5 group-hover:bg-primary group-hover:text-on-primary transition-all text-[10px] font-black uppercase tracking-widest rounded">View Hub</button>
         </div>
@@ -4979,7 +5116,7 @@ function formatBlogMetaLine(post = {}) {
     post.vertical || '',
     `${post.readingTime || 4} min read`
   ].filter(Boolean);
-  return parts.join(' · ');
+  return parts.join(' - ');
 }
 
 function renderBlogSportTabs(currentSport = 'all', league = '') {
@@ -5688,6 +5825,7 @@ function applyMatchScoreboardState(data = {}) {
 
 function renderMatchDetail(data) {
   if (!homeTeamName || !data || !data.homeTeam) return;
+  data = sanitizePayloadText(data);
 
   const leagueInfo = document.getElementById('match-league-info');
   const homeEvents = document.getElementById('home-events');
@@ -5706,8 +5844,8 @@ function renderMatchDetail(data) {
   if (timeTitle) timeTitle.textContent = params.timelineLabel;
   if (lineTitle) lineTitle.textContent = params.lineupsLabel;
 
-  homeTeamName.textContent = data.homeTeam.name || 'Home Team';
-  awayTeamName.textContent = data.awayTeam.name || 'Away Team';
+  homeTeamName.textContent = sanitizeDisplayText(data.homeTeam.name || 'Home Team');
+  awayTeamName.textContent = sanitizeDisplayText(data.awayTeam.name || 'Away Team');
   homeTeamLogo.src = data.homeTeam.logo || '/public/logo.png';
   awayTeamLogo.src = data.awayTeam.logo || '/public/logo.png';
   
@@ -5729,7 +5867,7 @@ function renderMatchDetail(data) {
   syncKineticClock(data.time, data.sport || 'soccer', data.status || 'live');
   applyMatchScoreboardState(data);
 
-  if (leagueInfo) leagueInfo.textContent = data.league || 'Sports Event';
+  if (leagueInfo) leagueInfo.textContent = sanitizeDisplayText(data.league || 'Sports Event');
   
   if (lineupHomeTab && lineupAwayTab) {
     lineupHomeTab.textContent = data.homeTeam.name || 'Home';
@@ -5851,7 +5989,7 @@ function renderMatchDetail(data) {
             <div class="space-y-2">
               <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1">
                 <span>${stat.label}</span>
-                <span class="text-primary">${stat.home} â€” ${stat.away}</span>
+                <span class="text-primary">${stat.home} - ${stat.away}</span>
               </div>
               <div class="h-1.5 w-full bg-white/5 flex rounded-full overflow-hidden">
                 <div class="h-full bg-surface-container-highest" style="width: ${homePercent}%"></div>
@@ -5921,10 +6059,10 @@ function renderMatchDetail(data) {
                     const isCard = event.type === 'card' || event.type === 'yellow-card' || event.type === 'red-card';
                     const isSub = event.type === 'substitution';
                     
-                    let icon = 'â€¢';
-                    if (isGoal) icon = 'âš½';
-                    else if (isCard) icon = event.player.toLowerCase().includes('red') ? 'ðŸŸ¥' : 'ðŸŸ¨';
-                    else if (isSub) icon = 'ðŸ”„';
+                    let icon = 'EVENT';
+                    if (isGoal) icon = 'GOAL';
+                    else if (isCard) icon = event.player.toLowerCase().includes('red') ? 'RED' : 'YEL';
+                    else if (isSub) icon = 'SUB';
 
                     // Half-time logic: detect if we crossed 45'
                     const showHT = idx > 0 && reversedTimeline[idx-1].time.includes('45') && !event.time.includes('45');
@@ -5994,7 +6132,7 @@ function renderMatchDetail(data) {
             ${detailTimeline.slice(0, 5).map(event => `
                 <div class="bg-surface-container-high p-4 rounded-sm border-l-4 ${event.type === 'goal' ? 'border-primary' : 'border-white/10'} mb-3">
                     <span class="text-[8px] font-black ${event.type === 'goal' ? 'text-primary' : 'text-on-surface-variant/50'} uppercase mb-1 block">
-                        ${event.time} â€” ${event.type.toUpperCase()}
+                        ${event.time} - ${event.type.toUpperCase()}
                     </span>
                     <p class="text-xs leading-relaxed font-medium">${event.player || event.text || 'Match update'}</p>
                 </div>
@@ -6043,7 +6181,7 @@ function renderMatchLineup(data) {
                 </div>
                 <div class="flex flex-col">
                     <span class="text-sm font-bold group-hover:text-primary transition-colors">${p.name}</span>
-                    <span class="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.2em]">${p.number || '--'} â€¢ ${p.position}</span>
+                    <span class="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-[0.2em]">${p.number || '--'} - ${p.position}</span>
                 </div>
             </div>
             <button class="material-symbols-outlined text-white/20 group-hover:text-primary transition-colors text-lg">info</button>
@@ -6217,11 +6355,12 @@ function formatUpcomingKickoffDetail(data = {}, presentation = {}) {
     detailParts.push(presentation.dateLabel);
   }
   const uniqueParts = Array.from(new Set(detailParts.filter(Boolean)));
-  return uniqueParts.length ? uniqueParts.join(' · ') : 'Awaiting schedule update';
+  return uniqueParts.length ? uniqueParts.join(' - ') : 'Awaiting schedule update';
 }
 
 function renderUpcomingMatchDetail(data) {
   if (!homeTeamName || !data || !data.homeTeam) return;
+  data = sanitizePayloadText(data);
 
   const hName = document.getElementById('home-team-name');
   const aName = document.getElementById('away-team-name');
@@ -6257,20 +6396,20 @@ function renderUpcomingMatchDetail(data) {
   const drawLabel = upcomingProbabilities.draw > 0 ? 'DRAW' : 'EDGE';
   const drawValue = `${upcomingProbabilities.draw}%`;
 
-  if (hName) hName.textContent = homeDisplayName;
-  if (aName) aName.textContent = awayDisplayName;
+  if (hName) hName.textContent = sanitizeDisplayText(homeDisplayName);
+  if (aName) aName.textContent = sanitizeDisplayText(awayDisplayName);
   if (hLogo) hLogo.src = data.homeTeam.logo || FALLBACK_LOGO;
   if (aLogo) aLogo.src = data.awayTeam.logo || FALLBACK_LOGO;
   if (mTime) mTime.textContent = timeLabel;
   if (mDate) mDate.textContent = dateLabel;
   if (sName) sName.textContent = hasUsefulMatchText(data.venue, ['tbd', 'tbd stadium', 'details unavailable'])
-    ? data.venue
+    ? sanitizeDisplayText(data.venue)
     : 'Venue update pending';
-  if (lName) lName.textContent = data.league || data.leagueSlug?.toUpperCase() || 'Scheduled Match';
-  if (leagueInfo) leagueInfo.textContent = data.league || data.leagueSlug?.toUpperCase() || 'Scheduled Match';
-  if (kickoffDetail) kickoffDetail.textContent = formatUpcomingKickoffDetail(data, { timeLabel, dateLabel });
+  if (lName) lName.textContent = sanitizeDisplayText(data.league || data.leagueSlug?.toUpperCase() || 'Scheduled Match');
+  if (leagueInfo) leagueInfo.textContent = sanitizeDisplayText(data.league || data.leagueSlug?.toUpperCase() || 'Scheduled Match');
+  if (kickoffDetail) kickoffDetail.textContent = sanitizeDisplayText(formatUpcomingKickoffDetail(data, { timeLabel, dateLabel }));
   if (broadcastName) broadcastName.textContent = hasUsefulMatchText(data.broadcast, ['details unavailable'])
-    ? data.broadcast
+    ? sanitizeDisplayText(data.broadcast)
     : 'Broadcast update pending';
   if (winHomeLabel) winHomeLabel.textContent = homeProbabilityLabel.toUpperCase();
   if (winDrawLabel) winDrawLabel.textContent = drawLabel;
