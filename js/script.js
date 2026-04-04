@@ -5823,11 +5823,32 @@ function setMatchUnavailableState(primary = 'Match unavailable', secondary = 'Pl
   const stadiumName = document.getElementById('stadium-name');
   const leagueName = document.getElementById('league-name');
   const h2hContainer = document.getElementById('h2h-container');
+  const mobileLastEvent = document.getElementById('mobile-last-event-text');
+  const mobileDataIntel = document.getElementById('mobile-data-intel');
+  const mobileFeed = document.getElementById('mobile-feed-list');
+  const mobileLineup = document.getElementById('mobile-lineup-strip');
+  const mobileOdds = document.getElementById('mobile-odds-card');
 
   if (upcomingTime) upcomingTime.textContent = '--:--';
   if (upcomingDate) upcomingDate.textContent = 'Unavailable';
   if (stadiumName) stadiumName.textContent = 'Details unavailable';
   if (leagueName) leagueName.textContent = 'Match centre unavailable';
+  if (mobileLastEvent) mobileLastEvent.textContent = primary;
+  if (mobileDataIntel) {
+    mobileDataIntel.innerHTML = `<div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">${secondary}</div>`;
+  }
+  if (mobileFeed) {
+    mobileFeed.innerHTML = `<div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Feed unavailable right now</div>`;
+  }
+  if (mobileLineup) {
+    mobileLineup.innerHTML = `<div class="lsf-mobile-card col-span-4 text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Lineups unavailable right now</div>`;
+  }
+  if (mobileOdds) {
+    mobileOdds.innerHTML = `
+      <div class="text-[10px] font-black uppercase tracking-[0.28em] text-on-surface/45">Betting Edge</div>
+      <div class="mt-3 text-sm font-bold text-on-surface/70">${secondary}</div>
+    `;
+  }
   if (h2hContainer) {
     h2hContainer.innerHTML = `
       <div class="py-8 text-center opacity-30 text-[10px] uppercase font-black tracking-widest">
@@ -6117,9 +6138,225 @@ function applyMatchScoreboardState(data = {}) {
   }
 }
 
+function syncMobileMatchSectionTabState(activeTarget = 'mobile-match-hub') {
+  const buttons = document.querySelectorAll('#mobile-match-tabs [data-mobile-scroll-target]');
+  buttons.forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.mobileScrollTarget === activeTarget);
+  });
+}
+
+function initMobileMatchSectionTabs() {
+  const rail = document.getElementById('mobile-match-tabs');
+  if (!rail || rail.dataset.bound === 'true') return;
+  rail.dataset.bound = 'true';
+  rail.querySelectorAll('[data-mobile-scroll-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const targetId = button.dataset.mobileScrollTarget;
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      syncMobileMatchSectionTabState(targetId);
+      window.scrollTo({
+        top: target.getBoundingClientRect().top + window.scrollY - 88,
+        behavior: 'smooth'
+      });
+    });
+  });
+}
+
+function getMobileMatchHighlightLabel(team = {}, sport = '') {
+  const abbreviation = sanitizeDisplayText(team?.abbreviation || team?.name || 'Team').toUpperCase().slice(0, 8);
+  const suffixMap = {
+    soccer: 'Scorers',
+    basketball: 'Leaders',
+    baseball: 'Moments',
+    cricket: 'Pulse',
+    hockey: 'Scorers'
+  };
+  const suffix = suffixMap[normalizeSportSlug(sport)] || 'Moments';
+  return `${abbreviation} ${suffix}`.toUpperCase();
+}
+
+function getMatchEventIconName(event = {}, sport = '') {
+  const type = String(event?.type || '').toLowerCase();
+  if (type.includes('goal')) return 'sports_soccer';
+  if (type.includes('wicket') || type.includes('boundary') || normalizeSportSlug(sport) === 'cricket') return 'sports_cricket';
+  if (type.includes('three') || type.includes('basket') || normalizeSportSlug(sport) === 'basketball') return 'sports_basketball';
+  if (type.includes('home run') || normalizeSportSlug(sport) === 'baseball') return 'sports_baseball';
+  if (normalizeSportSlug(sport) === 'hockey') return 'sports_hockey';
+  return 'bolt';
+}
+
+function parseComparableStatValue(value) {
+  const parsed = Number.parseFloat(String(value ?? '').replace(/[^0-9.\-]/g, ''));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function renderMobileMatchOdds(data = {}) {
+  const container = document.getElementById('mobile-odds-card');
+  if (!container) return;
+  const odds = data?.odds || {};
+  const hasOdds = odds.homeOdds || odds.awayOdds || odds.drawOdds || odds.details;
+  if (!hasOdds) {
+    container.innerHTML = `
+      <div class="text-[10px] font-black uppercase tracking-[0.28em] text-on-surface/45">Betting Edge</div>
+      <div class="mt-3 text-sm font-bold text-on-surface/70">Market context is usually published closer to tip-off or first pitch.</div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="text-[10px] font-black uppercase tracking-[0.28em] text-on-surface/45">Betting Edge</div>
+    <div class="mt-3 text-lg font-black italic uppercase">${sanitizeDisplayText(odds.details || 'Match Odds')}</div>
+    <div class="mt-4 space-y-3 text-xs font-bold uppercase">
+      <div class="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-4 py-3">
+        <span>${sanitizeDisplayText(data?.homeTeam?.name || 'Home')}</span>
+        <span class="text-primary">${sanitizeDisplayText(odds.homeOdds || '-')}</span>
+      </div>
+      ${odds.drawOdds ? `
+        <div class="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-4 py-3">
+          <span>Draw</span>
+          <span class="text-on-surface">${sanitizeDisplayText(odds.drawOdds)}</span>
+        </div>
+      ` : ''}
+      <div class="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-4 py-3">
+        <span>${sanitizeDisplayText(data?.awayTeam?.name || 'Away')}</span>
+        <span class="text-secondary">${sanitizeDisplayText(odds.awayOdds || '-')}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderMobileLineupPanel(data = {}) {
+  const container = document.getElementById('mobile-lineup-strip');
+  const homeTab = document.getElementById('mobile-lineup-home-tab');
+  const awayTab = document.getElementById('mobile-lineup-away-tab');
+  if (!container || !homeTab || !awayTab) return;
+
+  if (homeTab.dataset.bound !== 'true') {
+    homeTab.dataset.bound = 'true';
+    homeTab.addEventListener('click', () => {
+      activeLineupTab = 'home';
+      renderMatchLineup(window._latestMatchDetailData || data);
+    });
+    awayTab.addEventListener('click', () => {
+      activeLineupTab = 'away';
+      renderMatchLineup(window._latestMatchDetailData || data);
+    });
+  }
+
+  homeTab.classList.toggle('is-active', activeLineupTab === 'home');
+  awayTab.classList.toggle('is-active', activeLineupTab === 'away');
+  const lineup = activeLineupTab === 'home' ? (data?.homeTeam?.lineup || []) : (data?.awayTeam?.lineup || []);
+
+  if (!lineup.length) {
+    container.innerHTML = `<div class="lsf-mobile-card col-span-4 text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No lineup cards available yet</div>`;
+    return;
+  }
+
+  const defaultAvatar = `data:image/svg+xml;base64,${btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(255,255,255,0.2)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>')}`;
+  container.innerHTML = lineup.slice(0, 8).map((player) => `
+    <div class="lsf-mobile-lineup-chip">
+      <img src="${player.face || defaultAvatar}" alt="${sanitizeDisplayText(player.name || 'Player')}" class="mx-auto h-12 w-12 rounded-xl border border-white/10 bg-white/5 object-cover" onerror="this.src='${defaultAvatar}'">
+      <div class="mt-3 text-[10px] font-black uppercase leading-tight">${sanitizeDisplayText(player.name || 'Player')}</div>
+      <div class="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-on-surface/35">${sanitizeDisplayText(player.position || 'Squad')}</div>
+    </div>
+  `).join('');
+}
+
+function renderMobileMatchCentre(data = {}, detailStats = [], detailTimeline = [], commentaryFeed = []) {
+  const root = document.getElementById('mobile-match-centre');
+  if (!root) return;
+
+  initMobileMatchSectionTabs();
+  const latestEvent = commentaryFeed[0] || detailTimeline[0] || {};
+  const latestText = sanitizeDisplayText(latestEvent.text || latestEvent.player || data?.statusText || 'Awaiting live action');
+  const latestIcon = getMatchEventIconName(latestEvent, data?.sport || '');
+  const homeTimeline = detailTimeline.filter((event) => event.side === 'home');
+  const awayTimeline = detailTimeline.filter((event) => event.side === 'away');
+  const homeHighlight = homeTimeline[0] || {};
+  const awayHighlight = awayTimeline[0] || {};
+
+  const lastEventText = document.getElementById('mobile-last-event-text');
+  const lastEventIcon = document.getElementById('mobile-last-event-icon');
+  const homeLabel = document.getElementById('mobile-home-highlight-label');
+  const homeText = document.getElementById('mobile-home-highlight-text');
+  const homeTime = document.getElementById('mobile-home-highlight-time');
+  const awayLabel = document.getElementById('mobile-away-highlight-label');
+  const awayText = document.getElementById('mobile-away-highlight-text');
+  const awayTime = document.getElementById('mobile-away-highlight-time');
+  const statsHost = document.getElementById('mobile-data-intel');
+  const feedHost = document.getElementById('mobile-feed-list');
+
+  if (lastEventText) lastEventText.textContent = latestText;
+  if (lastEventIcon) lastEventIcon.textContent = latestIcon;
+  if (homeLabel) homeLabel.textContent = getMobileMatchHighlightLabel(data?.homeTeam, data?.sport);
+  if (homeText) homeText.textContent = sanitizeDisplayText(homeHighlight.player || homeHighlight.text || `${data?.homeTeam?.name || 'Home'} standing by`);
+  if (homeTime) homeTime.textContent = sanitizeDisplayText(homeHighlight.time || data?.homeTeam?.record || '--');
+  if (awayLabel) awayLabel.textContent = getMobileMatchHighlightLabel(data?.awayTeam, data?.sport);
+  if (awayText) awayText.textContent = sanitizeDisplayText(awayHighlight.player || awayHighlight.text || `${data?.awayTeam?.name || 'Away'} standing by`);
+  if (awayTime) awayTime.textContent = sanitizeDisplayText(awayHighlight.time || data?.awayTeam?.record || '--');
+
+  if (statsHost) {
+    const statRows = detailStats.slice(0, 4).map((stat) => {
+      const homeValue = parseComparableStatValue(stat.home);
+      const awayValue = parseComparableStatValue(stat.away);
+      const comparable = homeValue !== null && awayValue !== null && (homeValue + awayValue) > 0;
+      const homeWidth = comparable ? (homeValue / (homeValue + awayValue)) * 100 : 50;
+      const awayWidth = comparable ? 100 - homeWidth : 50;
+      return `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-[11px] font-black italic uppercase">
+            <span>${sanitizeDisplayText(stat.home || '-')}</span>
+            <span class="text-on-surface/40">${sanitizeDisplayText(stat.label || 'Stat')}</span>
+            <span>${sanitizeDisplayText(stat.away || '-')}</span>
+          </div>
+          <div class="lsf-mobile-stat-bar">
+            <span style="width:${homeWidth}%"></span>
+            <span style="width:${awayWidth}%"></span>
+          </div>
+        </div>
+      `;
+    });
+
+    statsHost.innerHTML = statRows.length
+      ? statRows.join('')
+      : `<div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Awaiting live stat readout</div>`;
+  }
+
+  if (feedHost) {
+    const items = commentaryFeed.slice(0, 6).map((entry) => {
+      const accentClass = entry.side === 'away'
+        ? 'text-secondary'
+        : entry.side === 'home'
+          ? 'text-primary'
+          : 'text-on-surface/35';
+
+      return `
+        <div class="lsf-mobile-feed-item">
+          <div class="lsf-mobile-feed-time">${sanitizeDisplayText(entry.time || 'LIVE')}</div>
+          <div class="lsf-mobile-feed-card">
+            <div class="text-[10px] font-black uppercase tracking-[0.24em] ${accentClass}">
+              ${sanitizeDisplayText(entry.type || 'Update')}
+            </div>
+            <div class="mt-2 text-sm font-medium leading-relaxed text-on-surface/88">${sanitizeDisplayText(entry.text || entry.player || 'Match update')}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    feedHost.innerHTML = items.length
+      ? items.join('')
+      : `<div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Awaiting commentary feed</div>`;
+  }
+
+  renderMobileLineupPanel(data);
+  renderMobileMatchOdds(data);
+}
+
 function renderMatchDetail(data) {
   if (!homeTeamName || !data || !data.homeTeam) return;
   data = sanitizePayloadText(data);
+  window._latestMatchDetailData = data;
 
   const leagueInfo = document.getElementById('match-league-info');
   const homeEvents = document.getElementById('home-events');
@@ -6171,7 +6408,7 @@ function renderMatchDetail(data) {
     if (!lineupHomeTab.onclick) {
         lineupHomeTab.onclick = () => {
             activeLineupTab = 'home';
-            renderMatchLineup(data);
+            renderMatchLineup(window._latestMatchDetailData || data);
             lineupHomeTab.classList.add('border-primary', 'bg-surface');
             lineupHomeTab.classList.remove('text-on-surface-variant/40', 'border-transparent');
             lineupAwayTab.classList.remove('border-primary', 'bg-surface');
@@ -6179,7 +6416,7 @@ function renderMatchDetail(data) {
         };
         lineupAwayTab.onclick = () => {
             activeLineupTab = 'away';
-            renderMatchLineup(data);
+            renderMatchLineup(window._latestMatchDetailData || data);
             lineupAwayTab.classList.add('border-primary', 'bg-surface');
             lineupAwayTab.classList.remove('text-on-surface-variant/40', 'border-transparent');
             lineupHomeTab.classList.remove('border-primary', 'bg-surface');
@@ -6197,6 +6434,8 @@ function renderMatchDetail(data) {
         type: event.type || 'commentary',
         side: event.side || 'neutral'
       })));
+
+  renderMobileMatchCentre(data, detailStats, detailTimeline, commentaryFeed);
 
   if (commentaryContainer) {
       commentaryContainer.innerHTML = commentaryFeed.length
@@ -6482,6 +6721,7 @@ function renderMatchLineup(data) {
         </div>
     `).join('');
     schedulePretextLayout(container);
+    renderMobileLineupPanel(data);
 }
 
 // --- FETCH UPCOMING MATCH DETAIL ---
