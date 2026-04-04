@@ -97,6 +97,16 @@ class TitleRewriter {
   }
 }
 
+class BaseHrefInjector {
+  constructor(href = "/") {
+    this.href = href;
+  }
+
+  element(element) {
+    element.prepend(`<base href="${escapeHtml(this.href)}">`, { html: true });
+  }
+}
+
 class HeadInjector {
   constructor(meta = {}) {
     this.meta = meta;
@@ -157,6 +167,7 @@ export async function renderMatchPage(context, {
     const image = matchData.homeTeam?.logo || matchData.awayTeam?.logo || `${url.origin}/icons/icon-512.png`;
 
     return new HTMLRewriter()
+      .on("head", new BaseHrefInjector("/"))
       .on("title", new TitleRewriter(title))
       .on("head", new HeadInjector({ title, description, canonical, image }))
       .transform(response);
