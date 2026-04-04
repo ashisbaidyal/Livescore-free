@@ -52,8 +52,16 @@ export function parseMatchRoute(url, routeBase = "match") {
   });
 }
 
-async function fetchPageAsset(request, assetPath) {
+async function fetchPageAsset(context, request, assetPath) {
   const assetUrl = new URL(assetPath, request.url);
+  if (context?.env?.ASSETS?.fetch) {
+    return context.env.ASSETS.fetch(new Request(assetUrl.toString(), {
+      method: "GET",
+      headers: {
+        Accept: "text/html,application/xhtml+xml"
+      }
+    }));
+  }
   return fetch(assetUrl.toString(), {
     headers: {
       Accept: "text/html,application/xhtml+xml"
@@ -127,7 +135,7 @@ export async function renderMatchPage(context, {
     return Response.redirect(new URL(canonicalPath, request.url).toString(), 301);
   }
 
-  const response = await fetchPageAsset(request, assetPath);
+  const response = await fetchPageAsset(context, request, assetPath);
   if (response.status !== 200 || !matchRoute.id) {
     return response;
   }

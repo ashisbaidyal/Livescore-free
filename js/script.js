@@ -2432,10 +2432,23 @@ const MOBILE_PRIMARY_NAV = {
   results: { icon: 'history', label: 'Results' }
 };
 
-function createMobileTopNavLink(sourceLink, extraClass = '') {
+function resolveNavPageKey(href = '') {
+  if (!href) return 'index';
+  try {
+    const url = new URL(href, window.location.origin);
+    if (url.pathname === '/' || url.pathname === '/index.html') return 'index';
+    return getPageKeyFromPath(url.pathname);
+  } catch (error) {
+    const normalized = href.replace(window.location.origin, '');
+    if (normalized === '/' || normalized === '/index.html' || normalized === 'index.html') return 'index';
+    return getPageKeyFromPath(normalized.startsWith('/') ? normalized : `/${normalized}`);
+  }
+}
+
+function createMobileTopNavLink(sourceLink, extraClass = '', { menu = false } = {}) {
   const href = sourceLink.getAttribute('href');
   if (!href) return null;
-  const pageKey = (href.split('/').pop() || 'index.html').replace('.html', '') || 'index';
+  const pageKey = resolveNavPageKey(href);
   const meta = MOBILE_PRIMARY_NAV[pageKey] || {
     icon: 'link',
     label: (sourceLink.textContent || '').trim()
@@ -2443,11 +2456,16 @@ function createMobileTopNavLink(sourceLink, extraClass = '') {
 
   const link = document.createElement('a');
   link.href = href;
-  link.innerHTML = `
-    <span class="material-symbols-outlined lsf-mobile-nav-icon">${meta.icon}</span>
-    <span class="lsf-mobile-nav-label">${meta.label}</span>
-  `;
-  link.className = `lsf-mobile-top-nav-link ${extraClass}`.trim();
+  if (menu) {
+    link.textContent = meta.label;
+    link.className = `lsf-mobile-more-link ${extraClass}`.trim();
+  } else {
+    link.innerHTML = `
+      <span class="material-symbols-outlined lsf-mobile-nav-icon">${meta.icon}</span>
+      <span class="lsf-mobile-nav-label">${meta.label}</span>
+    `;
+    link.className = `lsf-mobile-top-nav-link ${extraClass}`.trim();
+  }
   link.dataset.pageLink = 'true';
   link.dataset.pageKey = pageKey;
   link.setAttribute('aria-label', meta.label);
@@ -2466,8 +2484,13 @@ function ensureMobileTopNav() {
   const rail = document.createElement('div');
   rail.className = 'lsf-mobile-top-nav-scroll';
 
-  ['index.html', 'live.html', 'upcoming.html', 'results.html'].forEach((href) => {
-    const sourceLink = desktopNav.querySelector(`a[href="${href}"]`);
+  const desktopPrimaryLinks = new Map(
+    Array.from(desktopNav.querySelectorAll(':scope > a[href]'))
+      .map((link) => [resolveNavPageKey(link.getAttribute('href') || ''), link])
+  );
+
+  ['index', 'live', 'upcoming', 'results'].forEach((pageKey) => {
+    const sourceLink = desktopPrimaryLinks.get(pageKey);
     if (!sourceLink) return;
     const link = createMobileTopNavLink(sourceLink);
     if (link) rail.append(link);
@@ -2495,7 +2518,7 @@ function ensureMobileTopNav() {
     menu.className = 'lsf-mobile-more-menu';
 
     moreLinks.forEach((item) => {
-      const link = createMobileTopNavLink(item, 'lsf-mobile-more-link');
+      const link = createMobileTopNavLink(item, '', { menu: true });
       if (link) menu.append(link);
     });
 
@@ -2516,6 +2539,8 @@ function ensureMobileTopNav() {
     moreShell.append(trigger, menu);
     rail.append(moreShell);
   }
+
+  if (!rail.children.length) return;
 
   mobileNav.append(rail);
   document.body.append(mobileNav);
