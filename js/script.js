@@ -67,8 +67,8 @@ window._cachedBlogPosts = [];
 window._lsfHeroAutoplayHandle = null;
 window._lsfTickerAutoplayHandle = null;
 window._lsfHeroActiveKey = '';
-window._lsfNetworkAdObserver = null;
 window._lsfNetworkAdViewportObserver = null;
+window._lsfNetworkAdMessageBound = false;
 
 function isResultsHubPage() {
   return Boolean(
@@ -78,28 +78,100 @@ function isResultsHubPage() {
   );
 }
 
-function syncMirroredNetworkAds() {
-  const primarySlot = document.querySelector('[data-lsf-network-ad-primary="true"]');
-  const primaryContainer = primarySlot?.querySelector(`#${NETWORK_AD_CONTAINER_ID}`);
-  if (!primaryContainer) return;
-  const renderedNodes = Array.from(primaryContainer.childNodes || []);
-  if (!renderedNodes.length) return;
+function buildNetworkAdFrameMarkup(slotId = '', title = 'Sponsored placement') {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+    }
+    body {
+      display: block;
+    }
+    #${NETWORK_AD_CONTAINER_ID} {
+      width: 100%;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <script async="async" data-cfasync="false" src="${NETWORK_AD_SCRIPT_URL}"></script>
+  <div id="${NETWORK_AD_CONTAINER_ID}"></div>
+  <script>
+    (function () {
+      var slotId = ${JSON.stringify(String(slotId || ''))};
+      var container = document.getElementById(${JSON.stringify(NETWORK_AD_CONTAINER_ID)});
+      function notify(state) {
+        try {
+          parent.postMessage({ type: 'lsf-network-ad-state', slotId: slotId, state: state }, '*');
+        } catch (error) {}
+      }
+      function markReady() {
+        if (!container) return;
+        var hasNodes = container.childNodes && container.childNodes.length > 0;
+        var hasText = (container.textContent || '').trim().length > 0;
+        if (hasNodes || hasText) notify('ready');
+      }
+      if (container && 'MutationObserver' in window) {
+        new MutationObserver(markReady).observe(container, { childList: true, subtree: true });
+      }
+      window.addEventListener('load', function () {
+        notify('loading');
+        window.setTimeout(markReady, 1500);
+        window.setTimeout(markReady, 3500);
+        window.setTimeout(markReady, 6000);
+      });
+    })();
+  </script>
+</body>
+</html>`;
+}
 
-  primarySlot.dataset.state = 'ready';
-  document.querySelectorAll('[data-lsf-network-ad-mirror="true"]').forEach((slot) => {
-    slot.replaceChildren(...renderedNodes.map((node) => node.cloneNode(true)));
-    slot.dataset.state = 'ready';
+function findNetworkAdSlotById(slotId = '') {
+  if (!slotId) return null;
+  return Array.from(document.querySelectorAll('[data-lsf-network-ad][data-lsf-ad-slot-id]'))
+    .find((slot) => slot.dataset.lsfAdSlotId === slotId) || null;
+}
+
+function bindNetworkAdMessageListener() {
+  if (window._lsfNetworkAdMessageBound) return;
+  window._lsfNetworkAdMessageBound = true;
+  window.addEventListener('message', (event) => {
+    const payload = event?.data;
+    if (!payload || payload.type !== 'lsf-network-ad-state') return;
+    const slot = findNetworkAdSlotById(payload.slotId);
+    if (!slot) return;
+    slot.dataset.state = payload.state === 'ready' ? 'ready' : 'loading';
   });
 }
 
-function ensureNetworkAdBootstrapped() {
-  if (document.querySelector('script[data-lsf-network-ad-script="true"]')) return;
-  const script = document.createElement('script');
-  script.async = true;
-  script.dataset.cfasync = 'false';
-  script.dataset.lsfNetworkAdScript = 'true';
-  script.src = NETWORK_AD_SCRIPT_URL;
-  document.body.appendChild(script);
+function mountNetworkAdSlot(slot) {
+  if (!slot || slot.dataset.lsfAdMounted === 'true') return;
+  const slotId = slot.dataset.lsfAdSlotId || `lsf-ad-${Math.random().toString(36).slice(2, 10)}`;
+  const title = slot.dataset.adTitle || 'Sponsored placement';
+  const frame = document.createElement('iframe');
+
+  slot.dataset.lsfAdSlotId = slotId;
+  slot.dataset.lsfAdMounted = 'true';
+  slot.dataset.state = 'loading';
+
+  frame.className = 'lsf-network-ad-frame';
+  frame.loading = 'lazy';
+  frame.referrerPolicy = 'strict-origin-when-cross-origin';
+  frame.title = title;
+  frame.setAttribute('aria-label', title);
+  frame.setAttribute('scrolling', 'no');
+  frame.srcdoc = buildNetworkAdFrameMarkup(slotId, title);
+
+  slot.replaceChildren(frame);
 }
 
 function renderNetworkAdSlots(root = document) {
@@ -107,53 +179,14 @@ function renderNetworkAdSlots(root = document) {
   const slots = Array.from(root.querySelectorAll('[data-lsf-network-ad]'));
   if (!slots.length) return;
 
-  const primarySlot = slots[0];
-  primarySlot.dataset.lsfAdReady = 'true';
-  primarySlot.dataset.lsfNetworkAdPrimary = 'true';
-  primarySlot.dataset.state = 'loading';
-
-  if (!primarySlot.querySelector(`#${NETWORK_AD_CONTAINER_ID}`)) {
-    const primaryContainer = document.createElement('div');
-    primaryContainer.id = NETWORK_AD_CONTAINER_ID;
-    primarySlot.replaceChildren(primaryContainer);
-  }
-
-  slots.slice(1).forEach((slot) => {
-    if (slot.dataset.lsfAdReady === 'true') return;
-    slot.dataset.lsfAdReady = 'true';
-    slot.dataset.lsfNetworkAdMirror = 'true';
-    slot.dataset.state = 'loading';
-    slot.replaceChildren();
-  });
-
-  if (!window._lsfNetworkAdObserver) {
-    window._lsfNetworkAdObserver = new MutationObserver(() => {
-      syncMirroredNetworkAds();
-    });
-  } else {
-    window._lsfNetworkAdObserver.disconnect();
-  }
-
-  const observedContainer = primarySlot.querySelector(`#${NETWORK_AD_CONTAINER_ID}`);
-  if (observedContainer) {
-    window._lsfNetworkAdObserver.observe(observedContainer, { childList: true, subtree: true });
-  }
-
-  const bootAdNetwork = () => {
-    if (primarySlot.dataset.lsfAdBootstrapped === 'true') return;
-    primarySlot.dataset.lsfAdBootstrapped = 'true';
-    ensureNetworkAdBootstrapped();
-    window.setTimeout(syncMirroredNetworkAds, 2500);
-    window.setTimeout(syncMirroredNetworkAds, 5000);
-  };
+  bindNetworkAdMessageListener();
 
   if (!window._lsfNetworkAdViewportObserver && 'IntersectionObserver' in window) {
     window._lsfNetworkAdViewportObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
-        bootAdNetwork();
-        observer.disconnect();
-        window._lsfNetworkAdViewportObserver = null;
+        mountNetworkAdSlot(entry.target);
+        observer.unobserve(entry.target);
       });
     }, {
       rootMargin: '320px 0px'
@@ -161,9 +194,17 @@ function renderNetworkAdSlots(root = document) {
   }
 
   if (window._lsfNetworkAdViewportObserver) {
-    window._lsfNetworkAdViewportObserver.observe(primarySlot);
+    slots.forEach((slot) => {
+      if (slot.dataset.lsfAdObserved === 'true' || slot.dataset.lsfAdMounted === 'true') return;
+      slot.dataset.lsfAdObserved = 'true';
+      slot.dataset.state = slot.dataset.state || 'loading';
+      window._lsfNetworkAdViewportObserver.observe(slot);
+    });
   } else {
-    scheduleNonCritical(bootAdNetwork, 2400);
+    slots.forEach((slot, index) => {
+      if (slot.dataset.lsfAdMounted === 'true') return;
+      scheduleNonCritical(() => mountNetworkAdSlot(slot), 1200 + (index * 250));
+    });
   }
 }
 
@@ -6563,14 +6604,98 @@ function renderMatchDetail(data) {
     // Redesign as Vertical Split Timeline (Home vs Away)
     const reversedTimeline = [...detailTimeline].reverse(); // Oldest first for vertical flow
     const sportParams = getSportParams(data.sport).timelineParams;
+    const homeTimelineLogo = getSafeImageUrl(data.homeTeam.logo, FALLBACK_LOGO);
+    const awayTimelineLogo = getSafeImageUrl(data.awayTeam.logo, FALLBACK_LOGO);
+    const homeTimelineLabel = escapeHtml(sanitizeDisplayText(data.homeTeam.name || 'Home Team'));
+    const awayTimelineLabel = escapeHtml(sanitizeDisplayText(data.awayTeam.name || 'Away Team'));
+    const timelineEventsMarkup = reversedTimeline.map((event, idx) => {
+      const isHome = event.side === 'home';
+      const isAway = event.side === 'away';
+      const isNeutral = !isHome && !isAway;
+      const isGoal = event.type === 'goal';
+      const eventTime = escapeHtml(sanitizeDisplayText(event.time || 'UPDATE'));
+      const eventType = escapeHtml(sanitizeDisplayText(String(event.type || 'event').replace(/-/g, ' ')).toUpperCase());
+      const eventText = escapeHtml(sanitizeDisplayText(event.player || event.text || 'Match update'));
+      const previousTime = String(reversedTimeline[idx - 1]?.time || '');
+      const currentTime = String(event.time || '');
+      const showHT = idx > 0 && previousTime.includes('45') && !currentTime.includes('45');
+
+      if (isNeutral) {
+        return `
+          ${showHT ? `
+            <div class="relative z-10 flex flex-col items-center my-12">
+              <span class="material-symbols-outlined text-white/40 text-2xl mb-2">${sportParams.midIcon}</span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-white/60">${sportParams.midText}</span>
+            </div>
+          ` : ''}
+          <div class="relative flex w-full justify-center px-4 sm:px-10">
+            <div class="absolute left-1/2 top-0 -translate-x-1/2 flex flex-col items-center">
+              <div class="w-2.5 h-2.5 rounded-full bg-secondary border border-black z-20"></div>
+              <span class="bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded border border-white/10 text-[9px] font-black text-on-surface mt-2">${eventTime}</span>
+            </div>
+            <div class="w-full max-w-md pt-10">
+              <div class="rounded-2xl border border-white/10 bg-black/30 px-5 py-4 text-center shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
+                <span class="text-[8px] font-black uppercase tracking-[0.3em] text-primary/80">${eventType}</span>
+                <p class="mt-2 text-sm font-semibold leading-relaxed text-white/90">${eventText}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        ${showHT ? `
+          <div class="relative z-10 flex flex-col items-center my-12">
+            <span class="material-symbols-outlined text-white/40 text-2xl mb-2">${sportParams.midIcon}</span>
+            <span class="text-[10px] font-black uppercase tracking-widest text-white/60">${sportParams.midText}</span>
+          </div>
+        ` : ''}
+        <div class="flex items-start w-full relative min-h-[4.5rem]">
+          <div class="w-1/2 pr-10 sm:pr-12 text-right flex flex-col items-end">
+            ${isHome ? `
+              <div class="max-w-[18rem] rounded-2xl border border-white/10 bg-black/25 px-4 py-3 shadow-[0_14px_36px_rgba(0,0,0,0.16)]">
+                <span class="text-[8px] font-black uppercase text-primary tracking-[0.28em]">${eventType}</span>
+                <p class="mt-1 text-xs font-semibold leading-relaxed text-white">${eventText}</p>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="absolute left-1/2 top-0 -translate-x-1/2 flex flex-col items-center">
+            <div class="w-2.5 h-2.5 rounded-full ${isGoal ? 'bg-primary' : 'bg-white'} border border-black z-20"></div>
+            <span class="bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded border border-white/10 text-[9px] font-black text-on-surface mt-2">${eventTime}</span>
+          </div>
+
+          <div class="w-1/2 pl-10 sm:pl-12 text-left flex flex-col items-start">
+            ${isAway ? `
+              <div class="max-w-[18rem] rounded-2xl border border-white/10 bg-black/25 px-4 py-3 shadow-[0_14px_36px_rgba(0,0,0,0.16)]">
+                <span class="text-[8px] font-black uppercase text-primary tracking-[0.28em]">${eventType}</span>
+                <p class="mt-1 text-xs font-semibold leading-relaxed text-white">${eventText}</p>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
     
     timelineContainer.innerHTML = `
       <div class="flex flex-col items-center w-full max-w-2xl mx-auto py-10">
         <!-- Vertical Timeline Header: Team Logos -->
-        <div class="flex justify-between items-center w-full mb-16 px-12">
-            <img src="${data.homeTeam.logo}" class="w-12 h-12 object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" onerror="this.src='/public/logo.png'">
-            <div class="w-0.5 h-12 bg-white/10"></div>
-            <img src="${data.awayTeam.logo}" class="w-12 h-12 object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" onerror="this.src='/public/logo.png'">
+        <div class="flex justify-between items-start w-full mb-16 gap-6 px-4 sm:px-10">
+            <div class="flex max-w-[42%] flex-col items-center text-center">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-black/30 p-3">
+                    <img src="${homeTimelineLogo}" alt="${homeTimelineLabel}" class="h-full w-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" onerror="this.src='${FALLBACK_LOGO}'">
+                </div>
+                <span class="mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/80">${homeTimelineLabel}</span>
+            </div>
+            <div class="flex flex-col items-center pt-3">
+                <div class="w-0.5 h-12 bg-white/10"></div>
+            </div>
+            <div class="flex max-w-[42%] flex-col items-center text-center">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-black/30 p-3">
+                    <img src="${awayTimelineLogo}" alt="${awayTimelineLabel}" class="h-full w-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" onerror="this.src='${FALLBACK_LOGO}'">
+                </div>
+                <span class="mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/80">${awayTimelineLabel}</span>
+            </div>
         </div>
 
         <!-- Central Line -->
@@ -6585,62 +6710,7 @@ function renderMatchDetail(data) {
 
             <!-- Timeline Events -->
             <div class="space-y-12 relative z-10">
-                ${reversedTimeline.map((event, idx) => {
-                    const isHome = event.side === 'home';
-                    const isAway = event.side === 'away';
-                    const isGoal = event.type === 'goal';
-                    const isCard = event.type === 'card' || event.type === 'yellow-card' || event.type === 'red-card';
-                    const isSub = event.type === 'substitution';
-                    
-                    let icon = 'EVENT';
-                    if (isGoal) icon = 'GOAL';
-                    else if (isCard) icon = event.player.toLowerCase().includes('red') ? 'RED' : 'YEL';
-                    else if (isSub) icon = 'SUB';
-
-                    // Half-time logic: detect if we crossed 45'
-                    const showHT = idx > 0 && reversedTimeline[idx-1].time.includes('45') && !event.time.includes('45');
-                    
-                    return `
-                        ${showHT ? `
-                            <div class="relative z-10 flex flex-col items-center my-12">
-                                <span class="material-symbols-outlined text-white/40 text-2xl mb-2">${sportParams.midIcon}</span>
-                                <span class="text-[10px] font-black uppercase tracking-widest text-white/60">${sportParams.midText}</span>
-                            </div>
-                        ` : ''}
-                        
-                        <div class="flex items-center w-full relative">
-                            <!-- Left Side (Home) -->
-                            <div class="w-1/2 pr-12 text-right flex flex-col items-end">
-                                ${isHome ? `
-                                    <div class="flex items-center space-x-3 gap-2">
-                                        <div class="flex flex-col items-end">
-                                            <span class="text-xs font-black uppercase text-white">${event.player || event.text || 'Match update'}</span>
-                                            <span class="text-[8px] font-black uppercase text-primary tracking-widest">${event.type.toUpperCase()}</span>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-
-                            <!-- Center Time & Dot -->
-                            <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
-                                <div class="w-2 h-2 rounded-full ${isGoal ? 'bg-primary' : 'bg-white'} border border-black z-20"></div>
-                                <span class="bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded border border-white/10 text-[9px] font-black text-on-surface mt-2">${event.time}</span>
-                            </div>
-
-                            <!-- Right Side (Away) -->
-                            <div class="w-1/2 pl-12 text-left flex flex-col items-start">
-                                ${isAway ? `
-                                    <div class="flex items-center space-x-3 gap-2">
-                                        <div class="flex flex-col items-start">
-                                            <span class="text-xs font-black uppercase text-white">${event.player || event.text || 'Match update'}</span>
-                                            <span class="text-[8px] font-black uppercase text-primary tracking-widest">${event.type.toUpperCase()}</span>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
+                ${timelineEventsMarkup}
             </div>
 
             <!-- Half Time / Full Time Marker -->
