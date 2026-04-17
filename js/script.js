@@ -1025,7 +1025,22 @@ function initResultsLeagueFilter() {
   });
 }
 
-function buildCanonicalMatchPath({ id = '', sport = '', league = '', upcoming = false } = {}) {
+function slugifyPathSegment(value = '') {
+  return sanitizeDisplayText(String(value || ''))
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function buildMatchSeoSlug({ homeTeam = {}, awayTeam = {} } = {}) {
+  const homeSlug = slugifyPathSegment(homeTeam?.fullName || homeTeam?.name || homeTeam?.abbreviation || '');
+  const awaySlug = slugifyPathSegment(awayTeam?.fullName || awayTeam?.name || awayTeam?.abbreviation || '');
+  if (!homeSlug || !awaySlug) return '';
+  return `${homeSlug}-vs-${awaySlug}`;
+}
+
+function buildCanonicalMatchPath({ id = '', sport = '', league = '', upcoming = false, homeTeam = {}, awayTeam = {} } = {}) {
   const normalizedLeague = normalizeLeagueSlug(league || '') || 'all';
   const normalizedSport = normalizeSportSlug(sport || 'all', normalizedLeague) || 'all';
   const routeBase = upcoming ? '/upcoming-match' : '/match';
@@ -1033,7 +1048,15 @@ function buildCanonicalMatchPath({ id = '', sport = '', league = '', upcoming = 
   if (!normalizedId) {
     return upcoming ? '/upcoming' : '/live';
   }
-  return `${routeBase}/${encodeURIComponent(normalizedSport)}/${encodeURIComponent(normalizedLeague)}/${encodeURIComponent(normalizedId)}`;
+  const slug = buildMatchSeoSlug({ homeTeam, awayTeam });
+  const detailSegment = slug ? `${slug}-${normalizedId}` : normalizedId;
+  return `${routeBase}/${encodeURIComponent(normalizedSport)}/${encodeURIComponent(normalizedLeague)}/${encodeURIComponent(detailSegment)}`;
+}
+
+function extractMatchIdFromRouteSegment(segment = '') {
+  const decoded = String(segment || '').trim();
+  const trailingMatch = decoded.match(/(\d+)$/);
+  return trailingMatch?.[1] || decoded;
 }
 
 function parsePrettyMatchRoute(pathname = window.location.pathname) {
@@ -1050,7 +1073,7 @@ function parsePrettyMatchRoute(pathname = window.location.pathname) {
 
   if (segments[0] === 'match' && segments.length >= 4) {
     return {
-      id: segments[3],
+      id: extractMatchIdFromRouteSegment(segments[3]),
       sport: segments[1],
       league: segments[2],
       upcoming: false
@@ -1059,7 +1082,7 @@ function parsePrettyMatchRoute(pathname = window.location.pathname) {
 
   if (segments[0] === 'upcoming-match' && segments.length >= 4) {
     return {
-      id: segments[3],
+      id: extractMatchIdFromRouteSegment(segments[3]),
       sport: segments[1],
       league: segments[2],
       upcoming: true
@@ -1135,7 +1158,9 @@ function buildMatchUrl(match) {
     id: match?.id,
     sport: match?.sport,
     league: match?.leagueSlug,
-    upcoming: match?.status === 'upcoming'
+    upcoming: match?.status === 'upcoming',
+    homeTeam: match?.homeTeam,
+    awayTeam: match?.awayTeam
   });
 }
 
@@ -1426,6 +1451,62 @@ function upsertHeadLink(rel, href) {
     document.head.appendChild(node);
   }
   node.setAttribute('href', href);
+}
+
+function syncMatchCanonicalPath(data = {}, upcoming = false) {
+  const canonicalPath = buildCanonicalMatchPath({
+    id: data?.id,
+    sport: data?.sport,
+    league: data?.leagueSlug,
+    upcoming,
+    homeTeam: data?.homeTeam,
+    awayTeam: data?.awayTeam
+  });
+  if (!canonicalPath || window.location.pathname === canonicalPath) return canonicalPath;
+  window.history.replaceState({}, '', canonicalPath);
+  return canonicalPath;
+}
+
+function updateMatchSeo(data = {}, upcoming = false) {
+  if (!data?.homeTeam || !data?.awayTeam) return;
+  const homeDisplay = sanitizeDisplayText(data.homeTeam.fullName || data.homeTeam.name || 'Home Team');
+  const awayDisplay = sanitizeDisplayText(data.awayTeam.fullName || data.awayTeam.name || 'Away Team');
+  const matchup = `${homeDisplay} vs ${awayDisplay}`;
+  const leagueLabel = sanitizeDisplayText(data.league || getLeagueDisplayName(data.leagueSlug || '', '', data.sport || ''));
+  const status = String(data.status || '').toLowerCase();
+  const title = upcoming
+    ? `${matchup} | Upcoming Match Centre`
+    : status === 'finished'
+      ? `${matchup} | Final Score and Match Centre`
+      : `${matchup} | Live Match Centre`;
+  const description = upcoming
+    ? `Track ${matchup} in the ${leagueLabel} with schedule, venue, lineup updates, and pre-match analysis on LiveScoreFree.`
+    : status === 'finished'
+      ? `Review ${matchup} in the ${leagueLabel} with the final score, key moments, match stats, and lineup details on LiveScoreFree.`
+      : `Follow ${matchup} in the ${leagueLabel} with live scores, real-time commentary, match stats, and verified lineup data on LiveScoreFree.`;
+  const image = getSafeImageUrl(data?.homeTeam?.logo || data?.awayTeam?.logo, FALLBACK_LOGO);
+  const canonicalPath = syncMatchCanonicalPath(data, upcoming);
+  const canonicalUrl = new URL(canonicalPath || buildCanonicalMatchPath({
+    id: data?.id,
+    sport: data?.sport,
+    league: data?.leagueSlug,
+    upcoming,
+    homeTeam: data?.homeTeam,
+    awayTeam: data?.awayTeam
+  }), window.location.origin).toString();
+
+  document.title = title;
+  upsertHeadMeta('description', description);
+  upsertHeadMeta('og:title', title, 'property');
+  upsertHeadMeta('og:description', description, 'property');
+  upsertHeadMeta('og:url', canonicalUrl, 'property');
+  upsertHeadMeta('og:image', new URL(image, window.location.origin).toString(), 'property');
+  upsertHeadMeta('og:type', 'website', 'property');
+  upsertHeadMeta('twitter:card', 'summary_large_image', 'name');
+  upsertHeadMeta('twitter:title', title, 'name');
+  upsertHeadMeta('twitter:description', description, 'name');
+  upsertHeadMeta('twitter:image', new URL(image, window.location.origin).toString(), 'name');
+  upsertHeadLink('canonical', canonicalUrl);
 }
 
 function updateBlogSeo(post = {}, type = 'article') {
@@ -7154,6 +7235,10 @@ function renderMobileLineupPanel(data = {}) {
     });
   }
 
+  homeTab.textContent = sanitizeDisplayText(data?.homeTeam?.abbreviation || data?.homeTeam?.name || 'Home');
+  awayTab.textContent = sanitizeDisplayText(data?.awayTeam?.abbreviation || data?.awayTeam?.name || 'Away');
+  homeTab.title = sanitizeDisplayText(data?.homeTeam?.fullName || data?.homeTeam?.name || 'Home team');
+  awayTab.title = sanitizeDisplayText(data?.awayTeam?.fullName || data?.awayTeam?.name || 'Away team');
   homeTab.classList.toggle('is-active', activeLineupTab === 'home');
   awayTab.classList.toggle('is-active', activeLineupTab === 'away');
   const lineup = activeLineupTab === 'home' ? (data?.homeTeam?.lineup || []) : (data?.awayTeam?.lineup || []);
@@ -7171,6 +7256,560 @@ function renderMobileLineupPanel(data = {}) {
       <div class="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-on-surface/35">${sanitizeDisplayText(player.position || 'Squad')}</div>
     </div>
   `).join('');
+}
+
+function findLineupPlayerByName(lineup = [], name = '') {
+  const key = sanitizeDisplayText(name || '').toLowerCase();
+  if (!key) return null;
+  return lineup.find((player) => {
+    const candidate = sanitizeDisplayText(player?.name || '').toLowerCase();
+    return candidate && (candidate === key || candidate.includes(key) || key.includes(candidate));
+  }) || null;
+}
+
+function buildDesktopTeamSheetMarkup(team = {}, accent = 'home', highlightName = '') {
+  const lineup = Array.isArray(team?.lineup) ? team.lineup.slice(0, 7) : [];
+  const highlightKey = sanitizeDisplayText(highlightName || '').toLowerCase();
+  const accentClass = accent === 'home' ? 'is-home' : 'is-away';
+  const badge = sanitizeDisplayText(team?.abbreviation || getMobileLiveTeamLabel(team));
+  const subtitle = sanitizeDisplayText(team?.record || team?.score || 'Verified team list');
+  const rows = lineup.length
+    ? lineup.map((player, index) => {
+        const name = sanitizeDisplayText(player?.name || `Player ${index + 1}`);
+        const role = sanitizeDisplayText(player?.position || 'Squad');
+        const slot = sanitizeDisplayText(player?.number || String(index + 1));
+        const face = getSafeImageUrl(player?.face, FALLBACK_LOGO);
+        const isHighlighted = highlightKey && name.toLowerCase().includes(highlightKey);
+        return `
+          <div class="lsf-desktop-live-sheet-player ${isHighlighted ? 'is-highlighted' : ''}">
+            <div class="lsf-desktop-live-sheet-player-main">
+              <img src="${face}" alt="${escapeHtml(name)}" class="lsf-desktop-live-sheet-avatar" onerror="this.src='${FALLBACK_LOGO}'">
+              <div>
+                <div class="lsf-desktop-live-sheet-player-name">${escapeHtml(name)}</div>
+                <div class="lsf-desktop-live-sheet-player-meta">${escapeHtml(role)}</div>
+              </div>
+            </div>
+            <div class="lsf-desktop-live-sheet-player-slot">${escapeHtml(slot)}</div>
+          </div>
+        `;
+      }).join('')
+    : `<div class="lsf-desktop-live-empty">Awaiting verified team sheet.</div>`;
+
+  return `
+    <article class="lsf-desktop-live-team-sheet ${accentClass}">
+      <div class="lsf-desktop-live-sheet-head">
+        <div class="lsf-desktop-live-sheet-badge ${accentClass}">${escapeHtml(badge)}</div>
+        <div>
+          <div class="lsf-desktop-live-sheet-title">${escapeHtml(sanitizeDisplayText(team?.fullName || team?.name || 'Team'))}</div>
+          <div class="lsf-desktop-live-sheet-subtitle">${escapeHtml(subtitle)}</div>
+        </div>
+      </div>
+      <div class="lsf-desktop-live-sheet-list">${rows}</div>
+    </article>
+  `;
+}
+
+function getCricketDesktopTimelineBadge(parsed = {}) {
+  if (parsed.wicket) {
+    return { label: 'W', className: 'lsf-desktop-live-badge--wicket' };
+  }
+  if (parsed.runs === 6) {
+    return { label: '6', className: 'lsf-desktop-live-badge--six' };
+  }
+  if (parsed.runs === 4) {
+    return { label: '4', className: 'lsf-desktop-live-badge--four' };
+  }
+  if (Number.isFinite(parsed.runs)) {
+    return { label: String(parsed.runs), className: 'lsf-desktop-live-badge--default' };
+  }
+  return {
+    label: sanitizeDisplayText(parsed.time || 'UPD').slice(0, 4).toUpperCase(),
+    className: 'lsf-desktop-live-badge--default'
+  };
+}
+
+function buildCricketDesktopTimelineMarkup(commentaryFeed = []) {
+  const items = commentaryFeed.slice(0, 6).map((entry) => {
+    const parsed = parseCricketDeliveryEvent(entry);
+    const badge = getCricketDesktopTimelineBadge(parsed);
+    const parts = splitCricketCommentaryText(parsed.text);
+    return `
+      <div class="lsf-desktop-live-timeline-item">
+        <div class="lsf-desktop-live-timeline-marker">
+          <span class="lsf-desktop-live-play-badge ${badge.className}">${escapeHtml(badge.label)}</span>
+          <span class="lsf-desktop-live-timeline-time">${escapeHtml(sanitizeDisplayText(parsed.time || 'LIVE'))}</span>
+        </div>
+        <div class="lsf-desktop-live-timeline-copy">
+          <div class="lsf-desktop-live-timeline-headline">${escapeHtml(parts.headline || parsed.text || 'Live update')}</div>
+          <div class="lsf-desktop-live-timeline-text">${escapeHtml(parts.remaining || sanitizeDisplayText(entry?.player || ''))}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  return items.length
+    ? items.join('')
+    : `<div class="lsf-desktop-live-empty">Awaiting live over-by-over commentary.</div>`;
+}
+
+function buildGenericDesktopTimelineMarkup(events = [], sport = '', data = {}) {
+  const feed = events.length
+    ? events.slice(0, 5)
+    : [];
+  if (!feed.length) {
+    return `<div class="lsf-desktop-live-empty">Awaiting verified match events.</div>`;
+  }
+
+  return feed.map((event) => {
+    const presentation = getGenericTimelinePresentation(event, sport);
+    const badgeLabel = event.side === 'home'
+      ? getMobileLiveTeamLabel(data?.homeTeam)
+      : event.side === 'away'
+        ? getMobileLiveTeamLabel(data?.awayTeam)
+        : 'EVT';
+    const badgeTone = event.side === 'home'
+      ? 'is-home'
+      : event.side === 'away'
+        ? 'is-away'
+        : '';
+
+    return `
+      <div class="lsf-desktop-live-timeline-item">
+        <div class="lsf-desktop-live-timeline-marker">
+          <span class="lsf-desktop-live-side-badge ${badgeTone}">${escapeHtml(badgeLabel)}</span>
+          <span class="lsf-desktop-live-timeline-time">${escapeHtml(sanitizeDisplayText(event.time || 'LIVE'))}</span>
+        </div>
+        <div class="lsf-desktop-live-timeline-copy">
+          <div class="lsf-desktop-live-timeline-headline">${presentation.iconMarkup}<span>${escapeHtml(presentation.headline || 'Live update')}</span></div>
+          <div class="lsf-desktop-live-timeline-text">${escapeHtml(buildGenericTimelineCopy(event))}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function ensureDesktopCricketLiveShell(root) {
+  if (!root) return;
+  if (!root._defaultMarkup) root._defaultMarkup = root.innerHTML;
+  if (root.dataset.layoutMode === 'cricket-live-desktop') return;
+
+  root.dataset.layoutMode = 'cricket-live-desktop';
+  document.body.classList.remove('lsf-generic-desktop-live');
+  document.body.classList.add('lsf-cricket-desktop-live');
+  root.innerHTML = `
+    <div class="lsf-desktop-live-shell">
+      <section class="lsf-desktop-live-card lsf-desktop-live-hero-card lsf-desktop-live-hero-card--cricket">
+        <div class="lsf-desktop-live-hero-top">
+          <div id="desktop-cricket-status-pill" class="lsf-desktop-live-status-pill">LIVE</div>
+          <div id="desktop-cricket-league" class="lsf-desktop-live-kicker">League</div>
+        </div>
+        <div class="lsf-desktop-live-score-row lsf-desktop-live-score-row--cricket">
+          <div class="lsf-desktop-live-team-panel">
+            <div class="lsf-desktop-live-team-tile">
+              <img id="desktop-cricket-home-logo" alt="Home team" class="lsf-desktop-live-team-logo" src="${FALLBACK_LOGO}">
+            </div>
+            <div id="desktop-cricket-home-abbr" class="lsf-desktop-live-team-abbr">HOME</div>
+            <div id="desktop-cricket-home-name" class="lsf-desktop-live-team-name">Home Team</div>
+            <div id="desktop-cricket-home-sub" class="lsf-desktop-live-team-sub">Awaiting innings data</div>
+          </div>
+          <div class="lsf-desktop-live-score-centre">
+            <div id="desktop-cricket-score" class="lsf-desktop-live-cricket-score">0/0</div>
+            <div id="desktop-cricket-overs" class="lsf-desktop-live-score-meta">0.0 Overs</div>
+            <div id="desktop-cricket-rate" class="lsf-desktop-live-score-note">CRR -- | REQ --</div>
+          </div>
+          <div class="lsf-desktop-live-team-panel">
+            <div class="lsf-desktop-live-team-tile">
+              <img id="desktop-cricket-away-logo" alt="Away team" class="lsf-desktop-live-team-logo" src="${FALLBACK_LOGO}">
+            </div>
+            <div id="desktop-cricket-away-abbr" class="lsf-desktop-live-team-abbr">AWAY</div>
+            <div id="desktop-cricket-away-name" class="lsf-desktop-live-team-name">Away Team</div>
+            <div id="desktop-cricket-away-sub" class="lsf-desktop-live-team-sub">Awaiting innings data</div>
+          </div>
+        </div>
+        <div class="lsf-desktop-live-pill-row">
+          <span>Match Info</span>
+          <span>Scorecard</span>
+        </div>
+      </section>
+
+      <div class="lsf-desktop-live-grid lsf-desktop-live-grid--cricket">
+        <section class="lsf-desktop-live-card">
+          <div class="lsf-desktop-live-head">
+            <h3>Current Batters</h3>
+            <span>Live pair</span>
+          </div>
+          <div class="lsf-desktop-live-player-stack">
+            <article class="lsf-desktop-live-player-card is-home">
+              <div class="lsf-desktop-live-player-label">On Strike</div>
+              <div id="desktop-cricket-striker-name" class="lsf-desktop-live-player-name">Loading</div>
+              <div id="desktop-cricket-striker-meta" class="lsf-desktop-live-player-meta">Awaiting card</div>
+              <div id="desktop-cricket-striker-value" class="lsf-desktop-live-player-value">--</div>
+            </article>
+            <article class="lsf-desktop-live-player-card">
+              <div class="lsf-desktop-live-player-label">At Crease</div>
+              <div id="desktop-cricket-nonstriker-name" class="lsf-desktop-live-player-name">Loading</div>
+              <div id="desktop-cricket-nonstriker-meta" class="lsf-desktop-live-player-meta">Awaiting card</div>
+              <div id="desktop-cricket-nonstriker-value" class="lsf-desktop-live-player-value">--</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="lsf-desktop-live-card">
+          <div class="lsf-desktop-live-head">
+            <h3>Current Bowler</h3>
+            <span>Pressure spell</span>
+          </div>
+          <article class="lsf-desktop-live-bowler-panel">
+            <div class="lsf-desktop-live-bowler-main">
+              <img id="desktop-cricket-bowler-face" alt="Current bowler" class="lsf-desktop-live-bowler-face" src="${FALLBACK_LOGO}">
+              <div>
+                <div id="desktop-cricket-bowler-name" class="lsf-desktop-live-player-name">Loading</div>
+                <div id="desktop-cricket-bowler-meta" class="lsf-desktop-live-player-meta">Awaiting bowling figures</div>
+              </div>
+            </div>
+            <div id="desktop-cricket-bowler-value" class="lsf-desktop-live-bowler-value">--</div>
+          </article>
+        </section>
+
+        <section class="lsf-desktop-live-card lsf-desktop-live-card--timeline">
+          <div class="lsf-desktop-live-head">
+            <h3>Live Timeline</h3>
+            <span>Latest overs</span>
+          </div>
+          <div id="desktop-cricket-timeline" class="lsf-desktop-live-timeline-list"></div>
+        </section>
+
+        <section class="lsf-desktop-live-card">
+          <div class="lsf-desktop-live-head">
+            <h3>Match Intelligence</h3>
+            <span>Real-time data</span>
+          </div>
+          <div id="desktop-cricket-intel"></div>
+        </section>
+
+        <div data-lsf-network-ad data-ad-height="160" data-ad-title="LivescoreFree sponsored desktop cricket banner" class="lsf-network-ad-slot lsf-network-ad-slot--banner lsf-desktop-live-ad-slot"></div>
+      </div>
+
+      <section class="lsf-desktop-live-card">
+        <div class="lsf-desktop-live-head">
+          <h3>Squads</h3>
+          <span>Verified team lists</span>
+        </div>
+        <div id="desktop-cricket-lineups" class="lsf-desktop-live-lineup-grid"></div>
+      </section>
+    </div>
+  `;
+}
+
+function ensureDesktopGenericLiveShell(root) {
+  if (!root) return;
+  if (!root._defaultMarkup) root._defaultMarkup = root.innerHTML;
+  if (root.dataset.layoutMode === 'generic-live-desktop') return;
+
+  root.dataset.layoutMode = 'generic-live-desktop';
+  document.body.classList.remove('lsf-cricket-desktop-live');
+  document.body.classList.add('lsf-generic-desktop-live');
+  root.innerHTML = `
+    <div class="lsf-desktop-live-shell">
+      <section class="lsf-desktop-live-card lsf-desktop-live-hero-card lsf-desktop-live-hero-card--generic">
+        <div class="lsf-desktop-live-hero-top">
+          <div class="lsf-desktop-live-status-cluster">
+            <div id="desktop-generic-status-pill" class="lsf-desktop-live-status-pill">LIVE</div>
+            <div id="desktop-generic-clock" class="lsf-desktop-live-kicker">LIVE NOW</div>
+          </div>
+          <div id="desktop-generic-league" class="lsf-desktop-live-kicker">League</div>
+        </div>
+        <div class="lsf-desktop-live-score-row lsf-desktop-live-score-row--generic">
+          <div class="lsf-desktop-live-team-panel">
+            <div class="lsf-desktop-live-team-tile">
+              <img id="desktop-generic-home-logo" alt="Home team" class="lsf-desktop-live-team-logo" src="${FALLBACK_LOGO}">
+            </div>
+            <div id="desktop-generic-home-name" class="lsf-desktop-live-team-name">Home Team</div>
+          </div>
+          <div class="lsf-desktop-live-score-centre">
+            <div class="lsf-desktop-live-generic-score">
+              <span id="desktop-generic-home-score">0</span>
+              <span class="lsf-desktop-live-generic-separator">-</span>
+              <span id="desktop-generic-away-score">0</span>
+            </div>
+          </div>
+          <div class="lsf-desktop-live-team-panel">
+            <div class="lsf-desktop-live-team-tile">
+              <img id="desktop-generic-away-logo" alt="Away team" class="lsf-desktop-live-team-logo" src="${FALLBACK_LOGO}">
+            </div>
+            <div id="desktop-generic-away-name" class="lsf-desktop-live-team-name">Away Team</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="lsf-desktop-live-grid lsf-desktop-live-grid--generic">
+        <section class="lsf-desktop-live-card">
+          <div class="lsf-desktop-live-head">
+            <h3>Match Intel</h3>
+            <span>Real-time data</span>
+          </div>
+          <div id="desktop-generic-intel"></div>
+        </section>
+
+        <div class="lsf-desktop-live-sidebar-stack">
+          <section class="lsf-desktop-live-card lsf-desktop-live-card--timeline">
+            <div class="lsf-desktop-live-head">
+              <h3>Match Timeline</h3>
+              <span>Latest events</span>
+            </div>
+            <div id="desktop-generic-timeline" class="lsf-desktop-live-timeline-list"></div>
+          </section>
+          <div data-lsf-network-ad data-ad-height="220" data-ad-title="LivescoreFree sponsored desktop match panel" class="lsf-network-ad-slot lsf-network-ad-slot--panel lsf-desktop-live-ad-slot"></div>
+        </div>
+
+        <section class="lsf-desktop-live-card lsf-desktop-live-card--full">
+          <div class="lsf-desktop-live-head">
+            <h3>Tactical Lineups</h3>
+            <span>Verified team sheets</span>
+          </div>
+          <div id="desktop-generic-lineups" class="lsf-desktop-live-lineup-grid"></div>
+        </section>
+
+        <div data-lsf-network-ad data-ad-height="140" data-ad-title="LivescoreFree sponsored desktop live banner" class="lsf-network-ad-slot lsf-network-ad-slot--banner lsf-desktop-live-ad-slot lsf-desktop-live-ad-slot--full"></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
+  ensureDesktopCricketLiveShell(root);
+  renderNetworkAdSlots(root);
+
+  const innings = getCricketLiveInningsContext(data);
+  const activeScore = innings?.score || {};
+  const opponentScore = innings?.opponentScore || {};
+  const deliveries = commentaryFeed.map((entry) => parseCricketDeliveryEvent(entry)).filter((entry) => entry.text);
+  const batterCandidates = buildCricketParticipantSet(innings?.team, deliveries);
+  const recentBatterStats = buildCricketRecentBatterStats(deliveries);
+  const strikerName = batterCandidates[0] || sanitizeDisplayText(innings?.team?.leader?.name || innings?.team?.name || 'Batter');
+  const nonStrikerName = batterCandidates.find((name) => name.toLowerCase() !== String(strikerName || '').toLowerCase())
+    || sanitizeDisplayText((innings?.team?.lineup || []).find((player) => String(player?.name || '').toLowerCase() !== String(strikerName || '').toLowerCase())?.name || 'Awaiting partner');
+  const bowlerName = deliveries.find((delivery) => delivery.bowler)?.bowler
+    || sanitizeDisplayText(innings?.opponent?.leader?.name || innings?.opponent?.name || 'Bowler');
+  const runRate = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && activeScore.overs > 0
+    ? (activeScore.runs / activeScore.overs)
+    : null;
+  const opponentRuns = Number.isFinite(opponentScore?.runs) ? opponentScore.runs : null;
+  const ballsRemaining = Number.isFinite(activeScore?.oversLimit) && Number.isFinite(activeScore?.ballsBowled)
+    ? Math.max(0, Math.round((activeScore.oversLimit * 6) - activeScore.ballsBowled))
+    : null;
+  const runsRequired = opponentRuns !== null && Number.isFinite(activeScore?.runs) && opponentRuns >= activeScore.runs
+    ? Math.max((opponentRuns + 1) - activeScore.runs, 0)
+    : null;
+  const requiredRate = ballsRemaining && ballsRemaining > 0 && runsRequired !== null
+    ? ((runsRequired / ballsRemaining) * 6)
+    : null;
+  const projectedScore = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && Number.isFinite(activeScore?.oversLimit) && activeScore.overs > 0
+    ? Math.round((activeScore.runs / activeScore.overs) * activeScore.oversLimit)
+    : null;
+  const partnershipRuns = computeCricketPartnershipRuns(deliveries);
+  const probabilities = computeCricketLiveProbabilities({
+    side: innings?.side,
+    score: activeScore,
+    runRate,
+    requiredRate
+  });
+  const strikerState = buildCricketPlayerCardState(strikerName, 'On Strike', innings?.team, recentBatterStats, 'Live striker feed');
+  const nonStrikerState = buildCricketPlayerCardState(nonStrikerName, 'At Crease', innings?.team, recentBatterStats, 'Standing by');
+  const bowlerState = buildCricketBowlerCardState(bowlerName, innings?.opponent, activeScore);
+  const bowlerFace = findLineupPlayerByName(innings?.opponent?.lineup || [], bowlerState.name)?.face || innings?.opponent?.logo || FALLBACK_LOGO;
+  const homeScore = parseCricketScorecard(data?.homeTeam?.score || '');
+  const awayScore = parseCricketScorecard(data?.awayTeam?.score || '');
+  const teamDescriptor = (teamSide, team, score) => {
+    if (teamSide === innings?.side) {
+      if (requiredRate !== null && Number.isFinite(runsRequired)) {
+        return `${runsRequired} needed`;
+      }
+      return 'Batting now';
+    }
+    if (String(score?.raw || '').trim() === '0') return 'Yet to bat';
+    if (score?.raw) return score.raw;
+    return 'Yet to bat';
+  };
+
+  const setText = (id, value) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = sanitizeDisplayText(value || '');
+  };
+  const setImage = (id, src, alt) => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    node.src = getSafeImageUrl(src, FALLBACK_LOGO);
+    node.alt = sanitizeDisplayText(alt || 'Team');
+    node.onerror = () => { node.src = FALLBACK_LOGO; };
+  };
+
+  setText('desktop-cricket-status-pill', String(data?.status || '').toLowerCase() === 'live' ? 'LIVE' : (data?.statusText || 'LIVE'));
+  setText('desktop-cricket-league', data?.league || data?.leagueSlug || 'Live cricket');
+  setImage('desktop-cricket-home-logo', data?.homeTeam?.logo, data?.homeTeam?.name || 'Home team');
+  setImage('desktop-cricket-away-logo', data?.awayTeam?.logo, data?.awayTeam?.name || 'Away team');
+  setText('desktop-cricket-home-abbr', data?.homeTeam?.abbreviation || data?.homeTeam?.name || 'HOME');
+  setText('desktop-cricket-away-abbr', data?.awayTeam?.abbreviation || data?.awayTeam?.name || 'AWAY');
+  setText('desktop-cricket-home-name', data?.homeTeam?.fullName || data?.homeTeam?.name || 'Home Team');
+  setText('desktop-cricket-away-name', data?.awayTeam?.fullName || data?.awayTeam?.name || 'Away Team');
+  setText('desktop-cricket-home-sub', teamDescriptor('home', data?.homeTeam, homeScore));
+  setText('desktop-cricket-away-sub', teamDescriptor('away', data?.awayTeam, awayScore));
+  setText('desktop-cricket-score', activeScore?.scoreText || data?.awayTeam?.score || data?.homeTeam?.score || '0/0');
+  setText('desktop-cricket-overs', activeScore?.oversText ? `${activeScore.oversText} Overs` : (data?.time || 'LIVE'));
+  setText('desktop-cricket-rate', `CRR ${Number.isFinite(runRate) ? runRate.toFixed(2) : '--'} | REQ ${Number.isFinite(requiredRate) ? requiredRate.toFixed(2) : 'N/A'}`);
+  setText('desktop-cricket-striker-name', strikerState.name);
+  setText('desktop-cricket-striker-meta', strikerState.meta);
+  setText('desktop-cricket-striker-value', strikerState.primary);
+  setText('desktop-cricket-nonstriker-name', nonStrikerState.name);
+  setText('desktop-cricket-nonstriker-meta', nonStrikerState.meta);
+  setText('desktop-cricket-nonstriker-value', nonStrikerState.primary);
+  setText('desktop-cricket-bowler-name', bowlerState.name);
+  setText('desktop-cricket-bowler-meta', bowlerState.meta);
+  setText('desktop-cricket-bowler-value', bowlerState.primary);
+  setImage('desktop-cricket-bowler-face', bowlerFace, bowlerState.name || 'Current bowler');
+
+  const intelHost = document.getElementById('desktop-cricket-intel');
+  if (intelHost) {
+    intelHost.innerHTML = `
+      <div class="lsf-desktop-live-probability-head">
+        <span>${escapeHtml(sanitizeDisplayText(data?.homeTeam?.abbreviation || 'HOME'))} ${probabilities.home}%</span>
+        <span>${escapeHtml(sanitizeDisplayText(data?.awayTeam?.abbreviation || 'AWAY'))} ${probabilities.away}%</span>
+      </div>
+      <div class="lsf-desktop-live-probability-bar">
+        <span style="width:${Math.max(0, Math.min(100, probabilities.home))}%"></span>
+        <span style="width:${Math.max(0, Math.min(100, probabilities.away))}%"></span>
+      </div>
+      <div class="lsf-desktop-live-metric-grid">
+        <div class="lsf-desktop-live-metric">
+          <div class="lsf-desktop-live-metric-label">Projected Score</div>
+          <div class="lsf-desktop-live-metric-value">${projectedScore !== null ? projectedScore : '--'}</div>
+          <div class="lsf-desktop-live-metric-note">${Number.isFinite(runRate) ? `Current RR ${runRate.toFixed(2)}` : 'Awaiting overs context'}</div>
+        </div>
+        <div class="lsf-desktop-live-metric">
+          <div class="lsf-desktop-live-metric-label">Partnership</div>
+          <div class="lsf-desktop-live-metric-value">${partnershipRuns !== null ? partnershipRuns : '--'}</div>
+          <div class="lsf-desktop-live-metric-note">${escapeHtml(strikerState.name)} / ${escapeHtml(nonStrikerState.name)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const timelineHost = document.getElementById('desktop-cricket-timeline');
+  if (timelineHost) {
+    timelineHost.innerHTML = buildCricketDesktopTimelineMarkup(commentaryFeed);
+  }
+
+  const lineupHost = document.getElementById('desktop-cricket-lineups');
+  if (lineupHost) {
+    lineupHost.innerHTML = [
+      buildDesktopTeamSheetMarkup(data?.homeTeam || {}, 'home', strikerState.name),
+      buildDesktopTeamSheetMarkup(data?.awayTeam || {}, 'away', bowlerState.name)
+    ].join('');
+  }
+}
+
+function renderDesktopGenericLiveCentre(root, data = {}, detailStats = [], detailTimeline = [], commentaryFeed = []) {
+  ensureDesktopGenericLiveShell(root);
+  renderNetworkAdSlots(root);
+
+  const timelineFeed = detailTimeline.length
+    ? detailTimeline
+    : commentaryFeed.map((entry) => ({
+        time: entry.time || 'LIVE',
+        type: entry.type || 'event',
+        text: entry.text || entry.player || 'Live update',
+        player: entry.player || '',
+        side: entry.side || 'neutral'
+      }));
+  const setText = (id, value) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = sanitizeDisplayText(value || '');
+  };
+  const setImage = (id, src, alt) => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    node.src = getSafeImageUrl(src, FALLBACK_LOGO);
+    node.alt = sanitizeDisplayText(alt || 'Team');
+    node.onerror = () => { node.src = FALLBACK_LOGO; };
+  };
+
+  setText('desktop-generic-status-pill', String(data?.status || '').toLowerCase() === 'live' ? 'LIVE' : (data?.statusText || 'LIVE'));
+  setText('desktop-generic-clock', getGenericLiveClockLabel(data));
+  setText('desktop-generic-league', data?.league || data?.leagueSlug || 'Live sport');
+  setText('desktop-generic-home-name', data?.homeTeam?.fullName || data?.homeTeam?.name || 'Home Team');
+  setText('desktop-generic-away-name', data?.awayTeam?.fullName || data?.awayTeam?.name || 'Away Team');
+  setText('desktop-generic-home-score', data?.homeTeam?.score || '0');
+  setText('desktop-generic-away-score', data?.awayTeam?.score || '0');
+  setImage('desktop-generic-home-logo', data?.homeTeam?.logo, data?.homeTeam?.name || 'Home team');
+  setImage('desktop-generic-away-logo', data?.awayTeam?.logo, data?.awayTeam?.name || 'Away team');
+
+  const intelHost = document.getElementById('desktop-generic-intel');
+  if (intelHost) {
+    const statRows = detailStats.slice(0, 3).map((stat) => {
+      const homeValue = parseComparableStatValue(stat.home);
+      const awayValue = parseComparableStatValue(stat.away);
+      const comparable = homeValue !== null && awayValue !== null && (homeValue + awayValue) > 0;
+      const homeWidth = comparable ? (homeValue / (homeValue + awayValue)) * 100 : 50;
+      const awayWidth = comparable ? 100 - homeWidth : 50;
+      return `
+        <div class="lsf-desktop-live-stat-row">
+          <div class="lsf-desktop-live-stat-meta">
+            <span>${escapeHtml(sanitizeDisplayText(stat.home || '-'))}</span>
+            <span>${escapeHtml(sanitizeDisplayText(stat.label || 'Stat'))}</span>
+            <span>${escapeHtml(sanitizeDisplayText(stat.away || '-'))}</span>
+          </div>
+          <div class="lsf-desktop-live-stat-bar">
+            <span style="width:${homeWidth}%"></span>
+            <span style="width:${awayWidth}%"></span>
+          </div>
+        </div>
+      `;
+    });
+    intelHost.innerHTML = statRows.length
+      ? statRows.join('')
+      : `<div class="lsf-desktop-live-empty">Awaiting verified stat comparison.</div>`;
+  }
+
+  const timelineHost = document.getElementById('desktop-generic-timeline');
+  if (timelineHost) {
+    timelineHost.innerHTML = buildGenericDesktopTimelineMarkup(timelineFeed, data?.sport || '', data);
+  }
+
+  const lineupHost = document.getElementById('desktop-generic-lineups');
+  if (lineupHost) {
+    lineupHost.innerHTML = [
+      buildDesktopTeamSheetMarkup(data?.homeTeam || {}, 'home', timelineFeed.find((entry) => entry.side === 'home')?.player || ''),
+      buildDesktopTeamSheetMarkup(data?.awayTeam || {}, 'away', timelineFeed.find((entry) => entry.side === 'away')?.player || '')
+    ].join('');
+  }
+}
+
+function renderDesktopLiveCentre(data = {}, detailStats = [], detailTimeline = [], commentaryFeed = []) {
+  const root = document.querySelector('.lsf-desktop-live-centre');
+  if (!root) return false;
+  if (!root._defaultMarkup) root._defaultMarkup = root.innerHTML;
+
+  const isLive = String(data?.status || '').toLowerCase() === 'live';
+  const sportKey = normalizeSportSlug(data?.sport || '', data?.leagueSlug || '');
+  document.body.classList.remove('lsf-cricket-desktop-live');
+  document.body.classList.remove('lsf-generic-desktop-live');
+
+  if (!isLive) {
+    if ((root.dataset.layoutMode === 'cricket-live-desktop' || root.dataset.layoutMode === 'generic-live-desktop') && root._defaultMarkup) {
+      root.innerHTML = root._defaultMarkup;
+      root.dataset.layoutMode = 'default';
+      renderNetworkAdSlots(root);
+    }
+    return false;
+  }
+
+  if (sportKey === 'cricket') {
+    renderDesktopCricketLiveCentre(root, data, commentaryFeed);
+    return true;
+  }
+
+  renderDesktopGenericLiveCentre(root, data, detailStats, detailTimeline, commentaryFeed);
+  return true;
 }
 
 function renderMobileMatchCentre(data = {}, detailStats = [], detailTimeline = [], commentaryFeed = []) {
@@ -7294,6 +7933,23 @@ function renderMatchDetail(data) {
   data = sanitizePayloadText(data);
   window._latestMatchDetailData = data;
 
+  const detailStats = Array.isArray(data.stats) && data.stats.length ? data.stats : buildSyntheticMatchStats(data);
+  const detailTimeline = Array.isArray(data.timeline) && data.timeline.length ? data.timeline : buildSyntheticMatchTimeline(data);
+  const commentaryFeed = Array.isArray(data.commentary) && data.commentary.length
+    ? data.commentary
+    : (detailTimeline.slice(0, 8).map((event) => ({
+        time: event.time || '',
+        text: event.text || event.player || 'Match update',
+        type: event.type || 'commentary',
+        side: event.side || 'neutral'
+      })));
+
+  updateMatchSeo(data, false);
+  renderMobileMatchCentre(data, detailStats, detailTimeline, commentaryFeed);
+  if (renderDesktopLiveCentre(data, detailStats, detailTimeline, commentaryFeed)) {
+    return;
+  }
+
   const leagueInfo = document.getElementById('match-league-info');
   const homeEvents = document.getElementById('home-events');
   const awayEvents = document.getElementById('away-events');
@@ -7326,9 +7982,6 @@ function renderMatchDetail(data) {
     awayScore.dataset.rawScore = data.awayTeam.score || '0';
     awayScore.textContent = data.awayTeam.score || '0';
   }
-
-  const detailStats = Array.isArray(data.stats) && data.stats.length ? data.stats : buildSyntheticMatchStats(data);
-  const detailTimeline = Array.isArray(data.timeline) && data.timeline.length ? data.timeline : buildSyntheticMatchTimeline(data);
   
   // Sync the High-Precision Kinetic Clock
   syncKineticClock(data.time, data.sport || 'soccer', data.status || 'live');
@@ -7337,8 +7990,8 @@ function renderMatchDetail(data) {
   if (leagueInfo) leagueInfo.textContent = sanitizeDisplayText(data.league || 'Sports Event');
   
   if (lineupHomeTab && lineupAwayTab) {
-    lineupHomeTab.textContent = data.homeTeam.name || 'Home';
-    lineupAwayTab.textContent = data.awayTeam.name || 'Away';
+    lineupHomeTab.textContent = data.homeTeam.fullName || data.homeTeam.name || 'Home';
+    lineupAwayTab.textContent = data.awayTeam.fullName || data.awayTeam.name || 'Away';
 
     // Setup tab clicks if not already set
     if (!lineupHomeTab.onclick) {
@@ -7361,17 +8014,6 @@ function renderMatchDetail(data) {
     }
     renderMatchLineup(data);
   }
-
-  const commentaryFeed = Array.isArray(data.commentary) && data.commentary.length
-    ? data.commentary
-    : (detailTimeline.slice(0, 8).map((event) => ({
-        time: event.time || '',
-        text: event.text || event.player || 'Match update',
-        type: event.type || 'commentary',
-        side: event.side || 'neutral'
-      })));
-
-  renderMobileMatchCentre(data, detailStats, detailTimeline, commentaryFeed);
 
   if (commentaryContainer) {
       commentaryContainer.innerHTML = commentaryFeed.length
@@ -7860,6 +8502,7 @@ function formatUpcomingKickoffDetail(data = {}, presentation = {}) {
 function renderUpcomingMatchDetail(data) {
   if (!homeTeamName || !data || !data.homeTeam) return;
   data = sanitizePayloadText(data);
+  updateMatchSeo(data, true);
 
   const hName = document.getElementById('home-team-name');
   const aName = document.getElementById('away-team-name');
