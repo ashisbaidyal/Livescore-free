@@ -3,6 +3,8 @@ import {
   buildFeedMeta,
   FALLBACK_LOGO,
   fetchJson,
+  fetchText,
+  IPL_SERIES_ID,
   SPORT_LEAGUES,
   fetchWithFallback,
   getDefaultLeague,
@@ -56,6 +58,9 @@ function buildSummaryCandidates(id, sport, league) {
     candidates.push({ sport: candidateSport, league: candidateLeague });
   };
 
+  if (normalizedSport === "cricket" && normalizedLeague === "ipl") {
+    pushCandidate(normalizedSport, IPL_SERIES_ID);
+  }
   pushCandidate(normalizedSport, normalizedLeague);
   (SPORT_LEAGUES[normalizedSport] || []).slice(0, 6).forEach((candidateLeague) => pushCandidate(normalizedSport, candidateLeague));
   pushCandidate("soccer", "eng.1");
@@ -79,6 +84,9 @@ function buildScoreboardCandidates(sport, league) {
     candidates.push({ sport: candidateSport, league: candidateLeague });
   };
 
+  if (normalizedSport === "cricket" && normalizedLeague === "ipl") {
+    pushPair(normalizedSport, IPL_SERIES_ID);
+  }
   pushPair(normalizedSport, normalizedLeague);
   (SPORT_LEAGUES[normalizedSport] || []).slice(0, 4).forEach((candidateLeague) => pushPair(normalizedSport, candidateLeague));
   pushPair("soccer", "eng.1");
@@ -122,6 +130,130 @@ function sanitizeDisplayText(value = "") {
     .replace(/\u00c3\u201a|\u00c2/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
+}
+
+function stripHtmlMarkup(value = "") {
+  return sanitizeDisplayText(
+    String(value || "")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&quot;/gi, "\"")
+      .replace(/&#39;|&apos;/gi, "'")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
+  );
+}
+
+function extractInitialStateFromHtml(html = "") {
+  const match = String(html || "").match(/window\.__INITIAL_STATE__\s*=\s*(\{.*?\});/s);
+  if (!match?.[1]) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch (error) {
+    return null;
+  }
+}
+
+function looksLikeRealCricketCommentary(entries = []) {
+  return entries.some((entry) => {
+    const text = sanitizeDisplayText(entry?.text || entry?.player || "").toLowerCase();
+    return /\bto\b/.test(text) || /\b(four|six|wicket|out|run|lbw|caught|bowled)\b/.test(text);
+  });
+}
+
+function normalizeCricketCommentaryEvent(entry = {}) {
+  const rawEvent = String(entry?.event ?? "").trim().toUpperCase();
+  if (rawEvent === "W") return "wicket";
+  if (rawEvent === "6") return "six";
+  if (rawEvent === "4") return "four";
+  if (rawEvent === "0") return "dot";
+  if (/^[1-5]$/.test(rawEvent)) return "run";
+  return "commentary";
+}
+
+function buildCricketCommentaryFromPageState(pageState = {}) {
+  const overs = pageState?.gamePackage?.partCommentary?.overs || [];
+  const flattened = overs.flatMap((over) =>
+    (over?.comments || []).map((comment) => ({
+      time: String(comment?.timeStamp ?? over?.overNo ?? "").trim(),
+      text: stripHtmlMarkup(comment?.text || ""),
+      player: stripHtmlMarkup(comment?.dismissalText || comment?.pre || ""),
+      type: normalizeCricketCommentaryEvent(comment),
+      side: "neutral",
+      commId: String(comment?.commId || ""),
+      commSeq: Number(comment?.commSeq || 0)
+    }))
+  );
+
+  return uniqueBy(
+    flattened
+      .filter((entry) => entry.text)
+      .sort((left, right) => (right.commSeq || 0) - (left.commSeq || 0))
+      .map(({ commId, commSeq, ...entry }) => entry),
+    (entry) => `${entry.time}:${entry.text}:${entry.type}`
+  ).slice(0, 18);
+}
+
+function isSyntheticTimelineEntries(entries = [], summary = {}) {
+  if (!entries.length) return true;
+  const blockedTexts = new Set(
+    [
+      sanitizeDisplayText(summary?.statusText || "").toLowerCase(),
+      sanitizeDisplayText(summary?.time || "").toLowerCase(),
+      sanitizeDisplayText(summary?.venue ? `Venue: ${summary.venue}` : "").toLowerCase()
+    ].filter(Boolean)
+  );
+
+  return entries.every((entry) => {
+    const time = String(entry?.time || "").trim().toUpperCase();
+    const text = sanitizeDisplayText(entry?.text || entry?.player || "").toLowerCase();
+    return ["LIVE", "UPDATE", "DATE", "VENUE", "STAR", "RESULT"].includes(time)
+      || blockedTexts.has(text)
+      || text.startsWith("scheduled for ");
+  });
+}
+
+function buildCricketTimelineFromCommentary(entries = []) {
+  return entries.slice(0, 12).map((entry) => ({
+    time: entry.time || "LIVE",
+    type: entry.type || "commentary",
+    text: entry.text || entry.player || "Match update",
+    player: entry.player || entry.text || "",
+    side: entry.side || "neutral"
+  }));
+}
+
+async function hydrateCricketCommentary(summary = {}, summaryData = {}) {
+  if (summary?.sport !== "cricket") return summary;
+  if (looksLikeRealCricketCommentary(summary.commentary || [])) return summary;
+
+  const summaryHref = summaryData?.header?.links?.find((entry) => Array.isArray(entry?.rel) && entry.rel.includes("summary"))?.href
+    || summaryData?.header?.links?.[0]?.href
+    || "";
+  if (!summaryHref) return summary;
+
+  try {
+    const html = await fetchText(summaryHref);
+    const pageState = extractInitialStateFromHtml(html);
+    const commentary = buildCricketCommentaryFromPageState(pageState);
+    if (!commentary.length) return summary;
+
+    return {
+      ...summary,
+      commentary,
+      timeline: isSyntheticTimelineEntries(summary.timeline || [], summary)
+        ? buildCricketTimelineFromCommentary(commentary)
+        : (summary.timeline || [])
+    };
+  } catch (error) {
+    return summary;
+  }
 }
 
 function sanitizeDisplayPayload(value, seen = new WeakMap()) {
@@ -591,6 +723,7 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
   const away = competition.competitors?.find((entry) => entry.homeAway === "away") || {};
   const statusType = competition.status?.type || {};
   const timeline = normalizeTimeline(data, home.team?.id || "", away.team?.id || "");
+  const newsItems = Array.isArray(data.news) ? data.news : [];
   const commentary = (data.commentary || []).map((entry) => ({
     time: entry.time || entry.clock?.displayValue || "",
     text: entry.text || "",
@@ -637,7 +770,7 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
     },
     stats: normalizeStats(data),
     timeline,
-    commentary: commentary.concat((data.news || []).map((entry) => ({ text: entry.headline, type: "news" }))),
+    commentary: commentary.concat(newsItems.map((entry) => ({ text: entry.headline, type: "news" }))),
     odds: normalizeOdds(data),
     h2h: [],
     situation: data.situation || null
@@ -998,6 +1131,7 @@ export async function onRequest(context) {
     }
 
     let normalizedSummary = normalizeSummary(summaryData, sport, league);
+    normalizedSummary = await hydrateCricketCommentary(normalizedSummary, summaryData);
     normalizedSummary = await hydrateSummaryLineups(normalizedSummary, sport, league);
     normalizedSummary = sanitizeDisplayPayload(normalizedSummary);
     if (needsSummaryHydration(normalizedSummary)) {

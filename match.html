@@ -229,6 +229,9 @@
             color: #ffffff;
         }
         .lsf-cricket-mobile-shell {
+            --lsf-cricket-accent: #cc1616;
+            --lsf-cricket-accent-soft: #ff4d43;
+            --lsf-cricket-accent-glow: rgba(228, 37, 29, 0.32);
             display: flex;
             flex-direction: column;
             gap: 1.25rem;
@@ -259,6 +262,11 @@
             z-index: 1;
         }
         .lsf-cricket-mobile-abbr {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
             min-width: 3.4rem;
             padding: 0.7rem 0.5rem;
             border-radius: 1rem;
@@ -266,21 +274,39 @@
             background: rgba(255, 255, 255, 0.08);
             color: rgba(255, 255, 255, 0.88);
             text-align: center;
-            font-size: 1.65rem;
+            backdrop-filter: blur(8px);
+        }
+        .lsf-cricket-mobile-team-logo {
+            width: 1.7rem;
+            height: 1.7rem;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.16));
+        }
+        .lsf-cricket-mobile-abbr-text {
+            font-size: 1.45rem;
             font-weight: 900;
             letter-spacing: 0.05em;
             line-height: 1;
             text-transform: uppercase;
-            backdrop-filter: blur(8px);
         }
         .lsf-cricket-mobile-score-value {
-            color: #ffb8b3;
+            color: var(--lsf-cricket-accent-soft);
+            max-width: 100%;
+            white-space: nowrap;
             font-size: clamp(3rem, 15vw, 4.6rem);
             font-weight: 900;
             font-style: italic;
             line-height: 0.9;
             letter-spacing: -0.06em;
-            text-shadow: 0 0 24px rgba(255, 184, 179, 0.18);
+            text-shadow: 0 0 24px var(--lsf-cricket-accent-glow);
+        }
+        .lsf-cricket-mobile-score-value.is-compact {
+            font-size: clamp(2.45rem, 12vw, 3.85rem);
+            letter-spacing: -0.08em;
+        }
+        .lsf-cricket-mobile-score-value.is-tight {
+            font-size: clamp(2.1rem, 10.5vw, 3.15rem);
+            letter-spacing: -0.1em;
         }
         .lsf-cricket-mobile-overs {
             color: #6aff90;
@@ -330,13 +356,13 @@
             box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
         }
         .lsf-cricket-mobile-player-card--accent {
-            box-shadow: inset 4px 0 0 #f4a6a1, 0 18px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: inset 4px 0 0 var(--lsf-cricket-accent-soft), 0 18px 40px rgba(0, 0, 0, 0.2);
         }
         .lsf-cricket-mobile-player-card--muted {
             box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.12), 0 18px 40px rgba(0, 0, 0, 0.2);
         }
         .lsf-cricket-mobile-player-card-label {
-            color: rgba(244, 166, 161, 0.95);
+            color: var(--lsf-cricket-accent-soft);
             font-size: 0.68rem;
             font-weight: 900;
             letter-spacing: 0.18em;
@@ -362,7 +388,7 @@
         }
         .lsf-cricket-mobile-player-value {
             margin-top: 1rem;
-            color: #ffb8b3;
+            color: var(--lsf-cricket-accent-soft);
             font-size: 2.25rem;
             font-weight: 900;
             line-height: 1;
@@ -413,7 +439,7 @@
             background: rgba(255, 255, 255, 0.08);
         }
         .lsf-cricket-mobile-probability-bar > span:first-child {
-            background: linear-gradient(90deg, #e4251d, #f6b0a8);
+            background: linear-gradient(90deg, var(--lsf-cricket-accent), var(--lsf-cricket-accent-soft));
         }
         .lsf-cricket-mobile-probability-bar > span:last-child {
             background: rgba(255, 255, 255, 0.24);
@@ -482,7 +508,7 @@
             background: linear-gradient(180deg, #2cd164, #159246);
         }
         .lsf-cricket-mobile-feed-badge--wicket {
-            background: linear-gradient(180deg, #f4a623, #c97200);
+            background: linear-gradient(180deg, #ff5147, #9f0b0b);
         }
         .lsf-cricket-mobile-feed-badge--default {
             background: rgba(255, 255, 255, 0.08);
@@ -504,7 +530,7 @@
             line-height: 1.5;
         }
         .lsf-cricket-mobile-feed-headline strong {
-            color: #ffb8b3;
+            color: var(--lsf-cricket-accent-soft);
         }
         .lsf-cricket-mobile-feed-copy {
             margin-top: 0.35rem;

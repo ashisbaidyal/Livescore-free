@@ -6356,6 +6356,19 @@ function splitCricketCommentaryText(text = '') {
   return { headline, remaining };
 }
 
+function applyCricketMobileScoreFit(scoreText = '') {
+  const scoreNode = document.getElementById('mobile-cricket-score');
+  if (!scoreNode) return;
+
+  const compactScore = sanitizeDisplayText(String(scoreText || '')).replace(/\s+/g, '');
+  scoreNode.classList.remove('is-compact', 'is-tight');
+  if (compactScore.length >= 8) {
+    scoreNode.classList.add('is-tight');
+  } else if (compactScore.length >= 6) {
+    scoreNode.classList.add('is-compact');
+  }
+}
+
 function getMobileLiveTeamLabel(team = {}, maxLength = 3) {
   const abbreviation = sanitizeDisplayText(team?.abbreviation || '').trim();
   if (abbreviation) return abbreviation.toUpperCase().slice(0, maxLength);
@@ -6616,16 +6629,22 @@ function ensureCricketLiveMobileShell(root) {
           <div id="mobile-cricket-status-pill" class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.24em] text-on-surface/70">Live</div>
         </div>
         <div class="mt-4 flex items-start justify-between gap-3">
-          <div class="flex w-16 flex-col items-center gap-2">
-            <div id="mobile-cricket-home-abbr" class="lsf-cricket-mobile-abbr">IND</div>
+          <div class="flex w-[4.6rem] flex-col items-center gap-2">
+            <div class="lsf-cricket-mobile-abbr">
+              <img id="mobile-cricket-home-logo" alt="Home team" class="lsf-cricket-mobile-team-logo" src="${FALLBACK_LOGO}">
+              <span id="mobile-cricket-home-abbr" class="lsf-cricket-mobile-abbr-text">IND</span>
+            </div>
             <div id="mobile-cricket-home-name" class="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/65">Home</div>
           </div>
           <div class="min-w-0 flex-1 text-center">
             <div id="mobile-cricket-score" class="lsf-cricket-mobile-score-value">0/0</div>
             <div id="mobile-cricket-overs" class="lsf-cricket-mobile-overs mt-2">0 OVERS</div>
           </div>
-          <div class="flex w-16 flex-col items-center gap-2">
-            <div id="mobile-cricket-away-abbr" class="lsf-cricket-mobile-abbr">AWY</div>
+          <div class="flex w-[4.6rem] flex-col items-center gap-2">
+            <div class="lsf-cricket-mobile-abbr">
+              <img id="mobile-cricket-away-logo" alt="Away team" class="lsf-cricket-mobile-team-logo" src="${FALLBACK_LOGO}">
+              <span id="mobile-cricket-away-abbr" class="lsf-cricket-mobile-abbr-text">AWY</span>
+            </div>
             <div id="mobile-cricket-away-name" class="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/65">Away</div>
           </div>
         </div>
@@ -6686,7 +6705,7 @@ function ensureCricketLiveMobileShell(root) {
       <section id="mobile-moments-block" class="space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="lsf-cricket-mobile-section-title">Live Commentary</h3>
-          <span class="text-[11px] font-black uppercase tracking-[0.16em] text-[#ffb8b3]">View All</span>
+          <span class="text-[11px] font-black uppercase tracking-[0.16em] text-[#cc1616]">View All</span>
         </div>
         <div id="mobile-feed-list" class="space-y-4">
           <div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Awaiting commentary feed</div>
@@ -6787,6 +6806,8 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   document.body.classList.add('lsf-cricket-mobile-live');
   renderNetworkAdSlots(root);
 
+  const homeLogo = document.getElementById('mobile-cricket-home-logo');
+  const awayLogo = document.getElementById('mobile-cricket-away-logo');
   const innings = getCricketLiveInningsContext(data);
   const activeScore = innings?.score || {};
   const opponentScore = innings?.opponentScore || {};
@@ -6835,7 +6856,19 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   setText('mobile-cricket-away-abbr', data?.awayTeam?.abbreviation || data?.awayTeam?.name || 'AWAY');
   setText('mobile-cricket-home-name', data?.homeTeam?.fullName || data?.homeTeam?.name || 'Home');
   setText('mobile-cricket-away-name', data?.awayTeam?.fullName || data?.awayTeam?.name || 'Away');
-  setText('mobile-cricket-score', activeScore?.scoreText || data?.awayTeam?.score || data?.homeTeam?.score || '0/0');
+  if (homeLogo) {
+    homeLogo.src = getSafeImageUrl(data?.homeTeam?.logo, FALLBACK_LOGO);
+    homeLogo.alt = sanitizeDisplayText(data?.homeTeam?.name || 'Home team');
+    homeLogo.onerror = () => { homeLogo.src = FALLBACK_LOGO; };
+  }
+  if (awayLogo) {
+    awayLogo.src = getSafeImageUrl(data?.awayTeam?.logo, FALLBACK_LOGO);
+    awayLogo.alt = sanitizeDisplayText(data?.awayTeam?.name || 'Away team');
+    awayLogo.onerror = () => { awayLogo.src = FALLBACK_LOGO; };
+  }
+  const scoreValue = activeScore?.scoreText || data?.awayTeam?.score || data?.homeTeam?.score || '0/0';
+  setText('mobile-cricket-score', scoreValue);
+  applyCricketMobileScoreFit(scoreValue);
   setText('mobile-cricket-overs', activeScore?.oversText ? `${activeScore.oversText} OVERS` : (data?.time || data?.statusText || 'LIVE'));
   setText('mobile-last-event-text', commentaryFeed?.[0]?.text || commentaryFeed?.[0]?.player || data?.statusText || 'Awaiting live action');
   setText('mobile-cricket-run-rate', Number.isFinite(runRate) ? runRate.toFixed(2) : 'N/A');
@@ -6860,7 +6893,7 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
       <div class="flex items-center justify-between gap-3">
         <div class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface">Win Probability</div>
         <div class="text-[11px] font-black uppercase tracking-[0.16em] text-on-surface/62">
-          <span class="text-[#ffb8b3]">${escapeHtml(sanitizeDisplayText(data?.homeTeam?.abbreviation || 'HOME'))} ${probabilities.home}%</span>
+          <span class="text-[#cc1616]">${escapeHtml(sanitizeDisplayText(data?.homeTeam?.abbreviation || 'HOME'))} ${probabilities.home}%</span>
           <span class="ml-3">${escapeHtml(sanitizeDisplayText(data?.awayTeam?.abbreviation || 'AWAY'))} ${probabilities.away}%</span>
         </div>
       </div>
