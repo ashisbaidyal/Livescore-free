@@ -6232,6 +6232,842 @@ function parseComparableStatValue(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function convertCricketOversToDecimal(rawOvers = '') {
+  const text = String(rawOvers ?? '').trim();
+  if (!text) return null;
+  const match = text.match(/^(\d+)(?:\.(\d+))?$/);
+  if (!match) return null;
+  const overs = Number(match[1] || 0);
+  const balls = Number((match[2] || '0').slice(0, 1));
+  if (!Number.isFinite(overs) || !Number.isFinite(balls)) return null;
+  return overs + (Math.min(Math.max(balls, 0), 5) / 6);
+}
+
+function convertCricketOversToBalls(rawOvers = '') {
+  const text = String(rawOvers ?? '').trim();
+  if (!text) return null;
+  const match = text.match(/^(\d+)(?:\.(\d+))?$/);
+  if (!match) return null;
+  const overs = Number(match[1] || 0);
+  const balls = Number((match[2] || '0').slice(0, 1));
+  if (!Number.isFinite(overs) || !Number.isFinite(balls)) return null;
+  return (overs * 6) + Math.min(Math.max(balls, 0), 5);
+}
+
+function parseCricketScorecard(rawScore = '') {
+  const text = sanitizeDisplayText(String(rawScore || '').trim());
+  const scoreText = text.split('(')[0].trim() || text || '0';
+  const inningsContext = text.match(/\(([^)]+)\)/)?.[1] || '';
+  const scoreMatch = scoreText.match(/(\d+)(?:\s*\/\s*(\d+))?/);
+  const runs = scoreMatch ? Number(scoreMatch[1]) : null;
+  const wickets = scoreMatch?.[2] !== undefined ? Number(scoreMatch[2]) : null;
+
+  let oversText = '';
+  let oversLimit = null;
+  const oversPair = inningsContext.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*ov/i);
+  const oversSingle = inningsContext.match(/(\d+(?:\.\d+)?)\s*ov/i) || text.match(/(\d+(?:\.\d+)?)\s*ov/i);
+  if (oversPair) {
+    oversText = oversPair[1];
+    oversLimit = Number(oversPair[2]);
+  } else if (oversSingle) {
+    oversText = oversSingle[1];
+  }
+
+  return {
+    raw: text,
+    scoreText: scoreText || '0',
+    runs: Number.isFinite(runs) ? runs : null,
+    wickets: Number.isFinite(wickets) ? wickets : null,
+    oversText,
+    overs: convertCricketOversToDecimal(oversText),
+    ballsBowled: convertCricketOversToBalls(oversText),
+    oversLimit: Number.isFinite(oversLimit) ? oversLimit : null
+  };
+}
+
+function getCricketLiveInningsContext(data = {}) {
+  const homeScore = parseCricketScorecard(data?.homeTeam?.score || '');
+  const awayScore = parseCricketScorecard(data?.awayTeam?.score || '');
+  const options = [
+    {
+      side: 'home',
+      team: data?.homeTeam || {},
+      opponent: data?.awayTeam || {},
+      score: homeScore,
+      opponentScore: awayScore
+    },
+    {
+      side: 'away',
+      team: data?.awayTeam || {},
+      opponent: data?.homeTeam || {},
+      score: awayScore,
+      opponentScore: homeScore
+    }
+  ];
+
+  const scoreRank = (entry) => {
+    const raw = String(entry?.team?.score || '');
+    let rank = 0;
+    if (entry?.score?.overs !== null) rank += 100;
+    if (raw.includes('(')) rank += 80;
+    if (entry?.score?.wickets !== null) rank += 40;
+    if (entry?.score?.runs !== null) rank += 20;
+    rank += Math.min(raw.length, 30);
+    return rank;
+  };
+
+  options.sort((left, right) => scoreRank(right) - scoreRank(left));
+  return options[0];
+}
+
+function parseCricketDeliveryEvent(entry = {}) {
+  const text = sanitizeDisplayText(entry?.text || entry?.player || '');
+  const matchup = text.match(/^([^,]+?)\s+to\s+([^,]+?)(?:,|$)/i);
+  let runs = null;
+  if (/\bsix\b/i.test(text)) runs = 6;
+  else if (/\bfour\b/i.test(text)) runs = 4;
+  else if (/\bthree runs?\b|\b3 runs?\b/i.test(text)) runs = 3;
+  else if (/\btwo runs?\b|\b2 runs?\b/i.test(text)) runs = 2;
+  else if (/\b1 run\b|\bone run\b|\bsingle\b/i.test(text)) runs = 1;
+  else if (/\bno run\b|\bdot\b/i.test(text)) runs = 0;
+
+  return {
+    time: sanitizeDisplayText(entry?.time || 'LIVE'),
+    text,
+    bowler: matchup ? sanitizeDisplayText(matchup[1]) : '',
+    batter: matchup ? sanitizeDisplayText(matchup[2]) : '',
+    runs,
+    wicket: /\b(wicket|out|lbw|bowled|caught)\b/i.test(text)
+  };
+}
+
+function splitCricketCommentaryText(text = '') {
+  const clean = sanitizeDisplayText(text || '');
+  if (!clean) {
+    return {
+      headline: 'Match update',
+      remaining: ''
+    };
+  }
+
+  const match = clean.match(/^[^.!?]+[.!?]?/);
+  const headline = sanitizeDisplayText(match?.[0] || clean) || 'Match update';
+  const remaining = sanitizeDisplayText(clean.slice(headline.length).trim());
+  return { headline, remaining };
+}
+
+function getMobileLiveTeamLabel(team = {}, maxLength = 3) {
+  const abbreviation = sanitizeDisplayText(team?.abbreviation || '').trim();
+  if (abbreviation) return abbreviation.toUpperCase().slice(0, maxLength);
+  const initials = sanitizeDisplayText(team?.name || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+  if (initials) return initials.slice(0, maxLength);
+  return 'TM';
+}
+
+function getGenericLiveClockLabel(data = {}) {
+  const rawTime = sanitizeDisplayText(data?.time || '').trim();
+  const rawStatus = sanitizeDisplayText(data?.statusText || '').trim();
+  if (rawTime && !/^live$/i.test(rawTime)) return rawTime.toUpperCase();
+  if (rawStatus && !/^live$/i.test(rawStatus)) return rawStatus.toUpperCase();
+  return 'LIVE NOW';
+}
+
+function getGenericTimelinePresentation(event = {}, sport = '') {
+  const type = String(event?.type || '').toLowerCase();
+  const player = sanitizeDisplayText(event?.player || '');
+  if (type === 'goal') {
+    return {
+      headline: `Goal: ${player || 'Match Update'}`,
+      iconMarkup: `<span class="material-symbols-outlined text-[1rem] text-[#5dff7d]">sports_soccer</span>`
+    };
+  }
+  if (type === 'yellow-card' || type === 'card') {
+    return {
+      headline: `Yellow Card: ${player || 'Booked'}`,
+      iconMarkup: `<span class="block h-3.5 w-3 rounded-sm bg-[#f0c028]"></span>`
+    };
+  }
+  if (type === 'red-card') {
+    return {
+      headline: `Red Card: ${player || 'Sent Off'}`,
+      iconMarkup: `<span class="block h-3.5 w-3 rounded-sm bg-[#d3271d]"></span>`
+    };
+  }
+  if (type === 'substitution') {
+    return {
+      headline: `Substitution: ${player || 'Team Change'}`,
+      iconMarkup: `<span class="material-symbols-outlined text-[1rem] text-[#64ff8d]">swap_vert</span>`
+    };
+  }
+  if (type === 'shot') {
+    return {
+      headline: `Chance: ${player || 'Attempt'}`,
+      iconMarkup: `<span class="material-symbols-outlined text-[1rem] text-[#ffffff]">radio_button_checked</span>`
+    };
+  }
+  if (type === 'foul') {
+    return {
+      headline: `Foul: ${player || 'Contact'}`,
+      iconMarkup: `<span class="material-symbols-outlined text-[1rem] text-[#f4b0a6]">flag</span>`
+    };
+  }
+  if (normalizeSportSlug(sport) === 'basketball') {
+    return {
+      headline: player ? `Play: ${player}` : sanitizeDisplayText(event?.text || 'Live update'),
+      iconMarkup: `<span class="material-symbols-outlined text-[1rem] text-[#ffb76b]">sports_basketball</span>`
+    };
+  }
+  return {
+    headline: player || sanitizeDisplayText(event?.text || 'Live update'),
+    iconMarkup: `<span class="material-symbols-outlined text-[1rem] text-[#f4b0a6]">bolt</span>`
+  };
+}
+
+function buildGenericTimelineCopy(event = {}) {
+  const text = sanitizeDisplayText(event?.text || event?.player || '');
+  if (!text) return 'Real-time update from the live match centre.';
+  return text;
+}
+
+function buildGenericSheetPlayersMarkup(lineup = [], highlightName = '') {
+  if (!lineup.length) {
+    return `<div class="lsf-generic-mobile-sheet-player"><div class="lsf-generic-mobile-sheet-player-name">Awaiting lineup feed</div><div class="lsf-generic-mobile-sheet-player-slot">--</div></div>`;
+  }
+
+  const highlightedKey = sanitizeDisplayText(highlightName || '').toLowerCase();
+  return lineup.slice(0, 5).map((player, index) => {
+    const name = sanitizeDisplayText(player?.name || `Player ${index + 1}`);
+    const meta = sanitizeDisplayText(player?.position || player?.number || 'Starter');
+    const slot = sanitizeDisplayText(player?.number || player?.position || String(index + 1));
+    const isHighlighted = highlightedKey && name.toLowerCase().includes(highlightedKey);
+    return `
+      <div class="lsf-generic-mobile-sheet-player ${isHighlighted ? 'is-highlighted' : ''}">
+        <div>
+          <div class="lsf-generic-mobile-sheet-player-name">${escapeHtml(name)}</div>
+          <div class="lsf-generic-mobile-sheet-player-meta">${escapeHtml(meta)}</div>
+        </div>
+        <div class="lsf-generic-mobile-sheet-player-slot">${escapeHtml(slot)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function buildCricketParticipantSet(activeTeam = {}, deliveries = []) {
+  const names = [];
+  const pushName = (value) => {
+    const text = sanitizeDisplayText(String(value || '').trim());
+    if (!text) return;
+    if (names.some((entry) => entry.toLowerCase() === text.toLowerCase())) return;
+    names.push(text);
+  };
+
+  deliveries.forEach((delivery) => pushName(delivery.batter));
+  pushName(activeTeam?.leader?.name || '');
+  (activeTeam?.lineup || []).forEach((player) => pushName(player?.name || ''));
+  return names;
+}
+
+function buildCricketRecentBatterStats(deliveries = []) {
+  const stats = new Map();
+  deliveries.slice(0, 18).forEach((delivery) => {
+    if (!delivery?.batter) return;
+    const current = stats.get(delivery.batter) || { runs: 0, balls: 0 };
+    current.balls += 1;
+    if (Number.isFinite(delivery.runs)) current.runs += delivery.runs;
+    stats.set(delivery.batter, current);
+  });
+  return stats;
+}
+
+function pickCricketLeaderMetric(team = {}, playerName = '', fallbackMeta = 'Awaiting live data') {
+  const leaderName = sanitizeDisplayText(team?.leader?.name || '');
+  const leaderValue = sanitizeDisplayText(team?.leader?.value || '');
+  const playerKey = sanitizeDisplayText(playerName || '').toLowerCase();
+  const leaderKey = leaderName.toLowerCase();
+  const matchesPlayer = playerKey && leaderKey && (leaderKey.includes(playerKey) || playerKey.includes(leaderKey));
+  if (!leaderValue || (!matchesPlayer && playerName)) {
+    return {
+      primary: '--',
+      meta: fallbackMeta
+    };
+  }
+
+  const primary = leaderValue.match(/^\d+\*?(?:\/\d+)?/)?.[0]
+    || leaderValue.match(/\d+\*?(?:\/\d+)?/)?.[0]
+    || leaderValue.split(',')[0]
+    || leaderValue;
+
+  return {
+    primary: sanitizeDisplayText(primary),
+    meta: leaderValue
+  };
+}
+
+function buildCricketPlayerCardState(name = '', role = '', team = {}, recentStats = new Map(), fallbackMeta = 'Awaiting live data') {
+  const cleanName = sanitizeDisplayText(name || role || 'Player');
+  const leaderMetric = pickCricketLeaderMetric(team, cleanName, fallbackMeta);
+  if (leaderMetric.primary !== '--') {
+    return {
+      name: cleanName,
+      primary: leaderMetric.primary,
+      meta: leaderMetric.meta
+    };
+  }
+
+  const recent = recentStats.get(cleanName);
+  if (recent) {
+    return {
+      name: cleanName,
+      primary: String(recent.runs),
+      meta: `${recent.balls} BALL${recent.balls === 1 ? '' : 'S'} IN FEED`
+    };
+  }
+
+  return {
+    name: cleanName,
+    primary: '--',
+    meta: fallbackMeta
+  };
+}
+
+function buildCricketBowlerCardState(name = '', team = {}, activeScore = {}) {
+  const cleanName = sanitizeDisplayText(name || team?.leader?.name || team?.name || 'Bowler');
+  const leaderValue = sanitizeDisplayText(team?.leader?.value || '');
+  const leaderName = sanitizeDisplayText(team?.leader?.name || '').toLowerCase();
+  const cleanKey = cleanName.toLowerCase();
+  const matchesLeader = leaderName && cleanKey && (leaderName.includes(cleanKey) || cleanKey.includes(leaderName));
+  if (leaderValue && (!name || matchesLeader)) {
+    const primary = leaderValue.match(/^\d+\s*\/\s*\d+/)?.[0]
+      || leaderValue.match(/\d+\s*\/\s*\d+/)?.[0]
+      || leaderValue.match(/^\d+(?:\.\d+)?/)?.[0]
+      || leaderValue.split(',')[0]
+      || leaderValue;
+    return {
+      name: cleanName,
+      primary: sanitizeDisplayText(primary),
+      meta: leaderValue
+    };
+  }
+
+  const wicketValue = activeScore?.wickets !== null && activeScore?.wickets !== undefined
+    ? `${activeScore.wickets} WKTS`
+    : 'LIVE';
+
+  return {
+    name: cleanName,
+    primary: wicketValue,
+    meta: 'Current pressure'
+  };
+}
+
+function computeCricketPartnershipRuns(deliveries = []) {
+  let total = 0;
+  let hasRuns = false;
+  for (const delivery of deliveries) {
+    if (delivery?.wicket) break;
+    if (Number.isFinite(delivery?.runs)) {
+      total += delivery.runs;
+      hasRuns = true;
+    }
+  }
+  return hasRuns ? total : null;
+}
+
+function computeCricketLiveProbabilities(context = {}) {
+  const activeScore = context?.score || {};
+  const runRate = context?.runRate;
+  const requiredRate = context?.requiredRate;
+  const battingSide = context?.side || 'home';
+  let battingProbability = 50;
+
+  if (Number.isFinite(runRate) && Number.isFinite(requiredRate)) {
+    battingProbability = Math.round(Math.max(18, Math.min(82, 50 + ((runRate - requiredRate) * 11))));
+  } else if (Number.isFinite(activeScore?.overs) && Number.isFinite(activeScore?.oversLimit) && Number.isFinite(activeScore?.runs)) {
+    const progress = activeScore.oversLimit > 0 ? (activeScore.overs / activeScore.oversLimit) : 0.5;
+    const wicketFactor = activeScore.wickets !== null && activeScore.wickets !== undefined
+      ? Math.max(0.15, 1 - (activeScore.wickets / 10))
+      : 0.62;
+    battingProbability = Math.round(Math.max(24, Math.min(76, 36 + (progress * 22) + (wicketFactor * 18))));
+  }
+
+  return battingSide === 'home'
+    ? { home: battingProbability, away: 100 - battingProbability }
+    : { home: 100 - battingProbability, away: battingProbability };
+}
+
+function ensureCricketLiveMobileShell(root) {
+  if (!root) return;
+  if (!root._defaultMarkup) root._defaultMarkup = root.innerHTML;
+  if (root.dataset.layoutMode === 'cricket-live') return;
+
+  root.dataset.layoutMode = 'cricket-live';
+  document.body.classList.remove('lsf-generic-mobile-live');
+  document.body.classList.add('lsf-cricket-mobile-live');
+  root.innerHTML = `
+    <div class="lsf-cricket-mobile-shell">
+      <section class="lsf-cricket-mobile-scoreboard">
+        <div class="flex items-start justify-between gap-3">
+          <div class="text-[10px] font-black uppercase tracking-[0.28em] text-on-surface/45">Live Match</div>
+          <div id="mobile-cricket-status-pill" class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.24em] text-on-surface/70">Live</div>
+        </div>
+        <div class="mt-4 flex items-start justify-between gap-3">
+          <div class="flex w-16 flex-col items-center gap-2">
+            <div id="mobile-cricket-home-abbr" class="lsf-cricket-mobile-abbr">IND</div>
+            <div id="mobile-cricket-home-name" class="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/65">Home</div>
+          </div>
+          <div class="min-w-0 flex-1 text-center">
+            <div id="mobile-cricket-score" class="lsf-cricket-mobile-score-value">0/0</div>
+            <div id="mobile-cricket-overs" class="lsf-cricket-mobile-overs mt-2">0 OVERS</div>
+          </div>
+          <div class="flex w-16 flex-col items-center gap-2">
+            <div id="mobile-cricket-away-abbr" class="lsf-cricket-mobile-abbr">AWY</div>
+            <div id="mobile-cricket-away-name" class="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/65">Away</div>
+          </div>
+        </div>
+        <div class="mt-4 text-center text-[11px] font-bold text-on-surface/72">
+          <span id="mobile-last-event-text">Awaiting live action</span>
+        </div>
+        <div class="lsf-cricket-mobile-score-meta">
+          <div class="lsf-cricket-mobile-score-meta-item">
+            <div class="lsf-cricket-mobile-score-meta-label">Run Rate</div>
+            <div id="mobile-cricket-run-rate" class="lsf-cricket-mobile-score-meta-value">N/A</div>
+          </div>
+          <div class="lsf-cricket-mobile-score-meta-item">
+            <div class="lsf-cricket-mobile-score-meta-label">Required</div>
+            <div id="mobile-cricket-required-rate" class="lsf-cricket-mobile-score-meta-value">N/A</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lsf-cricket-mobile-player-grid">
+        <article class="lsf-cricket-mobile-player-card lsf-cricket-mobile-player-card--accent">
+          <div class="lsf-cricket-mobile-player-card-label">On Strike</div>
+          <div id="mobile-cricket-striker-name" class="lsf-cricket-mobile-player-name">Loading</div>
+          <div id="mobile-cricket-striker-meta" class="lsf-cricket-mobile-player-meta">Awaiting live card</div>
+          <div id="mobile-cricket-striker-value" class="lsf-cricket-mobile-player-value">--</div>
+        </article>
+        <article class="lsf-cricket-mobile-player-card lsf-cricket-mobile-player-card--muted">
+          <div class="lsf-cricket-mobile-player-card-label">At Crease</div>
+          <div id="mobile-cricket-nonstriker-name" class="lsf-cricket-mobile-player-name">Loading</div>
+          <div id="mobile-cricket-nonstriker-meta" class="lsf-cricket-mobile-player-meta">Awaiting live card</div>
+          <div id="mobile-cricket-nonstriker-value" class="lsf-cricket-mobile-player-value">--</div>
+        </article>
+      </section>
+
+      <section class="lsf-cricket-mobile-bowler-card">
+        <div class="lsf-cricket-mobile-bowler-icon">
+          <span class="material-symbols-outlined">sports_cricket</span>
+        </div>
+        <div>
+          <div class="text-[10px] font-black uppercase tracking-[0.24em] text-secondary">Bowler</div>
+          <div id="mobile-cricket-bowler-name" class="mt-1 text-xl font-black tracking-tight">Loading</div>
+          <div id="mobile-cricket-bowler-meta" class="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface/50">Current pressure</div>
+        </div>
+        <div id="mobile-cricket-bowler-value" class="text-4xl font-black tracking-tight text-on-surface">--</div>
+      </section>
+
+      <section class="space-y-3">
+        <div class="lsf-cricket-mobile-section-title">Match Intelligence</div>
+        <article id="mobile-data-intel" class="lsf-cricket-mobile-intel-card">
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Awaiting live stat readout</div>
+        </article>
+      </section>
+
+      <section id="mobile-betting-block" class="space-y-4">
+        <div data-lsf-network-ad data-ad-height="160" data-ad-title="LivescoreFree sponsored mobile cricket banner" class="lsf-network-ad-slot lsf-network-ad-slot--banner"></div>
+        <div id="mobile-odds-card" hidden></div>
+      </section>
+
+      <section id="mobile-moments-block" class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="lsf-cricket-mobile-section-title">Live Commentary</h3>
+          <span class="text-[11px] font-black uppercase tracking-[0.16em] text-[#ffb8b3]">View All</span>
+        </div>
+        <div id="mobile-feed-list" class="space-y-4">
+          <div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Awaiting commentary feed</div>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <div data-lsf-network-ad data-ad-height="160" data-ad-title="LivescoreFree sponsored mobile cricket footer banner" class="lsf-network-ad-slot lsf-network-ad-slot--banner"></div>
+      </section>
+
+      <section id="mobile-lineups-block" class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="lsf-cricket-mobile-section-title">Squads</h3>
+          <span class="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface/40">Live Pool</span>
+        </div>
+        <div class="flex gap-3">
+          <button id="mobile-lineup-home-tab" class="lsf-mobile-lineup-toggle is-active">Home</button>
+          <button id="mobile-lineup-away-tab" class="lsf-mobile-lineup-toggle">Away</button>
+        </div>
+        <div id="mobile-lineup-strip" class="grid grid-cols-4 gap-3">
+          <div class="lsf-mobile-card col-span-4 text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Lineup cards loading</div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function ensureGenericLiveMobileShell(root) {
+  if (!root) return;
+  if (!root._defaultMarkup) root._defaultMarkup = root.innerHTML;
+  if (root.dataset.layoutMode === 'generic-live') return;
+
+  root.dataset.layoutMode = 'generic-live';
+  document.body.classList.remove('lsf-cricket-mobile-live');
+  document.body.classList.add('lsf-generic-mobile-live');
+  root.innerHTML = `
+    <div class="lsf-generic-mobile-shell">
+      <section class="lsf-generic-mobile-scoreboard">
+        <div class="lsf-generic-mobile-status-row">
+          <div id="mobile-generic-status-pill" class="lsf-generic-mobile-status-pill">Live</div>
+          <div id="mobile-generic-clock" class="lsf-generic-mobile-clock">LIVE NOW</div>
+        </div>
+        <div class="lsf-generic-mobile-score-row">
+          <div class="lsf-generic-mobile-team-col">
+            <div class="lsf-generic-mobile-team-tile">
+              <img id="mobile-generic-home-logo" alt="Home team" class="lsf-generic-mobile-team-logo" src="${FALLBACK_LOGO}">
+            </div>
+            <div id="mobile-generic-home-name" class="lsf-generic-mobile-team-name">Home</div>
+          </div>
+          <div class="lsf-generic-mobile-score-wrap">
+            <span id="mobile-generic-home-score" class="lsf-generic-mobile-score-value">0</span>
+            <span class="lsf-generic-mobile-score-separator">-</span>
+            <span id="mobile-generic-away-score" class="lsf-generic-mobile-score-value">0</span>
+          </div>
+          <div class="lsf-generic-mobile-team-col">
+            <div class="lsf-generic-mobile-team-tile">
+              <img id="mobile-generic-away-logo" alt="Away team" class="lsf-generic-mobile-team-logo" src="${FALLBACK_LOGO}">
+            </div>
+            <div id="mobile-generic-away-name" class="lsf-generic-mobile-team-name">Away</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <div class="flex items-end justify-between gap-3">
+          <h3 class="lsf-generic-mobile-heading">Match Intel</h3>
+          <span class="lsf-generic-mobile-kicker">Real-time Data</span>
+        </div>
+        <article id="mobile-generic-intel" class="lsf-generic-mobile-intel-card">
+          <div class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Awaiting live stat readout</div>
+        </article>
+      </section>
+
+      <section class="space-y-4">
+        <h3 class="lsf-generic-mobile-heading">Timeline</h3>
+        <article id="mobile-generic-timeline" class="lsf-generic-mobile-timeline-card">
+          <div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Timeline loading</div>
+        </article>
+      </section>
+
+      <section class="lsf-generic-mobile-ad-grid">
+        <div data-lsf-network-ad data-ad-height="128" data-ad-title="LivescoreFree sponsored mobile live slot" class="lsf-network-ad-slot lsf-network-ad-slot--duo"></div>
+        <div data-lsf-network-ad data-ad-height="128" data-ad-title="LivescoreFree sponsored mobile live slot" class="lsf-network-ad-slot lsf-network-ad-slot--duo"></div>
+      </section>
+
+      <section class="space-y-4">
+        <h3 id="mobile-generic-lineups-title" class="lsf-generic-mobile-heading">Tactical Sheets</h3>
+        <div id="mobile-generic-lineups" class="lsf-generic-mobile-sheets">
+          <div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Lineups loading</div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
+  ensureCricketLiveMobileShell(root);
+  document.body.classList.add('lsf-cricket-mobile-live');
+  renderNetworkAdSlots(root);
+
+  const innings = getCricketLiveInningsContext(data);
+  const activeScore = innings?.score || {};
+  const opponentScore = innings?.opponentScore || {};
+  const deliveries = commentaryFeed.map((entry) => parseCricketDeliveryEvent(entry)).filter((entry) => entry.text);
+  const batterCandidates = buildCricketParticipantSet(innings?.team, deliveries);
+  const recentBatterStats = buildCricketRecentBatterStats(deliveries);
+  const strikerName = batterCandidates[0] || sanitizeDisplayText(innings?.team?.leader?.name || innings?.team?.name || 'Batter');
+  const nonStrikerName = batterCandidates.find((name) => name.toLowerCase() !== String(strikerName || '').toLowerCase())
+    || sanitizeDisplayText((innings?.team?.lineup || []).find((player) => String(player?.name || '').toLowerCase() !== String(strikerName || '').toLowerCase())?.name || 'Awaiting partner');
+  const bowlerName = deliveries.find((delivery) => delivery.bowler)?.bowler
+    || sanitizeDisplayText(innings?.opponent?.leader?.name || innings?.opponent?.name || 'Bowler');
+
+  const runRate = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && activeScore.overs > 0
+    ? (activeScore.runs / activeScore.overs)
+    : null;
+  const opponentRuns = Number.isFinite(opponentScore?.runs) ? opponentScore.runs : null;
+  const ballsRemaining = Number.isFinite(activeScore?.oversLimit) && Number.isFinite(activeScore?.ballsBowled)
+    ? Math.max(0, Math.round((activeScore.oversLimit * 6) - activeScore.ballsBowled))
+    : null;
+  const runsRequired = opponentRuns !== null && Number.isFinite(activeScore?.runs) && opponentRuns >= activeScore.runs
+    ? Math.max((opponentRuns + 1) - activeScore.runs, 0)
+    : null;
+  const requiredRate = ballsRemaining && ballsRemaining > 0 && runsRequired !== null
+    ? ((runsRequired / ballsRemaining) * 6)
+    : null;
+  const projectedScore = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && Number.isFinite(activeScore?.oversLimit) && activeScore.overs > 0
+    ? Math.round((activeScore.runs / activeScore.overs) * activeScore.oversLimit)
+    : null;
+  const partnershipRuns = computeCricketPartnershipRuns(deliveries);
+  const probabilities = computeCricketLiveProbabilities({
+    side: innings?.side,
+    score: activeScore,
+    runRate,
+    requiredRate
+  });
+  const strikerState = buildCricketPlayerCardState(strikerName, 'On Strike', innings?.team, recentBatterStats, 'Live striker feed');
+  const nonStrikerState = buildCricketPlayerCardState(nonStrikerName, 'At Crease', innings?.team, recentBatterStats, 'Standing by');
+  const bowlerState = buildCricketBowlerCardState(bowlerName, innings?.opponent, activeScore);
+
+  const setText = (id, value) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = sanitizeDisplayText(value || '');
+  };
+  setText('mobile-cricket-status-pill', String(data?.status || '').toLowerCase() === 'live' ? 'LIVE' : (data?.statusText || 'LIVE'));
+  setText('mobile-cricket-home-abbr', data?.homeTeam?.abbreviation || data?.homeTeam?.name || 'HOME');
+  setText('mobile-cricket-away-abbr', data?.awayTeam?.abbreviation || data?.awayTeam?.name || 'AWAY');
+  setText('mobile-cricket-home-name', data?.homeTeam?.fullName || data?.homeTeam?.name || 'Home');
+  setText('mobile-cricket-away-name', data?.awayTeam?.fullName || data?.awayTeam?.name || 'Away');
+  setText('mobile-cricket-score', activeScore?.scoreText || data?.awayTeam?.score || data?.homeTeam?.score || '0/0');
+  setText('mobile-cricket-overs', activeScore?.oversText ? `${activeScore.oversText} OVERS` : (data?.time || data?.statusText || 'LIVE'));
+  setText('mobile-last-event-text', commentaryFeed?.[0]?.text || commentaryFeed?.[0]?.player || data?.statusText || 'Awaiting live action');
+  setText('mobile-cricket-run-rate', Number.isFinite(runRate) ? runRate.toFixed(2) : 'N/A');
+  setText('mobile-cricket-required-rate', Number.isFinite(requiredRate) ? requiredRate.toFixed(2) : 'N/A');
+  setText('mobile-cricket-striker-name', strikerState.name);
+  setText('mobile-cricket-striker-meta', strikerState.meta);
+  setText('mobile-cricket-striker-value', strikerState.primary);
+  setText('mobile-cricket-nonstriker-name', nonStrikerState.name);
+  setText('mobile-cricket-nonstriker-meta', nonStrikerState.meta);
+  setText('mobile-cricket-nonstriker-value', nonStrikerState.primary);
+  setText('mobile-cricket-bowler-name', bowlerState.name);
+  setText('mobile-cricket-bowler-meta', bowlerState.meta);
+  setText('mobile-cricket-bowler-value', bowlerState.primary);
+
+  const statsHost = document.getElementById('mobile-data-intel');
+  if (statsHost) {
+    const activeAbbr = sanitizeDisplayText(innings?.team?.abbreviation || innings?.team?.name || 'BAT');
+    const opponentAbbr = sanitizeDisplayText(innings?.opponent?.abbreviation || innings?.opponent?.name || 'BOWL');
+    const homeWidth = Math.max(0, Math.min(100, probabilities.home));
+    const awayWidth = 100 - homeWidth;
+    statsHost.innerHTML = `
+      <div class="flex items-center justify-between gap-3">
+        <div class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface">Win Probability</div>
+        <div class="text-[11px] font-black uppercase tracking-[0.16em] text-on-surface/62">
+          <span class="text-[#ffb8b3]">${escapeHtml(sanitizeDisplayText(data?.homeTeam?.abbreviation || 'HOME'))} ${probabilities.home}%</span>
+          <span class="ml-3">${escapeHtml(sanitizeDisplayText(data?.awayTeam?.abbreviation || 'AWAY'))} ${probabilities.away}%</span>
+        </div>
+      </div>
+      <div class="mt-3 lsf-cricket-mobile-probability-bar">
+        <span style="width:${homeWidth}%"></span>
+        <span style="width:${awayWidth}%"></span>
+      </div>
+      <div class="lsf-cricket-mobile-intel-grid">
+        <div class="lsf-cricket-mobile-intel-metric">
+          <div class="lsf-cricket-mobile-intel-label">Projected Score</div>
+          <div class="lsf-cricket-mobile-intel-value">${projectedScore !== null ? projectedScore : '--'}</div>
+          <div class="lsf-cricket-mobile-intel-note">${Number.isFinite(runRate) ? `Current RR: ${runRate.toFixed(2)}` : `${activeAbbr} innings live`}</div>
+        </div>
+        <div class="lsf-cricket-mobile-intel-metric">
+          <div class="lsf-cricket-mobile-intel-label">Current Partnership</div>
+          <div class="lsf-cricket-mobile-intel-value" style="color:#ffffff;">${partnershipRuns !== null ? partnershipRuns : '--'}</div>
+          <div class="lsf-cricket-mobile-intel-note">${partnershipRuns !== null ? `${strikerState.name}/${nonStrikerState.name}` : `${opponentAbbr} awaiting break`}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const feedHost = document.getElementById('mobile-feed-list');
+  if (feedHost) {
+    const items = commentaryFeed.slice(0, 6).map((entry) => {
+      const parsed = parseCricketDeliveryEvent(entry);
+      let badgeClass = 'lsf-cricket-mobile-feed-badge--default';
+      let badgeText = escapeHtml(String(parsed.time || 'LIVE').slice(0, 2) || '•');
+      if (parsed.wicket) {
+        badgeClass = 'lsf-cricket-mobile-feed-badge--wicket';
+        badgeText = 'W';
+      } else if (parsed.runs === 6) {
+        badgeClass = 'lsf-cricket-mobile-feed-badge--six';
+        badgeText = '6';
+      } else if (parsed.runs === 4) {
+        badgeClass = 'lsf-cricket-mobile-feed-badge--four';
+        badgeText = '4';
+      } else if (Number.isFinite(parsed.runs)) {
+        badgeText = String(parsed.runs);
+      } else {
+        badgeText = 'UPD';
+      }
+
+      const headline = escapeHtml(sanitizeDisplayText(parsed.text.split(/(?<=[.!?])\s+/)[0] || parsed.text || 'Match update'));
+      const remaining = sanitizeDisplayText(parsed.text.replace(parsed.text.split(/(?<=[.!?])\s+/)[0] || '', '').trim()) || sanitizeDisplayText(entry?.type || 'Live update');
+
+      return `
+        <article class="lsf-cricket-mobile-feed-card">
+          <div>
+            <div class="lsf-cricket-mobile-feed-badge ${badgeClass}">${badgeText}</div>
+            <div class="lsf-cricket-mobile-feed-time">${escapeHtml(parsed.time || 'LIVE')}</div>
+          </div>
+          <div>
+            <div class="lsf-cricket-mobile-feed-headline">${headline}</div>
+            <div class="lsf-cricket-mobile-feed-copy">${escapeHtml(remaining)}</div>
+          </div>
+        </article>
+      `;
+    });
+
+    feedHost.innerHTML = items.length
+      ? items.join('')
+      : `<div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Awaiting commentary feed</div>`;
+  }
+
+  renderMobileLineupPanel(data);
+}
+
+function renderMobileGenericLiveCentre(root, data = {}, detailStats = [], detailTimeline = [], commentaryFeed = []) {
+  ensureGenericLiveMobileShell(root);
+  document.body.classList.add('lsf-generic-mobile-live');
+  renderNetworkAdSlots(root);
+
+  const params = getSportParams(data?.sport || '');
+  const homeLogo = document.getElementById('mobile-generic-home-logo');
+  const awayLogo = document.getElementById('mobile-generic-away-logo');
+  const lineupsTitle = document.getElementById('mobile-generic-lineups-title');
+  const homeHighlight = detailTimeline.find((event) => event.side === 'home') || commentaryFeed.find((entry) => entry.side === 'home') || {};
+  const awayHighlight = detailTimeline.find((event) => event.side === 'away') || commentaryFeed.find((entry) => entry.side === 'away') || {};
+  const latestHighlight = detailTimeline[0] || commentaryFeed[0] || {};
+
+  const setText = (id, value) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = sanitizeDisplayText(value || '');
+  };
+
+  setText('mobile-generic-status-pill', String(data?.status || '').toLowerCase() === 'live' ? 'LIVE' : (data?.statusText || 'LIVE'));
+  setText('mobile-generic-clock', getGenericLiveClockLabel(data));
+  setText('mobile-generic-home-name', data?.homeTeam?.name || 'Home');
+  setText('mobile-generic-away-name', data?.awayTeam?.name || 'Away');
+  setText('mobile-generic-home-score', data?.homeTeam?.score || '0');
+  setText('mobile-generic-away-score', data?.awayTeam?.score || '0');
+  if (homeLogo) homeLogo.src = getSafeImageUrl(data?.homeTeam?.logo, FALLBACK_LOGO);
+  if (awayLogo) awayLogo.src = getSafeImageUrl(data?.awayTeam?.logo, FALLBACK_LOGO);
+
+  const intelHost = document.getElementById('mobile-generic-intel');
+  if (intelHost) {
+    const statRows = detailStats.slice(0, 3).map((stat) => {
+      const homeValue = parseComparableStatValue(stat.home);
+      const awayValue = parseComparableStatValue(stat.away);
+      const comparable = homeValue !== null && awayValue !== null && (homeValue + awayValue) > 0;
+      const homeWidth = comparable ? (homeValue / (homeValue + awayValue)) * 100 : 50;
+      const awayWidth = comparable ? 100 - homeWidth : 50;
+      return `
+        <div class="lsf-generic-mobile-stat-row">
+          <div class="lsf-generic-mobile-stat-meta">
+            <span>${escapeHtml(sanitizeDisplayText(stat.home || '-'))}</span>
+            <span>${escapeHtml(sanitizeDisplayText(stat.label || 'Stat'))}</span>
+            <span>${escapeHtml(sanitizeDisplayText(stat.away || '-'))}</span>
+          </div>
+          <div class="lsf-generic-mobile-stat-bar">
+            <span style="width:${homeWidth}%"></span>
+            <span style="width:${awayWidth}%"></span>
+          </div>
+        </div>
+      `;
+    });
+
+    intelHost.innerHTML = statRows.length
+      ? statRows.join('')
+      : `<div class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Awaiting live stat readout</div>`;
+  }
+
+  const timelineHost = document.getElementById('mobile-generic-timeline');
+  if (timelineHost) {
+    const timelineFeed = detailTimeline.length
+      ? detailTimeline.slice(0, 5)
+      : commentaryFeed.slice(0, 5).map((entry) => ({
+          time: entry.time || 'LIVE',
+          type: entry.type || 'event',
+          text: entry.text || entry.player || 'Live update',
+          player: entry.player || '',
+          side: entry.side || 'neutral'
+        }));
+    const rows = timelineFeed.map((event) => {
+      const presentation = getGenericTimelinePresentation(event, data?.sport || '');
+      const badgeLabel = event.side === 'home'
+        ? getMobileLiveTeamLabel(data?.homeTeam)
+        : event.side === 'away'
+          ? getMobileLiveTeamLabel(data?.awayTeam)
+          : getMobileLiveTeamLabel({ abbreviation: String(event?.type || 'evt').replace(/[^A-Za-z]/g, '') || 'EVT' });
+      const badgeClass = event.side === 'home'
+        ? 'lsf-generic-mobile-timeline-badge--home'
+        : event.side === 'away'
+          ? 'lsf-generic-mobile-timeline-badge--away'
+          : '';
+
+      return `
+        <div class="lsf-generic-mobile-timeline-row">
+          <div class="lsf-generic-mobile-timeline-time">${escapeHtml(sanitizeDisplayText(event.time || 'LIVE'))}<small>${escapeHtml(sanitizeDisplayText(event.type || 'event'))}</small></div>
+          <div>
+            <div class="lsf-generic-mobile-timeline-headline">
+              <span class="lsf-generic-mobile-event-icon">${presentation.iconMarkup}<span>${escapeHtml(presentation.headline)}</span></span>
+            </div>
+            <div class="lsf-generic-mobile-timeline-copy">${escapeHtml(buildGenericTimelineCopy(event))}</div>
+          </div>
+          <div class="lsf-generic-mobile-timeline-badge ${badgeClass}">${escapeHtml(badgeLabel)}</div>
+        </div>
+      `;
+    });
+
+    timelineHost.innerHTML = rows.length
+      ? rows.join('')
+      : `<div class="lsf-mobile-card text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">Awaiting match timeline</div>`;
+  }
+
+  if (lineupsTitle) {
+    const genericTitle = normalizeSportSlug(data?.sport || '', data?.leagueSlug || '') === 'soccer'
+      ? 'Tactical Sheets'
+      : (params.lineupsLabel || 'Lineups');
+    lineupsTitle.textContent = genericTitle;
+  }
+
+  const lineupsHost = document.getElementById('mobile-generic-lineups');
+  if (lineupsHost) {
+    const cardSubtitle = normalizeSportSlug(data?.sport || '', data?.leagueSlug || '') === 'soccer'
+      ? 'Live Setup'
+      : (params.lineupsLabel || 'Lineup');
+    const homeMarkup = buildGenericSheetPlayersMarkup(data?.homeTeam?.lineup || [], sanitizeDisplayText(homeHighlight.player || ''));
+    const awayMarkup = buildGenericSheetPlayersMarkup(data?.awayTeam?.lineup || [], sanitizeDisplayText(awayHighlight.player || latestHighlight.player || ''));
+    lineupsHost.innerHTML = `
+      <article class="lsf-generic-mobile-sheet-card">
+        <div class="lsf-generic-mobile-sheet-header">
+          <div class="lsf-generic-mobile-sheet-badge lsf-generic-mobile-sheet-badge--home">${escapeHtml(getMobileLiveTeamLabel(data?.homeTeam))}</div>
+          <div>
+            <div class="lsf-generic-mobile-sheet-team">${escapeHtml(sanitizeDisplayText(data?.homeTeam?.name || 'Home Team'))}</div>
+            <div class="lsf-generic-mobile-sheet-subtitle">${escapeHtml(sanitizeDisplayText(cardSubtitle))}</div>
+          </div>
+          <div class="text-right text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/35">${escapeHtml(sanitizeDisplayText(data?.homeTeam?.record || ''))}</div>
+        </div>
+        <div class="lsf-generic-mobile-sheet-list">${homeMarkup}</div>
+      </article>
+      <article class="lsf-generic-mobile-sheet-card">
+        <div class="lsf-generic-mobile-sheet-header">
+          <div class="lsf-generic-mobile-sheet-badge lsf-generic-mobile-sheet-badge--away">${escapeHtml(getMobileLiveTeamLabel(data?.awayTeam))}</div>
+          <div>
+            <div class="lsf-generic-mobile-sheet-team">${escapeHtml(sanitizeDisplayText(data?.awayTeam?.name || 'Away Team'))}</div>
+            <div class="lsf-generic-mobile-sheet-subtitle">${escapeHtml(sanitizeDisplayText(cardSubtitle))}</div>
+          </div>
+          <div class="text-right text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/35">${escapeHtml(sanitizeDisplayText(data?.awayTeam?.record || ''))}</div>
+        </div>
+        <div class="lsf-generic-mobile-sheet-list">${awayMarkup}</div>
+      </article>
+    `;
+  }
+}
+
 function renderMobileMatchOdds(data = {}) {
   const container = document.getElementById('mobile-odds-card');
   if (!container) return;
@@ -6307,6 +7143,32 @@ function renderMobileLineupPanel(data = {}) {
 function renderMobileMatchCentre(data = {}, detailStats = [], detailTimeline = [], commentaryFeed = []) {
   const root = document.getElementById('mobile-match-centre');
   if (!root) return;
+
+  if (!root._defaultMarkup) root._defaultMarkup = root.innerHTML;
+
+  const sportKey = normalizeSportSlug(data?.sport || '', data?.leagueSlug || '');
+  const isLive = String(data?.status || '').toLowerCase() === 'live';
+  const useCricketLiveLayout = sportKey === 'cricket' && isLive;
+  const useGenericLiveLayout = sportKey !== 'cricket' && isLive;
+  if (useCricketLiveLayout) {
+    renderMobileCricketLiveCentre(root, data, commentaryFeed);
+    return;
+  }
+  if (useGenericLiveLayout) {
+    renderMobileGenericLiveCentre(root, data, detailStats, detailTimeline, commentaryFeed);
+    return;
+  }
+
+  if ((root.dataset.layoutMode === 'cricket-live' || root.dataset.layoutMode === 'generic-live') && root._defaultMarkup) {
+    root.innerHTML = root._defaultMarkup;
+    root.dataset.layoutMode = 'default';
+    document.body.classList.remove('lsf-cricket-mobile-live');
+    document.body.classList.remove('lsf-generic-mobile-live');
+    renderNetworkAdSlots(root);
+  } else {
+    document.body.classList.remove('lsf-cricket-mobile-live');
+    document.body.classList.remove('lsf-generic-mobile-live');
+  }
 
   initMobileMatchSectionTabs();
   const latestEvent = commentaryFeed[0] || detailTimeline[0] || {};

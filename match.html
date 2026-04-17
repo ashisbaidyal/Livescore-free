@@ -228,6 +228,678 @@
             border-color: rgba(204, 22, 22, 0.4);
             color: #ffffff;
         }
+        .lsf-cricket-mobile-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .lsf-cricket-mobile-scoreboard {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.35rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1rem;
+            box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
+            background:
+                linear-gradient(180deg, rgba(18, 24, 31, 0.18) 0%, rgba(15, 15, 15, 0.78) 100%),
+                linear-gradient(135deg, rgba(32, 56, 80, 0.92), rgba(30, 36, 44, 0.95) 52%, rgba(26, 47, 32, 0.92));
+        }
+        .lsf-cricket-mobile-scoreboard::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(180deg, rgba(8, 10, 14, 0.08), rgba(8, 10, 14, 0.78)),
+                url("https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80") center/cover;
+            opacity: 0.34;
+            pointer-events: none;
+        }
+        .lsf-cricket-mobile-scoreboard > * {
+            position: relative;
+            z-index: 1;
+        }
+        .lsf-cricket-mobile-abbr {
+            min-width: 3.4rem;
+            padding: 0.7rem 0.5rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.88);
+            text-align: center;
+            font-size: 1.65rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            line-height: 1;
+            text-transform: uppercase;
+            backdrop-filter: blur(8px);
+        }
+        .lsf-cricket-mobile-score-value {
+            color: #ffb8b3;
+            font-size: clamp(3rem, 15vw, 4.6rem);
+            font-weight: 900;
+            font-style: italic;
+            line-height: 0.9;
+            letter-spacing: -0.06em;
+            text-shadow: 0 0 24px rgba(255, 184, 179, 0.18);
+        }
+        .lsf-cricket-mobile-overs {
+            color: #6aff90;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .lsf-cricket-mobile-score-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-top: 1.2rem;
+            padding-top: 1.1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .lsf-cricket-mobile-score-meta-item {
+            text-align: center;
+        }
+        .lsf-cricket-mobile-score-meta-item + .lsf-cricket-mobile-score-meta-item {
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .lsf-cricket-mobile-score-meta-label {
+            color: rgba(229, 226, 225, 0.42);
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+        .lsf-cricket-mobile-score-meta-value {
+            margin-top: 0.25rem;
+            color: #ffffff;
+            font-size: 1.55rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+        .lsf-cricket-mobile-player-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+        .lsf-cricket-mobile-player-card {
+            border-radius: 1.15rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(32, 31, 31, 0.94);
+            padding: 1rem;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+        }
+        .lsf-cricket-mobile-player-card--accent {
+            box-shadow: inset 4px 0 0 #f4a6a1, 0 18px 40px rgba(0, 0, 0, 0.2);
+        }
+        .lsf-cricket-mobile-player-card--muted {
+            box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.12), 0 18px 40px rgba(0, 0, 0, 0.2);
+        }
+        .lsf-cricket-mobile-player-card-label {
+            color: rgba(244, 166, 161, 0.95);
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+        .lsf-cricket-mobile-player-card--muted .lsf-cricket-mobile-player-card-label {
+            color: rgba(229, 226, 225, 0.38);
+        }
+        .lsf-cricket-mobile-player-name {
+            margin-top: 1rem;
+            color: #ffffff;
+            font-size: 1.95rem;
+            font-weight: 900;
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+        }
+        .lsf-cricket-mobile-player-meta {
+            margin-top: 0.35rem;
+            color: rgba(229, 226, 225, 0.56);
+            font-size: 0.84rem;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        .lsf-cricket-mobile-player-value {
+            margin-top: 1rem;
+            color: #ffb8b3;
+            font-size: 2.25rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+        .lsf-cricket-mobile-player-card--muted .lsf-cricket-mobile-player-value {
+            color: #ffffff;
+        }
+        .lsf-cricket-mobile-bowler-card {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.95rem;
+            align-items: center;
+            border-radius: 1.15rem;
+            border: 1px solid rgba(95, 235, 146, 0.18);
+            background: rgba(38, 38, 38, 0.94);
+            padding: 1rem;
+        }
+        .lsf-cricket-mobile-bowler-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 1rem;
+            background: rgba(95, 235, 146, 0.18);
+            color: #5feb92;
+        }
+        .lsf-cricket-mobile-section-title {
+            color: rgba(229, 226, 225, 0.56);
+            font-size: 0.9rem;
+            font-weight: 900;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+        }
+        .lsf-cricket-mobile-intel-card {
+            border-radius: 1.15rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(32, 31, 31, 0.96);
+            padding: 1rem;
+        }
+        .lsf-cricket-mobile-probability-bar {
+            display: flex;
+            width: 100%;
+            height: 0.7rem;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .lsf-cricket-mobile-probability-bar > span:first-child {
+            background: linear-gradient(90deg, #e4251d, #f6b0a8);
+        }
+        .lsf-cricket-mobile-probability-bar > span:last-child {
+            background: rgba(255, 255, 255, 0.24);
+        }
+        .lsf-cricket-mobile-intel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .lsf-cricket-mobile-intel-metric {
+            border-radius: 0.9rem;
+            background: rgba(13, 13, 13, 0.92);
+            padding: 0.9rem;
+            min-height: 6.4rem;
+        }
+        .lsf-cricket-mobile-intel-label {
+            color: rgba(229, 226, 225, 0.42);
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+        .lsf-cricket-mobile-intel-value {
+            margin-top: 0.55rem;
+            color: #6aff90;
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.05em;
+        }
+        .lsf-cricket-mobile-intel-note {
+            margin-top: 0.35rem;
+            color: rgba(229, 226, 225, 0.6);
+            font-size: 0.8rem;
+            line-height: 1.35;
+        }
+        .lsf-cricket-mobile-feed-card {
+            display: grid;
+            grid-template-columns: 3.1rem 1fr;
+            gap: 0.95rem;
+            align-items: start;
+            border-radius: 1.15rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(37, 35, 35, 0.96);
+            padding: 1rem;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+        }
+        .lsf-cricket-mobile-feed-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 1rem;
+            color: #ffffff;
+            font-size: 1.45rem;
+            font-weight: 900;
+            line-height: 1;
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .lsf-cricket-mobile-feed-badge--six {
+            background: linear-gradient(180deg, #ea2118, #b4120b);
+        }
+        .lsf-cricket-mobile-feed-badge--four {
+            background: linear-gradient(180deg, #2cd164, #159246);
+        }
+        .lsf-cricket-mobile-feed-badge--wicket {
+            background: linear-gradient(180deg, #f4a623, #c97200);
+        }
+        .lsf-cricket-mobile-feed-badge--default {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e5e2e1;
+        }
+        .lsf-cricket-mobile-feed-time {
+            margin-top: 0.35rem;
+            color: rgba(229, 226, 225, 0.42);
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .lsf-cricket-mobile-feed-headline {
+            color: #ffffff;
+            font-size: 0.92rem;
+            font-weight: 900;
+            line-height: 1.5;
+        }
+        .lsf-cricket-mobile-feed-headline strong {
+            color: #ffb8b3;
+        }
+        .lsf-cricket-mobile-feed-copy {
+            margin-top: 0.35rem;
+            color: rgba(229, 226, 225, 0.74);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .lsf-generic-mobile-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .lsf-generic-mobile-scoreboard {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.35rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1rem;
+            background:
+                linear-gradient(180deg, rgba(14, 18, 20, 0.18) 0%, rgba(11, 11, 11, 0.82) 100%),
+                linear-gradient(135deg, rgba(36, 40, 42, 0.96), rgba(16, 19, 20, 0.96));
+            box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
+        }
+        .lsf-generic-mobile-scoreboard::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(180deg, rgba(6, 10, 14, 0.08), rgba(8, 10, 10, 0.82)),
+                url("https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80") center/cover;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .lsf-generic-mobile-scoreboard > * {
+            position: relative;
+            z-index: 1;
+        }
+        .lsf-generic-mobile-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+        .lsf-generic-mobile-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            border-radius: 0.7rem;
+            border: 1px solid rgba(103, 255, 145, 0.18);
+            background: rgba(50, 92, 59, 0.32);
+            color: #8dffab;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-status-pill::before {
+            content: "";
+            width: 0.55rem;
+            height: 0.55rem;
+            border-radius: 999px;
+            background: #55f089;
+            box-shadow: 0 0 16px rgba(85, 240, 137, 0.42);
+        }
+        .lsf-generic-mobile-clock {
+            color: #f2c7bf;
+            font-size: 0.88rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-score-row {
+            display: grid;
+            grid-template-columns: minmax(4.25rem, 4.9rem) 1fr minmax(4.25rem, 4.9rem);
+            gap: 0.75rem;
+            align-items: end;
+            margin-top: 1rem;
+        }
+        .lsf-generic-mobile-team-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.65rem;
+            min-width: 0;
+        }
+        .lsf-generic-mobile-team-tile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 4.5rem;
+            height: 4.5rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(8px);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        }
+        .lsf-generic-mobile-team-logo {
+            width: 2.65rem;
+            height: 2.65rem;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.12));
+        }
+        .lsf-generic-mobile-team-name {
+            width: 100%;
+            color: #ffffff;
+            font-size: 0.98rem;
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            text-align: center;
+            text-transform: uppercase;
+            word-break: break-word;
+        }
+        .lsf-generic-mobile-score-wrap {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 0.4rem;
+            min-width: 0;
+        }
+        .lsf-generic-mobile-score-value {
+            color: #ffffff;
+            font-size: clamp(3.4rem, 17vw, 5rem);
+            font-weight: 900;
+            font-style: italic;
+            line-height: 0.88;
+            letter-spacing: -0.08em;
+            text-shadow: 0 0 26px rgba(255, 255, 255, 0.12);
+        }
+        .lsf-generic-mobile-score-separator {
+            color: #d3271d;
+            font-size: clamp(2rem, 10vw, 2.8rem);
+            font-weight: 900;
+            line-height: 1;
+            transform: translateY(-0.45rem);
+        }
+        .lsf-generic-mobile-heading {
+            color: #f4f0eb;
+            font-size: 2.2rem;
+            font-weight: 900;
+            font-style: italic;
+            line-height: 0.95;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-kicker {
+            color: #f2b8ac;
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-intel-card {
+            border-radius: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(22, 22, 22, 0.96);
+            padding: 1rem;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+        }
+        .lsf-generic-mobile-stat-row + .lsf-generic-mobile-stat-row {
+            margin-top: 1rem;
+        }
+        .lsf-generic-mobile-stat-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            color: #ffffff;
+            font-size: 0.92rem;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-stat-bar {
+            display: flex;
+            width: 100%;
+            height: 0.7rem;
+            margin-top: 0.7rem;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .lsf-generic-mobile-stat-bar > span:first-child {
+            background: linear-gradient(90deg, #d3271d, #ef695d);
+        }
+        .lsf-generic-mobile-stat-bar > span:last-child {
+            background: linear-gradient(90deg, #2fb34d, #3fe16b);
+        }
+        .lsf-generic-mobile-timeline-card {
+            border-radius: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(31, 29, 29, 0.96);
+            overflow: hidden;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+        }
+        .lsf-generic-mobile-timeline-row {
+            display: grid;
+            grid-template-columns: 2.8rem 1fr auto;
+            gap: 0.9rem;
+            align-items: start;
+            padding: 1rem;
+        }
+        .lsf-generic-mobile-timeline-row + .lsf-generic-mobile-timeline-row {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .lsf-generic-mobile-timeline-time {
+            color: #f4b0a6;
+            font-size: 1rem;
+            font-weight: 900;
+            font-style: italic;
+            line-height: 1;
+        }
+        .lsf-generic-mobile-timeline-time small {
+            display: block;
+            margin-top: 0.4rem;
+            color: rgba(229, 226, 225, 0.32);
+            font-size: 0.62rem;
+            font-style: normal;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-timeline-headline {
+            color: #f5efe9;
+            font-size: 0.92rem;
+            font-weight: 900;
+            line-height: 1.45;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-timeline-copy {
+            margin-top: 0.35rem;
+            color: rgba(229, 226, 225, 0.76);
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+        .lsf-generic-mobile-timeline-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 3rem;
+            height: 3rem;
+            padding: 0 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-timeline-badge--home {
+            background: rgba(132, 28, 23, 0.34);
+            border-color: rgba(211, 39, 29, 0.35);
+            color: #ffcec7;
+        }
+        .lsf-generic-mobile-timeline-badge--away {
+            background: rgba(20, 90, 44, 0.34);
+            border-color: rgba(54, 204, 103, 0.35);
+            color: #92ffb2;
+        }
+        .lsf-generic-mobile-event-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .lsf-generic-mobile-event-dot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 0.9rem;
+            height: 0.9rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+        }
+        .lsf-generic-mobile-event-dot--goal {
+            color: #5dff7d;
+            background: rgba(35, 170, 72, 0.18);
+        }
+        .lsf-generic-mobile-event-dot--card {
+            background: #f0c028;
+        }
+        .lsf-generic-mobile-event-dot--red {
+            background: #d3271d;
+        }
+        .lsf-generic-mobile-event-dot--sub {
+            color: #82ff9f;
+            background: rgba(63, 225, 107, 0.15);
+        }
+        .lsf-generic-mobile-ad-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+        .lsf-network-ad-slot--duo {
+            min-height: 6.8rem;
+        }
+        .lsf-generic-mobile-sheets {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+            scrollbar-width: none;
+        }
+        .lsf-generic-mobile-sheets::-webkit-scrollbar {
+            display: none;
+        }
+        .lsf-generic-mobile-sheet-card {
+            flex: 0 0 min(19rem, calc(100vw - 4rem));
+            border-radius: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(41, 39, 39, 0.96);
+            padding: 1rem;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+        }
+        .lsf-generic-mobile-sheet-header {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.85rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .lsf-generic-mobile-sheet-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 3rem;
+            height: 3rem;
+            padding: 0 0.65rem;
+            border-radius: 0.85rem;
+            font-size: 1.35rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+        .lsf-generic-mobile-sheet-badge--home {
+            background: linear-gradient(180deg, #d3271d, #ab1a12);
+        }
+        .lsf-generic-mobile-sheet-badge--away {
+            background: linear-gradient(180deg, #2fb34d, #1d8b3a);
+        }
+        .lsf-generic-mobile-sheet-team {
+            color: #f5efe9;
+            font-size: 1.08rem;
+            font-weight: 900;
+            line-height: 1.15;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-sheet-subtitle {
+            margin-top: 0.2rem;
+            color: #f2b8ac;
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-sheet-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .lsf-generic-mobile-sheet-player {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            border-radius: 0.7rem;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 0.75rem 0.8rem;
+        }
+        .lsf-generic-mobile-sheet-player.is-highlighted {
+            background: rgba(124, 41, 34, 0.3);
+            box-shadow: inset 3px 0 0 #d3271d;
+        }
+        .lsf-generic-mobile-sheet-player-name {
+            color: #f5efe9;
+            font-size: 0.92rem;
+            font-weight: 900;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-sheet-player-meta {
+            color: rgba(229, 226, 225, 0.5);
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .lsf-generic-mobile-sheet-player-slot {
+            color: #f5c3ba;
+            font-size: 0.86rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
         @media (max-width: 767px) {
             .lsf-match-live-hero {
                 min-height: 26rem;
@@ -283,6 +955,18 @@
             }
             .lsf-desktop-live-centre {
                 display: none;
+            }
+            body.lsf-cricket-mobile-live .lsf-match-live-hero,
+            body.lsf-generic-mobile-live .lsf-match-live-hero {
+                display: none;
+            }
+            body.lsf-cricket-mobile-live #mobile-match-centre,
+            body.lsf-generic-mobile-live #mobile-match-centre {
+                margin-top: 0;
+                padding-top: 1rem;
+            }
+            .lsf-generic-mobile-ad-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
     </style>
