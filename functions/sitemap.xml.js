@@ -38,6 +38,15 @@ function dedupeUrls(entries = []) {
   });
 }
 
+function buildBlogArticlePath(post = {}) {
+  const params = new URLSearchParams();
+  if (post?.slug) params.set("slug", post.slug);
+  if (post?.sport) params.set("sport", post.sport);
+  if (post?.league) params.set("league", post.league);
+  const query = params.toString();
+  return query ? `/blog_article?${query}` : "/blog_article";
+}
+
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
@@ -67,17 +76,35 @@ export async function onRequest(context) {
 
     const dynamicMatchUrls = [
       ...((liveData.matches || []).slice(0, 80).map((match) => ({
-        loc: `${hostname}${buildMatchRoutePath({ id: match.id, sport: match.sport, league: match.leagueSlug }, "match")}`,
+        loc: `${hostname}${buildMatchRoutePath({
+          id: match.id,
+          sport: match.sport,
+          league: match.leagueSlug,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam
+        }, "match")}`,
         priority: "0.8",
         changefreq: "always"
       }))),
       ...((resultsData.matches || []).slice(0, 80).map((match) => ({
-        loc: `${hostname}${buildMatchRoutePath({ id: match.id, sport: match.sport, league: match.leagueSlug }, "match")}`,
+        loc: `${hostname}${buildMatchRoutePath({
+          id: match.id,
+          sport: match.sport,
+          league: match.leagueSlug,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam
+        }, "match")}`,
         priority: "0.7",
         changefreq: "daily"
       }))),
       ...((upcomingData.matches || []).slice(0, 80).map((match) => ({
-        loc: `${hostname}${buildMatchRoutePath({ id: match.id, sport: match.sport, league: match.leagueSlug }, "upcoming-match")}`,
+        loc: `${hostname}${buildMatchRoutePath({
+          id: match.id,
+          sport: match.sport,
+          league: match.leagueSlug,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam
+        }, "upcoming-match")}`,
         priority: "0.7",
         changefreq: "hourly"
       })))
@@ -87,7 +114,7 @@ export async function onRequest(context) {
       .filter((post) => post?.slug)
       .slice(0, 40)
       .map((post) => ({
-        loc: `${hostname}/blog_article.html?slug=${encodeURIComponent(post.slug)}`,
+        loc: `${hostname}${buildBlogArticlePath(post)}`,
         priority: "0.6",
         changefreq: "weekly"
       }));

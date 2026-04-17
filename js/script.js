@@ -410,7 +410,7 @@ function broadcastLiveMatches(matches) {
   if (typeof renderMatches === 'function' && currentPageFilter === 'live') {
     renderMatches(sortMatchesForDisplay(liveMatches, 'live'));
   }
-  if (typeof renderMatches === 'function' && window.location.pathname.includes('trending.html')) {
+  if (typeof renderMatches === 'function' && isCurrentPage('trending')) {
     renderMatches(combineMatchPools(liveMatches, window._cachedUpcoming || window._cachedUpcomingMatches || [], window._cachedResults || []).slice(0, 18));
   }
   if (typeof renderSidebarLive === 'function') renderSidebarLive(liveMatches.slice(0, 5));
@@ -423,17 +423,17 @@ function broadcastLiveMatches(matches) {
         finishedMatches: window._cachedResults || [],
         statusFilter: currentPageFilter,
         limit: 5,
-        isHomePage: window.location.pathname === '/' || window.location.pathname.endsWith('index.html')
+        isHomePage: isHomePath()
       });
       renderHeroSlider(heroPool, currentPageFilter, {
-        isHomePage: window.location.pathname === '/' || window.location.pathname.endsWith('index.html'),
+        isHomePage: isHomePath(),
         upcomingMatches: window._cachedUpcoming || window._cachedUpcomingMatches || [],
         newsList: window._cachedNews || [],
         finishedMatches: window._cachedResults || []
       });
   }
   
-  if (typeof renderIndexHeroHub === 'function' && (window.location.pathname === '/' || window.location.pathname.endsWith('index.html'))) {
+  if (typeof renderIndexHeroHub === 'function' && isHomePath()) {
       renderIndexHeroHub(normalizedMatches, window._cachedUpcoming || [], window._cachedNews || []);
   }
 
@@ -446,7 +446,7 @@ function broadcastLiveMatches(matches) {
       renderArenaLiveFallback(liveMatches);
   }
 
-  if (typeof renderLeaguesHub === 'function' && window.location.pathname.includes('leagues.html')) {
+  if (typeof renderLeaguesHub === 'function' && isCurrentPage('leagues')) {
       const elite = window._eliteLeaguesCache || [];
       const standings = window._standingsMapCache || {};
       renderLeaguesHub(elite, standings, normalizedMatches);
@@ -1013,11 +1013,14 @@ function initResultsLeagueFilter() {
     }
 
     const url = new URL(window.location);
-    url.searchParams.set('sport', currentTab || 'all');
-    if (currentLeagueFilter) url.searchParams.set('league', currentLeagueFilter);
-    else url.searchParams.delete('league');
-    url.searchParams.delete('l');
+    if (currentTab && currentTab !== 'all') url.searchParams.set('s', currentTab);
+    else url.searchParams.delete('s');
+    if (currentLeagueFilter) url.searchParams.set('l', currentLeagueFilter);
+    else url.searchParams.delete('l');
+    url.searchParams.delete('sport');
+    url.searchParams.delete('league');
     window.history.pushState({}, '', url);
+    updateDefaultPageSeo();
 
     renderTabs();
     renderResultsLeagueFilter([]);
@@ -1175,7 +1178,8 @@ function buildTeamProfileUrl(team, sport = '', league = '') {
   if (team?.logo) params.set('logo', team.logo);
   if (team?.record) params.set('record', team.record);
   if (team?.venue) params.set('venue', team.venue);
-  return `/team.html?${params.toString()}`;
+  const query = params.toString();
+  return query ? `/team?${query}` : '/team';
 }
 
 function buildPlayerProfileUrl(athlete, sport = '', league = '') {
@@ -1188,7 +1192,8 @@ function buildPlayerProfileUrl(athlete, sport = '', league = '') {
   if (resolvedLeague) params.set('league', resolvedLeague);
   if (athlete?.team?.name) params.set('team', athlete.team.name);
   if (athlete?.position?.displayName || athlete?.position?.name) params.set('role', athlete.position?.displayName || athlete.position?.name);
-  return `/player.html?${params.toString()}`;
+  const query = params.toString();
+  return query ? `/player?${query}` : '/player';
 }
 
 function buildApiUrl(path, params = {}) {
@@ -1382,25 +1387,30 @@ class PublicApiDataStore {
 
 window.LSFDataStore = window.LSFDataStore || new PublicApiDataStore();
 
+function buildPageUrl(path = '/', params = null) {
+  const query = params instanceof URLSearchParams ? params.toString() : new URLSearchParams(params || {}).toString();
+  return query ? `${path}?${query}` : path;
+}
+
 function buildSportHubUrl(sport = '', league = '') {
   const params = new URLSearchParams();
   const normalizedSport = normalizeSportSlug(sport, league);
   const normalizedLeague = normalizeLeagueSlug(league);
   if (normalizedSport === 'cricket' && normalizedLeague === 'ipl') {
-    return '/ipl.html';
+    return '/ipl';
   }
-  if (normalizedSport) params.set('s', normalizedSport);
+  if (normalizedSport && normalizedSport !== 'all') params.set('s', normalizedSport);
   if (normalizedLeague) params.set('l', normalizedLeague);
-  return `/sport.html?${params.toString()}`;
+  return buildPageUrl('/sport', params);
 }
 
 function buildBlogHubUrl(sport = '', league = '') {
   const params = new URLSearchParams();
   const normalizedSport = normalizeSportSlug(sport || 'all', league);
   const normalizedLeague = normalizeLeagueSlug(league);
-  if (normalizedSport) params.set('s', normalizedSport);
+  if (normalizedSport && normalizedSport !== 'all') params.set('s', normalizedSport);
   if (normalizedLeague) params.set('l', normalizedLeague);
-  return `/news.html?${params.toString()}`;
+  return buildPageUrl('/news', params);
 }
 
 function buildBlogArticleUrl(post = {}) {
@@ -1408,7 +1418,7 @@ function buildBlogArticleUrl(post = {}) {
   if (post.slug) params.set('slug', post.slug);
   if (post.sport) params.set('sport', post.sport);
   if (post.league) params.set('league', post.league);
-  return `/blog_article.html?${params.toString()}`;
+  return buildPageUrl('/blog_article', params);
 }
 
 function escapeHtml(value = '') {
@@ -1451,6 +1461,338 @@ function upsertHeadLink(rel, href) {
     document.head.appendChild(node);
   }
   node.setAttribute('href', href);
+}
+
+function upsertJsonLdScript(id, payload) {
+  if (!id || !payload) return;
+  let node = document.getElementById(id);
+  if (!node) {
+    node = document.createElement('script');
+    node.type = 'application/ld+json';
+    node.id = id;
+    document.head.appendChild(node);
+  }
+  node.textContent = JSON.stringify(payload);
+}
+
+function isHomePath(pathname = window.location.pathname) {
+  return getPageKeyFromPath(pathname) === 'index';
+}
+
+function isCurrentPage(...keys) {
+  const pageKey = getPageKeyFromPath(window.location.pathname);
+  return keys.includes(pageKey);
+}
+
+function getSportSeoLabel(sport = 'all') {
+  const normalizedSport = normalizeSportSlug(sport || 'all');
+  if (!normalizedSport || normalizedSport === 'all') return 'Sports';
+  const entry = SPORTS.find((item) => normalizeSportSlug(item.id) === normalizedSport);
+  return sanitizeDisplayText(entry?.name || normalizedSport.replace(/-/g, ' '));
+}
+
+function getLeagueSeoLabel(league = '', sport = '') {
+  const normalizedLeague = normalizeLeagueSlug(league);
+  if (!normalizedLeague) return '';
+  return sanitizeDisplayText(getLeagueDisplayName(normalizedLeague, '', sport || ''));
+}
+
+function buildFilteredHubPath(path = '/', sport = '', league = '') {
+  const params = new URLSearchParams();
+  const normalizedSport = normalizeSportSlug(sport || 'all', league);
+  const normalizedLeague = normalizeLeagueSlug(league);
+  if (normalizedSport && normalizedSport !== 'all') params.set('s', normalizedSport);
+  if (normalizedLeague) params.set('l', normalizedLeague);
+  return buildPageUrl(path, params);
+}
+
+function buildPageCanonicalPath(pageKey = getPageKeyFromPath(window.location.pathname), rawSearch = window.location.search) {
+  const params = new URLSearchParams(rawSearch || '');
+  const rawSport = params.get('s') || params.get('sport') || currentTab || 'all';
+  const rawLeague = params.get('l') || params.get('league') || currentLeagueFilter || '';
+  const sport = normalizeSportSlug(rawSport || 'all', rawLeague);
+  const league = normalizeLeagueSlug(rawLeague || '');
+
+  switch (pageKey) {
+    case 'index':
+      return '/';
+    case 'live':
+      return buildFilteredHubPath('/live', sport, league);
+    case 'upcoming':
+      return buildFilteredHubPath('/upcoming', sport, league);
+    case 'results':
+      return buildFilteredHubPath('/results', sport, league);
+    case 'news':
+      return buildFilteredHubPath('/news', sport, league);
+    case 'sport':
+      return buildSportHubUrl(sport, league);
+    case 'team': {
+      const canonicalParams = new URLSearchParams();
+      ['id', 'name', 'sport', 'league'].forEach((key) => {
+        const value = params.get(key);
+        if (value) canonicalParams.set(key, value);
+      });
+      return buildPageUrl('/team', canonicalParams);
+    }
+    case 'player': {
+      const canonicalParams = new URLSearchParams();
+      ['id', 'name', 'sport', 'league', 'team', 'role'].forEach((key) => {
+        const value = params.get(key);
+        if (value) canonicalParams.set(key, value);
+      });
+      return buildPageUrl('/player', canonicalParams);
+    }
+    case 'info': {
+      const canonicalParams = new URLSearchParams();
+      const page = params.get('p');
+      if (page) canonicalParams.set('p', page);
+      return buildPageUrl('/info', canonicalParams);
+    }
+    case 'blog_article': {
+      const canonicalParams = new URLSearchParams();
+      ['slug', 'sport', 'league'].forEach((key) => {
+        const value = params.get(key);
+        if (value) canonicalParams.set(key, value);
+      });
+      return buildPageUrl('/blog_article', canonicalParams);
+    }
+    case 'blog_hub':
+      return buildFilteredHubPath('/blog_hub', sport, league);
+    case 'trending':
+      return buildFilteredHubPath('/trending', sport, league);
+    case 'leagues':
+      return '/leagues';
+    case 'teams':
+      return buildFilteredHubPath('/teams', sport, league);
+    case 'players':
+      return buildFilteredHubPath('/players', sport, league);
+    case 'standings':
+      return buildFilteredHubPath('/standings', sport, league);
+    case 'ipl':
+      return '/ipl';
+    case 'match':
+      return buildCanonicalMatchPath({ id: params.get('id') || '', sport, league, upcoming: false });
+    case 'upcoming_match_detail':
+      return buildCanonicalMatchPath({ id: params.get('id') || '', sport, league, upcoming: true });
+    default:
+      return pageKey ? `/${pageKey}` : '/';
+  }
+}
+
+function syncStaticCanonicalPath(pageKey = getPageKeyFromPath(window.location.pathname)) {
+  if (pageKey === 'match' || pageKey === 'upcoming_match_detail') return null;
+  const canonicalPath = buildPageCanonicalPath(pageKey, window.location.search);
+  if (!canonicalPath) return null;
+  const current = new URL(window.location.href);
+  const target = new URL(canonicalPath, window.location.origin);
+  if (`${current.pathname}${current.search}` !== `${target.pathname}${target.search}`) {
+    window.history.replaceState({}, '', `${target.pathname}${target.search}${target.hash}`);
+  }
+  return target.toString();
+}
+
+function buildDefaultSeoState(pageKey = getPageKeyFromPath(window.location.pathname), rawSearch = window.location.search) {
+  const params = new URLSearchParams(rawSearch || '');
+  const rawSport = params.get('s') || params.get('sport') || currentTab || 'all';
+  const rawLeague = params.get('l') || params.get('league') || currentLeagueFilter || '';
+  const sport = normalizeSportSlug(rawSport || 'all', rawLeague);
+  const league = normalizeLeagueSlug(rawLeague || '');
+  const sportLabel = getSportSeoLabel(sport);
+  const leagueLabel = getLeagueSeoLabel(league, sport);
+  const canonicalPath = buildPageCanonicalPath(pageKey, rawSearch);
+  const canonicalUrl = new URL(canonicalPath, window.location.origin).toString();
+  const pageToken = params.get('p') || '';
+  const infoLabelMap = {
+    about: 'About LiveScoreFree',
+    privacy: 'Privacy Policy',
+    terms: 'Terms and Conditions',
+    dmca: 'DMCA Policy',
+    transparency: 'Transparency and Editorial Standards',
+    contact: 'Contact and Support'
+  };
+  const teamName = sanitizeDisplayText(params.get('name') || 'Team');
+  const playerName = sanitizeDisplayText(params.get('name') || 'Player');
+  const teamLabel = sanitizeDisplayText(params.get('team') || '');
+  const roleLabel = sanitizeDisplayText(params.get('role') || 'player');
+  const articleSlug = sanitizeDisplayText((params.get('slug') || '').replace(/-/g, ' '));
+  const articleLabel = articleSlug
+    ? articleSlug.replace(/\b\w/g, (char) => char.toUpperCase())
+    : 'Editorial Story';
+  const baseImage = new URL(FALLBACK_HERO_IMAGE, window.location.origin).toString();
+
+  const defaults = {
+    title: 'Live Scores, Match Centres, Schedules and Sports News | LiveScoreFree',
+    description: 'Follow live scores, upcoming fixtures, final results, standings, trusted sports updates, and detailed match centres across football, cricket, basketball, tennis, baseball, hockey, and more on LiveScoreFree.',
+    type: 'website'
+  };
+
+  switch (pageKey) {
+    case 'live':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} Live Scores and Match Centre | LiveScoreFree`
+        : `${sportLabel} Live Scores and Match Centre | LiveScoreFree`;
+      defaults.description = leagueLabel
+        ? `Track ${leagueLabel} live scores, lineups, match timelines, and key stats in real time with LiveScoreFree.`
+        : `Track ${sportLabel.toLowerCase()} live scores, match centres, verified timelines, and key stats in real time with LiveScoreFree.`;
+      break;
+    case 'upcoming':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} Fixtures and Upcoming Matches | LiveScoreFree`
+        : `${sportLabel} Fixtures and Upcoming Matches | LiveScoreFree`;
+      defaults.description = leagueLabel
+        ? `See ${leagueLabel} upcoming fixtures, kickoff times, venues, and pre-match context on LiveScoreFree.`
+        : `See upcoming ${sportLabel.toLowerCase()} fixtures, kickoff times, venues, and match previews on LiveScoreFree.`;
+      break;
+    case 'results':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} Results and Final Scores | LiveScoreFree`
+        : `${sportLabel} Results and Final Scores | LiveScoreFree`;
+      defaults.description = leagueLabel
+        ? `Review ${leagueLabel} final scores, recent results, and match summaries with LiveScoreFree.`
+        : `Review recent ${sportLabel.toLowerCase()} results, final scores, and match summaries with LiveScoreFree.`;
+      break;
+    case 'news':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} News, Fan Guides and Match Stories | LiveScoreFree`
+        : `${sportLabel} News, Fan Guides and Match Stories | LiveScoreFree`;
+      defaults.description = leagueLabel
+        ? `Read ${leagueLabel} news, rewritten fan guides, and source-linked sports stories curated by LiveScoreFree.`
+        : `Read ${sportLabel.toLowerCase()} news, rewritten fan guides, and source-linked sports stories curated by LiveScoreFree.`;
+      break;
+    case 'sport':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} Scores, Fixtures and Standings | LiveScoreFree`
+        : `${sportLabel} Scores, Fixtures and Standings | LiveScoreFree`;
+      defaults.description = leagueLabel
+        ? `Track ${leagueLabel} live scores, standings, schedules, teams, and match coverage on LiveScoreFree.`
+        : `Track ${sportLabel.toLowerCase()} live scores, standings, schedules, and match coverage on LiveScoreFree.`;
+      break;
+    case 'team':
+      defaults.title = `${teamName} Team Profile and Match Context | LiveScoreFree`;
+      defaults.description = leagueLabel
+        ? `View the ${teamName} team profile with league context, identity details, and live match links for ${leagueLabel} on LiveScoreFree.`
+        : `View the ${teamName} team profile with club identity, venue context, and live match links on LiveScoreFree.`;
+      break;
+    case 'player':
+      defaults.title = `${playerName} Player Profile and Career Snapshot | LiveScoreFree`;
+      defaults.description = `${playerName}${teamLabel ? ` of ${teamLabel}` : ''} with ${roleLabel} context, profile details, and connected match coverage on LiveScoreFree.`;
+      break;
+    case 'players':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} Players, Profiles and Trending Athletes | LiveScoreFree`
+        : `${sportLabel} Players, Profiles and Trending Athletes | LiveScoreFree`;
+      defaults.description = `Explore ${sportLabel.toLowerCase()} player profiles, trending athletes, and quick career snapshots on LiveScoreFree.`;
+      break;
+    case 'teams':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} Teams and Club Profiles | LiveScoreFree`
+        : `${sportLabel} Teams and Club Profiles | LiveScoreFree`;
+      defaults.description = `Browse ${sportLabel.toLowerCase()} team profiles, club identities, and match connections on LiveScoreFree.`;
+      break;
+    case 'standings':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} Standings and Table Tracker | LiveScoreFree`
+        : `${sportLabel} Standings and Table Tracker | LiveScoreFree`;
+      defaults.description = leagueLabel
+        ? `Follow the ${leagueLabel} table with points, wins, losses, form, and movement updates on LiveScoreFree.`
+        : `Follow ${sportLabel.toLowerCase()} standings, rankings, and table movement updates on LiveScoreFree.`;
+      break;
+    case 'leagues':
+      defaults.title = 'Sports Leagues Directory and Coverage Hubs | LiveScoreFree';
+      defaults.description = 'Explore major football, cricket, basketball, baseball, hockey, tennis, MMA, and racing leagues with dedicated coverage hubs on LiveScoreFree.';
+      break;
+    case 'trending':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} Trending Matches, Results and Headlines | LiveScoreFree`
+        : 'Trending Matches, Results and Sports Headlines | LiveScoreFree';
+      defaults.description = 'Track the trending sports pulse with live matches, fixtures, recent results, news, and standout athletes on LiveScoreFree.';
+      break;
+    case 'blog_hub':
+      defaults.title = leagueLabel
+        ? `${leagueLabel} Editorial Hub and Fan Guides | LiveScoreFree`
+        : `${sportLabel} Editorial Hub and Fan Guides | LiveScoreFree`;
+      defaults.description = 'Explore long-form sports fan guides, editorial explainers, and match-driven stories published by LiveScoreFree.';
+      break;
+    case 'blog_article':
+      defaults.title = `${articleLabel} | LiveScoreFree Editorial`;
+      defaults.description = `Read the LiveScoreFree editorial story on ${articleLabel.toLowerCase()} with source-linked context and match connections.`;
+      defaults.type = 'article';
+      break;
+    case 'info':
+      defaults.title = `${infoLabelMap[pageToken] || 'Information and Policies'} | LiveScoreFree`;
+      defaults.description = 'Review LiveScoreFree policies, transparency notes, legal resources, and help information in one place.';
+      break;
+    case 'ipl':
+      defaults.title = 'IPL Live Scores, Fixtures, Points Table and Team News | LiveScoreFree';
+      defaults.description = 'Follow IPL live scores, schedules, results, team squads, commentary, and points table updates on LiveScoreFree.';
+      break;
+    case 'index':
+      defaults.title = 'Live Scores, Match Centres, Fixtures and Sports News | LiveScoreFree';
+      defaults.description = 'Follow live scores, fixtures, results, standings, and verified sports coverage across football, cricket, basketball, tennis, baseball, hockey, and more on LiveScoreFree.';
+      break;
+    default:
+      break;
+  }
+
+  return {
+    ...defaults,
+    canonicalUrl,
+    canonicalPath,
+    image: baseImage
+  };
+}
+
+function updateSiteSchemas(seoState = buildDefaultSeoState()) {
+  const logoUrl = new URL(FALLBACK_LOGO, window.location.origin).toString();
+  const pageSchemaType = seoState.type === 'article'
+    ? 'Article'
+    : (isHomePath() ? 'WebSite' : 'WebPage');
+  upsertJsonLdScript('lsf-organization-schema', {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'LiveScoreFree',
+    url: window.location.origin,
+    logo: logoUrl
+  });
+
+  upsertJsonLdScript('lsf-webpage-schema', {
+    '@context': 'https://schema.org',
+    '@type': pageSchemaType,
+    name: seoState.title,
+    description: seoState.description,
+    url: seoState.canonicalUrl,
+    publisher: {
+      '@type': 'Organization',
+      name: 'LiveScoreFree',
+      logo: {
+        '@type': 'ImageObject',
+        url: logoUrl
+      }
+    }
+  });
+}
+
+function updateDefaultPageSeo(pageKey = getPageKeyFromPath(window.location.pathname)) {
+  if (pageKey === 'match' || pageKey === 'upcoming_match_detail') return;
+  const seoState = buildDefaultSeoState(pageKey, window.location.search);
+
+  document.title = seoState.title;
+  upsertHeadMeta('description', seoState.description);
+  upsertHeadMeta('robots', 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1');
+  upsertHeadMeta('author', 'LiveScoreFree Editorial Desk');
+  upsertHeadMeta('publisher', 'LiveScoreFree');
+  upsertHeadMeta('og:title', seoState.title, 'property');
+  upsertHeadMeta('og:description', seoState.description, 'property');
+  upsertHeadMeta('og:type', seoState.type, 'property');
+  upsertHeadMeta('og:url', seoState.canonicalUrl, 'property');
+  upsertHeadMeta('og:image', seoState.image, 'property');
+  upsertHeadMeta('og:site_name', 'LiveScoreFree', 'property');
+  upsertHeadMeta('twitter:card', 'summary_large_image', 'name');
+  upsertHeadMeta('twitter:title', seoState.title, 'name');
+  upsertHeadMeta('twitter:description', seoState.description, 'name');
+  upsertHeadMeta('twitter:image', seoState.image, 'name');
+  upsertHeadLink('canonical', seoState.canonicalUrl);
+  updateSiteSchemas(seoState);
 }
 
 function syncMatchCanonicalPath(data = {}, upcoming = false) {
@@ -1507,6 +1849,13 @@ function updateMatchSeo(data = {}, upcoming = false) {
   upsertHeadMeta('twitter:description', description, 'name');
   upsertHeadMeta('twitter:image', new URL(image, window.location.origin).toString(), 'name');
   upsertHeadLink('canonical', canonicalUrl);
+  updateSiteSchemas({
+    title,
+    description,
+    canonicalUrl,
+    image: new URL(image, window.location.origin).toString(),
+    type: 'website'
+  });
 }
 
 function updateBlogSeo(post = {}, type = 'article') {
@@ -1526,6 +1875,13 @@ function updateBlogSeo(post = {}, type = 'article') {
   upsertHeadMeta('twitter:description', description, 'name');
   upsertHeadMeta('twitter:image', new URL(image, window.location.origin).toString(), 'name');
   upsertHeadLink('canonical', new URL(canonical, window.location.origin).toString());
+  updateSiteSchemas({
+    title,
+    description,
+    canonicalUrl: new URL(canonical, window.location.origin).toString(),
+    image: new URL(image, window.location.origin).toString(),
+    type: type === 'article' ? 'article' : 'website'
+  });
 }
 
 function getCurrentFeedParams(overrides = {}) {
@@ -2383,6 +2739,12 @@ function patchLegacyImages(root = document) {
 }
 
 function ensureHeadEnhancements() {
+  if (!document.head.querySelector('base[href="/"]')) {
+    const base = document.createElement('base');
+    base.href = '/';
+    document.head.prepend(base);
+  }
+
   [
     ['preconnect', 'https://fonts.googleapis.com', false],
     ['preconnect', 'https://fonts.gstatic.com', true],
@@ -2425,6 +2787,13 @@ function ensureHeadEnhancements() {
     meta.content = '#0e0e0e';
     document.head.appendChild(meta);
   }
+
+  if (!document.querySelector('meta[name="robots"]')) {
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
+    document.head.appendChild(meta);
+  }
 }
 
 function hydrateNavigationLinks() {
@@ -2450,7 +2819,19 @@ function hydrateNavigationLinks() {
     'standings.html': '/standings',
     '/standings.html': '/standings',
     'ipl.html': '/ipl',
-    '/ipl.html': '/ipl'
+    '/ipl.html': '/ipl',
+    'sport.html': '/sport',
+    '/sport.html': '/sport',
+    'team.html': '/team',
+    '/team.html': '/team',
+    'player.html': '/player',
+    '/player.html': '/player',
+    'info.html': '/info',
+    '/info.html': '/info',
+    'blog_hub.html': '/blog_hub',
+    '/blog_hub.html': '/blog_hub',
+    'blog_article.html': '/blog_article',
+    '/blog_article.html': '/blog_article'
   };
 
   document.querySelectorAll('a').forEach((link) => {
@@ -2465,8 +2846,8 @@ function hydrateNavigationLinks() {
     if (text.includes('all leagues') || text.includes('top league')) link.setAttribute('href', '/leagues');
     if (text.includes('standings')) link.setAttribute('href', '/standings');
     if (text.includes('teams hub')) link.setAttribute('href', '/teams');
-    if (text.includes('team profile')) link.setAttribute('href', '/team.html');
-    if (text.includes('player profile')) link.setAttribute('href', '/player.html');
+    if (text.includes('team profile')) link.setAttribute('href', '/team');
+    if (text.includes('player profile')) link.setAttribute('href', '/player');
     if (text === 'results') link.setAttribute('href', '/results');
   });
 }
@@ -3105,7 +3486,7 @@ function renderNotificationPanel() {
       reminderList.innerHTML = reminders
         .map((reminder) => `
           <div class="lsf-reminder-item">
-            <a class="lsf-reminder-link" href="${reminder.url || '/upcoming.html'}">
+            <a class="lsf-reminder-link" href="${reminder.url || '/upcoming'}">
               <div class="lsf-reminder-title">${reminder.title || 'Match Reminder'}</div>
               <div class="lsf-reminder-copy">${reminder.body || 'Saved match reminder from LivescoreFree.'}</div>
               <div class="lsf-reminder-meta">${formatReminderCountdown(reminder)} | ${formatReminderSchedule(reminder)}</div>
@@ -3189,7 +3570,7 @@ function scheduleStoredReminder(reminder) {
 
   const timeoutId = window.setTimeout(async () => {
     reminderTimerHandles.delete(reminder.matchId);
-    const url = reminder.url || '/upcoming.html';
+    const url = reminder.url || '/upcoming';
     const title = reminder.title || 'Match Reminder';
     try {
       if (navigator.serviceWorker?.ready) {
@@ -3564,6 +3945,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const league = currentLeagueFilter || getDefaultLeagueForSport(sport);
   const isUpcomingMatchPage = path.includes('upcoming_match_detail.html') || prettyMatchRoute?.upcoming;
 
+  if (!matchId) {
+    syncStaticCanonicalPath(pageKey);
+    updateDefaultPageSeo(pageKey);
+  }
+
   if (matchId) {
     const canonicalMatchPath = buildCanonicalMatchPath({
       id: matchId,
@@ -3640,12 +4026,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (isResultsHubPage()) initResultsLeagueFilter();
 
     // Set page filter based on current file
-    if (path.includes('upcoming.html')) {
+    if (pageKey === 'upcoming') {
         currentPageFilter = 'upcoming';
         currentArenaTab = currentTab;
     } else if (isResultsHubPage()) {
         currentPageFilter = 'finished';
-    } else if (path.includes('trending.html')) {
+    } else if (pageKey === 'trending') {
         currentPageFilter = null;
     } else {
         currentPageFilter = 'live';
@@ -3741,7 +4127,7 @@ window.handleNotification = async function(subject, detail) {
     kickoffAt: Number.isFinite(kickoffMs) ? kickoffMs : Date.now() + 15 * 60 * 1000,
     notifyAt: Number.isFinite(kickoffMs) ? Math.max(Date.now() + 5000, kickoffMs - 15 * 60 * 1000) : Date.now() + 5000,
     savedAt: Date.now(),
-    url: match ? buildMatchUrl(match) : '/upcoming.html'
+    url: match ? buildMatchUrl(match) : '/upcoming'
   };
 
   persistReminder(reminder);
@@ -3931,7 +4317,7 @@ window.switchArenaTab = function switchTab(tabId) {
   fetchArenaSchedule(tabId);
 
   // Sync with main matches grid if on upcoming page
-  if (window.location.pathname.includes('upcoming.html')) {
+  if (isCurrentPage('upcoming')) {
     currentTab = tabId;
     if (matchesContainer) {
       matchesContainer.innerHTML = '<div class="col-span-full py-20 flex justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>';
@@ -4064,7 +4450,7 @@ function setupArenaControls() {
 async function fetchHeroData(statusFilter = null) {
   if (!heroSliderContainer) return;
   try {
-    const isIndexPage = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
+    const isIndexPage = isHomePath();
     const feed = await fetchCompositeMatchFeeds({
       sport: isIndexPage ? 'all' : (currentTab || 'all'),
       league: isIndexPage ? '' : (currentLeagueFilter || ''),
@@ -4281,9 +4667,9 @@ function renderHomeHeroWidgets(upcomingMatches = [], newsList = []) {
       <div class="glass-card p-6 rounded-2xl border border-white/10 w-80 shadow-2xl bg-surface/30 backdrop-blur-md">
         <div class="text-[10px] font-black uppercase tracking-widest text-on-surface/40 mb-4">The Multiverse Quick-Jump</div>
         <div class="grid grid-cols-4 gap-3">
-          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=soccer"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_soccer</span></a>
-          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=basketball&l=nba"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_basketball</span></a>
-          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport.html?s=football&l=nfl"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_football</span></a>
+          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport?s=soccer"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_soccer</span></a>
+          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport?s=basketball&l=nba"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_basketball</span></a>
+          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport?s=football&l=nfl"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_football</span></a>
           <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/results.html"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">history</span></a>
         </div>
       </div>
@@ -4643,7 +5029,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
 
 // --- FETCH PLAYERS ---
 async function fetchPlayers() {
-  const isPlayersPage = window.location.pathname.endsWith('players.html');
+  const isPlayersPage = isCurrentPage('players');
   if (!playersContainer && !trendingPlayersContainer && !isPlayersPage) return;
 
   try {
@@ -4951,7 +5337,7 @@ function renderTrendingUpcoming(matches) {
 // --- FETCH & RENDER NEWS ---
 // --- FETCH NEWS ---
 async function fetchNews() {
-  const isNewsPage = window.location.pathname.endsWith('news.html');
+  const isNewsPage = isCurrentPage('news');
   if (!document.getElementById('news-grid-container') && !document.getElementById('latest-headlines-container') && !isNewsPage) return;
   
   try {
@@ -5280,11 +5666,14 @@ async function fetchSidebarLive() {
 
 // --- UPDATE PAGE TITLE WITH LIVE SCORES ---
 function updatePageTitle(liveMatches) {
+  const pageKey = getPageKeyFromPath(window.location.pathname);
+  if (!['index', 'live', 'results', 'trending'].includes(pageKey)) return;
+
   if (liveMatches.length > 0) {
     const m = liveMatches[0];
     document.title = `(${m.homeTeam.score}-${m.awayTeam.score}) ${m.homeTeam.name} vs ${m.awayTeam.name} | LiveScoreFree`;
   } else {
-    document.title = 'LivescoreFree.online | Real-Time Sports Multiverse';
+    updateDefaultPageSeo(pageKey);
   }
 }
 
@@ -5312,10 +5701,13 @@ window.switchTab = function (tabId) {
 
   // Update URL search params without reload for persistence
   const url = new URL(window.location);
-  url.searchParams.set('sport', currentTab);
-  url.searchParams.delete('league');
+  if (currentTab && currentTab !== 'all') url.searchParams.set('s', currentTab);
+  else url.searchParams.delete('s');
   url.searchParams.delete('l');
+  url.searchParams.delete('sport');
+  url.searchParams.delete('league');
   window.history.pushState({}, '', url);
+  updateDefaultPageSeo();
 
   renderTabs();
   if (resultsLeagueFilter) renderResultsLeagueFilter([]);
@@ -8891,7 +9283,7 @@ if (dateDisplay) {
 
 // --- DYNAMIC NEWS HERO ---
 // Replace static hero on news.html with a live/recent match
-if (window.location.pathname.includes('news.html')) {
+if (isCurrentPage('news')) {
   (async () => {
     try {
       const res = await fetch(`${API_LIVE}?sport=all`);
@@ -9156,7 +9548,7 @@ if (window.location.pathname.includes('upcoming')) {
 
 // --- FETCH LEAGUES HERO ---
 async function fetchLeaguesHero() {
-  if (!heroSliderContainer || !window.location.pathname.includes('leagues.html')) return;
+  if (!heroSliderContainer || !isCurrentPage('leagues')) return;
   try {
     const res = await fetch(buildApiUrl(API_BLOG, { sport: 'all', limit: 6 }));
     const data = await res.json();

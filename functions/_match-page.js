@@ -19,10 +19,34 @@ function normalizeMatchContext({ id = "", sport = "", league = "" } = {}) {
   };
 }
 
-export function buildMatchRoutePath({ id = "", sport = "", league = "" } = {}, routeBase = "match") {
+function slugifyPathSegment(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildMatchSeoSlug({ homeTeam = {}, awayTeam = {} } = {}) {
+  const homeSlug = slugifyPathSegment(homeTeam?.fullName || homeTeam?.name || homeTeam?.abbreviation || "");
+  const awaySlug = slugifyPathSegment(awayTeam?.fullName || awayTeam?.name || awayTeam?.abbreviation || "");
+  if (!homeSlug || !awaySlug) return "";
+  return `${homeSlug}-vs-${awaySlug}`;
+}
+
+function extractMatchIdFromSegment(segment = "") {
+  const decoded = String(segment || "").trim();
+  const trailingMatch = decoded.match(/(\d+)$/);
+  return trailingMatch?.[1] || decoded;
+}
+
+export function buildMatchRoutePath({ id = "", sport = "", league = "", homeTeam = {}, awayTeam = {} } = {}, routeBase = "match") {
   const normalized = normalizeMatchContext({ id, sport, league });
   if (!normalized.id) return `/${routeBase}`;
-  return `/${routeBase}/${encodeURIComponent(normalized.sport)}/${encodeURIComponent(normalized.league)}/${encodeURIComponent(normalized.id)}`;
+  const slug = buildMatchSeoSlug({ homeTeam, awayTeam });
+  const detailSegment = slug ? `${slug}-${normalized.id}` : normalized.id;
+  return `/${routeBase}/${encodeURIComponent(normalized.sport)}/${encodeURIComponent(normalized.league)}/${encodeURIComponent(detailSegment)}`;
 }
 
 export function parseMatchRoute(url, routeBase = "match") {
@@ -41,7 +65,7 @@ export function parseMatchRoute(url, routeBase = "match") {
     return normalizeMatchContext({
       sport: segments[1],
       league: segments[2],
-      id: segments[3]
+      id: extractMatchIdFromSegment(segments[3])
     });
   }
 
@@ -139,11 +163,6 @@ export async function renderMatchPage(context, {
   const { request } = context;
   const url = new URL(request.url);
   const matchRoute = parseMatchRoute(url, routeBase);
-  const canonicalPath = buildMatchRoutePath(matchRoute, routeBase);
-
-  if (matchRoute.id && (url.searchParams.get("id") || url.pathname.endsWith(".html"))) {
-    return Response.redirect(new URL(canonicalPath, request.url).toString(), 301);
-  }
 
   const response = await fetchPageAsset(context, request, assetPath);
   if (response.status !== 200 || !matchRoute.id) {
@@ -153,6 +172,17 @@ export async function renderMatchPage(context, {
   try {
     const matchData = await fetchMatchPayload(request, matchRoute);
     if (!matchData) return response;
+    const canonicalPath = buildMatchRoutePath({
+      id: matchRoute.id,
+      sport: matchData.sport || matchRoute.sport,
+      league: matchData.leagueSlug || matchRoute.league,
+      homeTeam: matchData.homeTeam || {},
+      awayTeam: matchData.awayTeam || {}
+    }, routeBase);
+
+    if (url.searchParams.get("id") || url.pathname.endsWith(".html") || url.pathname !== canonicalPath) {
+      return Response.redirect(new URL(canonicalPath, request.url).toString(), 301);
+    }
 
     const statusLabel = upcoming || matchData.status === "upcoming"
       ? "Upcoming"

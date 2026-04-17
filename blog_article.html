@@ -1,8 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
+<base href="/">
 <title>LivescoreFree.online | Editorial Story</title>
 <meta name="description" content="Long-form evergreen sports blog coverage, fan guides, and rewritten public-source editorial stories.">
 <meta property="og:title" content="LivescoreFree.online | Editorial Story">
@@ -16,7 +17,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script src="js/config.js"></script>
+<script src="/js/config.js"></script>
 <script id="tailwind-config">
 tailwind.config = {
   darkMode: "class",
@@ -65,23 +66,23 @@ tailwind.config = {
   <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
     <div class="flex items-center gap-4">
       <button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full transition-all">menu</button>
-      <a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+      <a href="/" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
         <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
         <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
       </a>
     </div>
     <div class="hidden lg:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter" id="top-nav-links">
-      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
-      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="live.html">live score</a>
-      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">upcoming matches</a>
-      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="results.html">results</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="/">Home</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="/live">live score</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="/upcoming">upcoming matches</a>
+      <a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="/results">results</a>
       <div class="relative group cursor-pointer h-full flex items-center">
         <span class="nav-link text-on-surface/60 hover:text-primary transition-all uppercase flex items-center gap-1">More <span class="material-symbols-outlined text-sm">expand_more</span></span>
         <div class="absolute top-full left-0 mt-2 w-48 bg-surface-container-high border border-white/10 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-[200]">
-          <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="trending.html">trending</a>
-          <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="news.html">news</a>
-          <a class="block px-4 py-2 text-sm text-primary bg-white/5 hover:bg-white/10 transition-colors" href="blog_hub.html">editorial hub</a>
-          <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="leagues.html">top league</a>
+          <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="/trending">trending</a>
+          <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="/news">news</a>
+          <a class="block px-4 py-2 text-sm text-primary bg-white/5 hover:bg-white/10 transition-colors" href="/blog_hub">editorial hub</a>
+          <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="/leagues">top league</a>
         </div>
       </div>
     </div>
@@ -101,10 +102,10 @@ tailwind.config = {
   <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto">
     <nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
       <div class="px-6 mb-8 space-y-1">
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="leagues.html"><span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">public</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">All Leagues</span></a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="news.html"><span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">news</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Live News</span></a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-primary bg-white/5 transition-all duration-300 group border-l-[3px] border-primary hover:bg-white/10" href="blog_hub.html"><span class="material-symbols-outlined text-lg scale-110 text-primary">edit_note</span><span class="font-black uppercase tracking-widest text-[10px] translate-x-2 transition-transform">Editorial Hub</span></a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="players.html"><span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">group</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Players Hub</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/leagues"><span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">public</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">All Leagues</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/news"><span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">news</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Live News</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-primary bg-white/5 transition-all duration-300 group border-l-[3px] border-primary hover:bg-white/10" href="/blog_hub"><span class="material-symbols-outlined text-lg scale-110 text-primary">edit_note</span><span class="font-black uppercase tracking-widest text-[10px] translate-x-2 transition-transform">Editorial Hub</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/players"><span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">group</span><span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Players Hub</span></a>
       </div>
       <div class="px-6 mb-8">
         <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Today's Live Scores</div>
@@ -164,7 +165,7 @@ tailwind.config = {
           <div class="rounded-[1.75rem] border border-white/10 bg-[#07111a] p-6">
             <div class="flex items-center justify-between gap-4">
               <h2 class="text-2xl font-black italic uppercase tracking-tighter">Up next</h2>
-              <a href="blog_hub.html" class="text-[10px] font-black uppercase tracking-[0.22em] text-primary">Full hub</a>
+              <a href="/blog_hub" class="text-[10px] font-black uppercase tracking-[0.22em] text-primary">Full hub</a>
             </div>
             <div class="mt-6 space-y-4" id="blog-next-stories">
               <div class="h-28 rounded-2xl bg-white/5 animate-pulse"></div>
@@ -182,9 +183,9 @@ tailwind.config = {
           <p class="mt-2 text-sm text-on-surface/55">Permanent fan-focused blog coverage layered on top of the live sports shell.</p>
         </div>
         <div class="flex flex-wrap gap-3">
-          <a href="blog_hub.html" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] hover:bg-white/10">Editorial Hub</a>
-          <a href="news.html" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] hover:bg-white/10">Live News</a>
-          <a href="index.html" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] hover:bg-white/10">Home</a>
+          <a href="/blog_hub" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] hover:bg-white/10">Editorial Hub</a>
+          <a href="/news" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] hover:bg-white/10">Live News</a>
+          <a href="/" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] hover:bg-white/10">Home</a>
         </div>
       </div>
     </footer>
@@ -206,9 +207,10 @@ tailwind.config = {
 </div>
 
 <script id="blog-jsonld" type="application/ld+json"></script>
-<script src="js/script.js?v=1.0.28"></script>
-    <script src="js/databus.js?v=1.0.1"></script>
+<script src="/js/script.js?v=1.0.28"></script>
+    <script src="/js/databus.js?v=1.0.1"></script>
 </body>
 </html>
+
 
 

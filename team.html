@@ -1,14 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<base href="/">
 <title>LivescoreFree.online | Team Profile</title>
 <meta name="description" content="Dedicated team profile page for the LivescoreFree theme, including club identity, venue, record, and connected navigation."/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
     <!-- Real-time Data Configuration -->
-    <script src="js/config.js"></script>
+    <script src="/js/config.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
   tailwind.config = {
@@ -61,20 +62,20 @@
   <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
     <div class="flex items-center gap-4">
       <button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full transition-all">menu</button>
-      <a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+      <a href="/" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
         <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
         <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
       </a>
     </div>
-    <div class="hidden lg:flex gap-8 items-center font-bold uppercase tracking-tighter" id="top-nav-links"><a class="text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
-<a class="text-on-surface/60 hover:text-primary transition-all" href="live.html">Live</a>
-<a class="text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">Upcoming</a>
-<a class="text-on-surface/60 hover:text-primary transition-all" href="results.html">Results</a>
+    <div class="hidden lg:flex gap-8 items-center font-bold uppercase tracking-tighter" id="top-nav-links"><a class="text-on-surface/60 hover:text-primary transition-all" href="/">Home</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="/live">Live</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="/upcoming">Upcoming</a>
+<a class="text-on-surface/60 hover:text-primary transition-all" href="/results">Results</a>
 
 <div class="relative group cursor-pointer h-full flex items-center">
     <span class="nav-link text-on-surface/60 hover:text-primary transition-all uppercase flex items-center gap-1">More <span class="material-symbols-outlined text-sm">expand_more</span></span>
     <div class="absolute top-full left-0 mt-2 w-48 bg-surface-container-high border border-white/10 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-[200]">
-        <a class="text-on-surface/60 hover:text-primary transition-all" href="trending.html">Trending</a><a class="text-on-surface/60 hover:text-primary transition-all" href="news.html">News</a><a class="text-on-surface/60 hover:text-primary transition-all" href="teams.html">Teams</a>
+        <a class="text-on-surface/60 hover:text-primary transition-all" href="/trending">Trending</a><a class="text-on-surface/60 hover:text-primary transition-all" href="/news">News</a><a class="text-on-surface/60 hover:text-primary transition-all" href="/teams">Teams</a>
     </div>
 </div>
 </div>
@@ -94,10 +95,10 @@
   <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto">
     <nav class="flex flex-col gap-1 font-medium text-xs">
       <div class="px-6 mb-8 space-y-1">
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="teams.html"><span class="material-symbols-outlined text-lg">groups</span><span class="font-black uppercase tracking-widest text-[10px]">Teams Hub</span></a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="team.html"><span class="material-symbols-outlined text-lg">shield</span><span class="font-black uppercase tracking-widest text-[10px]">Team Profile</span></a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="standings.html"><span class="material-symbols-outlined text-lg">leaderboard</span><span class="font-black uppercase tracking-widest text-[10px]">Standings</span></a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="player.html"><span class="material-symbols-outlined text-lg">person</span><span class="font-black uppercase tracking-widest text-[10px]">Player Profile</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/teams"><span class="material-symbols-outlined text-lg">groups</span><span class="font-black uppercase tracking-widest text-[10px]">Teams Hub</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/team"><span class="material-symbols-outlined text-lg">shield</span><span class="font-black uppercase tracking-widest text-[10px]">Team Profile</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/standings"><span class="material-symbols-outlined text-lg">leaderboard</span><span class="font-black uppercase tracking-widest text-[10px]">Standings</span></a>
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/player"><span class="material-symbols-outlined text-lg">person</span><span class="font-black uppercase tracking-widest text-[10px]">Player Profile</span></a>
       </div>
       <div class="px-6 mb-8">
         <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Live Feed</div>
@@ -213,15 +214,15 @@
         <div class="glass-card rounded-3xl border border-white/5 p-6">
           <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Navigate</div>
           <div class="grid gap-3" id="team-links">
-            <a href="teams.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+            <a href="/teams" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
               <div class="text-xs font-black uppercase tracking-widest">Back To Teams Hub</div>
               <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Browse more teams</div>
             </a>
-            <a href="standings.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+            <a href="/standings" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
               <div class="text-xs font-black uppercase tracking-widest">Check Standings</div>
               <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Move from profile to table</div>
             </a>
-            <a href="upcoming.html" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+            <a href="/upcoming" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
               <div class="text-xs font-black uppercase tracking-widest">Upcoming Fixtures</div>
               <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Find scheduled action</div>
             </a>
@@ -242,10 +243,10 @@
           <p class="text-[10px] uppercase tracking-[0.3em] text-on-surface/35 mt-2">(c) 2026 team profile</p>
         </div>
         <div class="flex flex-wrap justify-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface/45">
-          <a href="teams.html" class="hover:text-primary transition-colors">Teams</a>
-          <a href="standings.html" class="hover:text-primary transition-colors">Standings</a>
-          <a href="player.html" class="hover:text-primary transition-colors">Player</a>
-          <a href="live.html" class="hover:text-primary transition-colors">Live</a>
+          <a href="/teams" class="hover:text-primary transition-colors">Teams</a>
+          <a href="/standings" class="hover:text-primary transition-colors">Standings</a>
+          <a href="/player" class="hover:text-primary transition-colors">Player</a>
+          <a href="/live" class="hover:text-primary transition-colors">Live</a>
         </div>
       </div>
     </footer>
@@ -266,8 +267,8 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.28"></script>
-    <script src="js/databus.js?v=1.0.1"></script>
+<script src="/js/script.js?v=1.0.28"></script>
+    <script src="/js/databus.js?v=1.0.1"></script>
 <script>
   function safeUpper(value) {
     return String(value || "").toUpperCase();
@@ -374,15 +375,15 @@
 
     // Sidebar Links
     document.getElementById("team-links").innerHTML = `
-      <a href="teams.html?league=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+<a href="/teams?l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
         <div class="text-xs font-black uppercase tracking-widest">Back To Teams Hub</div>
         <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Browse more teams</div>
       </a>
-      <a href="standings.html?sport=${encodeURIComponent(team.sport)}&league=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+<a href="/standings?s=${encodeURIComponent(team.sport)}&l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
         <div class="text-xs font-black uppercase tracking-widest">Check Standings</div>
         <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Review league position</div>
       </a>
-      <a href="upcoming.html?sport=${encodeURIComponent(team.sport)}&l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+<a href="/upcoming?s=${encodeURIComponent(team.sport)}&l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
         <div class="text-xs font-black uppercase tracking-widest">Upcoming Fixtures</div>
         <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Move from profile to schedule</div>
       </a>
@@ -620,15 +621,15 @@
     renderInjuries(profile.injuries);
 
     document.getElementById("team-links").innerHTML = `
-      <a href="teams.html?league=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+<a href="/teams?l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
         <div class="text-xs font-black uppercase tracking-widest">Back To Teams Hub</div>
         <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Browse more teams</div>
       </a>
-      <a href="standings.html?sport=${encodeURIComponent(team.sport)}&league=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+<a href="/standings?s=${encodeURIComponent(team.sport)}&l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
         <div class="text-xs font-black uppercase tracking-widest">Check Standings</div>
         <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Review league position</div>
       </a>
-      <a href="upcoming.html?sport=${encodeURIComponent(team.sport)}&l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
+<a href="/upcoming?s=${encodeURIComponent(team.sport)}&l=${encodeURIComponent(team.league)}" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
         <div class="text-xs font-black uppercase tracking-widest">Upcoming Fixtures</div>
         <div class="text-[10px] text-on-surface/40 uppercase tracking-[0.2em] mt-1">Move from profile to schedule</div>
       </a>
@@ -707,5 +708,6 @@
 </script>
 </body>
 </html>
+
 
 

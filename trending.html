@@ -1,8 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
+<base href="/">
 <title>LivescoreFree.online | Trending Hub | Live Heat, Upcoming Radar, Results</title>
 <meta name="description" content="Track the trending sports pulse with live matches, upcoming fixtures, recent results, headlines, and athlete momentum in one realtime hub.">
 <meta property="og:title" content="LivescoreFree.online | Trending Hub">
@@ -14,7 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 <!-- Real-time Data Configuration -->
-<script src="js/config.js"></script>
+<script src="/js/config.js"></script>
 <script id="tailwind-config">
   tailwind.config = {
     darkMode: "class",
@@ -96,20 +97,20 @@
   <div class="flex justify-between items-center px-6 h-16 w-full max-w-[1920px] mx-auto">
     <div class="flex items-center gap-4">
       <button id="sidebar-toggle" class="material-symbols-outlined text-primary hover:bg-white/5 p-2 rounded-full transition-all">menu</button>
-      <a href="index.html" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+      <a href="/" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
         <span class="material-symbols-outlined text-primary pulse-red rounded-full">broadcast_on_personal</span>
         <div class="text-2xl font-black italic tracking-tighter text-primary">Livescorefree</div>
       </a>
     </div>
-    <div class="hidden lg:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter" id="top-nav-links"><a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="index.html">Home</a>
-<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="live.html">live score</a>
-<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="upcoming.html">upcoming matches</a>
-<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="results.html">results</a>
+    <div class="hidden lg:flex gap-8 items-center font-['Lexend'] font-bold uppercase tracking-tighter" id="top-nav-links"><a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="/">Home</a>
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="/live">live score</a>
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="/upcoming">upcoming matches</a>
+<a class="nav-link text-on-surface/60 hover:text-primary transition-all" href="/results">results</a>
 
 <div class="relative group cursor-pointer h-full flex items-center">
     <span class="nav-link text-on-surface/60 hover:text-primary transition-all uppercase flex items-center gap-1">More <span class="material-symbols-outlined text-sm">expand_more</span></span>
     <div class="absolute top-full left-0 mt-2 w-48 bg-surface-container-high border border-white/10 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-[200]">
-        <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="trending.html">trending</a><a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="news.html">news</a><a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="leagues.html">top league</a>
+        <a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="/trending">trending</a><a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="/news">news</a><a class="block px-4 py-2 text-sm text-on-surface/60 hover:text-primary hover:bg-white/5 transition-colors" href="/leagues">top league</a>
     </div>
 </div>
 </div>
@@ -133,23 +134,23 @@
   <aside id="sidebar" class="fixed left-0 top-16 z-[90] h-[calc(100vh-64px)] w-64 -translate-x-full transition-transform duration-300 shadow-2xl bg-[#0E0E0E] flex flex-col pt-8 pb-10 border-r border-white/5 overflow-y-auto">
     <nav class="flex flex-col gap-1 font-['Lexend'] font-medium text-xs">
       <div class="px-6 mb-8 space-y-1">
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="leagues.html">
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/leagues">
           <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">public</span>
           <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">All Leagues</span>
         </a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="standings.html">
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/standings">
           <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">leaderboard</span>
           <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Standings</span>
         </a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="upcoming.html">
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/upcoming">
           <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">calendar_month</span>
           <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Fixtures</span>
         </a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="teams.html">
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/teams">
           <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">groups</span>
           <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Teams Hub</span>
         </a>
-        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="results.html">
+        <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/results">
           <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">scoreboard</span>
           <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Results</span>
         </a>
@@ -158,11 +159,11 @@
       <div class="px-6 mb-8">
         <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Players</div>
         <div class="space-y-1">
-          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="players.html">
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/players">
             <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">group</span>
             <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Players Hub</span>
           </a>
-          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="player.html">
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/player">
             <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">person</span>
             <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Player Profile</span>
           </a>
@@ -181,11 +182,11 @@
       <div class="px-6 mb-8">
         <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Quick Links</div>
         <div class="space-y-1">
-          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="info.html?p=privacy">
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/info?p=privacy">
             <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">policy</span>
             <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Privacy Policy</span>
           </a>
-          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="info.html?p=advertise">
+          <a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/info?p=advertise">
             <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform group-hover:text-primary">campaign</span>
             <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Advertise</span>
           </a>
@@ -295,7 +296,7 @@
                 <h3 class="text-2xl font-black italic uppercase tracking-tighter">Trending Stories</h3>
                 <p class="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mt-2">Headlines powering the social pulse</p>
               </div>
-              <a href="news.html" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">All News</a>
+              <a href="/news" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">All News</a>
             </div>
             <div id="news-grid-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
           </section>
@@ -337,30 +338,30 @@
       <div class="flex flex-col gap-6">
         <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Quick Links</h5>
         <ul class="flex flex-col gap-4">
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=soccer">Football</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=basketball">Basketball</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=baseball">Baseball</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=tennis">Tennis</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=football&amp;l=nfl">NFL</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="sport.html?s=basketball&amp;l=nba">NBA</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport?s=soccer">Football</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport?s=basketball">Basketball</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport?s=baseball">Baseball</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport?s=tennis">Tennis</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport?s=football&amp;l=nfl">NFL</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/sport?s=basketball&amp;l=nba">NBA</a></li>
         </ul>
       </div>
 
       <div class="flex flex-col gap-6">
         <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Legal</h5>
         <ul class="flex flex-col gap-4">
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=privacy">Privacy Policy</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=terms">Terms of Service</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=privacy">Cookie Settings</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=dmca">DMCA Policy</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/info?p=privacy">Privacy Policy</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/info?p=terms">Terms of Service</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/info?p=privacy">Cookie Settings</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/info?p=dmca">DMCA Policy</a></li>
         </ul>
       </div>
 
       <div class="flex flex-col gap-6">
         <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Resources</h5>
         <ul class="flex flex-col gap-4">
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=help">Help Center</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=advertise">Advertise With Us</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/info?p=help">Help Center</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/info?p=advertise">Advertise With Us</a></li>
         </ul>
       </div>
 
@@ -368,7 +369,7 @@
         <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Support</h5>
         <ul class="flex flex-col gap-4">
           <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="https://ko-fi.com/livescorefree" target="_blank">Support on Ko-fi</a></li>
-          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="info.html?p=transparency">Donation Transparency</a></li>
+          <li><a class="text-on-surface/40 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-widest" href="/info?p=transparency">Donation Transparency</a></li>
         </ul>
       </div>
     </div>
@@ -403,9 +404,10 @@
   </div>
 </div>
 
-<script src="js/script.js?v=1.0.28"></script>
-    <script src="js/databus.js?v=1.0.1"></script>
+<script src="/js/script.js?v=1.0.28"></script>
+    <script src="/js/databus.js?v=1.0.1"></script>
 </body>
 </html>
+
 
 
