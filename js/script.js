@@ -6324,6 +6324,9 @@ function initBlogArticlePage() {
 }
 
 function setMatchUnavailableState(primary = 'Match unavailable', secondary = 'Please try again shortly') {
+  syncLegacyMatchHeroVisibility(false);
+  document.body.classList.remove('lsf-cricket-desktop-live');
+  document.body.classList.remove('lsf-generic-desktop-live');
   if (homeTeamName) homeTeamName.textContent = primary;
   if (awayTeamName) awayTeamName.textContent = secondary;
   if (homeTeamLogo) homeTeamLogo.src = FALLBACK_LOGO;
@@ -6372,8 +6375,28 @@ function setMatchUnavailableState(primary = 'Match unavailable', secondary = 'Pl
   }
 }
 
+function syncLegacyMatchHeroVisibility(hidden = false) {
+  const hero = document.querySelector('.lsf-match-live-hero');
+  const desktopCentre = document.querySelector('.lsf-desktop-live-centre');
+  const isDesktopViewport = typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(min-width: 768px)').matches;
+
+  if (hero) {
+    hero.hidden = hidden;
+    hero.style.display = hidden ? 'none' : '';
+    hero.setAttribute('aria-hidden', hidden ? 'true' : 'false');
+  }
+
+  if (desktopCentre) {
+    desktopCentre.style.marginTop = hidden && isDesktopViewport ? '0' : '';
+    desktopCentre.style.paddingTop = hidden && isDesktopViewport ? '1.5rem' : '';
+  }
+}
+
 // --- FETCH & UPDATE MATCH DETAIL ---
 async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
+  syncLegacyMatchHeroVisibility(true);
   try {
     const result = await fetchMatchPayload(id, sport, league);
     const data = result.data;
@@ -7064,6 +7087,35 @@ function computeCricketPartnershipRuns(deliveries = []) {
   return hasRuns ? total : null;
 }
 
+function getCricketLiveScoringContext(activeScore = {}, opponentScore = {}) {
+  const opponentRaw = sanitizeDisplayText(opponentScore?.raw || '');
+  const opponentRuns = Number.isFinite(opponentScore?.runs) ? opponentScore.runs : null;
+  const ballsRemaining = Number.isFinite(activeScore?.oversLimit) && Number.isFinite(activeScore?.ballsBowled)
+    ? Math.max(0, Math.round((activeScore.oversLimit * 6) - activeScore.ballsBowled))
+    : null;
+  const runsRequired = opponentRuns !== null && Number.isFinite(activeScore?.runs) && opponentRuns >= activeScore.runs
+    ? Math.max((opponentRuns + 1) - activeScore.runs, 0)
+    : null;
+  const requiredRate = ballsRemaining && ballsRemaining > 0 && runsRequired !== null
+    ? ((runsRequired / ballsRemaining) * 6)
+    : null;
+  const projectedScore = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && Number.isFinite(activeScore?.oversLimit) && activeScore.overs > 0
+    ? Math.round((activeScore.runs / activeScore.overs) * activeScore.oversLimit)
+    : null;
+  const targetScore = opponentRuns !== null ? (opponentRuns + 1) : null;
+  const isChase = targetScore !== null && opponentRaw && opponentRaw !== '0' && Number.isFinite(activeScore?.overs);
+
+  return {
+    ballsRemaining,
+    isChase,
+    opponentRuns,
+    projectedScore,
+    requiredRate,
+    runsRequired,
+    targetScore
+  };
+}
+
 function computeCricketLiveProbabilities(context = {}) {
   const activeScore = context?.score || {};
   const runRate = context?.runRate;
@@ -7296,19 +7348,12 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   const runRate = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && activeScore.overs > 0
     ? (activeScore.runs / activeScore.overs)
     : null;
-  const opponentRuns = Number.isFinite(opponentScore?.runs) ? opponentScore.runs : null;
-  const ballsRemaining = Number.isFinite(activeScore?.oversLimit) && Number.isFinite(activeScore?.ballsBowled)
-    ? Math.max(0, Math.round((activeScore.oversLimit * 6) - activeScore.ballsBowled))
-    : null;
-  const runsRequired = opponentRuns !== null && Number.isFinite(activeScore?.runs) && opponentRuns >= activeScore.runs
-    ? Math.max((opponentRuns + 1) - activeScore.runs, 0)
-    : null;
-  const requiredRate = ballsRemaining && ballsRemaining > 0 && runsRequired !== null
-    ? ((runsRequired / ballsRemaining) * 6)
-    : null;
-  const projectedScore = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && Number.isFinite(activeScore?.oversLimit) && activeScore.overs > 0
-    ? Math.round((activeScore.runs / activeScore.overs) * activeScore.oversLimit)
-    : null;
+  const scoringContext = getCricketLiveScoringContext(activeScore, opponentScore);
+  const ballsRemaining = scoringContext.ballsRemaining;
+  const projectedScore = scoringContext.projectedScore;
+  const requiredRate = scoringContext.requiredRate;
+  const runsRequired = scoringContext.runsRequired;
+  const targetScore = scoringContext.targetScore;
   const partnershipRuns = computeCricketPartnershipRuns(deliveries);
   const probabilities = computeCricketLiveProbabilities({
     side: innings?.side,
@@ -7376,9 +7421,19 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
       </div>
       <div class="lsf-cricket-mobile-intel-grid">
         <div class="lsf-cricket-mobile-intel-metric">
-          <div class="lsf-cricket-mobile-intel-label">Projected Score</div>
-          <div class="lsf-cricket-mobile-intel-value">${projectedScore !== null ? projectedScore : '--'}</div>
-          <div class="lsf-cricket-mobile-intel-note">${Number.isFinite(runRate) ? `Current RR: ${runRate.toFixed(2)}` : `${activeAbbr} innings live`}</div>
+          <div class="lsf-cricket-mobile-intel-label">${scoringContext.isChase ? 'Target' : 'Projected Score'}</div>
+          <div class="lsf-cricket-mobile-intel-value">${scoringContext.isChase ? (targetScore !== null ? targetScore : '--') : (projectedScore !== null ? projectedScore : '--')}</div>
+          <div class="lsf-cricket-mobile-intel-note">${scoringContext.isChase
+            ? (Number.isFinite(runsRequired) && Number.isFinite(ballsRemaining)
+              ? `${runsRequired} needed from ${ballsRemaining} balls`
+              : (Number.isFinite(runsRequired)
+                ? `${runsRequired} needed`
+                : (Number.isFinite(ballsRemaining)
+                  ? `${ballsRemaining} balls left`
+                  : 'Chase underway')))
+            : (Number.isFinite(runRate)
+              ? `Current RR: ${runRate.toFixed(2)}`
+              : `${activeAbbr} innings live`)}</div>
         </div>
         <div class="lsf-cricket-mobile-intel-metric">
           <div class="lsf-cricket-mobile-intel-label">Current Partnership</div>
@@ -7786,6 +7841,7 @@ function ensureDesktopCricketLiveShell(root) {
   if (root.dataset.layoutMode === 'cricket-live-desktop') return;
 
   root.dataset.layoutMode = 'cricket-live-desktop';
+  syncLegacyMatchHeroVisibility(true);
   document.body.classList.remove('lsf-generic-desktop-live');
   document.body.classList.add('lsf-cricket-desktop-live');
   root.innerHTML = `
@@ -7899,6 +7955,7 @@ function ensureDesktopGenericLiveShell(root) {
   if (root.dataset.layoutMode === 'generic-live-desktop') return;
 
   root.dataset.layoutMode = 'generic-live-desktop';
+  syncLegacyMatchHeroVisibility(true);
   document.body.classList.remove('lsf-cricket-desktop-live');
   document.body.classList.add('lsf-generic-desktop-live');
   root.innerHTML = `
@@ -7986,19 +8043,11 @@ function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   const runRate = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && activeScore.overs > 0
     ? (activeScore.runs / activeScore.overs)
     : null;
-  const opponentRuns = Number.isFinite(opponentScore?.runs) ? opponentScore.runs : null;
-  const ballsRemaining = Number.isFinite(activeScore?.oversLimit) && Number.isFinite(activeScore?.ballsBowled)
-    ? Math.max(0, Math.round((activeScore.oversLimit * 6) - activeScore.ballsBowled))
-    : null;
-  const runsRequired = opponentRuns !== null && Number.isFinite(activeScore?.runs) && opponentRuns >= activeScore.runs
-    ? Math.max((opponentRuns + 1) - activeScore.runs, 0)
-    : null;
-  const requiredRate = ballsRemaining && ballsRemaining > 0 && runsRequired !== null
-    ? ((runsRequired / ballsRemaining) * 6)
-    : null;
-  const projectedScore = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && Number.isFinite(activeScore?.oversLimit) && activeScore.overs > 0
-    ? Math.round((activeScore.runs / activeScore.overs) * activeScore.oversLimit)
-    : null;
+  const scoringContext = getCricketLiveScoringContext(activeScore, opponentScore);
+  const projectedScore = scoringContext.projectedScore;
+  const requiredRate = scoringContext.requiredRate;
+  const runsRequired = scoringContext.runsRequired;
+  const targetScore = scoringContext.targetScore;
   const partnershipRuns = computeCricketPartnershipRuns(deliveries);
   const probabilities = computeCricketLiveProbabilities({
     side: innings?.side,
@@ -8073,9 +8122,19 @@ function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
       </div>
       <div class="lsf-desktop-live-metric-grid">
         <div class="lsf-desktop-live-metric">
-          <div class="lsf-desktop-live-metric-label">Projected Score</div>
-          <div class="lsf-desktop-live-metric-value">${projectedScore !== null ? projectedScore : '--'}</div>
-          <div class="lsf-desktop-live-metric-note">${Number.isFinite(runRate) ? `Current RR ${runRate.toFixed(2)}` : 'Awaiting overs context'}</div>
+          <div class="lsf-desktop-live-metric-label">${scoringContext.isChase ? 'Target' : 'Projected Score'}</div>
+          <div class="lsf-desktop-live-metric-value">${scoringContext.isChase ? (targetScore !== null ? targetScore : '--') : (projectedScore !== null ? projectedScore : '--')}</div>
+          <div class="lsf-desktop-live-metric-note">${scoringContext.isChase
+            ? (Number.isFinite(runsRequired) && Number.isFinite(scoringContext.ballsRemaining)
+              ? `${runsRequired} needed from ${scoringContext.ballsRemaining} balls`
+              : (Number.isFinite(runsRequired)
+                ? `${runsRequired} needed`
+                : (Number.isFinite(scoringContext.ballsRemaining)
+                  ? `${scoringContext.ballsRemaining} balls left`
+                  : 'Chase underway')))
+            : (Number.isFinite(runRate)
+              ? `Current RR ${runRate.toFixed(2)}`
+              : 'Awaiting overs context')}</div>
         </div>
         <div class="lsf-desktop-live-metric">
           <div class="lsf-desktop-live-metric-label">Partnership</div>
@@ -8192,6 +8251,7 @@ function renderDesktopLiveCentre(data = {}, detailStats = [], detailTimeline = [
       root.dataset.layoutMode = 'default';
       renderNetworkAdSlots(root);
     }
+    syncLegacyMatchHeroVisibility(false);
     return false;
   }
 
