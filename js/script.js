@@ -7017,8 +7017,42 @@ function pickCricketLeaderMetric(team = {}, playerName = '', fallbackMeta = 'Awa
   };
 }
 
-function buildCricketPlayerCardState(name = '', role = '', team = {}, recentStats = new Map(), fallbackMeta = 'Awaiting live data') {
+function buildCricketNameTokens(value = '') {
+  return sanitizeDisplayText(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((token) => token.length > 1);
+}
+
+function isSameCricketLivePlayer(left = '', right = '') {
+  const leftTokens = buildCricketNameTokens(left);
+  const rightTokens = buildCricketNameTokens(right);
+  if (!leftTokens.length || !rightTokens.length) return false;
+  const leftSet = new Set(leftTokens);
+  const rightSet = new Set(rightTokens);
+  const sharedTokens = leftTokens.filter((token) => rightSet.has(token));
+  return sharedTokens.length > 0
+    && (sharedTokens.length === leftSet.size
+      || sharedTokens.length === rightSet.size
+      || sharedTokens.some((token) => token.length >= 4));
+}
+
+function findCricketLiveMetric(entries = [], playerName = '') {
+  return (entries || []).find((entry) => isSameCricketLivePlayer(entry?.name || '', playerName || '')) || null;
+}
+
+function buildCricketPlayerCardState(name = '', role = '', team = {}, recentStats = new Map(), liveBatters = [], fallbackMeta = 'Awaiting live data') {
   const cleanName = sanitizeDisplayText(name || role || 'Player');
+  const liveMetric = findCricketLiveMetric(liveBatters, cleanName);
+  if (liveMetric?.primary) {
+    return {
+      name: cleanName || sanitizeDisplayText(liveMetric.name || 'Player'),
+      primary: sanitizeDisplayText(liveMetric.primary),
+      meta: sanitizeDisplayText(liveMetric.meta || fallbackMeta)
+    };
+  }
+
   const leaderMetric = pickCricketLeaderMetric(team, cleanName, fallbackMeta);
   if (leaderMetric.primary !== '--') {
     return {
@@ -7033,7 +7067,7 @@ function buildCricketPlayerCardState(name = '', role = '', team = {}, recentStat
     return {
       name: cleanName,
       primary: String(recent.runs),
-      meta: `${recent.balls} BALL${recent.balls === 1 ? '' : 'S'} IN FEED`
+      meta: `LAST ${recent.balls} BALL${recent.balls === 1 ? '' : 'S'}`
     };
   }
 
@@ -7044,8 +7078,17 @@ function buildCricketPlayerCardState(name = '', role = '', team = {}, recentStat
   };
 }
 
-function buildCricketBowlerCardState(name = '', team = {}, activeScore = {}) {
+function buildCricketBowlerCardState(name = '', team = {}, activeScore = {}, liveBowlers = []) {
   const cleanName = sanitizeDisplayText(name || team?.leader?.name || team?.name || 'Bowler');
+  const liveMetric = findCricketLiveMetric(liveBowlers, cleanName);
+  if (liveMetric?.primary) {
+    return {
+      name: cleanName || sanitizeDisplayText(liveMetric.name || 'Bowler'),
+      primary: sanitizeDisplayText(liveMetric.primary),
+      meta: sanitizeDisplayText(liveMetric.meta || 'Current spell')
+    };
+  }
+
   const leaderValue = sanitizeDisplayText(team?.leader?.value || '');
   const leaderName = sanitizeDisplayText(team?.leader?.name || '').toLowerCase();
   const cleanKey = cleanName.toLowerCase();
@@ -7339,6 +7382,8 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   const deliveries = commentaryFeed.map((entry) => parseCricketDeliveryEvent(entry)).filter((entry) => entry.text);
   const batterCandidates = buildCricketParticipantSet(innings?.team, deliveries);
   const recentBatterStats = buildCricketRecentBatterStats(deliveries);
+  const liveBatters = data?.cricketLive?.batters || [];
+  const liveBowlers = data?.cricketLive?.bowlers || [];
   const strikerName = batterCandidates[0] || sanitizeDisplayText(innings?.team?.leader?.name || innings?.team?.name || 'Batter');
   const nonStrikerName = batterCandidates.find((name) => name.toLowerCase() !== String(strikerName || '').toLowerCase())
     || sanitizeDisplayText((innings?.team?.lineup || []).find((player) => String(player?.name || '').toLowerCase() !== String(strikerName || '').toLowerCase())?.name || 'Awaiting partner');
@@ -7361,9 +7406,9 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
     runRate,
     requiredRate
   });
-  const strikerState = buildCricketPlayerCardState(strikerName, 'On Strike', innings?.team, recentBatterStats, 'Live striker feed');
-  const nonStrikerState = buildCricketPlayerCardState(nonStrikerName, 'At Crease', innings?.team, recentBatterStats, 'Standing by');
-  const bowlerState = buildCricketBowlerCardState(bowlerName, innings?.opponent, activeScore);
+  const strikerState = buildCricketPlayerCardState(strikerName, 'On Strike', innings?.team, recentBatterStats, liveBatters, 'Live striker feed');
+  const nonStrikerState = buildCricketPlayerCardState(nonStrikerName, 'At Crease', innings?.team, recentBatterStats, liveBatters, 'Standing by');
+  const bowlerState = buildCricketBowlerCardState(bowlerName, innings?.opponent, activeScore, liveBowlers);
 
   const setText = (id, value) => {
     const node = document.getElementById(id);
@@ -8035,6 +8080,8 @@ function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   const deliveries = commentaryFeed.map((entry) => parseCricketDeliveryEvent(entry)).filter((entry) => entry.text);
   const batterCandidates = buildCricketParticipantSet(innings?.team, deliveries);
   const recentBatterStats = buildCricketRecentBatterStats(deliveries);
+  const liveBatters = data?.cricketLive?.batters || [];
+  const liveBowlers = data?.cricketLive?.bowlers || [];
   const strikerName = batterCandidates[0] || sanitizeDisplayText(innings?.team?.leader?.name || innings?.team?.name || 'Batter');
   const nonStrikerName = batterCandidates.find((name) => name.toLowerCase() !== String(strikerName || '').toLowerCase())
     || sanitizeDisplayText((innings?.team?.lineup || []).find((player) => String(player?.name || '').toLowerCase() !== String(strikerName || '').toLowerCase())?.name || 'Awaiting partner');
@@ -8055,9 +8102,9 @@ function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
     runRate,
     requiredRate
   });
-  const strikerState = buildCricketPlayerCardState(strikerName, 'On Strike', innings?.team, recentBatterStats, 'Live striker feed');
-  const nonStrikerState = buildCricketPlayerCardState(nonStrikerName, 'At Crease', innings?.team, recentBatterStats, 'Standing by');
-  const bowlerState = buildCricketBowlerCardState(bowlerName, innings?.opponent, activeScore);
+  const strikerState = buildCricketPlayerCardState(strikerName, 'On Strike', innings?.team, recentBatterStats, liveBatters, 'Live striker feed');
+  const nonStrikerState = buildCricketPlayerCardState(nonStrikerName, 'At Crease', innings?.team, recentBatterStats, liveBatters, 'Standing by');
+  const bowlerState = buildCricketBowlerCardState(bowlerName, innings?.opponent, activeScore, liveBowlers);
   const bowlerFace = findLineupPlayerByName(innings?.opponent?.lineup || [], bowlerState.name)?.face || innings?.opponent?.logo || FALLBACK_LOGO;
   const homeScore = parseCricketScorecard(data?.homeTeam?.score || '');
   const awayScore = parseCricketScorecard(data?.awayTeam?.score || '');

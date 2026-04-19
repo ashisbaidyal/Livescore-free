@@ -160,6 +160,159 @@ function extractInitialStateFromHtml(html = "") {
   }
 }
 
+function stripHtmlToStructuredLines(value = "") {
+  return String(value || "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|section|article|header|footer|main|aside|li|ul|ol|tr|td|th|table|h1|h2|h3|h4|h5|h6)>/gi, "\n")
+    .replace(/<(p|div|section|article|header|footer|main|aside|li|ul|ol|tr|td|th|table|h1|h2|h3|h4|h5|h6)(\s[^>]*)?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\r/g, "")
+    .split("\n")
+    .map((line) => sanitizeDisplayText(line))
+    .filter(Boolean);
+}
+
+function findStructuredSectionLines(lines = [], heading = "", endHeadings = []) {
+  const startIndex = lines.findIndex((line) => line.toLowerCase() === heading.toLowerCase());
+  if (startIndex === -1) return [];
+
+  let endIndex = lines.length;
+  for (let index = startIndex + 1; index < lines.length; index += 1) {
+    const candidate = lines[index].toLowerCase();
+    if (endHeadings.some((entry) => candidate === String(entry || "").toLowerCase())) {
+      endIndex = index;
+      break;
+    }
+  }
+
+  return lines.slice(startIndex + 1, endIndex);
+}
+
+function looksLikeStructuredPlayerName(line = "") {
+  const clean = sanitizeDisplayText(line);
+  if (!clean) return false;
+  if (clean.length > 42) return false;
+  if (/\d/.test(clean)) return false;
+  if (!/[a-z]/i.test(clean)) return false;
+  if (/^(current batsmen|current bowlers|fall of wickets|partnership|scorecard|match details|summary)$/i.test(clean)) return false;
+  return clean.split(/\s+/).length <= 6;
+}
+
+function buildCricketLiveBattersFromLines(lines = []) {
+  const batters = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const name = sanitizeDisplayText(lines[index] || "");
+    if (!looksLikeStructuredPlayerName(name)) continue;
+
+    let statLine = "";
+    for (let offset = 1; offset <= 4 && (index + offset) < lines.length; offset += 1) {
+      const candidate = sanitizeDisplayText(lines[index + offset] || "");
+      if (/\d+\*?\s*\(\d+\s*(?:b|ball|balls)?\)/i.test(candidate)) {
+        statLine = candidate;
+        break;
+      }
+    }
+    if (!statLine) continue;
+
+    const match = statLine.match(/(\d+)(\*)?\s*\((\d+)\s*(?:b|ball|balls)?\)/i);
+    if (!match) continue;
+
+    const runs = Number(match[1] || 0);
+    const balls = Number(match[3] || 0);
+    if (!Number.isFinite(runs) || !Number.isFinite(balls)) continue;
+
+    const strikeRate = balls > 0 ? ((runs / balls) * 100) : null;
+    batters.push({
+      name,
+      runs,
+      balls,
+      primary: `${runs}${match[2] ? "*" : ""}`,
+      meta: strikeRate !== null
+        ? `${balls} BALL${balls === 1 ? "" : "S"} | SR ${strikeRate.toFixed(1)}`
+        : `${balls} BALL${balls === 1 ? "" : "S"}`
+    });
+  }
+
+  return uniqueBy(batters, (entry) => entry.name.toLowerCase()).slice(0, 2);
+}
+
+function buildCricketLiveBowlersFromLines(lines = []) {
+  const bowlers = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const name = sanitizeDisplayText(lines[index] || "");
+    if (!looksLikeStructuredPlayerName(name)) continue;
+
+    let statLine = "";
+    for (let offset = 1; offset <= 4 && (index + offset) < lines.length; offset += 1) {
+      const candidate = sanitizeDisplayText(lines[index + offset] || "");
+      if (/^\d+(?:\.\d+)?-\d+-\d+-\d+$/.test(candidate) || /\b\d+\s*\/\s*\d+\b/.test(candidate)) {
+        statLine = candidate;
+        break;
+      }
+    }
+    if (!statLine) continue;
+
+    let primary = "";
+    let meta = "";
+    const spellMatch = statLine.match(/^(\d+(?:\.\d+)?)\-(\d+)\-(\d+)\-(\d+)$/);
+    const figuresMatch = statLine.match(/(\d+)\s*\/\s*(\d+)/);
+    if (spellMatch) {
+      const overs = Number(spellMatch[1] || 0);
+      const runs = Number(spellMatch[3] || 0);
+      const wickets = Number(spellMatch[4] || 0);
+      const economy = overs > 0 ? (runs / overs) : null;
+      primary = `${wickets}/${runs}`;
+      meta = economy !== null ? `ECON ${economy.toFixed(1)}` : `OVERS ${spellMatch[1]}`;
+    } else if (figuresMatch) {
+      primary = `${figuresMatch[1]}/${figuresMatch[2]}`;
+      meta = "Current spell";
+    } else {
+      continue;
+    }
+
+    bowlers.push({
+      name,
+      primary,
+      meta
+    });
+  }
+
+  return uniqueBy(bowlers, (entry) => entry.name.toLowerCase()).slice(0, 2);
+}
+
+function buildCricketLiveStateFromHtml(html = "") {
+  const lines = stripHtmlToStructuredLines(html);
+  if (!lines.length) return null;
+
+  const batters = buildCricketLiveBattersFromLines(
+    findStructuredSectionLines(lines, "Current Batsmen", [
+      "Current bowlers",
+      "Fall of wickets",
+      "Match details",
+      "Scorecard",
+      "Match Centre"
+    ])
+  );
+  const bowlers = buildCricketLiveBowlersFromLines(
+    findStructuredSectionLines(lines, "Current bowlers", [
+      "Fall of wickets",
+      "Current batsmen",
+      "Match details",
+      "Scorecard",
+      "Match Centre"
+    ])
+  );
+
+  if (!batters.length && !bowlers.length) return null;
+  return { batters, bowlers };
+}
+
 function looksLikeRealCricketCommentary(entries = []) {
   return entries.some((entry) => {
     const text = sanitizeDisplayText(entry?.text || entry?.player || "").toLowerCase();
@@ -231,7 +384,6 @@ function buildCricketTimelineFromCommentary(entries = []) {
 
 async function hydrateCricketCommentary(summary = {}, summaryData = {}) {
   if (summary?.sport !== "cricket") return summary;
-  if (looksLikeRealCricketCommentary(summary.commentary || [])) return summary;
 
   const summaryHref = summaryData?.header?.links?.find((entry) => Array.isArray(entry?.rel) && entry.rel.includes("summary"))?.href
     || summaryData?.header?.links?.[0]?.href
@@ -240,12 +392,30 @@ async function hydrateCricketCommentary(summary = {}, summaryData = {}) {
 
   try {
     const html = await fetchText(summaryHref);
+    const liveState = buildCricketLiveStateFromHtml(html);
+    if (looksLikeRealCricketCommentary(summary.commentary || [])) {
+      return liveState
+        ? {
+            ...summary,
+            cricketLive: liveState
+          }
+        : summary;
+    }
+
     const pageState = extractInitialStateFromHtml(html);
     const commentary = buildCricketCommentaryFromPageState(pageState);
-    if (!commentary.length) return summary;
+    if (!commentary.length) {
+      return liveState
+        ? {
+            ...summary,
+            cricketLive: liveState
+          }
+        : summary;
+    }
 
     return {
       ...summary,
+      ...(liveState ? { cricketLive: liveState } : {}),
       commentary,
       timeline: isSyntheticTimelineEntries(summary.timeline || [], summary)
         ? buildCricketTimelineFromCommentary(commentary)
