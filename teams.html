@@ -6,13 +6,13 @@
 <base href="/">
 <title>LivescoreFree.online | Teams Hub</title>
 <meta name="description" content="Explore club and franchise profiles across the current LivescoreFree theme with a dedicated teams hub page."/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="/css/style.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
     <!-- Real-time Data Configuration -->
     <script src="/js/config.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
-  tailwind.config = {
+  window.tailwind = window.tailwind || {}; window.tailwind.config = {
     darkMode: "class",
     theme: {
       extend: {
@@ -224,7 +224,7 @@
   </div>
 </div>
 
-<script src="/js/script.js?v=1.0.28"></script>
+<script src="/js/script.js?v=1.0.30"></script>
     <script src="/js/databus.js?v=1.0.1"></script>
 <script>
   const teamParams = new URLSearchParams(window.location.search);

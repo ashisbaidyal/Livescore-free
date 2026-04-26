@@ -1,27 +1,79 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./index.html",
-    "./match.html",
+    "./*.html",
     "./js/**/*.js"
   ],
   theme: {
     extend: {
       colors: {
-        background: '#0B0F19',
-        surface: '#121826',
-        'surface-soft': '#1A2234',
-        foreground: '#F8FAFC',
-        muted: '#94A3B8',
-        brand: '#00E676',
-        accent: '#FF5E5B',
-        line: 'rgba(255, 255, 255, 0.06)'
+        "on-primary": "#690003",
+        "tertiary-fixed-dim": "#c3c6cf",
+        "on-primary-fixed-variant": "#930006",
+        "secondary-container": "#1fa64a",
+        "on-secondary-fixed-variant": "#00531f",
+        "surface-container-low": "#1c1b1b",
+        "tertiary": "#c3c6cf",
+        "on-tertiary-container": "#e3e6ef",
+        "inverse-primary": "#bf050e",
+        "secondary": "#62df7b",
+        "inverse-surface": "#e5e2e1",
+        "surface": "#131313",
+        "on-secondary-fixed": "#002108",
+        "tertiary-container": "#63676f",
+        "on-background": "#e5e2e1",
+        "on-primary-container": "#FFE5E5",
+        "background": "#131313",
+        "outline-variant": "#5d3f3c",
+        "tertiary-fixed": "#dfe2eb",
+        "on-tertiary": "#2d3137",
+        "secondary-fixed-dim": "#62df7b",
+        "secondary-fixed": "#80fc94",
+        "surface-dim": "#131313",
+        "surface-bright": "#3a3939",
+        "on-surface-variant": "#8B0000",
+        "error": "#FF0000",
+        "surface-container-highest": "#353534",
+        "primary": "#CC1616",
+        "on-tertiary-fixed-variant": "#43474e",
+        "inverse-on-surface": "#313030",
+        "primary-fixed-dim": "#FF1E1E",
+        "primary-container": "#cc1616",
+        "on-secondary": "#003913",
+        "on-error-container": "#FFECEC",
+        "primary-fixed": "#FFFFFF",
+        "surface-container-lowest": "#0e0e0e",
+        "on-surface": "#e5e2e1",
+        "surface-container-high": "#2a2a2a",
+        "error-container": "#93000a",
+        "surface-tint": "#CC1616",
+        "on-error": "#690005",
+        "outline": "#ad8883",
+        "on-tertiary-fixed": "#181c22",
+        "on-secondary-container": "#00320f",
+        "surface-variant": "#353534",
+        "surface-container": "#201f1f",
+        "on-primary-fixed": "#410001",
+        "foreground": "#F8FAFC",
+        "muted": "#94A3B8",
+        "brand": "#00E676",
+        "accent": "#FF5E5B",
+        "line": "rgba(255, 255, 255, 0.06)"
       },
       fontFamily: {
-        sans: ['"Inter"', 'sans-serif'],
-        display: ['"Oswald"', 'sans-serif']
+        sans: ['"Lexend"', 'sans-serif'],
+        display: ['"Lexend"', 'sans-serif'],
+        headline: ['"Lexend"', 'sans-serif'],
+        body: ['"Lexend"', 'sans-serif'],
+        label: ['"Lexend"', 'sans-serif']
+      },
+      borderRadius: {
+        DEFAULT: "0.125rem",
+        lg: "0.25rem",
+        xl: "0.5rem",
+        full: "0.75rem"
       }
     },
   },
   plugins: [],
-}
+};

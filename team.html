@@ -6,13 +6,13 @@
 <base href="/">
 <title>LivescoreFree.online | Team Profile</title>
 <meta name="description" content="Dedicated team profile page for the LivescoreFree theme, including club identity, venue, record, and connected navigation."/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="/css/style.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
     <!-- Real-time Data Configuration -->
     <script src="/js/config.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
-  tailwind.config = {
+  window.tailwind = window.tailwind || {}; window.tailwind.config = {
     darkMode: "class",
     theme: {
       extend: {
@@ -113,7 +113,7 @@
 
   <main class="flex-1 w-full bg-surface min-h-screen">
     <section class="relative overflow-hidden border-b border-white/5">
-      <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517927033932-b3d18e61fb3a?auto=format&fit=crop&q=80&w=1600')] bg-cover bg-center opacity-25"></div>
+      <div class="absolute inset-0 bg-cover bg-center opacity-25" style="background-image:url('/public/hero-fallback.jpg');"></div>
       <div class="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-black/20"></div>
       <div class="relative max-w-7xl mx-auto px-8 py-16 lg:py-20">
         <div class="flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-12">
@@ -267,7 +267,7 @@
   </div>
 </div>
 
-<script src="/js/script.js?v=1.0.28"></script>
+<script src="/js/script.js?v=1.0.30"></script>
     <script src="/js/databus.js?v=1.0.1"></script>
 <script>
   function safeUpper(value) {

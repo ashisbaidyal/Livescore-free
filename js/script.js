@@ -601,7 +601,11 @@ function formatTickerDate(match = {}) {
 }
 
 function getSafeImageUrl(url, fallback = FALLBACK_HERO_IMAGE) {
-  if (!url || url.includes("unsplash.com")) return fallback;
+  const source = String(url || '').trim();
+  if (!source) return fallback;
+  if (source.includes('unsplash.com')) return fallback;
+  if (/a\.espncdn\.com\/i\/headshots\/cricket\/players\/full\//i.test(source)) return fallback;
+  if (/fonts\.googleapis\.com\/css2/i.test(source)) return fallback;
   return url;
 }
 
@@ -3780,6 +3784,11 @@ function setupAppShell() {
   }
 
   window.addEventListener('beforeinstallprompt', (event) => {
+    if (isCompactMobileShell()) {
+      deferredInstallPrompt = null;
+      updateInstallUi();
+      return;
+    }
     event.preventDefault();
     deferredInstallPrompt = event;
     updateInstallUi();
@@ -6865,6 +6874,103 @@ function parseCricketScorecard(rawScore = '') {
   };
 }
 
+function normalizeCricketLinescoreEntry(entry = {}) {
+  const period = Number(entry?.period ?? entry?.value ?? 0);
+  const runs = Number(entry?.runs);
+  const wickets = Number(entry?.wickets);
+  const oversRaw = entry?.overs;
+  return {
+    period: Number.isFinite(period) ? period : 0,
+    runs: Number.isFinite(runs) ? runs : null,
+    wickets: Number.isFinite(wickets) ? wickets : null,
+    oversText: sanitizeDisplayText(oversRaw === undefined || oversRaw === null ? '' : String(oversRaw)),
+    isCurrent: Boolean(entry?.isCurrent),
+    isBatting: Boolean(entry?.isBatting),
+    description: sanitizeDisplayText(entry?.description || '')
+  };
+}
+
+function formatCricketLinescoreValue(entry = {}) {
+  if (!Number.isFinite(entry?.runs)) return '';
+  return Number.isFinite(entry?.wickets)
+    ? `${entry.runs}/${entry.wickets}`
+    : String(entry.runs);
+}
+
+function getCricketLatestCommentaryText(data = {}, commentaryFeed = []) {
+  const candidates = [
+    data?.situation?.lastPlay?.text,
+    ...commentaryFeed.map((entry) => entry?.text || entry?.player || ''),
+    data?.statusText
+  ]
+    .map((value) => sanitizeDisplayText(String(value || '').trim()))
+    .filter(Boolean)
+    .filter((text) => !/^(live|scheduled for\b|venue:|date\b|match status\b)/i.test(text));
+
+  return candidates[0] || 'Awaiting live action';
+}
+
+function buildCricketSuperOverState(data = {}, innings = null, commentaryFeed = []) {
+  const homeLines = (Array.isArray(data?.homeTeam?.linescores) ? data.homeTeam.linescores : []).map(normalizeCricketLinescoreEntry);
+  const awayLines = (Array.isArray(data?.awayTeam?.linescores) ? data.awayTeam.linescores : []).map(normalizeCricketLinescoreEntry);
+  const contextText = [
+    data?.statusText,
+    data?.time,
+    data?.situation?.lastPlay?.text,
+    data?.homeTeam?.score,
+    data?.awayTeam?.score,
+    ...commentaryFeed.slice(0, 8).map((entry) => entry?.text || entry?.player || '')
+  ].map((value) => sanitizeDisplayText(String(value || '').trim()).toLowerCase()).join(' ');
+  const hasSuperOverText = /super[\s-]?over|one[\s-]?over eliminator/.test(contextText);
+  const isLive = String(data?.status || '').toLowerCase() === 'live';
+
+  const pickSuperOverLine = (lines = []) => {
+    const candidates = lines.filter((line) => {
+      const oversValue = Number.parseFloat(String(line?.oversText || '').replace(/[^0-9.]/g, ''));
+      const looksLikeOneOverFrame = Number.isFinite(oversValue) ? oversValue <= 1.1 : false;
+      return /super/.test(line.description) || (line.period > 2 && looksLikeOneOverFrame);
+    });
+    if (!candidates.length) return null;
+    const current = candidates.find((line) => line.isCurrent);
+    const resolved = current || [...candidates].sort((left, right) => (right.period || 0) - (left.period || 0))[0];
+    const scoreText = formatCricketLinescoreValue(resolved);
+    if (!scoreText) return null;
+    return {
+      ...resolved,
+      scoreText
+    };
+  };
+
+  let home = pickSuperOverLine(homeLines);
+  let away = pickSuperOverLine(awayLines);
+
+  if (hasSuperOverText && innings?.side) {
+    const activeScoreText = sanitizeDisplayText(innings?.score?.scoreText || '');
+    const opponentScoreText = sanitizeDisplayText(innings?.opponentScore?.scoreText || '');
+    if (innings.side === 'home') {
+      if (!home && activeScoreText) home = { scoreText: activeScoreText, isCurrent: isLive };
+      if (!away && opponentScoreText) away = { scoreText: opponentScoreText, isCurrent: false };
+    } else if (innings.side === 'away') {
+      if (!away && activeScoreText) away = { scoreText: activeScoreText, isCurrent: isLive };
+      if (!home && opponentScoreText) home = { scoreText: opponentScoreText, isCurrent: false };
+    }
+  }
+
+  if (!home && !away && !hasSuperOverText) return null;
+  return {
+    active: true,
+    isLive: isLive && (hasSuperOverText || Boolean(home?.isCurrent) || Boolean(away?.isCurrent)),
+    home,
+    away
+  };
+}
+
+function formatCricketSuperOverLine(state = null, side = 'home') {
+  const line = state?.[side];
+  if (!line?.scoreText) return '';
+  return `${state?.isLive && line.isCurrent ? 'SUPER OVER LIVE' : 'SUPER OVER'} ${line.scoreText}`;
+}
+
 function getCricketLiveInningsContext(data = {}) {
   const homeScore = parseCricketScorecard(data?.homeTeam?.score || '');
   const awayScore = parseCricketScorecard(data?.awayTeam?.score || '');
@@ -7367,7 +7473,7 @@ function ensureCricketLiveMobileShell(root) {
       <section class="lsf-cricket-mobile-scoreboard">
         <div class="flex items-start justify-between gap-3">
           <div class="text-[10px] font-black uppercase tracking-[0.28em] text-on-surface/45">Live Match</div>
-          <div id="mobile-cricket-status-pill" class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.24em] text-on-surface/70">Live</div>
+          <div id="mobile-cricket-status-pill" class="lsf-cricket-mobile-status-pill">Live</div>
         </div>
         <div class="mt-4 flex items-start justify-between gap-3">
           <div class="flex w-[4.6rem] flex-col items-center gap-2">
@@ -7376,6 +7482,7 @@ function ensureCricketLiveMobileShell(root) {
               <span id="mobile-cricket-home-abbr" class="lsf-cricket-mobile-abbr-text">IND</span>
             </div>
             <div id="mobile-cricket-home-name" class="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/65">Home</div>
+            <div id="mobile-cricket-home-extra" class="lsf-cricket-mobile-team-extra" hidden></div>
           </div>
           <div class="min-w-0 flex-1 text-center">
             <div id="mobile-cricket-score" class="lsf-cricket-mobile-score-value">0/0</div>
@@ -7387,10 +7494,11 @@ function ensureCricketLiveMobileShell(root) {
               <span id="mobile-cricket-away-abbr" class="lsf-cricket-mobile-abbr-text">AWY</span>
             </div>
             <div id="mobile-cricket-away-name" class="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface/65">Away</div>
+            <div id="mobile-cricket-away-extra" class="lsf-cricket-mobile-team-extra" hidden></div>
           </div>
         </div>
         <div class="mt-4 text-center text-[11px] font-bold text-on-surface/72">
-          <span id="mobile-last-event-text">Awaiting live action</span>
+          <span id="mobile-cricket-commentary">Awaiting live action</span>
         </div>
         <div class="lsf-cricket-mobile-score-meta">
           <div class="lsf-cricket-mobile-score-meta-item">
@@ -7572,6 +7680,8 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   const runsRequired = scoringContext.runsRequired;
   const targetScore = scoringContext.targetScore;
   const partnershipRuns = computeCricketPartnershipRuns(deliveries);
+  const latestCommentary = getCricketLatestCommentaryText(data, commentaryFeed);
+  const superOverState = buildCricketSuperOverState(data, innings, commentaryFeed);
   const probabilities = computeCricketLiveProbabilities({
     side: innings?.side,
     score: activeScore,
@@ -7586,11 +7696,20 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
     const node = document.getElementById(id);
     if (node) node.textContent = sanitizeDisplayText(value || '');
   };
+  const setOptionalText = (id, value) => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    const nextValue = sanitizeDisplayText(value || '');
+    node.textContent = nextValue;
+    node.hidden = !nextValue;
+  };
   setText('mobile-cricket-status-pill', String(data?.status || '').toLowerCase() === 'live' ? 'LIVE' : (data?.statusText || 'LIVE'));
   setText('mobile-cricket-home-abbr', data?.homeTeam?.abbreviation || data?.homeTeam?.name || 'HOME');
   setText('mobile-cricket-away-abbr', data?.awayTeam?.abbreviation || data?.awayTeam?.name || 'AWAY');
   setText('mobile-cricket-home-name', data?.homeTeam?.fullName || data?.homeTeam?.name || 'Home');
   setText('mobile-cricket-away-name', data?.awayTeam?.fullName || data?.awayTeam?.name || 'Away');
+  setOptionalText('mobile-cricket-home-extra', formatCricketSuperOverLine(superOverState, 'home'));
+  setOptionalText('mobile-cricket-away-extra', formatCricketSuperOverLine(superOverState, 'away'));
   if (homeLogo) {
     homeLogo.src = getSafeImageUrl(data?.homeTeam?.logo, FALLBACK_LOGO);
     homeLogo.alt = sanitizeDisplayText(data?.homeTeam?.name || 'Home team');
@@ -7605,7 +7724,7 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   setText('mobile-cricket-score', scoreValue);
   applyCricketMobileScoreFit(scoreValue);
   setText('mobile-cricket-overs', activeScore?.oversText ? `${activeScore.oversText} OVERS` : (data?.time || data?.statusText || 'LIVE'));
-  setText('mobile-last-event-text', commentaryFeed?.[0]?.text || commentaryFeed?.[0]?.player || data?.statusText || 'Awaiting live action');
+  setText('mobile-cricket-commentary', latestCommentary);
   setText('mobile-cricket-run-rate', Number.isFinite(runRate) ? runRate.toFixed(2) : 'N/A');
   setText('mobile-cricket-required-rate', Number.isFinite(requiredRate) ? requiredRate.toFixed(2) : 'N/A');
   setText('mobile-cricket-striker-name', strikerState.name);
@@ -7915,7 +8034,7 @@ function renderMobileLineupPanel(data = {}) {
   const defaultAvatar = `data:image/svg+xml;base64,${btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(255,255,255,0.2)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>')}`;
   container.innerHTML = lineup.slice(0, 8).map((player) => `
     <div class="lsf-mobile-lineup-chip">
-      <img src="${player.face || defaultAvatar}" alt="${sanitizeDisplayText(player.name || 'Player')}" class="mx-auto h-12 w-12 rounded-xl border border-white/10 bg-white/5 object-cover" onerror="this.src='${defaultAvatar}'">
+      <img src="${getSafeImageUrl(player.face, defaultAvatar)}" alt="${sanitizeDisplayText(player.name || 'Player')}" class="mx-auto h-12 w-12 rounded-xl border border-white/10 bg-white/5 object-cover" onerror="this.src='${defaultAvatar}'">
       <div class="mt-3 text-[10px] font-black uppercase leading-tight">${sanitizeDisplayText(player.name || 'Player')}</div>
       <div class="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-on-surface/35">${sanitizeDisplayText(player.position || 'Squad')}</div>
     </div>
@@ -8070,17 +8189,28 @@ function ensureDesktopCricketLiveShell(root) {
         </div>
         <div class="lsf-desktop-live-score-row lsf-desktop-live-score-row--cricket">
           <div class="lsf-desktop-live-team-panel">
-            <div class="lsf-desktop-live-team-tile">
+          <div class="lsf-desktop-live-team-tile">
               <img id="desktop-cricket-home-logo" alt="Home team" class="lsf-desktop-live-team-logo" src="${FALLBACK_LOGO}">
             </div>
             <div id="desktop-cricket-home-abbr" class="lsf-desktop-live-team-abbr">HOME</div>
             <div id="desktop-cricket-home-name" class="lsf-desktop-live-team-name">Home Team</div>
             <div id="desktop-cricket-home-sub" class="lsf-desktop-live-team-sub">Awaiting innings data</div>
+            <div id="desktop-cricket-home-extra" class="lsf-desktop-live-team-extra" hidden></div>
           </div>
           <div class="lsf-desktop-live-score-centre">
             <div id="desktop-cricket-score" class="lsf-desktop-live-cricket-score">0/0</div>
             <div id="desktop-cricket-overs" class="lsf-desktop-live-score-meta">0.0 Overs</div>
-            <div id="desktop-cricket-rate" class="lsf-desktop-live-score-note">CRR -- | REQ --</div>
+            <div id="desktop-cricket-commentary" class="lsf-desktop-live-commentary">Awaiting live action</div>
+            <div class="lsf-desktop-live-rate-grid">
+              <div class="lsf-desktop-live-rate-chip">
+                <span>Run Rate</span>
+                <strong id="desktop-cricket-run-rate-value">N/A</strong>
+              </div>
+              <div class="lsf-desktop-live-rate-chip">
+                <span>Required</span>
+                <strong id="desktop-cricket-required-rate-value">N/A</strong>
+              </div>
+            </div>
           </div>
           <div class="lsf-desktop-live-team-panel">
             <div class="lsf-desktop-live-team-tile">
@@ -8089,6 +8219,7 @@ function ensureDesktopCricketLiveShell(root) {
             <div id="desktop-cricket-away-abbr" class="lsf-desktop-live-team-abbr">AWAY</div>
             <div id="desktop-cricket-away-name" class="lsf-desktop-live-team-name">Away Team</div>
             <div id="desktop-cricket-away-sub" class="lsf-desktop-live-team-sub">Awaiting innings data</div>
+            <div id="desktop-cricket-away-extra" class="lsf-desktop-live-team-extra" hidden></div>
           </div>
         </div>
         <div class="lsf-desktop-live-pill-row">
@@ -8267,6 +8398,8 @@ function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   const runsRequired = scoringContext.runsRequired;
   const targetScore = scoringContext.targetScore;
   const partnershipRuns = computeCricketPartnershipRuns(deliveries);
+  const latestCommentary = getCricketLatestCommentaryText(data, commentaryFeed);
+  const superOverState = buildCricketSuperOverState(data, innings, commentaryFeed);
   const probabilities = computeCricketLiveProbabilities({
     side: innings?.side,
     score: activeScore,
@@ -8295,6 +8428,13 @@ function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
     const node = document.getElementById(id);
     if (node) node.textContent = sanitizeDisplayText(value || '');
   };
+  const setOptionalText = (id, value) => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    const nextValue = sanitizeDisplayText(value || '');
+    node.textContent = nextValue;
+    node.hidden = !nextValue;
+  };
   const setImage = (id, src, alt) => {
     const node = document.getElementById(id);
     if (!node) return;
@@ -8313,9 +8453,13 @@ function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   setText('desktop-cricket-away-name', data?.awayTeam?.fullName || data?.awayTeam?.name || 'Away Team');
   setText('desktop-cricket-home-sub', teamDescriptor('home', data?.homeTeam, homeScore));
   setText('desktop-cricket-away-sub', teamDescriptor('away', data?.awayTeam, awayScore));
+  setOptionalText('desktop-cricket-home-extra', formatCricketSuperOverLine(superOverState, 'home'));
+  setOptionalText('desktop-cricket-away-extra', formatCricketSuperOverLine(superOverState, 'away'));
   setText('desktop-cricket-score', activeScore?.scoreText || data?.awayTeam?.score || data?.homeTeam?.score || '0/0');
   setText('desktop-cricket-overs', activeScore?.oversText ? `${activeScore.oversText} Overs` : (data?.time || 'LIVE'));
-  setText('desktop-cricket-rate', `CRR ${Number.isFinite(runRate) ? runRate.toFixed(2) : '--'} | REQ ${Number.isFinite(requiredRate) ? requiredRate.toFixed(2) : 'N/A'}`);
+  setText('desktop-cricket-commentary', latestCommentary);
+  setText('desktop-cricket-run-rate-value', Number.isFinite(runRate) ? runRate.toFixed(2) : 'N/A');
+  setText('desktop-cricket-required-rate-value', Number.isFinite(requiredRate) ? requiredRate.toFixed(2) : 'N/A');
   setText('desktop-cricket-striker-name', strikerState.name);
   setText('desktop-cricket-striker-meta', strikerState.meta);
   setText('desktop-cricket-striker-value', strikerState.primary);
@@ -8987,7 +9131,7 @@ function renderMatchLineup(data) {
         <div class="flex items-center justify-between group cursor-default p-2 rounded-lg hover:bg-white/5 transition-all">
             <div class="flex items-center space-x-4">
                 <div class="relative">
-                    <img src="${p.face || defaultAvatar}" class="w-10 h-10 rounded-full border border-white/10 object-cover bg-white/5 group-hover:border-primary transition-all" onerror="this.src='${defaultAvatar}'">
+                    <img src="${getSafeImageUrl(p.face, defaultAvatar)}" class="w-10 h-10 rounded-full border border-white/10 object-cover bg-white/5 group-hover:border-primary transition-all" onerror="this.src='${defaultAvatar}'">
                     ${p.starter ? '<span class="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-surface"></span>' : ''}
                 </div>
                 <div class="flex flex-col">

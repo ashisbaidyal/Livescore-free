@@ -1,5 +1,5 @@
-const STATIC_CACHE = "lsf-static-v27";
-const DATA_CACHE = "lsf-data-v19";
+const STATIC_CACHE = "lsf-static-v29";
+const DATA_CACHE = "lsf-data-v20";
 const APP_SHELL = [
   "/index.html",
   "/ipl.html",
@@ -22,8 +22,10 @@ const APP_SHELL = [
   "/robots.txt",
   "/manifest.webmanifest",
   "/offline.html",
-  "/js/script.js?v=1.0.27",
+  "/js/config.js",
+  "/js/script.js?v=1.0.30",
   "/js/ipl-hub.js?v=1.0.17",
+  "/css/style.css",
   "/css/runtime-enhancements.css",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -55,6 +57,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
 
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(networkFirst(request, DATA_CACHE));
@@ -65,6 +68,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
+          if (!response.ok) return response;
           const copy = response.clone();
           caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
           return response;
@@ -93,8 +97,7 @@ async function networkFirst(request, cacheName) {
     return response;
   } catch (error) {
     const cached = await cache.match(request);
-    if (cached) return cached;
-    throw error;
+    return cached || Response.error();
   }
 }
 
@@ -103,10 +106,12 @@ async function staleWhileRevalidate(request, cacheName) {
   const cached = await cache.match(request);
   const networkPromise = fetch(request)
     .then((response) => {
-      cache.put(request, response.clone());
+      if (response.ok) {
+        cache.put(request, response.clone());
+      }
       return response;
     })
-    .catch(() => cached);
+    .catch(() => cached || Response.error());
 
   return cached || networkPromise;
 }

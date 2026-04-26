@@ -10,6 +10,7 @@ import {
   getDefaultLeague,
   jsonResponse,
   mapStatus,
+  normalizeCricketLinescores,
   normalizeLeagueParam,
   normalizeRosterGroups,
   normalizeScoreboardEvent,
@@ -927,7 +928,8 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
       logo: home.team?.logos?.[0]?.href || home.team?.logo || FALLBACK_LOGO,
       score: home.score || "0",
       record: home.records?.[0]?.summary || "",
-      lineup: normalizeLineup(data, "home")
+      lineup: normalizeLineup(data, "home"),
+      linescores: normalizeCricketLinescores(home.linescores || [])
     },
     awayTeam: {
       id: away.team?.id || "",
@@ -936,7 +938,8 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
       logo: away.team?.logos?.[0]?.href || away.team?.logo || FALLBACK_LOGO,
       score: away.score || "0",
       record: away.records?.[0]?.summary || "",
-      lineup: normalizeLineup(data, "away")
+      lineup: normalizeLineup(data, "away"),
+      linescores: normalizeCricketLinescores(away.linescores || [])
     },
     stats: normalizeStats(data),
     timeline,

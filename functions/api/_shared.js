@@ -557,7 +557,8 @@ export function normalizeScoreboardEvent(event = {}, sport, leagueSlug, leagueNa
             name: homeLeader.athlete?.displayName || "",
             value: homeLeader.displayValue || ""
           }
-        : null
+        : null,
+      linescores: normalizeCricketLinescores(home.linescores || [])
     },
     awayTeam: {
       id: away.team?.id || "",
@@ -574,9 +575,29 @@ export function normalizeScoreboardEvent(event = {}, sport, leagueSlug, leagueNa
             name: awayLeader.athlete?.displayName || "",
             value: awayLeader.displayValue || ""
           }
-        : null
+        : null,
+      linescores: normalizeCricketLinescores(away.linescores || [])
     }
   };
+}
+
+export function normalizeCricketLinescores(linescores = []) {
+  return (Array.isArray(linescores) ? linescores : []).map((entry) => {
+    const period = Number(entry?.period ?? entry?.value ?? 0);
+    const runs = Number(entry?.runs);
+    const wickets = Number(entry?.wickets);
+    const oversRaw = entry?.overs;
+    const overs = Number.isFinite(oversRaw) ? oversRaw : Number(String(oversRaw || "").trim());
+    return {
+      period: Number.isFinite(period) ? period : 0,
+      runs: Number.isFinite(runs) ? runs : null,
+      wickets: Number.isFinite(wickets) ? wickets : null,
+      overs: Number.isFinite(overs) ? overs : null,
+      isBatting: Boolean(entry?.isBatting),
+      isCurrent: Boolean(entry?.isCurrent),
+      description: String(entry?.description || "").trim()
+    };
+  });
 }
 
 export function normalizeTeamEntry(entry = {}, sport = "soccer", league = "eng.1") {
