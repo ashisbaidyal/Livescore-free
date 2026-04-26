@@ -466,6 +466,38 @@ export function mapStatus(state = "pre") {
   return "upcoming";
 }
 
+function resolveScoreboardStatus(statusType = {}, event = {}, competition = {}) {
+  const state = String(statusType?.state || event?.status?.type?.state || competition?.status?.type?.state || "pre").toLowerCase();
+  const completed = Boolean(
+    statusType?.completed
+    ?? event?.status?.type?.completed
+    ?? competition?.status?.type?.completed
+    ?? event?.status?.completed
+    ?? competition?.status?.completed
+  );
+
+  if (completed) return "finished";
+
+  const statusText = [
+    statusType?.shortDetail,
+    statusType?.detail,
+    statusType?.description,
+    event?.status?.type?.shortDetail,
+    event?.status?.type?.detail,
+    competition?.status?.type?.shortDetail,
+    competition?.status?.type?.detail
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (/(^|\b)(final|full time|full-time|ft|game over|won by|match tied|match drawn|abandoned|cancelled|canceled)(\b|$)/.test(statusText)) {
+    return "finished";
+  }
+
+  return mapStatus(state);
+}
+
 export function parseDateRange(daysAhead = 7) {
   const dates = [];
   const now = new Date();
@@ -533,7 +565,7 @@ export function normalizeScoreboardEvent(event = {}, sport, leagueSlug, leagueNa
     leagueSlug,
     leagueSearchValue: leagueSlug,
     league: leagueName || extractLeagueName({ leagues: [{ name: leagueName }] }, leagueName),
-    status: mapStatus(statusType.state),
+    status: resolveScoreboardStatus(statusType, event, competition),
     statusText: statusType.detail || statusType.description || statusType.shortDetail || "",
     time: statusType.shortDetail || statusType.detail || "",
     period: event.status?.period || competition.status?.period || null,

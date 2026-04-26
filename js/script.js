@@ -398,8 +398,13 @@ function setupNewsExpansion() {
 function broadcastLiveMatches(matches) {
   const normalizedMatches = filterRenderableMatches(Array.isArray(matches) ? matches : []);
   const liveMatches = normalizedMatches.filter((match) => match.status === 'live');
+  const upcomingMatches = normalizedMatches.filter((match) => match.status === 'upcoming');
+  const finishedMatches = normalizedMatches.filter((match) => match.status === 'finished');
   window._cachedMatches = normalizedMatches;
   window._cachedLiveMatches = liveMatches;
+  window._cachedUpcoming = mergeCachedMatchesByStatus(window._cachedUpcoming || window._cachedUpcomingMatches || [], upcomingMatches, 'upcoming');
+  window._cachedUpcomingMatches = window._cachedUpcoming;
+  window._cachedResults = mergeCachedMatchesByStatus(window._cachedResults || [], finishedMatches, 'finished');
 
   const liveCountText = document.getElementById('live-count-text');
   const liveHeroCountText = document.getElementById('live-hero-count-text');
@@ -413,10 +418,19 @@ function broadcastLiveMatches(matches) {
   if (typeof renderMatches === 'function' && currentPageFilter === 'live') {
     renderMatches(sortMatchesForDisplay(liveMatches, 'live'));
   }
+  if (typeof renderMatches === 'function' && currentPageFilter === 'finished') {
+    renderMatches(sortMatchesForDisplay(window._cachedResults || [], 'finished'));
+  }
   if (typeof renderMatches === 'function' && isCurrentPage('trending')) {
     renderMatches(combineMatchPools(liveMatches, window._cachedUpcoming || window._cachedUpcomingMatches || [], window._cachedResults || []).slice(0, 18));
   }
   if (typeof renderSidebarLive === 'function') renderSidebarLive(liveMatches.slice(0, 5));
+  if (typeof updateResultsSectionMeta === 'function' && (isResultsHubPage() || currentPageFilter === 'finished')) {
+    updateResultsSectionMeta(window._cachedResults || []);
+  }
+  if (typeof renderResultsLeagueFilter === 'function' && isResultsHubPage()) {
+    renderResultsLeagueFilter(window._cachedResults || []);
+  }
   
   // Update Hubs/Sliders
   if (typeof renderHeroSlider === 'function' && typeof heroSliderContainer !== 'undefined' && heroSliderContainer && currentPageFilter !== 'upcoming') {
@@ -2425,6 +2439,14 @@ function dedupeMatchesById(matches = []) {
   return Array.from(uniqueMatches.values());
 }
 
+function mergeCachedMatchesByStatus(existingMatches = [], incomingMatches = [], targetStatus = 'finished') {
+  const merged = dedupeMatchesById([
+    ...filterRenderableMatches(Array.isArray(incomingMatches) ? incomingMatches : []).filter((match) => match.status === targetStatus),
+    ...filterRenderableMatches(Array.isArray(existingMatches) ? existingMatches : []).filter((match) => match.status === targetStatus)
+  ]);
+  return sortMatchesForDisplay(merged, targetStatus);
+}
+
 function getMatchDateValue(match = {}) {
   const parsed = new Date(match?.date || 0).getTime();
   return Number.isFinite(parsed) ? parsed : 0;
@@ -3410,6 +3432,7 @@ function removeSavedReminder(matchId, silent = false) {
   writeStoredReminders(next);
   updateNotificationButton();
   renderNotificationPanel();
+  syncReminderButtons();
   if (!silent) {
     showRuntimeToast('Reminder removed');
   }
@@ -3629,6 +3652,7 @@ function persistReminder(reminder) {
     writeStoredReminders(next);
     updateNotificationButton();
     renderNotificationPanel();
+    syncReminderButtons();
   } catch (error) {
     console.error('Reminder persistence failed:', error);
   }
@@ -3696,6 +3720,35 @@ function updateNotificationButton(permission = notificationPermissionState) {
     : 'No saved reminders';
   button.setAttribute('aria-label', `${stateTitle}. ${reminderTitle}.`);
   button.setAttribute('title', `${stateTitle} | ${reminderTitle}`);
+}
+
+function hasSavedReminder(matchId = '') {
+  const key = String(matchId || '');
+  if (!key) return false;
+  return getSavedReminders().some((reminder) => String(reminder.matchId) === key);
+}
+
+function syncReminderButtons(root = document) {
+  const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+  const saved = new Set(getSavedReminders().map((reminder) => String(reminder.matchId)));
+  scope.querySelectorAll('[data-reminder-match-id]').forEach((button) => {
+    const matchId = String(button.dataset.reminderMatchId || '');
+    const active = saved.has(matchId);
+    const label = button.querySelector('[data-reminder-label]');
+    const icon = button.querySelector('[data-reminder-icon]');
+
+    button.dataset.state = active ? 'saved' : 'idle';
+    button.setAttribute('aria-pressed', String(active));
+    button.classList.toggle('bg-primary', active);
+    button.classList.toggle('text-white', active);
+    button.classList.toggle('border-primary/40', active);
+    button.classList.toggle('bg-white/5', !active);
+    button.classList.toggle('text-on-surface/40', !active);
+    button.classList.toggle('border-white/10', !active);
+
+    if (label) label.textContent = active ? 'REMINDER SAVED' : 'SET REMINDER';
+    if (icon) icon.textContent = active ? 'notifications_active' : 'notifications';
+  });
 }
 
 function updateInstallUi() {
@@ -4121,6 +4174,12 @@ window.handleNotification = async function(subject, detail) {
     return;
   }
 
+  if (hasSavedReminder(matchId)) {
+    removeSavedReminder(matchId, true);
+    showRuntimeToast('Reminder removed');
+    return;
+  }
+
   const match = findCachedMatch(matchId);
   const title = match
     ? `${match.homeTeam.name} vs ${match.awayTeam.name}`
@@ -4173,16 +4232,18 @@ window.slideArena = function (direction) {
 async function fetchArenaSchedule(sport = currentArenaTab) {
   const container = document.getElementById('arena-schedule-container');
   if (!container) return;
-  
-  const isUpcomingPage = window.location.pathname.includes('upcoming');
-  
+
   try {
     // Always use the dedicated upcoming API for real future fixtures
     const apiUrl = `${API_UPCOMING}?sport=${sport === 'all' ? 'all' : sport}&days=7`;
       
-    const res = await fetch(apiUrl);
+    const res = await fetch(apiUrl, { cache: 'no-store' });
     const data = await res.json();
-    const allMatches = filterRenderableMatches(data.matches || []);
+    const allMatches = sortMatchesForDisplay(
+      filterRenderableMatches(data.matches || []).filter((match) => match.status === 'upcoming'),
+      'upcoming'
+    );
+    window._cachedUpcoming = allMatches;
     window._cachedUpcomingMatches = allMatches;
     
     if (allMatches.length === 0) {
@@ -4197,7 +4258,7 @@ async function fetchArenaSchedule(sport = currentArenaTab) {
       `;
       return;
     }
-    
+      
     renderArenaSchedule(allMatches.slice(0, 12));
   } catch (err) {
     console.error('Arena Fetch Error:', err);
@@ -4316,6 +4377,40 @@ function renderArenaTabs() {
   `).join('');
 }
 
+function formatArenaScheduleDateParts(match = {}) {
+  const parsed = match?.date ? new Date(match.date) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) {
+    return {
+      dayLabel: 'SCHEDULED',
+      dateLabel: sanitizeDisplayText(match?.time || 'DATE TBD'),
+      timeLabel: 'TIME TBD'
+    };
+  }
+
+  const now = new Date();
+  const todayKey = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const kickoffKey = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime();
+  const dayDiff = Math.round((kickoffKey - todayKey) / 86400000);
+  let dayLabel = parsed.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  if (dayDiff === 0) dayLabel = 'TODAY';
+  else if (dayDiff === 1) dayLabel = 'TOMORROW';
+
+  return {
+    dayLabel,
+    dateLabel: parsed.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    }).toUpperCase(),
+    timeLabel: parsed.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZoneName: 'short'
+    }).toUpperCase()
+  };
+}
+
 window.switchArenaTab = function switchTab(tabId) {
   currentArenaTab = tabId;
   currentTab = tabId;
@@ -4345,7 +4440,12 @@ function renderArenaSchedule(matches) {
   const container = document.getElementById('arena-schedule-container');
   if (!container) return;
 
-  if (matches.length === 0) {
+  const scheduledMatches = sortMatchesForDisplay(
+    filterRenderableMatches(matches).filter((match) => match.status === 'upcoming'),
+    'upcoming'
+  );
+
+  if (scheduledMatches.length === 0) {
     container.innerHTML = `
       <div class="bg-surface-container border border-white/5 p-12 rounded-2xl flex items-center justify-center w-full min-h-[360px]">
         <p class="text-on-surface/30 font-black uppercase tracking-[0.3em] text-xs">No Scheduled Events Found</p>
@@ -4354,84 +4454,91 @@ function renderArenaSchedule(matches) {
     return;
   }
 
-  container.innerHTML = matches.map(match => {
+  container.innerHTML = scheduledMatches.map(match => {
     let dotColor = 'bg-primary';
     if (match.leagueSlug?.includes('esp.1')) dotColor = 'bg-yellow-500';
     if (match.leagueSlug?.includes('nba')) dotColor = 'bg-orange-500';
     if (match.leagueSlug?.includes('eng.1')) dotColor = 'bg-blue-500';
     if (match.leagueSlug?.includes('nfl')) dotColor = 'bg-red-600';
-
-    // Friendly date/time logic
-    let friendlyDate = match.time || '';
-    let dayLabel = 'TODAY';
-    try {
-      const d = new Date(match.date);
-      const now = new Date();
-      if (d.getDate() !== now.getDate()) {
-        dayLabel = 'TOMORROW';
-      }
-      friendlyDate = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    } catch(e) {}
-
+    const reminderSaved = hasSavedReminder(match.id);
+    const kickoff = formatArenaScheduleDateParts(match);
     const homeAbbr = match.homeTeam.abbreviation || match.homeTeam.name.substring(0, 3).toUpperCase();
     const awayAbbr = match.awayTeam.abbreviation || match.awayTeam.name.substring(0, 3).toUpperCase();
+    const venueLabel = sanitizeDisplayText(match.venue || match.broadcast || match.statusText || 'Venue details pending');
+    const detailUrl = buildMatchUrl(match);
 
     return `
       <div class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-white/10 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[450px] group min-w-[320px] snap-center shrink-0">
         <div>
-          <!-- Top Row: League & Time -->
-          <div class="flex justify-between items-center mb-12">
-            <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-on-surface/60">
-              <span class="w-2 h-2 rounded-full ${dotColor}"></span>
-              ${match.league || 'UPCOMING'}
-            </span>
-            <span class="text-[10px] font-black uppercase tracking-widest text-on-surface/40">
-              ${friendlyDate} ${dayLabel}
-            </span>
+          <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-4 mb-8 items-start">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-on-surface/60">
+                <span class="w-2 h-2 rounded-full ${dotColor} shrink-0"></span>
+                <span class="truncate">${match.league || 'UPCOMING'}</span>
+              </div>
+              <div class="mt-3 text-[10px] font-black uppercase tracking-[0.22em] text-on-surface/35">${kickoff.dateLabel}</div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-[9px] font-black uppercase tracking-[0.22em] text-on-surface/40">${kickoff.dayLabel}</div>
+              <div class="mt-2 text-sm font-black uppercase tracking-[0.08em] text-primary">${kickoff.timeLabel}</div>
+            </div>
           </div>
 
-          <!-- Middle Row: Team Circles & VS -->
           <div class="flex items-center justify-between mb-8 px-4">
-            <!-- Home Team Circle -->
             <div class="flex flex-col items-center gap-4">
-              <div class="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center relative group-hover:border-primary/50 transition-colors shadow-inner">
+              <div class="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative group-hover:border-primary/50 transition-colors shadow-inner overflow-hidden">
                 <span class="text-xl font-black tracking-tighter uppercase text-on-surface/80">${homeAbbr}</span>
-                <img src="${match.homeTeam.logo}" class="absolute w-12 h-12 object-contain opacity-10 group-hover:opacity-20 transition-opacity" onerror="this.style.display='none'">
+                <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" class="absolute w-12 h-12 object-contain opacity-25 group-hover:opacity-40 transition-opacity" onerror="this.src='${FALLBACK_LOGO}'">
               </div>
             </div>
 
-            <!-- VS Element -->
             <div class="flex flex-col items-center">
               <span class="text-3xl font-black text-primary italic tracking-tight transform group-hover:scale-110 transition-transform duration-700">VS</span>
             </div>
 
-            <!-- Away Team Circle -->
             <div class="flex flex-col items-center gap-4">
-              <div class="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center relative group-hover:border-primary/50 transition-colors shadow-inner">
+              <div class="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative group-hover:border-primary/50 transition-colors shadow-inner overflow-hidden">
                 <span class="text-xl font-black tracking-tighter uppercase text-on-surface/80">${awayAbbr}</span>
-                <img src="${match.awayTeam.logo}" class="absolute w-12 h-12 object-contain opacity-10 group-hover:opacity-20 transition-opacity" onerror="this.style.display='none'">
+                <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" class="absolute w-12 h-12 object-contain opacity-25 group-hover:opacity-40 transition-opacity" onerror="this.src='${FALLBACK_LOGO}'">
               </div>
             </div>
           </div>
 
-          <!-- Bottom Labels: Full Names -->
           <div class="flex justify-between px-2 text-center">
             <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/30 truncate w-32">${match.homeTeam.name}</span>
             <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/30 truncate w-32">${match.awayTeam.name}</span>
           </div>
+          <div class="mt-6 rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
+            <div class="text-[9px] font-black uppercase tracking-[0.22em] text-on-surface/35">Venue</div>
+            <div class="mt-2 text-sm font-bold leading-relaxed text-on-surface/72 line-clamp-2">${venueLabel}</div>
+          </div>
         </div>
 
-        <!-- Footer: Notify Button -->
         <div class="space-y-4">
           <div class="w-full h-px bg-white/5"></div>
-          <button onclick="handleNotification('${match.id}', '${encodeURIComponent(`${match.homeTeam.name} vs ${match.awayTeam.name}`)}')" 
-                  class="w-full py-4 bg-white/5 hover:bg-primary rounded-xl text-[10px] font-black uppercase tracking-widest text-on-surface/40 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2">
-            NOTIFY ME
-          </button>
+          <div class="grid grid-cols-2 gap-3">
+            <a href="${detailUrl}" class="w-full py-4 rounded-xl border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest text-on-surface/70 transition-all hover:border-primary/40 hover:text-white flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-sm">open_in_new</span>
+              OPEN FIXTURE
+            </a>
+            <button
+              type="button"
+              onclick="event.stopPropagation(); handleNotification('${String(match.id).replace(/'/g, "\\'")}', '${encodeURIComponent(`${match.homeTeam.name} vs ${match.awayTeam.name}`)}')"
+              data-reminder-match-id="${String(match.id).replace(/"/g, '&quot;')}"
+              data-state="${reminderSaved ? 'saved' : 'idle'}"
+              aria-pressed="${reminderSaved ? 'true' : 'false'}"
+              class="w-full py-4 rounded-xl border ${reminderSaved ? 'bg-primary border-primary/40 text-white' : 'bg-white/5 border-white/10 text-on-surface/40'} text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 hover:bg-primary hover:text-white hover:border-primary/40 flex items-center justify-center gap-2"
+            >
+              <span class="material-symbols-outlined text-sm" data-reminder-icon>${reminderSaved ? 'notifications_active' : 'notifications'}</span>
+              <span data-reminder-label>${reminderSaved ? 'REMINDER SAVED' : 'SET REMINDER'}</span>
+            </button>
+          </div>
         </div>
       </div>
     `;
   }).join('');
+
+  syncReminderButtons(container);
 }
 
 
