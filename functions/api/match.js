@@ -1258,6 +1258,27 @@ async function findScoreboardFallback(id, sport, league) {
   return null;
 }
 
+function getMatchResponseCacheSeconds(payload = {}, fallbackCacheSeconds = 15) {
+  const normalizedStatus = String(payload?.status || "").toLowerCase();
+  if (normalizedStatus === "live") return 4;
+  if (normalizedStatus === "upcoming") return 20;
+  return fallbackCacheSeconds;
+}
+
+function jsonMatchResponse(payload, fallbackCacheSeconds = 15, status = 200) {
+  const cacheSeconds = getMatchResponseCacheSeconds(payload, fallbackCacheSeconds);
+  const response = jsonResponse(payload, cacheSeconds, status);
+  const normalizedStatus = String(payload?.status || "").toLowerCase();
+  if (normalizedStatus === "live") {
+    response.headers.set(
+      "Cache-Control",
+      "public, max-age=4, s-maxage=4, stale-while-revalidate=2, stale-if-error=30"
+    );
+    response.headers.set("X-Cache-TTL-Reason", "live-match-fast-refresh");
+  }
+  return response;
+}
+
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
@@ -1289,7 +1310,7 @@ export async function onRequest(context) {
       const feedFallback = await findFeedFallback(request, id, sport, league);
       if (feedFallback) {
         const rosterHydratedFeed = await hydrateSummaryLineups(feedFallback, sport, league);
-        return jsonResponse({ ...sanitizeDisplayPayload(rosterHydratedFeed), meta: buildFeedMeta({ fallback: "feed" }) }, 15);
+        return jsonMatchResponse({ ...sanitizeDisplayPayload(rosterHydratedFeed), meta: buildFeedMeta({ fallback: "feed" }) }, 15);
       }
 
       const fallback = await findScoreboardFallback(id, sport, league);
@@ -1297,7 +1318,7 @@ export async function onRequest(context) {
         return jsonResponse({ notFound: true, meta: buildFeedMeta({ degraded: true }) }, 30, 404);
       }
       const rosterHydratedFallback = await hydrateSummaryLineups(fallback, sport, league);
-      return jsonResponse({ ...sanitizeDisplayPayload(rosterHydratedFallback), meta: buildFeedMeta() }, 15);
+      return jsonMatchResponse({ ...sanitizeDisplayPayload(rosterHydratedFallback), meta: buildFeedMeta() }, 15);
     }
 
     let normalizedSummary = normalizeSummary(summaryData, sport, league);
@@ -1309,18 +1330,18 @@ export async function onRequest(context) {
       if (feedFallback) {
         const mergedSummary = mergeSummaryPayload(normalizedSummary, feedFallback);
         const rosterHydratedMerged = await hydrateSummaryLineups(mergedSummary, sport, league);
-        return jsonResponse({ ...sanitizeDisplayPayload(rosterHydratedMerged), meta: buildFeedMeta({ fallback: "summary+feed" }) }, 15);
+        return jsonMatchResponse({ ...sanitizeDisplayPayload(rosterHydratedMerged), meta: buildFeedMeta({ fallback: "summary+feed" }) }, 15);
       }
 
       const scoreboardFallback = await findScoreboardFallback(id, sport, league);
       if (scoreboardFallback) {
         const mergedSummary = mergeSummaryPayload(normalizedSummary, scoreboardFallback);
         const rosterHydratedMerged = await hydrateSummaryLineups(mergedSummary, sport, league);
-        return jsonResponse({ ...sanitizeDisplayPayload(rosterHydratedMerged), meta: buildFeedMeta({ fallback: "summary+scoreboard" }) }, 15);
+        return jsonMatchResponse({ ...sanitizeDisplayPayload(rosterHydratedMerged), meta: buildFeedMeta({ fallback: "summary+scoreboard" }) }, 15);
       }
     }
 
-    return jsonResponse({ ...normalizedSummary, meta: buildFeedMeta() }, 15);
+    return jsonMatchResponse({ ...normalizedSummary, meta: buildFeedMeta() }, 15);
   } catch (error) {
     return jsonResponse({ error: error.message, meta: buildFeedMeta({ degraded: true }) }, 15, 500);
   }

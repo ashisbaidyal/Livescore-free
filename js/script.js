@@ -18,6 +18,9 @@ const LSF_CONFIG = window.LSF_CONFIG || {
   },
   refresh: {
     live: 8000,
+    matchLive: 4000,
+    matchPending: 20000,
+    matchRetry: 10000,
     results: 60000,
     upcoming: 90000,
     standings: 300000,
@@ -774,6 +777,9 @@ let currentLeagueFilter = '';
 let currentArenaTab = 'all'; // Filter for the Arena section
 let currentPageFilter = 'live'; // Added globally to track page-specific selection (live, upcoming, finished)
 let autoRefreshTimer = null;
+let matchDetailRefreshTimer = null;
+let matchDetailFetchPromise = null;
+let activeMatchDetailContext = null;
 let deferredInstallPrompt = null;
 let notificationPermissionState = typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;
 let notificationPanelVisible = false;
@@ -6394,34 +6400,112 @@ function syncLegacyMatchHeroVisibility(hidden = false) {
   }
 }
 
-// --- FETCH & UPDATE MATCH DETAIL ---
-async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1') {
-  syncLegacyMatchHeroVisibility(true);
-  try {
-    const result = await fetchMatchPayload(id, sport, league);
-    const data = result.data;
-
-    if (!data) {
-      console.error('Match detail unavailable for id:', id, 'status:', result.status);
-      setMatchUnavailableState(
-        result.notFound ? 'Match not found' : 'Match unavailable',
-        result.notFound ? 'Please try another match' : 'Please try again shortly'
-      );
-      return;
-    }
-
-    console.log('Match data received:', data, 'source:', result.source);
-    updateFeedRibbon(data.meta || {}, {
-      feedLabel: 'Match center',
-      matchCount: 1,
-      liveCount: data.status === 'live' ? 1 : 0
-    });
-    renderMatchDetail(data);
-  } catch (err) {
-    console.error('Failed to fetch match detail:', err);
-    setMatchUnavailableState('Error loading match', 'Check console for details');
+function clearMatchDetailRefreshTimer() {
+  if (matchDetailRefreshTimer) {
+    clearTimeout(matchDetailRefreshTimer);
+    matchDetailRefreshTimer = null;
   }
 }
+
+function getMatchDetailRefreshMs(status = '') {
+  const normalizedStatus = String(status || '').toLowerCase();
+  if (normalizedStatus === 'live') return REFRESH.matchLive || 4000;
+  if (normalizedStatus === 'upcoming') return REFRESH.matchPending || 20000;
+  if (normalizedStatus === 'error' || normalizedStatus === 'retry') return REFRESH.matchRetry || 10000;
+  return 0;
+}
+
+function scheduleMatchDetailRefresh(status = '') {
+  clearMatchDetailRefreshTimer();
+  if (!activeMatchDetailContext?.id) return;
+  const refreshMs = getMatchDetailRefreshMs(status);
+  if (!refreshMs) return;
+
+  matchDetailRefreshTimer = window.setTimeout(() => {
+    if (!activeMatchDetailContext?.id) return;
+    if (document.hidden) {
+      scheduleMatchDetailRefresh(status);
+      return;
+    }
+    fetchMatchDetail(
+      activeMatchDetailContext.id,
+      activeMatchDetailContext.sport,
+      activeMatchDetailContext.league,
+      { reason: 'timer' }
+    ).catch(() => {});
+  }, refreshMs);
+}
+
+function syncMatchDetailRefreshFromData(data = {}) {
+  scheduleMatchDetailRefresh(String(data?.status || '').toLowerCase());
+}
+
+// --- FETCH & UPDATE MATCH DETAIL ---
+async function fetchMatchDetail(id, sport = 'soccer', league = 'eng.1', options = {}) {
+  activeMatchDetailContext = { id, sport, league };
+  if (matchDetailFetchPromise) return matchDetailFetchPromise;
+  syncLegacyMatchHeroVisibility(true);
+  matchDetailFetchPromise = (async () => {
+    try {
+      const result = await fetchMatchPayload(id, sport, league);
+      const data = result.data;
+
+      if (!data) {
+        console.error('Match detail unavailable for id:', id, 'status:', result.status);
+        setMatchUnavailableState(
+          result.notFound ? 'Match not found' : 'Match unavailable',
+          result.notFound ? 'Please try another match' : 'Please try again shortly'
+        );
+        scheduleMatchDetailRefresh(result.notFound ? '' : 'retry');
+        return null;
+      }
+
+      console.log('Match data received:', data, 'source:', result.source, options?.reason ? `reason:${options.reason}` : '');
+      updateFeedRibbon(data.meta || {}, {
+        feedLabel: 'Match center',
+        matchCount: 1,
+        liveCount: data.status === 'live' ? 1 : 0
+      });
+      renderMatchDetail(data);
+      return data;
+    } catch (err) {
+      console.error('Failed to fetch match detail:', err);
+      setMatchUnavailableState('Error loading match', 'Check console for details');
+      scheduleMatchDetailRefresh('error');
+      return null;
+    } finally {
+      matchDetailFetchPromise = null;
+    }
+  })();
+  return matchDetailFetchPromise;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  const latestStatus = String(window._latestMatchDetailData?.status || '').toLowerCase();
+  if (!activeMatchDetailContext?.id || !latestStatus) return;
+  if (latestStatus === 'live' || latestStatus === 'upcoming') {
+    fetchMatchDetail(
+      activeMatchDetailContext.id,
+      activeMatchDetailContext.sport,
+      activeMatchDetailContext.league,
+      { reason: 'visibility' }
+    ).catch(() => {});
+  }
+});
+
+window.addEventListener('online', () => {
+  const latestStatus = String(window._latestMatchDetailData?.status || '').toLowerCase();
+  if (!activeMatchDetailContext?.id || !latestStatus) return;
+  if (latestStatus === 'live' || latestStatus === 'upcoming') {
+    fetchMatchDetail(
+      activeMatchDetailContext.id,
+      activeMatchDetailContext.sport,
+      activeMatchDetailContext.league,
+      { reason: 'online' }
+    ).catch(() => {});
+  }
+});
 
 // --- RENDER MATCH CARDS (HOME) ---
 function renderMatches(matches) {
@@ -6784,6 +6868,7 @@ function parseCricketScorecard(rawScore = '') {
 function getCricketLiveInningsContext(data = {}) {
   const homeScore = parseCricketScorecard(data?.homeTeam?.score || '');
   const awayScore = parseCricketScorecard(data?.awayTeam?.score || '');
+  const liveBatters = Array.isArray(data?.cricketLive?.batters) ? data.cricketLive.batters : [];
   const options = [
     {
       side: 'home',
@@ -6801,9 +6886,43 @@ function getCricketLiveInningsContext(data = {}) {
     }
   ];
 
+  const tokenizeName = (value = '') => sanitizeDisplayText(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((token) => token.length > 1);
+  const namesMatch = (left = '', right = '') => {
+    const leftTokens = tokenizeName(left);
+    const rightTokens = tokenizeName(right);
+    if (!leftTokens.length || !rightTokens.length) return false;
+    const rightSet = new Set(rightTokens);
+    const shared = leftTokens.filter((token) => rightSet.has(token));
+    return shared.length > 0
+      && (shared.length === leftTokens.length
+        || shared.length === rightTokens.length
+        || shared.some((token) => token.length >= 4));
+  };
+  const lineupMatchCount = (entry) => liveBatters.reduce((total, batter) => {
+    const batterName = sanitizeDisplayText(batter?.name || '');
+    if (!batterName) return total;
+    const hasLineupMatch = (entry?.team?.lineup || []).some((player) => namesMatch(player?.name || '', batterName));
+    return total + (hasLineupMatch ? 1 : 0);
+  }, 0);
+  const inningsProgressRank = (entry) => {
+    const overs = entry?.score?.overs;
+    const oversLimit = entry?.score?.oversLimit;
+    const wickets = entry?.score?.wickets;
+    if (!Number.isFinite(overs)) return 0;
+    if (!Number.isFinite(oversLimit)) return 110;
+    if (overs + 0.001 < oversLimit && (!Number.isFinite(wickets) || wickets < 10)) return 220;
+    if (Number.isFinite(wickets) && wickets >= 10) return 40;
+    return 80;
+  };
   const scoreRank = (entry) => {
     const raw = String(entry?.team?.score || '');
     let rank = 0;
+    rank += lineupMatchCount(entry) * 1000;
+    rank += inningsProgressRank(entry);
     if (entry?.score?.overs !== null) rank += 100;
     if (raw.includes('(')) rank += 80;
     if (entry?.score?.wickets !== null) rank += 40;
@@ -7040,6 +7159,60 @@ function isSameCricketLivePlayer(left = '', right = '') {
 
 function findCricketLiveMetric(entries = [], playerName = '') {
   return (entries || []).find((entry) => isSameCricketLivePlayer(entry?.name || '', playerName || '')) || null;
+}
+
+function resolveCricketBattingPair(innings = {}, deliveries = [], liveBatters = [], liveBowlers = []) {
+  const livePair = (liveBatters || [])
+    .map((entry) => sanitizeDisplayText(entry?.name || ''))
+    .filter(Boolean)
+    .slice(0, 2);
+  if (livePair.length) {
+    return {
+      strikerName: livePair[0] || sanitizeDisplayText(innings?.team?.leader?.name || innings?.team?.name || 'Batter'),
+      nonStrikerName: livePair[1] || sanitizeDisplayText((innings?.team?.lineup || []).find((player) => !isSameCricketLivePlayer(player?.name || '', livePair[0] || ''))?.name || 'Awaiting partner'),
+      bowlerName: sanitizeDisplayText(liveBowlers?.[0]?.name || deliveries.find((delivery) => delivery.bowler)?.bowler || innings?.opponent?.leader?.name || innings?.opponent?.name || 'Bowler')
+    };
+  }
+
+  const bowlerName = sanitizeDisplayText(liveBowlers?.[0]?.name || deliveries.find((delivery) => delivery.bowler)?.bowler || innings?.opponent?.leader?.name || innings?.opponent?.name || 'Bowler');
+  const excludedNames = [
+    bowlerName,
+    innings?.opponent?.leader?.name,
+    ...((innings?.opponent?.lineup || []).map((player) => player?.name || ''))
+  ]
+    .map((name) => sanitizeDisplayText(name || ''))
+    .filter(Boolean);
+  const isExcluded = (value = '') => {
+    const clean = sanitizeDisplayText(value || '');
+    if (!clean) return true;
+    return excludedNames.some((entry) => isSameCricketLivePlayer(entry, clean));
+  };
+
+  const recentBatters = [];
+  deliveries.forEach((delivery) => {
+    const batter = sanitizeDisplayText(delivery?.batter || '');
+    if (!batter || isExcluded(batter)) return;
+    if (recentBatters.some((entry) => isSameCricketLivePlayer(entry, batter))) return;
+    recentBatters.push(batter);
+  });
+
+  const lineupBatters = (innings?.team?.lineup || [])
+    .map((player) => sanitizeDisplayText(player?.name || ''))
+    .filter((name) => name && !isExcluded(name))
+    .filter((name, index, array) => array.findIndex((entry) => isSameCricketLivePlayer(entry, name)) === index);
+
+  const strikerName = recentBatters[0]
+    || lineupBatters[0]
+    || sanitizeDisplayText(innings?.team?.leader?.name || innings?.team?.name || 'Batter');
+  const nonStrikerName = recentBatters.find((name) => !isSameCricketLivePlayer(name, strikerName))
+    || lineupBatters.find((name) => !isSameCricketLivePlayer(name, strikerName))
+    || 'Awaiting partner';
+
+  return {
+    strikerName,
+    nonStrikerName,
+    bowlerName
+  };
 }
 
 function buildCricketPlayerCardState(name = '', role = '', team = {}, recentStats = new Map(), liveBatters = [], fallbackMeta = 'Awaiting live data') {
@@ -7380,15 +7553,14 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   const activeScore = innings?.score || {};
   const opponentScore = innings?.opponentScore || {};
   const deliveries = commentaryFeed.map((entry) => parseCricketDeliveryEvent(entry)).filter((entry) => entry.text);
-  const batterCandidates = buildCricketParticipantSet(innings?.team, deliveries);
   const recentBatterStats = buildCricketRecentBatterStats(deliveries);
   const liveBatters = data?.cricketLive?.batters || [];
   const liveBowlers = data?.cricketLive?.bowlers || [];
-  const strikerName = batterCandidates[0] || sanitizeDisplayText(innings?.team?.leader?.name || innings?.team?.name || 'Batter');
-  const nonStrikerName = batterCandidates.find((name) => name.toLowerCase() !== String(strikerName || '').toLowerCase())
-    || sanitizeDisplayText((innings?.team?.lineup || []).find((player) => String(player?.name || '').toLowerCase() !== String(strikerName || '').toLowerCase())?.name || 'Awaiting partner');
-  const bowlerName = deliveries.find((delivery) => delivery.bowler)?.bowler
-    || sanitizeDisplayText(innings?.opponent?.leader?.name || innings?.opponent?.name || 'Bowler');
+  const {
+    strikerName,
+    nonStrikerName,
+    bowlerName
+  } = resolveCricketBattingPair(innings, deliveries, liveBatters, liveBowlers);
 
   const runRate = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && activeScore.overs > 0
     ? (activeScore.runs / activeScore.overs)
@@ -8078,15 +8250,14 @@ function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   const activeScore = innings?.score || {};
   const opponentScore = innings?.opponentScore || {};
   const deliveries = commentaryFeed.map((entry) => parseCricketDeliveryEvent(entry)).filter((entry) => entry.text);
-  const batterCandidates = buildCricketParticipantSet(innings?.team, deliveries);
   const recentBatterStats = buildCricketRecentBatterStats(deliveries);
   const liveBatters = data?.cricketLive?.batters || [];
   const liveBowlers = data?.cricketLive?.bowlers || [];
-  const strikerName = batterCandidates[0] || sanitizeDisplayText(innings?.team?.leader?.name || innings?.team?.name || 'Batter');
-  const nonStrikerName = batterCandidates.find((name) => name.toLowerCase() !== String(strikerName || '').toLowerCase())
-    || sanitizeDisplayText((innings?.team?.lineup || []).find((player) => String(player?.name || '').toLowerCase() !== String(strikerName || '').toLowerCase())?.name || 'Awaiting partner');
-  const bowlerName = deliveries.find((delivery) => delivery.bowler)?.bowler
-    || sanitizeDisplayText(innings?.opponent?.leader?.name || innings?.opponent?.name || 'Bowler');
+  const {
+    strikerName,
+    nonStrikerName,
+    bowlerName
+  } = resolveCricketBattingPair(innings, deliveries, liveBatters, liveBowlers);
   const runRate = Number.isFinite(activeScore?.runs) && Number.isFinite(activeScore?.overs) && activeScore.overs > 0
     ? (activeScore.runs / activeScore.overs)
     : null;
@@ -8431,6 +8602,7 @@ function renderMatchDetail(data) {
   if (!homeTeamName || !data || !data.homeTeam) return;
   data = sanitizePayloadText(data);
   window._latestMatchDetailData = data;
+  syncMatchDetailRefreshFromData(data);
 
   const detailStats = Array.isArray(data.stats) && data.stats.length ? data.stats : buildSyntheticMatchStats(data);
   const detailTimeline = Array.isArray(data.timeline) && data.timeline.length ? data.timeline : buildSyntheticMatchTimeline(data);

@@ -21,6 +21,9 @@ window.LSF_CONFIG = {
     },
     refresh: {
         live: 8000,
+        matchLive: 4000,
+        matchPending: 20000,
+        matchRetry: 10000,
         results: 60000,
         upcoming: 90000,
         standings: 300000,
