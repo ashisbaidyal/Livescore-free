@@ -4378,12 +4378,16 @@ function renderArenaTabs() {
 }
 
 function formatArenaScheduleDateParts(match = {}) {
+  const locale = Array.isArray(navigator.languages) && navigator.languages.length
+    ? navigator.languages[0]
+    : (navigator.language || undefined);
   const parsed = match?.date ? new Date(match.date) : null;
   if (!parsed || Number.isNaN(parsed.getTime())) {
     return {
       dayLabel: 'SCHEDULED',
       dateLabel: sanitizeDisplayText(match?.time || 'DATE TBD'),
-      timeLabel: 'TIME TBD'
+      timeLabel: 'TIME TBD',
+      zoneLabel: 'LOCAL TIME'
     };
   }
 
@@ -4391,23 +4395,26 @@ function formatArenaScheduleDateParts(match = {}) {
   const todayKey = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const kickoffKey = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime();
   const dayDiff = Math.round((kickoffKey - todayKey) / 86400000);
-  let dayLabel = parsed.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  let dayLabel = parsed.toLocaleDateString(locale, { weekday: 'long' }).toUpperCase();
   if (dayDiff === 0) dayLabel = 'TODAY';
   else if (dayDiff === 1) dayLabel = 'TOMORROW';
 
+  const zonePart = new Intl.DateTimeFormat(locale, {
+    timeZoneName: 'short'
+  }).formatToParts(parsed).find((part) => part.type === 'timeZoneName');
+
   return {
     dayLabel,
-    dateLabel: parsed.toLocaleDateString('en-US', {
+    dateLabel: parsed.toLocaleDateString(locale, {
       weekday: 'short',
       month: 'short',
       day: 'numeric'
     }).toUpperCase(),
-    timeLabel: parsed.toLocaleTimeString('en-US', {
+    timeLabel: parsed.toLocaleTimeString(locale, {
       hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZoneName: 'short'
-    }).toUpperCase()
+      minute: '2-digit'
+    }).toUpperCase(),
+    zoneLabel: sanitizeDisplayText(zonePart?.value || 'LOCAL TIME').toUpperCase()
   };
 }
 
@@ -4468,7 +4475,7 @@ function renderArenaSchedule(matches) {
     const detailUrl = buildMatchUrl(match);
 
     return `
-      <div class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-white/10 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[450px] group min-w-[320px] snap-center shrink-0">
+      <div class="bg-[#111111] p-8 rounded-2xl border border-white/5 hover:border-white/10 transition-all duration-500 shadow-2xl flex flex-col justify-between h-[450px] w-[320px] min-w-[320px] max-w-[320px] basis-[320px] group snap-center shrink-0">
         <div>
           <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-4 mb-8 items-start">
             <div class="min-w-0">
@@ -4478,17 +4485,18 @@ function renderArenaSchedule(matches) {
               </div>
               <div class="mt-3 text-[10px] font-black uppercase tracking-[0.22em] text-on-surface/35">${kickoff.dateLabel}</div>
             </div>
-            <div class="text-right shrink-0">
+            <div class="text-right shrink-0 max-w-[8.5rem]">
               <div class="text-[9px] font-black uppercase tracking-[0.22em] text-on-surface/40">${kickoff.dayLabel}</div>
-              <div class="mt-2 text-sm font-black uppercase tracking-[0.08em] text-primary">${kickoff.timeLabel}</div>
+              <div class="mt-2 text-sm font-black uppercase tracking-[0.08em] leading-tight text-primary">${kickoff.timeLabel}</div>
+              <div class="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-on-surface/28">${kickoff.zoneLabel}</div>
             </div>
           </div>
 
           <div class="flex items-center justify-between mb-8 px-4">
             <div class="flex flex-col items-center gap-4">
               <div class="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative group-hover:border-primary/50 transition-colors shadow-inner overflow-hidden">
-                <span class="text-xl font-black tracking-tighter uppercase text-on-surface/80">${homeAbbr}</span>
-                <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" class="absolute w-12 h-12 object-contain opacity-25 group-hover:opacity-40 transition-opacity" onerror="this.src='${FALLBACK_LOGO}'">
+                <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" class="w-14 h-14 object-contain drop-shadow-[0_0_16px_rgba(255,255,255,0.18)]" onerror="this.src='${FALLBACK_LOGO}'">
+                <span class="absolute bottom-1.5 right-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-white/90">${homeAbbr}</span>
               </div>
             </div>
 
@@ -4498,15 +4506,15 @@ function renderArenaSchedule(matches) {
 
             <div class="flex flex-col items-center gap-4">
               <div class="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative group-hover:border-primary/50 transition-colors shadow-inner overflow-hidden">
-                <span class="text-xl font-black tracking-tighter uppercase text-on-surface/80">${awayAbbr}</span>
-                <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" class="absolute w-12 h-12 object-contain opacity-25 group-hover:opacity-40 transition-opacity" onerror="this.src='${FALLBACK_LOGO}'">
+                <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" class="w-14 h-14 object-contain drop-shadow-[0_0_16px_rgba(255,255,255,0.18)]" onerror="this.src='${FALLBACK_LOGO}'">
+                <span class="absolute bottom-1.5 right-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-white/90">${awayAbbr}</span>
               </div>
             </div>
           </div>
 
           <div class="flex justify-between px-2 text-center">
-            <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/30 truncate w-32">${match.homeTeam.name}</span>
-            <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/30 truncate w-32">${match.awayTeam.name}</span>
+            <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/30 line-clamp-2 w-32">${match.homeTeam.name}</span>
+            <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/30 line-clamp-2 w-32">${match.awayTeam.name}</span>
           </div>
           <div class="mt-6 rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
             <div class="text-[9px] font-black uppercase tracking-[0.22em] text-on-surface/35">Venue</div>
