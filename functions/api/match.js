@@ -4,6 +4,7 @@ import {
   FALLBACK_LOGO,
   fetchJson,
   fetchText,
+  getIplSquadArticleUrl,
   IPL_SERIES_ID,
   SPORT_LEAGUES,
   fetchWithFallback,
@@ -791,6 +792,393 @@ function normalizeLineup(data = {}, side = "home") {
   return buildSyntheticLineupFromLeaders(competitor);
 }
 
+const IPL_ARTICLE_ROLE_LABELS = {
+  batters: "Batter",
+  wicketkeepers: "Wicketkeeper",
+  allrounders: "All-rounder",
+  spinners: "Spinner",
+  "fast bowlers": "Fast bowler"
+};
+
+let IPL_SQUAD_DIRECTORY_PROMISE = null;
+
+function normalizeRosterPersonKey(value = "") {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/&amp;/g, "and")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function decodeRosterHtmlEntities(value = "") {
+  return String(value || "")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&rsquo;/gi, "'")
+    .replace(/&lsquo;/gi, "'")
+    .replace(/&ndash;/gi, "-")
+    .replace(/&mdash;/gi, "-")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+}
+
+function stripRosterHtml(value = "") {
+  return decodeRosterHtmlEntities(String(value || "").replace(/<[^>]+>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function deriveRosterRoleMeta(category = "") {
+  const normalized = String(category || "").trim().toLowerCase();
+  const displayName = IPL_ARTICLE_ROLE_LABELS[normalized] || (category || "Squad");
+  const abbreviation = displayName
+    .split(/[\s-]+/)
+    .map((chunk) => chunk[0] || "")
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+
+  return {
+    displayName,
+    abbreviation: abbreviation || "SQD"
+  };
+}
+
+function buildRosterPlayer(name = "", position = "", face = FALLBACK_LOGO, starter = false, number = "") {
+  const cleanName = String(name || "").replace(/\s+/g, " ").trim();
+  if (!cleanName) return null;
+  return {
+    name: cleanName,
+    number: String(number || "").trim(),
+    position: String(position || "").trim(),
+    starter: Boolean(starter),
+    face: face || FALLBACK_LOGO
+  };
+}
+
+function buildRosterPlayerFromMatchEntry(entry = {}) {
+  return buildRosterPlayer(
+    entry.athlete?.displayName || "",
+    entry.position?.abbreviation || entry.position?.displayName || "",
+    entry.athlete?.headshot?.href || FALLBACK_LOGO,
+    Boolean(entry.starter),
+    entry.jersey || ""
+  );
+}
+
+function buildRosterPlayerFromAthlete(athlete = {}, starter = false) {
+  return buildRosterPlayer(
+    athlete.fullName || athlete.shortName || "",
+    athlete.position?.abbreviation || athlete.position?.displayName || athlete.position?.name || "Player",
+    athlete.headshot?.href || FALLBACK_LOGO,
+    starter,
+    athlete.jersey || ""
+  );
+}
+
+function buildRosterMetadataEntry(name = "", role = "", face = FALLBACK_LOGO) {
+  return buildRosterPlayer(name, role || "Team", face || FALLBACK_LOGO, false, "");
+}
+
+function dedupeRosterPlayers(players = []) {
+  const seen = new Set();
+  return players.filter((player) => {
+    const key = normalizeRosterPersonKey(player?.name || "");
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function emptyRosterSections() {
+  return {
+    playingXI: [],
+    substitutes: [],
+    bench: [],
+    supportStaff: [],
+    legends: []
+  };
+}
+
+function normalizeRosterSectionsPayload(sections = {}) {
+  const base = emptyRosterSections();
+  Object.keys(base).forEach((key) => {
+    base[key] = dedupeRosterPlayers(Array.isArray(sections?.[key]) ? sections[key].filter(Boolean) : []);
+  });
+  return base;
+}
+
+function isIplRosterContext(sport = "", league = "") {
+  return normalizeSportParam(sport, league) === "cricket"
+    && normalizeLeagueParam(league, "cricket") === "ipl";
+}
+
+function extractIplPlayerNames(playersHtml = "") {
+  const plain = stripRosterHtml(playersHtml)
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\.+$/g, "");
+
+  return plain
+    .split(",")
+    .map((name) => name.replace(/\s+/g, " ").trim().replace(/\.$/, ""))
+    .filter(Boolean);
+}
+
+function buildIplArticlePlayer(team = {}, fullName = "", category = "", order = 0) {
+  const role = deriveRosterRoleMeta(category);
+  const player = buildRosterPlayer(
+    fullName,
+    role.abbreviation || role.displayName,
+    team.logo || FALLBACK_LOGO,
+    order < 11,
+    order ? String(order) : ""
+  );
+  return player ? { ...player, roleLabel: role.displayName } : null;
+}
+
+function parseIplProbableLineup(sectionHtml = "") {
+  const lineupMatch = sectionHtml.match(/<p><b>(?:Possible|Probable)(?:\s+best)?\s+XI{1,2}<\/b>:\s*([\s\S]*?)<\/p>/i);
+  if (!lineupMatch) {
+    return { playingXI: [], substitutes: [] };
+  }
+
+  const plain = stripRosterHtml(lineupMatch[1]);
+  const slots = plain
+    .split(/\s*,\s*(?=\d+\s)/)
+    .map((slot) => slot.replace(/^\d+\s*/, "").replace(/\([^)]*\)/g, "").trim())
+    .filter(Boolean);
+
+  const playingXI = [];
+  const substitutes = [];
+
+  slots.forEach((slot, index) => {
+    const options = slot
+      .split("/")
+      .map((name) => name.replace(/\s+/g, " ").trim().replace(/\.$/, ""))
+      .filter(Boolean);
+    if (!options.length) return;
+    if (index < 11) {
+      playingXI.push(options[0]);
+      substitutes.push(...options.slice(1));
+      return;
+    }
+    substitutes.push(...options);
+  });
+
+  return {
+    playingXI: dedupeRosterPlayers(playingXI.map((name) => buildRosterMetadataEntry(name))).map((entry) => entry.name),
+    substitutes: dedupeRosterPlayers(substitutes.map((name) => buildRosterMetadataEntry(name))).map((entry) => entry.name)
+  };
+}
+
+function parseIplSquadPlayers(sectionHtml = "", team = {}) {
+  const rosterMatch = sectionHtml.match(/<p><b>Full(?:\s+[^<]+)?\s+squad<\/b><\/p>\s*<ul>([\s\S]*?)<\/ul>/i);
+  const rosterHtml = rosterMatch?.[1] || "";
+  const categoryMatches = Array.from(rosterHtml.matchAll(/<li>\s*<p><b>([^<]+)<\/b>:\s*([\s\S]*?)<\/li>/gi));
+  const players = [];
+  let order = 0;
+
+  categoryMatches.forEach((categoryMatch) => {
+    const category = stripRosterHtml(categoryMatch[1]);
+    const names = extractIplPlayerNames(categoryMatch[2]);
+    names.forEach((name) => {
+      order += 1;
+      const player = buildIplArticlePlayer(team, name, category, order);
+      if (player) players.push(player);
+    });
+  });
+
+  return dedupeRosterPlayers(players);
+}
+
+async function getIplSquadDirectory() {
+  if (!IPL_SQUAD_DIRECTORY_PROMISE) {
+    IPL_SQUAD_DIRECTORY_PROMISE = (async () => {
+      const html = await fetchText(getIplSquadArticleUrl());
+      const directory = new Map();
+      const headings = Array.from(html.matchAll(/<h2>([\s\S]*?)<\/h2>/gi));
+
+      headings.forEach((headingMatch, index) => {
+        const teamName = stripRosterHtml(headingMatch[1]);
+        if (!teamName) return;
+        const sectionStart = (headingMatch.index || 0) + headingMatch[0].length;
+        const sectionEnd = headings[index + 1]?.index || html.length;
+        const sectionHtml = html.slice(sectionStart, sectionEnd);
+        const probable = parseIplProbableLineup(sectionHtml);
+        directory.set(normalizeRosterPersonKey(teamName), {
+          teamName,
+          playingXI: probable.playingXI,
+          substitutes: probable.substitutes,
+          sectionHtml
+        });
+      });
+
+      return directory;
+    })().catch(() => new Map());
+  }
+
+  return IPL_SQUAD_DIRECTORY_PROMISE;
+}
+
+function mapRosterNamesToPlayers(names = [], candidates = [], team = {}) {
+  const playerByKey = new Map(
+    dedupeRosterPlayers(candidates).map((player) => [normalizeRosterPersonKey(player?.name || ""), player])
+  );
+
+  return dedupeRosterPlayers(
+    names.map((name) => {
+      const key = normalizeRosterPersonKey(name);
+      return playerByKey.get(key) || buildRosterMetadataEntry(name, "Squad", team.logo || FALLBACK_LOGO);
+    })
+  );
+}
+
+function collectNamedTeamEntries(value, roleFallback = "", bucket = []) {
+  if (!value) return bucket;
+  if (Array.isArray(value)) {
+    value.forEach((entry) => collectNamedTeamEntries(entry, roleFallback, bucket));
+    return bucket;
+  }
+  if (typeof value === "string") {
+    const entry = buildRosterMetadataEntry(value, roleFallback);
+    if (entry) bucket.push(entry);
+    return bucket;
+  }
+  if (typeof value !== "object") return bucket;
+
+  const name = value.displayName || value.fullName || value.name || value.shortName || "";
+  const role = value.role?.displayName
+    || value.role?.name
+    || value.position?.displayName
+    || value.position?.name
+    || value.type
+    || roleFallback;
+  const genericNames = new Set(["coach", "staff", "support staff", "legend", "management"]);
+
+  if (name && !genericNames.has(String(name).trim().toLowerCase())) {
+    const entry = buildRosterMetadataEntry(name, role, value.headshot?.href || value.logo || FALLBACK_LOGO);
+    if (entry) bucket.push(entry);
+  }
+
+  if (Array.isArray(value.items)) collectNamedTeamEntries(value.items, roleFallback, bucket);
+  if (Array.isArray(value.people)) collectNamedTeamEntries(value.people, roleFallback, bucket);
+  return bucket;
+}
+
+function extractTeamEntityGroup(teamData = {}, keys = [], roleFallback = "") {
+  const buckets = [
+    teamData,
+    teamData.team,
+    teamData.details,
+    teamData.franchise,
+    teamData.profile,
+    teamData.overview
+  ].filter(Boolean);
+
+  const results = [];
+  buckets.forEach((bucket) => {
+    keys.forEach((key) => {
+      if (bucket?.[key] !== undefined) {
+        collectNamedTeamEntries(bucket[key], roleFallback, results);
+      }
+    });
+  });
+
+  return dedupeRosterPlayers(results);
+}
+
+function extractTeamSupportStaff(teamData = {}) {
+  return dedupeRosterPlayers([
+    ...extractTeamEntityGroup(teamData, ["coach", "headCoach", "coaches"], "Coach"),
+    ...extractTeamEntityGroup(teamData, ["supportStaff", "staff", "management", "coachingStaff", "backroom"], "Support staff")
+  ]).slice(0, 10);
+}
+
+function extractTeamLegends(teamData = {}) {
+  return dedupeRosterPlayers([
+    ...extractTeamEntityGroup(teamData, ["legends", "legend", "hallOfFame", "halloffame", "alumni", "ambassadors", "icons"], "Legend")
+  ]).slice(0, 12);
+}
+
+function buildRosterSectionsFromMatchData(data = {}, side = "home") {
+  const roster = data.rosters?.find((entry) => entry.homeAway === side);
+  if (!roster?.roster?.length) return emptyRosterSections();
+
+  const players = dedupeRosterPlayers(roster.roster.map((entry) => buildRosterPlayerFromMatchEntry(entry)).filter(Boolean));
+  const starters = dedupeRosterPlayers(
+    roster.roster
+      .filter((entry) => Boolean(entry?.starter))
+      .map((entry) => buildRosterPlayerFromMatchEntry(entry))
+      .filter(Boolean)
+  );
+  const nonStarters = dedupeRosterPlayers(
+    roster.roster
+      .filter((entry) => !entry?.starter)
+      .map((entry) => buildRosterPlayerFromMatchEntry(entry))
+      .filter(Boolean)
+  );
+
+  return normalizeRosterSectionsPayload({
+    playingXI: starters.length ? starters : players.slice(0, 11),
+    substitutes: nonStarters
+  });
+}
+
+function buildRosterSectionsFromSources({
+  team = {},
+  lineup = [],
+  rosterPlayers = [],
+  predictedXI = [],
+  predictedSubstitutes = [],
+  supportStaff = [],
+  legends = [],
+  currentSections = {}
+} = {}) {
+  const existing = normalizeRosterSectionsPayload(currentSections);
+  const candidatePlayers = dedupeRosterPlayers([...(lineup || []), ...(rosterPlayers || [])]);
+  const lineupPlayers = dedupeRosterPlayers(lineup || []);
+  const predictedLineupPlayers = mapRosterNamesToPlayers(predictedXI, candidatePlayers, team);
+  const predictedSubstitutePlayers = mapRosterNamesToPlayers(predictedSubstitutes, candidatePlayers, team);
+  const completeExistingPlayingXI = existing.playingXI.length >= 11 ? existing.playingXI : [];
+  const completeLineup = lineupPlayers.length >= 11 ? lineupPlayers.slice(0, 11) : [];
+  const playingXI = dedupeRosterPlayers(
+    completeExistingPlayingXI.length
+      ? completeExistingPlayingXI
+      : (completeLineup.length
+        ? completeLineup
+        : (predictedLineupPlayers.length
+          ? predictedLineupPlayers.slice(0, 11)
+          : (existing.playingXI.length
+            ? existing.playingXI
+            : lineupPlayers.slice(0, 11))))
+  ).slice(0, 11);
+  const substitutes = dedupeRosterPlayers(
+    existing.substitutes.length
+      ? existing.substitutes
+      : predictedSubstitutePlayers
+  );
+  const excluded = new Set(
+    [...playingXI, ...substitutes].map((entry) => normalizeRosterPersonKey(entry?.name || ""))
+  );
+  const bench = dedupeRosterPlayers(
+    existing.bench.length
+      ? existing.bench
+      : candidatePlayers.filter((entry) => !excluded.has(normalizeRosterPersonKey(entry?.name || "")))
+  );
+
+  return normalizeRosterSectionsPayload({
+    playingXI,
+    substitutes,
+    bench,
+    supportStaff: existing.supportStaff.length ? existing.supportStaff : supportStaff,
+    legends: existing.legends.length ? existing.legends : legends
+  });
+}
+
 function mapRosterToLineup(roster = []) {
   return roster
     .filter((athlete) => athlete?.fullName)
@@ -804,35 +1192,96 @@ function mapRosterToLineup(roster = []) {
     }));
 }
 
-async function fetchRosterFallback(sport = "soccer", league = "eng.1", teamId = "") {
-  if (!teamId) return [];
+async function fetchRosterFallbackBundle(sport = "soccer", league = "eng.1", team = {}) {
+  const teamId = team?.id || "";
+  const hasIplContext = isIplRosterContext(sport, league);
+  if (!teamId && !hasIplContext) {
+    return { lineup: [], rosterSections: emptyRosterSections() };
+  }
+
   try {
-    const rosterData = await fetchJson(siteApiUrl(sport, league, `teams/${teamId}/roster`));
-    return mapRosterToLineup(normalizeRosterGroups(rosterData));
+    const [rosterData, teamData, iplSquads] = await Promise.all([
+      teamId ? fetchJson(siteApiUrl(sport, league, `teams/${teamId}/roster`)).catch(() => null) : Promise.resolve(null),
+      teamId ? fetchJson(siteApiUrl(sport, league, `teams/${teamId}`)).catch(() => null) : Promise.resolve(null),
+      hasIplContext ? getIplSquadDirectory() : Promise.resolve(new Map())
+    ]);
+
+    const rosterPlayers = dedupeRosterPlayers(
+      normalizeRosterGroups(rosterData || {}).map((athlete, index) => buildRosterPlayerFromAthlete(athlete, index < 11)).filter(Boolean)
+    );
+    const articleSection = hasIplContext
+      ? iplSquads.get(normalizeRosterPersonKey(team?.fullName || team?.name || team?.abbreviation || ""))
+      : null;
+    const articlePlayers = articleSection
+      ? parseIplSquadPlayers(articleSection.sectionHtml || "", team)
+      : [];
+    const sections = buildRosterSectionsFromSources({
+      team,
+      lineup: Array.isArray(team?.lineup) ? team.lineup : [],
+      rosterPlayers: dedupeRosterPlayers([...rosterPlayers, ...articlePlayers]),
+      predictedXI: articleSection?.playingXI || [],
+      predictedSubstitutes: articleSection?.substitutes || [],
+      supportStaff: extractTeamSupportStaff(teamData || {}),
+      legends: extractTeamLegends(teamData || {}),
+      currentSections: team?.rosterSections || {}
+    });
+    const lineup = Array.isArray(team?.lineup) && team.lineup.length >= 11
+      ? team.lineup
+      : (sections.playingXI.length ? sections.playingXI : mapRosterToLineup(normalizeRosterGroups(rosterData || {})));
+
+    return { lineup, rosterSections: sections };
   } catch (error) {
-    return [];
+    return {
+      lineup: Array.isArray(team?.lineup) ? team.lineup : [],
+      rosterSections: normalizeRosterSectionsPayload(team?.rosterSections || {})
+    };
   }
 }
 
 async function hydrateSummaryLineups(summary = {}, sport = "soccer", league = "eng.1") {
-  const needsHomeRoster = !(Array.isArray(summary.homeTeam?.lineup) && summary.homeTeam.lineup.length);
-  const needsAwayRoster = !(Array.isArray(summary.awayTeam?.lineup) && summary.awayTeam.lineup.length);
-  if (!needsHomeRoster && !needsAwayRoster) return summary;
+  const expectsFullCricketXI = normalizeSportParam(sport, league) === "cricket";
+  const minimumRosterSize = expectsFullCricketXI ? 11 : 1;
+  const needsHomeRoster = !(Array.isArray(summary.homeTeam?.lineup) && summary.homeTeam.lineup.length >= minimumRosterSize);
+  const needsAwayRoster = !(Array.isArray(summary.awayTeam?.lineup) && summary.awayTeam.lineup.length >= minimumRosterSize);
+  const needsHomeSections = isIplRosterContext(sport, league)
+    || !Array.isArray(summary.homeTeam?.rosterSections?.playingXI)
+    || summary.homeTeam.rosterSections.playingXI.length < minimumRosterSize;
+  const needsAwaySections = isIplRosterContext(sport, league)
+    || !Array.isArray(summary.awayTeam?.rosterSections?.playingXI)
+    || summary.awayTeam.rosterSections.playingXI.length < minimumRosterSize;
 
-  const [homeRoster, awayRoster] = await Promise.all([
-    needsHomeRoster ? fetchRosterFallback(sport, league, summary.homeTeam?.id || "") : Promise.resolve([]),
-    needsAwayRoster ? fetchRosterFallback(sport, league, summary.awayTeam?.id || "") : Promise.resolve([])
+  if (!needsHomeRoster && !needsAwayRoster && !needsHomeSections && !needsAwaySections) return summary;
+
+  const [homeBundle, awayBundle] = await Promise.all([
+    (needsHomeRoster || needsHomeSections)
+      ? fetchRosterFallbackBundle(sport, league, summary.homeTeam || {})
+      : Promise.resolve({
+          lineup: summary.homeTeam?.lineup || [],
+          rosterSections: normalizeRosterSectionsPayload(summary.homeTeam?.rosterSections || {})
+        }),
+    (needsAwayRoster || needsAwaySections)
+      ? fetchRosterFallbackBundle(sport, league, summary.awayTeam || {})
+      : Promise.resolve({
+          lineup: summary.awayTeam?.lineup || [],
+          rosterSections: normalizeRosterSectionsPayload(summary.awayTeam?.rosterSections || {})
+        })
   ]);
 
   return {
     ...summary,
     homeTeam: {
       ...(summary.homeTeam || {}),
-      lineup: needsHomeRoster ? homeRoster : (summary.homeTeam?.lineup || [])
+      lineup: needsHomeRoster ? homeBundle.lineup : (summary.homeTeam?.lineup || []),
+      rosterSections: needsHomeSections
+        ? homeBundle.rosterSections
+        : normalizeRosterSectionsPayload(summary.homeTeam?.rosterSections || {})
     },
     awayTeam: {
       ...(summary.awayTeam || {}),
-      lineup: needsAwayRoster ? awayRoster : (summary.awayTeam?.lineup || [])
+      lineup: needsAwayRoster ? awayBundle.lineup : (summary.awayTeam?.lineup || []),
+      rosterSections: needsAwaySections
+        ? awayBundle.rosterSections
+        : normalizeRosterSectionsPayload(summary.awayTeam?.rosterSections || {})
     }
   };
 }
@@ -929,6 +1378,7 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
       score: home.score || "0",
       record: home.records?.[0]?.summary || "",
       lineup: normalizeLineup(data, "home"),
+      rosterSections: buildRosterSectionsFromMatchData(data, "home"),
       linescores: normalizeCricketLinescores(home.linescores || [])
     },
     awayTeam: {
@@ -939,6 +1389,7 @@ function normalizeSummary(data = {}, fallbackSport = "soccer", fallbackLeague = 
       score: away.score || "0",
       record: away.records?.[0]?.summary || "",
       lineup: normalizeLineup(data, "away"),
+      rosterSections: buildRosterSectionsFromMatchData(data, "away"),
       linescores: normalizeCricketLinescores(away.linescores || [])
     },
     stats: normalizeStats(data),
@@ -966,11 +1417,17 @@ function normalizeFallbackScoreboardSummary(event = {}, sport = "soccer", league
     broadcast: normalized.broadcast,
     homeTeam: {
       ...normalized.homeTeam,
-      lineup: buildSyntheticLineupFromTeam(normalized.homeTeam)
+      lineup: buildSyntheticLineupFromTeam(normalized.homeTeam),
+      rosterSections: normalizeRosterSectionsPayload({
+        playingXI: buildSyntheticLineupFromTeam(normalized.homeTeam)
+      })
     },
     awayTeam: {
       ...normalized.awayTeam,
-      lineup: buildSyntheticLineupFromTeam(normalized.awayTeam)
+      lineup: buildSyntheticLineupFromTeam(normalized.awayTeam),
+      rosterSections: normalizeRosterSectionsPayload({
+        playingXI: buildSyntheticLineupFromTeam(normalized.awayTeam)
+      })
     },
     stats: buildSyntheticStatsFromMatch(normalized),
     timeline: syntheticTimeline,
@@ -1005,7 +1462,12 @@ function normalizeFeedFallbackSummary(match = {}, h2h = []) {
       score: match.homeTeam?.score || "0",
       lineup: Array.isArray(match.homeTeam?.lineup) && match.homeTeam.lineup.length
         ? match.homeTeam.lineup
-        : buildSyntheticLineupFromTeam(match.homeTeam || {})
+        : buildSyntheticLineupFromTeam(match.homeTeam || {}),
+      rosterSections: normalizeRosterSectionsPayload(match.homeTeam?.rosterSections || {
+        playingXI: Array.isArray(match.homeTeam?.lineup) && match.homeTeam.lineup.length
+          ? match.homeTeam.lineup.slice(0, 11)
+          : buildSyntheticLineupFromTeam(match.homeTeam || {})
+      })
     },
     awayTeam: {
       ...(match.awayTeam || {}),
@@ -1014,7 +1476,12 @@ function normalizeFeedFallbackSummary(match = {}, h2h = []) {
       score: match.awayTeam?.score || "0",
       lineup: Array.isArray(match.awayTeam?.lineup) && match.awayTeam.lineup.length
         ? match.awayTeam.lineup
-        : buildSyntheticLineupFromTeam(match.awayTeam || {})
+        : buildSyntheticLineupFromTeam(match.awayTeam || {}),
+      rosterSections: normalizeRosterSectionsPayload(match.awayTeam?.rosterSections || {
+        playingXI: Array.isArray(match.awayTeam?.lineup) && match.awayTeam.lineup.length
+          ? match.awayTeam.lineup.slice(0, 11)
+          : buildSyntheticLineupFromTeam(match.awayTeam || {})
+      })
     },
     stats: buildSyntheticStatsFromMatch(match),
     timeline: syntheticTimeline,
@@ -1112,7 +1579,16 @@ function mergeSummaryPayload(primary = {}, fallback = {}) {
       fullName: !isGenericTeam(primaryHome) ? (primaryHome.fullName || fallbackHome.fullName || primaryHome.name || fallbackHome.name || "Home Team") : (fallbackHome.fullName || primaryHome.fullName || fallbackHome.name || primaryHome.name || "Home Team"),
       logo: primaryHome.logo || fallbackHome.logo || FALLBACK_LOGO,
       score: primaryHome.score ?? fallbackHome.score ?? "0",
-      lineup: Array.isArray(primaryHome.lineup) && primaryHome.lineup.length ? primaryHome.lineup : (fallbackHome.lineup || [])
+      lineup: Array.isArray(primaryHome.lineup) && primaryHome.lineup.length ? primaryHome.lineup : (fallbackHome.lineup || []),
+      rosterSections: normalizeRosterSectionsPayload(
+        (primaryHome?.rosterSections && Object.keys(primaryHome.rosterSections).length)
+          ? primaryHome.rosterSections
+          : (fallbackHome?.rosterSections || {
+              playingXI: Array.isArray(primaryHome.lineup) && primaryHome.lineup.length
+                ? primaryHome.lineup.slice(0, 11)
+                : (Array.isArray(fallbackHome.lineup) ? fallbackHome.lineup.slice(0, 11) : [])
+            })
+      )
     },
     awayTeam: {
       ...fallbackAway,
@@ -1121,7 +1597,16 @@ function mergeSummaryPayload(primary = {}, fallback = {}) {
       fullName: !isGenericTeam(primaryAway) ? (primaryAway.fullName || fallbackAway.fullName || primaryAway.name || fallbackAway.name || "Away Team") : (fallbackAway.fullName || primaryAway.fullName || fallbackAway.name || primaryAway.name || "Away Team"),
       logo: primaryAway.logo || fallbackAway.logo || FALLBACK_LOGO,
       score: primaryAway.score ?? fallbackAway.score ?? "0",
-      lineup: Array.isArray(primaryAway.lineup) && primaryAway.lineup.length ? primaryAway.lineup : (fallbackAway.lineup || [])
+      lineup: Array.isArray(primaryAway.lineup) && primaryAway.lineup.length ? primaryAway.lineup : (fallbackAway.lineup || []),
+      rosterSections: normalizeRosterSectionsPayload(
+        (primaryAway?.rosterSections && Object.keys(primaryAway.rosterSections).length)
+          ? primaryAway.rosterSections
+          : (fallbackAway?.rosterSections || {
+              playingXI: Array.isArray(primaryAway.lineup) && primaryAway.lineup.length
+                ? primaryAway.lineup.slice(0, 11)
+                : (Array.isArray(fallbackAway.lineup) ? fallbackAway.lineup.slice(0, 11) : [])
+            })
+      )
     }
   };
 }

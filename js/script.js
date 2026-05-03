@@ -8115,6 +8115,157 @@ function renderMobileMatchOdds(data = {}) {
   `;
 }
 
+const ROSTER_SECTION_ORDER = ['playingXI', 'substitutes', 'bench', 'supportStaff', 'legends'];
+const ROSTER_SECTION_LABELS = {
+  playingXI: 'Playing XI',
+  substitutes: 'Substitutes',
+  bench: 'Bench',
+  supportStaff: 'Support Staff',
+  legends: 'Legends'
+};
+const ROSTER_SECTION_META_LABELS = {
+  playingXI: 'Squad',
+  substitutes: 'Substitute',
+  bench: 'Bench',
+  supportStaff: 'Support staff',
+  legends: 'Legend'
+};
+
+function getLineupDefaultAvatar() {
+  return `data:image/svg+xml;base64,${btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(255,255,255,0.2)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>')}`;
+}
+
+function getTeamRosterSections(team = {}) {
+  const raw = team?.rosterSections || {};
+  const sections = {
+    playingXI: Array.isArray(raw.playingXI) ? raw.playingXI.filter(Boolean) : [],
+    substitutes: Array.isArray(raw.substitutes) ? raw.substitutes.filter(Boolean) : [],
+    bench: Array.isArray(raw.bench) ? raw.bench.filter(Boolean) : [],
+    supportStaff: Array.isArray(raw.supportStaff) ? raw.supportStaff.filter(Boolean) : [],
+    legends: Array.isArray(raw.legends) ? raw.legends.filter(Boolean) : []
+  };
+
+  if (!sections.playingXI.length && Array.isArray(team?.lineup) && team.lineup.length) {
+    sections.playingXI = team.lineup.slice(0, 11);
+  }
+
+  return sections;
+}
+
+function hasExtendedRosterSections(team = {}) {
+  const raw = team?.rosterSections || {};
+  return ['substitutes', 'bench', 'supportStaff', 'legends'].some((key) => Array.isArray(raw[key]) && raw[key].length);
+}
+
+function shouldRenderGroupedRoster(team = {}, sport = '') {
+  return String(sport || '').toLowerCase() === 'cricket' || hasExtendedRosterSections(team);
+}
+
+function getRosterSectionLabel(sectionKey = '') {
+  return ROSTER_SECTION_LABELS[sectionKey] || 'Squad';
+}
+
+function getRosterSectionEmptyCopy(sectionKey = '') {
+  return `No verified ${getRosterSectionLabel(sectionKey).toLowerCase()} data available yet.`;
+}
+
+function getRosterEntryRole(entry = {}, sectionKey = 'playingXI') {
+  return sanitizeDisplayText(
+    entry?.position
+    || entry?.roleLabel
+    || entry?.role
+    || ROSTER_SECTION_META_LABELS[sectionKey]
+    || 'Squad'
+  );
+}
+
+function getRosterEntrySlot(entry = {}, sectionKey = 'playingXI', index = 0) {
+  const number = sanitizeDisplayText(entry?.number || '');
+  if (number) return number;
+  if (sectionKey === 'playingXI') return String(index + 1);
+  return '';
+}
+
+function buildMobileRosterEntryMarkup(entry = {}, index = 0, sectionKey = 'playingXI') {
+  const defaultAvatar = getLineupDefaultAvatar();
+  const name = sanitizeDisplayText(entry?.name || `Entry ${index + 1}`);
+  const role = getRosterEntryRole(entry, sectionKey);
+  const slot = getRosterEntrySlot(entry, sectionKey, index);
+  const face = getSafeImageUrl(entry?.face, defaultAvatar);
+
+  return `
+    <article class="lsf-mobile-lineup-chip lsf-mobile-lineup-chip--section">
+      ${slot ? `<span class="lsf-mobile-lineup-slot">${escapeHtml(slot)}</span>` : ''}
+      <img src="${face}" alt="${escapeHtml(name)}" class="lsf-mobile-lineup-photo" onerror="this.src='${defaultAvatar}'">
+      <div class="lsf-mobile-lineup-name">${escapeHtml(name)}</div>
+      <div class="lsf-mobile-lineup-meta">${escapeHtml(role)}</div>
+    </article>
+  `;
+}
+
+function buildMobileRosterSectionMarkup(team = {}, sectionKey = 'playingXI') {
+  const sections = getTeamRosterSections(team);
+  const entries = Array.isArray(sections[sectionKey]) ? sections[sectionKey] : [];
+
+  return `
+    <section class="lsf-mobile-lineup-section col-span-4">
+      <div class="lsf-mobile-lineup-section-title">${escapeHtml(getRosterSectionLabel(sectionKey))}</div>
+      <div class="lsf-mobile-lineup-grid">
+        ${entries.length
+          ? entries.map((entry, index) => buildMobileRosterEntryMarkup(entry, index, sectionKey)).join('')
+          : `<div class="lsf-mobile-lineup-empty">${escapeHtml(getRosterSectionEmptyCopy(sectionKey))}</div>`}
+      </div>
+    </section>
+  `;
+}
+
+function buildDesktopRosterRowMarkup(player = {}, index = 0, sectionKey = 'playingXI', highlightKey = '') {
+  const name = sanitizeDisplayText(player?.name || `Player ${index + 1}`);
+  const role = getRosterEntryRole(player, sectionKey);
+  const slot = getRosterEntrySlot(player, sectionKey, index);
+  const face = getSafeImageUrl(player?.face, FALLBACK_LOGO);
+  const isHighlighted = highlightKey && name.toLowerCase().includes(highlightKey);
+
+  return `
+    <div class="lsf-desktop-live-sheet-player ${isHighlighted ? 'is-highlighted' : ''}">
+      <div class="lsf-desktop-live-sheet-player-main">
+        <img src="${face}" alt="${escapeHtml(name)}" class="lsf-desktop-live-sheet-avatar" onerror="this.src='${FALLBACK_LOGO}'">
+        <div>
+          <div class="lsf-desktop-live-sheet-player-name">${escapeHtml(name)}</div>
+          <div class="lsf-desktop-live-sheet-player-meta">${escapeHtml(role)}</div>
+        </div>
+      </div>
+      <div class="lsf-desktop-live-sheet-player-slot">${slot ? escapeHtml(slot) : '&nbsp;'}</div>
+    </div>
+  `;
+}
+
+function buildDesktopRosterSectionMarkup(sectionKey = 'playingXI', entries = [], highlightKey = '') {
+  const body = entries.length
+    ? entries.map((player, index) => buildDesktopRosterRowMarkup(player, index, sectionKey, highlightKey)).join('')
+    : `<div class="lsf-desktop-live-sheet-empty">${escapeHtml(getRosterSectionEmptyCopy(sectionKey))}</div>`;
+
+  return `
+    <section class="lsf-desktop-live-sheet-section">
+      <div class="lsf-desktop-live-sheet-section-title">${escapeHtml(getRosterSectionLabel(sectionKey))}</div>
+      <div class="lsf-desktop-live-sheet-list">${body}</div>
+    </section>
+  `;
+}
+
+function buildSidebarRosterSectionMarkup(sectionKey = 'playingXI', entries = []) {
+  const body = entries.length
+    ? entries.map((player, index) => buildDesktopRosterRowMarkup(player, index, sectionKey, '')).join('')
+    : `<div class="lsf-lineup-section-empty">${escapeHtml(getRosterSectionEmptyCopy(sectionKey))}</div>`;
+
+  return `
+    <section class="lsf-lineup-section">
+      <div class="lsf-lineup-section-title">${escapeHtml(getRosterSectionLabel(sectionKey))}</div>
+      <div class="lsf-desktop-live-sheet-list">${body}</div>
+    </section>
+  `;
+}
+
 function renderMobileLineupPanel(data = {}) {
   const container = document.getElementById('mobile-lineup-strip');
   const homeTab = document.getElementById('mobile-lineup-home-tab');
@@ -8139,14 +8290,23 @@ function renderMobileLineupPanel(data = {}) {
   awayTab.title = sanitizeDisplayText(data?.awayTeam?.fullName || data?.awayTeam?.name || 'Away team');
   homeTab.classList.toggle('is-active', activeLineupTab === 'home');
   awayTab.classList.toggle('is-active', activeLineupTab === 'away');
-  const lineup = activeLineupTab === 'home' ? (data?.homeTeam?.lineup || []) : (data?.awayTeam?.lineup || []);
+  const selectedTeam = activeLineupTab === 'home' ? (data?.homeTeam || {}) : (data?.awayTeam || {});
+  const sections = getTeamRosterSections(selectedTeam);
+  const lineup = sections.playingXI;
+
+  if (shouldRenderGroupedRoster(selectedTeam, data?.sport)) {
+    container.innerHTML = ROSTER_SECTION_ORDER
+      .map((sectionKey) => buildMobileRosterSectionMarkup(selectedTeam, sectionKey))
+      .join('');
+    return;
+  }
 
   if (!lineup.length) {
     container.innerHTML = `<div class="lsf-mobile-card col-span-4 text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/35">No lineup cards available yet</div>`;
     return;
   }
 
-  const defaultAvatar = `data:image/svg+xml;base64,${btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(255,255,255,0.2)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>')}`;
+  const defaultAvatar = getLineupDefaultAvatar();
   container.innerHTML = lineup.slice(0, 8).map((player) => `
     <div class="lsf-mobile-lineup-chip">
       <img src="${getSafeImageUrl(player.face, defaultAvatar)}" alt="${sanitizeDisplayText(player.name || 'Player')}" class="mx-auto h-12 w-12 rounded-xl border border-white/10 bg-white/5 object-cover" onerror="this.src='${defaultAvatar}'">
@@ -8165,33 +8325,18 @@ function findLineupPlayerByName(lineup = [], name = '') {
   }) || null;
 }
 
-function buildDesktopTeamSheetMarkup(team = {}, accent = 'home', highlightName = '') {
-  const lineup = Array.isArray(team?.lineup) ? team.lineup.slice(0, 7) : [];
+function buildDesktopTeamSheetMarkup(team = {}, accent = 'home', highlightName = '', options = {}) {
+  const sections = getTeamRosterSections(team);
+  const lineup = sections.playingXI.length ? sections.playingXI.slice(0, 7) : (Array.isArray(team?.lineup) ? team.lineup.slice(0, 7) : []);
   const highlightKey = sanitizeDisplayText(highlightName || '').toLowerCase();
   const accentClass = accent === 'home' ? 'is-home' : 'is-away';
   const badge = sanitizeDisplayText(team?.abbreviation || getMobileLiveTeamLabel(team));
   const subtitle = sanitizeDisplayText(team?.record || team?.score || 'Verified team list');
-  const rows = lineup.length
-    ? lineup.map((player, index) => {
-        const name = sanitizeDisplayText(player?.name || `Player ${index + 1}`);
-        const role = sanitizeDisplayText(player?.position || 'Squad');
-        const slot = sanitizeDisplayText(player?.number || String(index + 1));
-        const face = getSafeImageUrl(player?.face, FALLBACK_LOGO);
-        const isHighlighted = highlightKey && name.toLowerCase().includes(highlightKey);
-        return `
-          <div class="lsf-desktop-live-sheet-player ${isHighlighted ? 'is-highlighted' : ''}">
-            <div class="lsf-desktop-live-sheet-player-main">
-              <img src="${face}" alt="${escapeHtml(name)}" class="lsf-desktop-live-sheet-avatar" onerror="this.src='${FALLBACK_LOGO}'">
-              <div>
-                <div class="lsf-desktop-live-sheet-player-name">${escapeHtml(name)}</div>
-                <div class="lsf-desktop-live-sheet-player-meta">${escapeHtml(role)}</div>
-              </div>
-            </div>
-            <div class="lsf-desktop-live-sheet-player-slot">${escapeHtml(slot)}</div>
-          </div>
-        `;
-      }).join('')
-    : `<div class="lsf-desktop-live-empty">Awaiting verified team sheet.</div>`;
+  const rows = options?.expanded
+    ? ROSTER_SECTION_ORDER.map((sectionKey) => buildDesktopRosterSectionMarkup(sectionKey, sections[sectionKey] || [], highlightKey)).join('')
+    : (lineup.length
+      ? lineup.map((player, index) => buildDesktopRosterRowMarkup(player, index, 'playingXI', highlightKey)).join('')
+      : `<div class="lsf-desktop-live-empty">Awaiting verified team sheet.</div>`);
 
   return `
     <article class="lsf-desktop-live-team-sheet ${accentClass}">
@@ -8630,8 +8775,8 @@ function renderDesktopCricketLiveCentre(root, data = {}, commentaryFeed = []) {
   const lineupHost = document.getElementById('desktop-cricket-lineups');
   if (lineupHost) {
     lineupHost.innerHTML = [
-      buildDesktopTeamSheetMarkup(data?.homeTeam || {}, 'home', strikerState.name),
-      buildDesktopTeamSheetMarkup(data?.awayTeam || {}, 'away', bowlerState.name)
+      buildDesktopTeamSheetMarkup(data?.homeTeam || {}, 'home', strikerState.name, { expanded: true }),
+      buildDesktopTeamSheetMarkup(data?.awayTeam || {}, 'away', bowlerState.name, { expanded: true })
     ].join('');
   }
 }
@@ -9232,7 +9377,18 @@ function renderMatchLineup(data) {
     const container = document.getElementById('lineup-players-container');
     if (!container) return;
 
-    const lineup = activeLineupTab === 'home' ? data.homeTeam.lineup : data.awayTeam.lineup;
+    const team = activeLineupTab === 'home' ? (data?.homeTeam || {}) : (data?.awayTeam || {});
+    const sections = getTeamRosterSections(team);
+    const lineup = sections.playingXI.length ? sections.playingXI : (Array.isArray(team?.lineup) ? team.lineup : []);
+
+    if (shouldRenderGroupedRoster(team, data?.sport)) {
+        container.innerHTML = ROSTER_SECTION_ORDER
+            .map((sectionKey) => buildSidebarRosterSectionMarkup(sectionKey, sections[sectionKey] || []))
+            .join('');
+        schedulePretextLayout(container);
+        renderMobileLineupPanel(data);
+        return;
+    }
     
     if (!lineup || lineup.length === 0) {
         container.innerHTML = `<p class="text-[10px] font-black uppercase tracking-widest opacity-40">No lineup data available yet.</p>`;
@@ -9240,7 +9396,7 @@ function renderMatchLineup(data) {
         return;
     }
 
-    const defaultAvatar = `data:image/svg+xml;base64,${btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(255,255,255,0.2)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>')}`;
+    const defaultAvatar = getLineupDefaultAvatar();
 
     container.innerHTML = lineup.map(p => `
         <div class="flex items-center justify-between group cursor-default p-2 rounded-lg hover:bg-white/5 transition-all">

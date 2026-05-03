@@ -179,6 +179,78 @@
             padding: 0.75rem 0.55rem;
             text-align: center;
         }
+        .lsf-mobile-lineup-chip--section {
+            position: relative;
+            min-height: 8.8rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        .lsf-mobile-lineup-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .lsf-mobile-lineup-section-title {
+            color: rgba(229, 226, 225, 0.52);
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+        .lsf-mobile-lineup-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+        .lsf-mobile-lineup-photo {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto;
+            border-radius: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            object-fit: cover;
+        }
+        .lsf-mobile-lineup-slot {
+            position: absolute;
+            top: 0.55rem;
+            right: 0.55rem;
+            color: rgba(245, 195, 186, 0.92);
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .lsf-mobile-lineup-name {
+            margin-top: 0.72rem;
+            color: #f5efe9;
+            font-size: 0.72rem;
+            font-weight: 900;
+            line-height: 1.18;
+            text-transform: uppercase;
+        }
+        .lsf-mobile-lineup-meta {
+            margin-top: 0.22rem;
+            color: rgba(229, 226, 225, 0.42);
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+        .lsf-mobile-lineup-empty {
+            grid-column: 1 / -1;
+            border-radius: 0.95rem;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.9rem;
+            color: rgba(229, 226, 225, 0.44);
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            text-align: center;
+        }
         .lsf-mobile-stat-bar {
             height: 0.45rem;
             background: rgba(255, 255, 255, 0.08);
@@ -1596,6 +1668,17 @@
             flex-direction: column;
             gap: 0.55rem;
         }
+        .lsf-desktop-live-sheet-section + .lsf-desktop-live-sheet-section {
+            margin-top: 1rem;
+        }
+        .lsf-desktop-live-sheet-section-title {
+            color: rgba(229, 226, 225, 0.48);
+            font-size: 0.66rem;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 0.55rem;
+        }
         .lsf-desktop-live-sheet-player {
             display: flex;
             align-items: center;
@@ -1649,8 +1732,34 @@
             text-transform: uppercase;
             padding: 0 1.2rem 1.2rem;
         }
+        .lsf-desktop-live-sheet-empty,
+        .lsf-lineup-section-empty {
+            border-radius: 0.85rem;
+            border: 1px dashed rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.75rem 0.8rem;
+            color: rgba(229, 226, 225, 0.42);
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            text-align: center;
+        }
         .lsf-desktop-live-team-sheet .lsf-desktop-live-empty {
             padding: 0;
+        }
+        .lsf-lineup-section + .lsf-lineup-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .lsf-lineup-section-title {
+            color: rgba(229, 226, 225, 0.48);
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            margin-bottom: 0.65rem;
         }
         .lsf-desktop-live-ad-slot {
             min-height: 9rem;
