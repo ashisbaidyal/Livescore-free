@@ -309,7 +309,8 @@ export function jsonResponse(payload, cacheSeconds = 30, status = 200, reason = 
   const headers = {
     "Content-Type": "application/json",
     "Cache-Control": `public, max-age=${cacheSeconds}, s-maxage=${cacheSeconds}, stale-while-revalidate=${swr}, stale-if-error=${sie}`,
-    "Access-Control-Allow-Origin": "*"
+    "Access-Control-Allow-Origin": "*",
+    "X-Robots-Tag": "noindex, nofollow"
   };
   
   if (reason) {
