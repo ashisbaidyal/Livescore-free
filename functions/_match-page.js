@@ -121,38 +121,35 @@ class TitleRewriter {
   }
 }
 
-class BaseHrefInjector {
-  constructor(href = "/") {
-    this.href = href;
+class AttributeRewriter {
+  constructor(attribute, value) {
+    this.attribute = attribute;
+    this.value = value;
   }
 
   element(element) {
-    element.prepend(`<base href="${escapeHtml(this.href)}">`, { html: true });
+    element.setAttribute(this.attribute, this.value);
   }
 }
 
-class HeadInjector {
-  constructor(meta = {}) {
-    this.meta = meta;
-  }
-
-  element(element) {
-    const tags = [
-      `<meta name="description" content="${escapeHtml(this.meta.description)}">`,
-      `<meta name="robots" content="index,follow,max-image-preview:large">`,
-      `<link rel="canonical" href="${escapeHtml(this.meta.canonical)}">`,
-      `<meta property="og:title" content="${escapeHtml(this.meta.title)}">`,
-      `<meta property="og:description" content="${escapeHtml(this.meta.description)}">`,
-      `<meta property="og:type" content="website">`,
-      `<meta property="og:url" content="${escapeHtml(this.meta.canonical)}">`,
-      `<meta property="og:image" content="${escapeHtml(this.meta.image)}">`,
-      `<meta name="twitter:card" content="summary_large_image">`,
-      `<meta name="twitter:title" content="${escapeHtml(this.meta.title)}">`,
-      `<meta name="twitter:description" content="${escapeHtml(this.meta.description)}">`,
-      `<meta name="twitter:image" content="${escapeHtml(this.meta.image)}">`
-    ];
-    element.append(tags.join(""), { html: true });
-  }
+function buildNotFoundHtml({ title = "Match not found | LiveScoreFree", canonical = "" } = {}) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(title)}</title>
+<meta name="robots" content="noindex,follow">
+${canonical ? `<link rel="canonical" href="${escapeHtml(canonical)}">` : ""}
+</head>
+<body>
+<main>
+<h1>Match not found</h1>
+<p>This match centre is unavailable or has expired.</p>
+<p><a href="/live">View live scores</a> or <a href="/upcoming">upcoming fixtures</a>.</p>
+</main>
+</body>
+</html>`;
 }
 
 export async function renderMatchPage(context, {
@@ -171,7 +168,19 @@ export async function renderMatchPage(context, {
 
   try {
     const matchData = await fetchMatchPayload(request, matchRoute);
-    if (!matchData) return response;
+    if (!matchData) {
+      return new Response(buildNotFoundHtml({
+        title: upcoming ? "Upcoming match not found | LiveScoreFree" : "Match not found | LiveScoreFree",
+        canonical: new URL(upcoming ? "/upcoming" : "/live", request.url).toString()
+      }), {
+        status: 404,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=120",
+          "X-Robots-Tag": "noindex, follow"
+        }
+      });
+    }
     const canonicalPath = buildMatchRoutePath({
       id: matchRoute.id,
       sport: matchData.sport || matchRoute.sport,
@@ -197,9 +206,19 @@ export async function renderMatchPage(context, {
     const image = matchData.homeTeam?.logo || matchData.awayTeam?.logo || `${url.origin}/icons/icon-512.png`;
 
     return new HTMLRewriter()
-      .on("head", new BaseHrefInjector("/"))
       .on("title", new TitleRewriter(title))
-      .on("head", new HeadInjector({ title, description, canonical, image }))
+      .on('meta[name="description"]', new AttributeRewriter("content", description))
+      .on('meta[name="robots"]', new AttributeRewriter("content", "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"))
+      .on('link[rel="canonical"]', new AttributeRewriter("href", canonical))
+      .on('meta[property="og:title"]', new AttributeRewriter("content", title))
+      .on('meta[property="og:description"]', new AttributeRewriter("content", description))
+      .on('meta[property="og:type"]', new AttributeRewriter("content", "website"))
+      .on('meta[property="og:url"]', new AttributeRewriter("content", canonical))
+      .on('meta[property="og:image"]', new AttributeRewriter("content", image))
+      .on('meta[name="twitter:card"]', new AttributeRewriter("content", "summary_large_image"))
+      .on('meta[name="twitter:title"]', new AttributeRewriter("content", title))
+      .on('meta[name="twitter:description"]', new AttributeRewriter("content", description))
+      .on('meta[name="twitter:image"]', new AttributeRewriter("content", image))
       .transform(response);
   } catch (error) {
     return response;

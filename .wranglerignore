@@ -1,0 +1,8 @@
+.git
+.github
+.agent
+.vscode
+.wrangler
+node_modules
+.archived-templates
+.full-website-design-backups

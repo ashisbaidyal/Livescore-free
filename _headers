@@ -1,0 +1,11 @@
+/api/*
+  X-Robots-Tag: noindex, nofollow
+
+/offline.html
+  X-Robots-Tag: noindex, follow
+
+/*.json
+  X-Robots-Tag: noindex, nofollow
+
+/*.webmanifest
+  X-Robots-Tag: noindex, nofollow
