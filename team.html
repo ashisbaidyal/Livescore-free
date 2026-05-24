@@ -125,7 +125,7 @@
       <div class="relative max-w-7xl mx-auto px-8 py-16 lg:py-20">
         <div class="flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-12">
           <div id="team-logo-shell" class="w-32 h-32 lg:w-40 lg:h-40 rounded-3xl border border-white/10 glass-card flex items-center justify-center p-6">
-            <img id="team-logo" src="/public/logo.png" alt="" class="w-full h-full object-contain"/>
+            <img id="team-logo" src="/public/logo.png" alt="Team profile logo" class="w-full h-full object-contain"/>
           </div>
           <div class="flex-1">
             <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
@@ -274,7 +274,7 @@
   </div>
 </div>
 
-<script src="/js/script.js?v=1.0.30"></script>
+<script src="/js/script.js?v=1.0.31"></script>
     <script src="/js/databus.js?v=1.0.1"></script>
 <script>
   function safeUpper(value) {
@@ -472,12 +472,12 @@
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <img src="${m.homeTeam.logo}" class="w-5 h-5 object-contain" onerror="this.style.display='none'" alt="Image description">
+              <img src="${m.homeTeam.logo}" class="w-5 h-5 object-contain" onerror="this.style.display='none'" alt="${m.homeTeam.name} logo">
               <span class="text-sm font-black uppercase tracking-tight truncate ${m.homeTeam.winner ? 'text-white' : 'text-on-surface/60'}">${m.homeTeam.name}</span>
               <span class="text-sm font-black ${isFinished || isLive ? '' : 'text-on-surface/30'}">${isFinished || isLive ? m.homeTeam.score : ''}</span>
             </div>
             <div class="flex items-center gap-2 mt-1">
-              <img src="${m.awayTeam.logo}" class="w-5 h-5 object-contain" onerror="this.style.display='none'" alt="Image description">
+              <img src="${m.awayTeam.logo}" class="w-5 h-5 object-contain" onerror="this.style.display='none'" alt="${m.awayTeam.name} logo">
               <span class="text-sm font-black uppercase tracking-tight truncate ${m.awayTeam.winner ? 'text-white' : 'text-on-surface/60'}">${m.awayTeam.name}</span>
               <span class="text-sm font-black ${isFinished || isLive ? '' : 'text-on-surface/30'}">${isFinished || isLive ? m.awayTeam.score : ''}</span>
             </div>

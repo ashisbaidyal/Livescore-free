@@ -374,7 +374,7 @@
 </div>
 </footer>
 
-<script src="/js/script.js?v=1.0.30"></script>
+<script src="/js/script.js?v=1.0.31"></script>
     <script src="/js/databus.js?v=1.0.1"></script>
 <script>
 const sportStoreSubscriptions = {
@@ -559,7 +559,7 @@ function fetchSportStandings(sport, league) {
                             <td class="px-4 py-3"><span class="text-xs font-black italic ${idx < 4 ? 'text-primary' : 'text-on-surface/40'}">${entry.stats?.find(s => s.name === 'rank')?.value || idx + 1}</span></td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
-                                    <img src="${entry.team?.logos?.[0]?.href || '/public/logo.png'}" class="w-6 h-6 object-contain" onerror="this.src='/public/logo.png'" alt="">
+                                    <img src="${entry.team?.logos?.[0]?.href || '/public/logo.png'}" class="w-6 h-6 object-contain" onerror="this.src='/public/logo.png'" alt="${entry.team?.displayName || 'Team'} logo">
                                     <span class="text-[10px] font-black tracking-tight group-hover:text-primary transition-colors truncate max-w-[100px]">${entry.team?.displayName || 'Team'}</span>
                                 </div>
                             </td>
@@ -611,7 +611,7 @@ function fetchSportNews(sport, league) {
                     <div class="flex items-center justify-between gap-3 mb-2">
                         <span class="bg-primary text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm self-start">${a.vertical || a.categories?.[0]?.name || 'SPORTS'}</span>
                         <span class="inline-flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.18em] text-on-surface/40">
-                            <img src="${getSourceFaviconUrl(a.source)}" class="w-4 h-4 rounded-full object-cover" onerror="this.src='${FALLBACK_LOGO}'" alt="">
+                            <img src="${getSourceFaviconUrl(a.source)}" class="w-4 h-4 rounded-full object-cover" onerror="this.src='${FALLBACK_LOGO}'" alt="${a.source?.domain || a.source?.name || a.sportLabel || 'Sports news source'} icon">
                             ${(a.source?.domain || a.source?.name || a.sportLabel || 'SOURCE')}
                         </span>
                     </div>

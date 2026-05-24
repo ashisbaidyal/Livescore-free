@@ -159,6 +159,8 @@
       if (league) league.textContent = "IPL board loading";
       if (homeName) homeName.textContent = "Home";
       if (awayName) awayName.textContent = "Away";
+      if (homeLogo) homeLogo.alt = "Featured IPL home team logo";
+      if (awayLogo) awayLogo.alt = "Featured IPL away team logo";
       if (score) score.textContent = "0-0";
       if (time) time.textContent = "Loading";
       if (meta) meta.textContent = "Watching for live or upcoming IPL matches";
@@ -169,8 +171,14 @@
     const statusLabel = featured.status === "live" ? "Live now" : (featured.status === "finished" ? "Final" : "Scheduled");
     if (badge) badge.textContent = statusLabel.toUpperCase();
     if (league) league.textContent = featured.league || "Indian Premier League";
-    if (homeLogo) homeLogo.src = featured.homeTeam?.logo || IPL_FALLBACK;
-    if (awayLogo) awayLogo.src = featured.awayTeam?.logo || IPL_FALLBACK;
+    if (homeLogo) {
+      homeLogo.src = featured.homeTeam?.logo || IPL_FALLBACK;
+      homeLogo.alt = `${featured.homeTeam?.name || "Home team"} logo`;
+    }
+    if (awayLogo) {
+      awayLogo.src = featured.awayTeam?.logo || IPL_FALLBACK;
+      awayLogo.alt = `${featured.awayTeam?.name || "Away team"} logo`;
+    }
     if (homeName) homeName.textContent = featured.homeTeam?.name || "Home";
     if (awayName) awayName.textContent = featured.awayTeam?.name || "Away";
     if (score) {

@@ -1,4 +1,4 @@
-const STATIC_CACHE = "lsf-static-v29";
+const STATIC_CACHE = "lsf-static-v30";
 const DATA_CACHE = "lsf-data-v20";
 const APP_SHELL = [
   "/index.html",
@@ -23,8 +23,8 @@ const APP_SHELL = [
   "/manifest.webmanifest",
   "/offline.html",
   "/js/config.js",
-  "/js/script.js?v=1.0.30",
-  "/js/ipl-hub.js?v=1.0.17",
+  "/js/script.js?v=1.0.31",
+  "/js/ipl-hub.js?v=1.0.18",
   "/css/style.css",
   "/css/runtime-enhancements.css",
   "/icons/icon-192.png",

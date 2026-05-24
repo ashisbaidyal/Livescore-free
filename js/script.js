@@ -2020,6 +2020,95 @@ function sanitizePayloadText(value, seen = new WeakMap()) {
   return next;
 }
 
+const GENERIC_IMAGE_ALT_PATTERN = /^(|image description|home team|away team|player|logo)$/i;
+
+function getReadableNodeText(node) {
+  return sanitizeDisplayText(node?.textContent || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 90);
+}
+
+function getTextFromSelector(selector) {
+  return getReadableNodeText(document.querySelector(selector));
+}
+
+function getNearbyImageLabel(img) {
+  const container = img.closest('a, article, section, li, .group, .glass-card, [id$="-card"]');
+  if (!container) return '';
+
+  const labelled = container.querySelector('[id$="-name"], h1, h2, h3, h4, [aria-label], .truncate');
+  const label = labelled?.getAttribute?.('aria-label') || getReadableNodeText(labelled);
+  return label || getReadableNodeText(container);
+}
+
+function inferImageAltText(img) {
+  const id = String(img.id || '').toLowerCase();
+  const className = String(img.className || '').toLowerCase();
+  const src = String(img.currentSrc || img.getAttribute('src') || '').toLowerCase();
+  const nearbyLabel = getNearbyImageLabel(img);
+  const pageLabel = getReadableNodeText(document.querySelector('h1')) || 'LiveScoreFree sports';
+
+  if (id.includes('player-headshot')) {
+    return `${getTextFromSelector('#player-name') || nearbyLabel || 'Player'} profile photo`;
+  }
+  if (id.includes('team-logo')) {
+    return `${getTextFromSelector('#team-name') || nearbyLabel || 'Team'} logo`;
+  }
+  if (id.includes('home-logo')) {
+    return `${getTextFromSelector('#ipl-featured-home-name') || nearbyLabel || 'Home team'} logo`;
+  }
+  if (id.includes('away-logo')) {
+    return `${getTextFromSelector('#ipl-featured-away-name') || nearbyLabel || 'Away team'} logo`;
+  }
+  if (src.includes('favicon') || className.includes('favicon')) {
+    return `${nearbyLabel || 'News source'} icon`;
+  }
+  if (className.includes('object-contain') || src.includes('logo')) {
+    return `${nearbyLabel || pageLabel} logo`;
+  }
+  if (className.includes('avatar') || className.includes('headshot') || className.includes('rounded-full')) {
+    return `${nearbyLabel || pageLabel} profile image`;
+  }
+
+  return `${nearbyLabel || pageLabel} image`;
+}
+
+function normalizeImageAltAttributes(root = document) {
+  const scope = root instanceof HTMLImageElement ? [root] : Array.from(root.querySelectorAll?.('img') || []);
+  scope.forEach((img) => {
+    const currentAlt = sanitizeDisplayText(img.getAttribute('alt') || '');
+    if (!currentAlt || GENERIC_IMAGE_ALT_PATTERN.test(currentAlt)) {
+      img.setAttribute('alt', inferImageAltText(img));
+    }
+    if (!img.hasAttribute('decoding')) {
+      img.setAttribute('decoding', 'async');
+    }
+  });
+}
+
+function installImageAltObserver() {
+  normalizeImageAltAttributes(document);
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) {
+          normalizeImageAltAttributes(node);
+        }
+      });
+      if (mutation.type === 'attributes' && mutation.target instanceof HTMLImageElement) {
+        normalizeImageAltAttributes(mutation.target);
+      }
+    });
+  });
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['src', 'alt']
+  });
+}
+
 function buildSyntheticMatchStats(match = {}) {
   const stats = [];
   if (match.homeTeam?.record || match.awayTeam?.record) {
@@ -3868,6 +3957,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.dataset.lsfPage = getPageKeyFromPath(window.location.pathname);
   hydrateNavigationLinks();
   patchLegacyImages();
+  installImageAltObserver();
   setupAppShell();
   ensureMobileTopNav();
   normalizeLegacyMatchLinks(document);
