@@ -1,6 +1,9 @@
 const SITE_ORIGIN = "https://livescorefree.online";
 const INDEXNOW_KEY = "9d4f7b2c8a1e4f03b6c9d0a5e7f21834";
-const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
+const INDEXNOW_ENDPOINTS = [
+  "https://api.indexnow.org/indexnow",
+  "https://www.bing.com/indexnow"
+];
 
 function decodeXml(value = "") {
   return String(value)
@@ -45,8 +48,8 @@ async function readSitemapUrls() {
   return [...new Set(urls)];
 }
 
-async function submitBatch(urlList) {
-  const response = await fetch(INDEXNOW_ENDPOINT, {
+async function submitBatch(endpoint, urlList) {
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json; charset=utf-8"
@@ -61,7 +64,7 @@ async function submitBatch(urlList) {
 
   if (!response.ok && response.status !== 202) {
     const body = await response.text().catch(() => "");
-    throw new Error(`IndexNow rejected batch: ${response.status} ${body}`.trim());
+    throw new Error(`IndexNow endpoint ${endpoint} rejected batch: ${response.status} ${body}`.trim());
   }
 
   return response.status;
@@ -73,18 +76,19 @@ async function main() {
   const urls = (await readSitemapUrls()).slice(0, Number.isFinite(limit) ? limit : 10000);
 
   if (dryRun) {
-    console.log(`IndexNow dry run: ${urls.length} URLs ready.`);
+    console.log(`IndexNow dry run: ${urls.length} URLs ready for ${INDEXNOW_ENDPOINTS.length} endpoints.`);
     urls.slice(0, 10).forEach((url) => console.log(url));
     return;
   }
 
-  let submitted = 0;
-  for (const batch of chunk(urls, 10000)) {
-    await submitBatch(batch);
-    submitted += batch.length;
+  for (const endpoint of INDEXNOW_ENDPOINTS) {
+    let submitted = 0;
+    for (const batch of chunk(urls, 10000)) {
+      await submitBatch(endpoint, batch);
+      submitted += batch.length;
+    }
+    console.log(`Submitted ${submitted} URLs to ${endpoint}.`);
   }
-
-  console.log(`Submitted ${submitted} URLs to IndexNow.`);
 }
 
 main().catch((error) => {
