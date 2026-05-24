@@ -1645,8 +1645,8 @@ function buildDefaultSeoState(pageKey = getPageKeyFromPath(window.location.pathn
   const baseImage = new URL(FALLBACK_HERO_IMAGE, window.location.origin).toString();
 
   const defaults = {
-    title: 'Live Scores, Match Centres, Schedules and Sports News | LiveScoreFree',
-    description: 'Follow live scores, upcoming fixtures, final results, standings, trusted sports updates, and detailed match centres across football, cricket, basketball, tennis, baseball, hockey, and more on LiveScoreFree.',
+    title: 'LiveScoreFree: Free Live Scores, Fixtures & Results',
+    description: 'Get free live scores, fixtures, results, standings and match stats for football, cricket, basketball, tennis, baseball and hockey from trusted public sports sources.',
     type: 'website'
   };
 
@@ -1751,8 +1751,8 @@ function buildDefaultSeoState(pageKey = getPageKeyFromPath(window.location.pathn
       defaults.description = 'Follow IPL live scores, schedules, results, team squads, commentary, and points table updates on LiveScoreFree.';
       break;
     case 'index':
-      defaults.title = 'Live Scores, Match Centres, Fixtures and Sports News | LiveScoreFree';
-      defaults.description = 'Follow live scores, fixtures, results, standings, and verified sports coverage across football, cricket, basketball, tennis, baseball, hockey, and more on LiveScoreFree.';
+      defaults.title = 'LiveScoreFree: Free Live Scores, Fixtures & Results';
+      defaults.description = 'Get free live scores, fixtures, results, standings and match stats for football, cricket, basketball, tennis, baseball and hockey from trusted public sports sources.';
       break;
     default:
       break;
@@ -1775,8 +1775,10 @@ function updateSiteSchemas(seoState = buildDefaultSeoState()) {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'LiveScoreFree',
+    alternateName: 'livescorefree.online',
     url: window.location.origin,
-    logo: logoUrl
+    logo: logoUrl,
+    description: 'Free live scores, fixtures, results, standings and match stats from trusted public sports sources.'
   });
 
   upsertJsonLdScript('lsf-webpage-schema', {
