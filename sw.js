@@ -1,4 +1,4 @@
-const STATIC_CACHE = "lsf-static-v30";
+const STATIC_CACHE = "lsf-static-v31";
 const DATA_CACHE = "lsf-data-v20";
 const APP_SHELL = [
   "/index.html",
@@ -29,9 +29,7 @@ const APP_SHELL = [
   "/css/runtime-enhancements.css",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
-  "/icons/hero-fallback.svg",
-  "/public/logo.png",
-  "/public/hero-fallback.jpg"
+  "/icons/hero-fallback.svg"
 ];
 
 self.addEventListener("install", (event) => {

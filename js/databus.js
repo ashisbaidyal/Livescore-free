@@ -1,5 +1,5 @@
 /**
- * LivescoreFree DataBus — Centralised Reactive Data Hub
+ * LivescoreFree DataBus - Centralized Reactive Data Hub
  * Manages auto-refresh subscriptions for every page section.
  * Loaded after script.js to extend the existing architecture.
  */
@@ -133,7 +133,7 @@
     var findStat = function (entry, names) {
       var stats = Array.isArray(entry.stats) ? entry.stats : [];
       var found = stats.find(function (s) { return names.indexOf(String(s && s.name || '').toLowerCase()) >= 0; });
-      return found && found.displayValue ? found.displayValue : '—';
+      return found && found.displayValue ? found.displayValue : '-';
     };
     var isSoccer = sport === 'soccer' || /eng|esp|ger|ita|fra|uefa/.test(league || '');
     var isCricket = sport === 'cricket';
@@ -196,7 +196,7 @@
       var headshot = (player.headshot && player.headshot.href) || player.headshot || FALLBACK_LOGO;
       var profileUrl = _buildPlayerProfileUrl(player, player.sport || '', player.league || '');
       var teamLogo = (player.team && player.team.logo) || FALLBACK_LOGO;
-      return '<a href="' + profileUrl + '" class="bg-surface-container border border-white/5 hover:border-primary/30 rounded-xl p-4 flex items-center gap-4 transition-all group"><div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"><img src="' + _getSafeImageUrl(headshot, FALLBACK_LOGO) + '" class="w-full h-full object-cover" onerror="this.src=\'' + FALLBACK_LOGO + '\'"></div><div class="flex-1 min-w-0"><div class="text-xs font-black uppercase tracking-wider truncate group-hover:text-primary transition-colors">' + _escapeHtml(player.fullName || player.shortName || 'Player') + '</div><div class="flex items-center gap-2 mt-1"><img src="' + _getSafeImageUrl(teamLogo, FALLBACK_LOGO) + '" class="w-4 h-4 object-contain" onerror="this.src=\'' + FALLBACK_LOGO + '\'"><span class="text-[9px] text-on-surface/40 font-bold truncate">' + _escapeHtml((player.team && player.team.name) || '') + (player.position && player.position.displayName ? ' • ' + _escapeHtml(player.position.displayName) : '') + '</span></div></div></a>';
+      return '<a href="' + profileUrl + '" class="bg-surface-container border border-white/5 hover:border-primary/30 rounded-xl p-4 flex items-center gap-4 transition-all group"><div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"><img src="' + _getSafeImageUrl(headshot, FALLBACK_LOGO) + '" class="w-full h-full object-cover" onerror="this.src=\'' + FALLBACK_LOGO + '\'"></div><div class="flex-1 min-w-0"><div class="text-xs font-black uppercase tracking-wider truncate group-hover:text-primary transition-colors">' + _escapeHtml(player.fullName || player.shortName || 'Player') + '</div><div class="flex items-center gap-2 mt-1"><img src="' + _getSafeImageUrl(teamLogo, FALLBACK_LOGO) + '" class="w-4 h-4 object-contain" onerror="this.src=\'' + FALLBACK_LOGO + '\'"><span class="text-[9px] text-on-surface/40 font-bold truncate">' + _escapeHtml((player.team && player.team.name) || '') + (player.position && player.position.displayName ? ' - ' + _escapeHtml(player.position.displayName) : '') + '</span></div></div></a>';
     }).join('');
   }
 

@@ -1,7 +1,7 @@
 (() => {
   const IPL_CONTEXT = { sport: "cricket", league: "ipl" };
   const IPL_API = window.LSF_CONFIG?.api || {};
-  const IPL_FALLBACK = "/public/logo.png";
+  const IPL_FALLBACK = "/icons/icon-192.png";
   const iplState = {
     live: [],
     upcoming: [],

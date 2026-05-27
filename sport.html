@@ -552,14 +552,14 @@ function fetchSportStandings(sport, league) {
                         const teamUrl = buildTeamProfileUrl({
                             id: entry.team?.id || '',
                             name: entry.team?.displayName || 'Team',
-                            logo: entry.team?.logos?.[0]?.href || '/public/logo.png'
+                            logo: entry.team?.logos?.[0]?.href || '/icons/icon-192.png'
                         }, espnSport, targetLeague);
                         return `
                         <tr class="hover:bg-white/10 transition-all group cursor-pointer" onclick="window.location.href='${teamUrl}'">
                             <td class="px-4 py-3"><span class="text-xs font-black italic ${idx < 4 ? 'text-primary' : 'text-on-surface/40'}">${entry.stats?.find(s => s.name === 'rank')?.value || idx + 1}</span></td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
-                                    <img src="${entry.team?.logos?.[0]?.href || '/public/logo.png'}" class="w-6 h-6 object-contain" onerror="this.src='/public/logo.png'" alt="${entry.team?.displayName || 'Team'} logo">
+                                    <img src="${entry.team?.logos?.[0]?.href || '/icons/icon-192.png'}" class="w-6 h-6 object-contain" onerror="this.src='/icons/icon-192.png'" alt="${entry.team?.displayName || 'Team'} logo">
                                     <span class="text-[10px] font-black tracking-tight group-hover:text-primary transition-colors truncate max-w-[100px]">${entry.team?.displayName || 'Team'}</span>
                                 </div>
                             </td>

@@ -103,7 +103,7 @@ function trimSentence(value = "", limit = 180) {
   const text = String(value || "").replace(/\s+/g, " ").trim();
   if (!text) return "";
   if (text.length <= limit) return text;
-  return `${text.slice(0, Math.max(0, limit - 1)).trimEnd()}…`;
+  return `${text.slice(0, Math.max(0, limit - 3)).trimEnd()}...`;
 }
 
 function buildLeagueLabel(league = "", matches = []) {

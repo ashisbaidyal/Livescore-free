@@ -617,10 +617,15 @@ function formatTickerDate(match = {}) {
 function getSafeImageUrl(url, fallback = FALLBACK_HERO_IMAGE) {
   const source = String(url || '').trim();
   if (!source) return fallback;
+  if (source.includes('/public/logo.png')) return FALLBACK_LOGO;
+  if (source.includes('/public/hero-fallback.jpg')) return FALLBACK_HERO_IMAGE;
   if (source.includes('unsplash.com')) return fallback;
+  if (source.includes('googleusercontent.com/aida-public')) return fallback;
   if (/a\.espncdn\.com\/i\/headshots\/cricket\/players\/full\//i.test(source)) return fallback;
   if (/fonts\.googleapis\.com\/css2/i.test(source)) return fallback;
-  return url;
+  if (source.startsWith('//')) return `https:${source}`;
+  if (/^https?:\/\//i.test(source) || source.startsWith('/')) return source;
+  return fallback;
 }
 
 const SPORT_ALIASES = {
@@ -4162,13 +4167,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="flex justify-between items-center gap-4">
                   <div class="flex items-center gap-3 flex-1">
-                    <img src="${m.homeTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+                    <img src="${getSafeImageUrl(m.homeTeam.logo, FALLBACK_LOGO)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
                     <span class="text-sm font-black uppercase truncate">${m.homeTeam.name}</span>
                   </div>
                   <span class="text-2xl font-black italic ${m.status === 'live' ? 'text-primary' : 'text-on-surface/50'}">${m.homeTeam.score} - ${m.awayTeam.score}</span>
                   <div class="flex items-center gap-3 flex-1 justify-end">
                     <span class="text-sm font-black uppercase truncate text-right">${m.awayTeam.name}</span>
-                    <img src="${m.awayTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+                    <img src="${getSafeImageUrl(m.awayTeam.logo, FALLBACK_LOGO)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
                   </div>
                 </div>
               </a>
@@ -4381,7 +4386,7 @@ function renderArenaLiveFallback(matches) {
         <div class="flex items-center justify-between mb-6 px-2">
           <div class="flex flex-col items-center gap-3 w-2/5">
             <div class="w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-colors">
-              <img src="${m.homeTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+              <img src="${getSafeImageUrl(m.homeTeam.logo, FALLBACK_LOGO)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
             </div>
             <span class="text-[10px] font-black uppercase tracking-widest opacity-60 truncate w-full text-center">${m.homeTeam.name}</span>
           </div>
@@ -4391,7 +4396,7 @@ function renderArenaLiveFallback(matches) {
           </div>
           <div class="flex flex-col items-center gap-3 w-2/5">
             <div class="w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-colors">
-              <img src="${m.awayTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+              <img src="${getSafeImageUrl(m.awayTeam.logo, FALLBACK_LOGO)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
             </div>
             <span class="text-[10px] font-black uppercase tracking-widest opacity-60 truncate w-full text-center">${m.awayTeam.name}</span>
           </div>
@@ -4426,7 +4431,7 @@ function renderArenaFinishedFallback(matches) {
         <div class="flex items-center justify-between mb-6 px-2">
           <div class="flex flex-col items-center gap-3 w-2/5">
             <div class="w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-colors">
-              <img src="${m.homeTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+              <img src="${getSafeImageUrl(m.homeTeam.logo, FALLBACK_LOGO)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
             </div>
             <span class="text-[10px] font-black uppercase tracking-widest ${homeWin ? 'text-primary' : 'opacity-40'} truncate w-full text-center">${m.homeTeam.name}</span>
           </div>
@@ -4435,7 +4440,7 @@ function renderArenaFinishedFallback(matches) {
           </div>
           <div class="flex flex-col items-center gap-3 w-2/5">
             <div class="w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-colors">
-              <img src="${m.awayTeam.logo}" class="w-10 h-10 object-contain" onerror="this.src='/public/logo.png'">
+              <img src="${getSafeImageUrl(m.awayTeam.logo, FALLBACK_LOGO)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
             </div>
             <span class="text-[10px] font-black uppercase tracking-widest ${awayWin ? 'text-primary' : 'opacity-40'} truncate w-full text-center">${m.awayTeam.name}</span>
           </div>
@@ -5114,8 +5119,8 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
     const combatLeagues = eliteLeagues.filter(l => l.category === 'combat');
     // For combat, we often use specific hero-style blocks
     const combatMetadata = {
-        'ufc': { img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvIyeKN8pU6Tv8l7j-RmQf1mq1YYkRNanPO1kQCTkfpqO1lnOXuSXrM1XtkhkolcZdhEQS_PmMYnlFeWJFN7mnloZTh5Ma37GUcum0oXBwzOPT1dOb1NzKoEbQCIqJwLILR8GSq3XEkvk0bb5iUu5SRjqqNa7LiEsFgaTh6sCpPyjm97xrCouooxKwVn_5v4A8rEfd35QrTnsB3tXr4X7sBhD0favzvQsyRibEZUQ48Y_Zkq1Jop3gjDYtR4ex2BmQWkhgcDR589xC', title: 'Ultimate Fighting' },
-        'boxing': { img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDch9QidtmtgyAuKOhBwokTeBFsRbDLkH0wFQjZhtJLDO9QCp6s4LrnaeRYyVXfjZbefQVmOHoMq1wSdEnhGjfTdwC8mUQGZwhyug-EnBbdPSaiIUbN9-cs51DDEzNE_B6liCVR92OWeoEHj86EllurkqqM_w2DjPnkcOYojy7BbXRQV7wpvYR8gZQqUCEQMtlIzBgQXByX4rqtAKsAW5xeNAp5h-sxvkwucT08VJYZzbUttb0wrkNwvi2OPZZLFsvKTmzj30BGI6ZL', title: 'World Class Boxing' }
+        ufc: { img: FALLBACK_HERO_IMAGE, title: 'Ultimate Fighting' },
+        boxing: { img: FALLBACK_HERO_IMAGE, title: 'World Class Boxing' }
     };
 
     combatSportsContainer.innerHTML = combatLeagues.map(l => {
@@ -5123,7 +5128,7 @@ function renderLeaguesHub(eliteLeagues, standingsMap, liveMatches) {
         const meta = combatMetadata[l.slug] || { img: '', title: l.name };
         return `
         <div class="h-64 relative bg-surface-container-high rounded-xl overflow-hidden group border ${isLive ? 'border-primary/50' : 'border-white/5'}">
-          <img class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" src="${meta.img}" onerror="this.src='/public/hero-fallback.jpg'">
+          <img class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" src="${getSafeImageUrl(meta.img, FALLBACK_HERO_IMAGE)}" onerror="this.src='${FALLBACK_HERO_IMAGE}'">
           <div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest/80 to-transparent"></div>
           <div class="relative h-full p-8 flex flex-col justify-center max-w-xs">
             <div class="inline-flex h-8 bg-white/10 backdrop-blur px-4 items-center justify-center mb-4 rounded border border-white/10">
@@ -5688,7 +5693,7 @@ async function fetchAndRenderTopPerformers() {
     container.innerHTML = athletes.map(a => `
       <a href="${buildPlayerProfileUrl({ ...a, sport: 'soccer', league: 'eng.1' }, 'soccer', 'eng.1')}" class="bg-surface-container rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all block">
         <div class="relative h-48 bg-gradient-to-t from-surface-container to-surface-container-high">
-          <img src="${a.headshot?.href || '/public/logo.png'}" class="absolute bottom-0 left-1/2 -translate-x-1/2 h-full object-cover filter brightness-90"/>
+          <img src="${getSafeImageUrl(a.headshot?.href, FALLBACK_LOGO)}" class="absolute bottom-0 left-1/2 -translate-x-1/2 h-full object-cover filter brightness-90" onerror="this.src='${FALLBACK_LOGO}'"/>
         </div>
         <div class="p-4">
           <div class="flex justify-between items-start mb-2">
@@ -7992,7 +7997,7 @@ function renderMobileCricketLiveCentre(root, data = {}, commentaryFeed = []) {
     const items = commentaryFeed.slice(0, 6).map((entry) => {
       const parsed = parseCricketDeliveryEvent(entry);
       let badgeClass = 'lsf-cricket-mobile-feed-badge--default';
-      let badgeText = escapeHtml(String(parsed.time || 'LIVE').slice(0, 2) || '•');
+      let badgeText = escapeHtml(String(parsed.time || 'LIVE').slice(0, 2) || '*');
       if (parsed.wicket) {
         badgeClass = 'lsf-cricket-mobile-feed-badge--wicket';
         badgeText = 'W';
@@ -9136,8 +9141,8 @@ function renderMatchDetail(data) {
 
   homeTeamName.textContent = sanitizeDisplayText(data.homeTeam.name || 'Home Team');
   awayTeamName.textContent = sanitizeDisplayText(data.awayTeam.name || 'Away Team');
-  homeTeamLogo.src = data.homeTeam.logo || '/public/logo.png';
-  awayTeamLogo.src = data.awayTeam.logo || '/public/logo.png';
+  homeTeamLogo.src = getSafeImageUrl(data.homeTeam.logo, FALLBACK_LOGO);
+  awayTeamLogo.src = getSafeImageUrl(data.awayTeam.logo, FALLBACK_LOGO);
   
   const homeScore = document.getElementById('home-score');
   const awayScore = document.getElementById('away-score');
@@ -9841,7 +9846,7 @@ function renderUpcomingToday(matches) {
       <div class="space-y-4 mb-6">
         <div class="flex items-center space-x-3">
           <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center border border-white/5">
-            <img src="${match.homeTeam.logo}" class="w-5 h-5 object-contain" onerror="this.src='/public/logo.png'">
+            <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" class="w-5 h-5 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
           </div>
           <span class="lsf-pretext-card-title font-bold uppercase tracking-tight text-sm truncate"
                 data-pretext-fit
@@ -9850,7 +9855,7 @@ function renderUpcomingToday(matches) {
         </div>
         <div class="flex items-center space-x-3">
           <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center border border-white/5">
-            <img src="${match.awayTeam.logo}" class="w-5 h-5 object-contain" onerror="this.src='/public/logo.png'">
+            <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" class="w-5 h-5 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
           </div>
           <span class="lsf-pretext-card-title font-bold uppercase tracking-tight text-sm truncate"
                 data-pretext-fit
@@ -10005,7 +10010,7 @@ async function performSearch(query) {
     return `
       <a href="${detailUrl}" class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-primary/20 transition-all group border border-transparent hover:border-primary/30">
         <div class="flex items-center gap-3 flex-1 min-w-0">
-          <img src="${m.homeTeam.logo}" class="w-8 h-8 object-contain" onerror="this.src='/public/logo.png'">
+          <img src="${getSafeImageUrl(m.homeTeam.logo, FALLBACK_LOGO)}" class="w-8 h-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
           <div class="flex-1 min-w-0">
             <div class="text-xs font-black uppercase truncate group-hover:text-primary transition-colors">${m.homeTeam.name} vs ${m.awayTeam.name}</div>
             <div class="text-[9px] font-bold text-on-surface/40 uppercase tracking-widest">${m.league || m.sport}</div>
@@ -10083,6 +10088,7 @@ if (isCurrentPage('news')) {
           const isLive = heroMatch.status === 'live';
           const badge = isLive ? 'LIVE NOW' : 'FINAL RESULT';
           const badgeColor = isLive ? 'bg-primary' : 'bg-secondary-container';
+          const sportParams = getSportParams(heroMatch.sport || '');
           heroSection.innerHTML = `
             <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-surface-container-lowest/20"></div>
             <div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-transparent to-transparent"></div>
@@ -10106,7 +10112,7 @@ if (isCurrentPage('news')) {
                 <a href="${buildMatchUrl(heroMatch)}" class="bg-primary text-white px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2 rounded">
                   <span class="material-symbols-outlined">${sportParams.endIcon}</span> Match Center
                 </a>
-                <a href="/live.html" class="bg-white/5 backdrop-blur-md border border-white/10 text-on-surface px-10 py-4 font-black uppercase text-xs tracking-widest rounded hover:bg-white/10 transition-colors">All Live Scores</a>
+                <a href="/live" class="bg-white/5 backdrop-blur-md border border-white/10 text-on-surface px-10 py-4 font-black uppercase text-xs tracking-widest rounded hover:bg-white/10 transition-colors">All Live Scores</a>
               </div>
             </div>
           `;
@@ -10229,13 +10235,13 @@ if (window.location.pathname.includes('upcoming')) {
               <!-- Home Team -->
               <div class="flex items-center gap-3 flex-1 min-w-0">
                 <span class="text-sm font-bold truncate">${m.homeTeam.name}</span>
-                <img src="${m.homeTeam.logo}" class="w-8 h-8 object-contain shrink-0" onerror="this.src='/public/logo.png'">
+                <img src="${getSafeImageUrl(m.homeTeam.logo, FALLBACK_LOGO)}" class="w-8 h-8 object-contain shrink-0" onerror="this.src='${FALLBACK_LOGO}'">
               </div>
               <!-- VS -->
               <span class="text-[10px] font-black text-on-surface/30 uppercase shrink-0">vs</span>
               <!-- Away Team -->
               <div class="flex items-center gap-3 flex-1 min-w-0">
-                <img src="${m.awayTeam.logo}" class="w-8 h-8 object-contain shrink-0" onerror="this.src='/public/logo.png'">
+                <img src="${getSafeImageUrl(m.awayTeam.logo, FALLBACK_LOGO)}" class="w-8 h-8 object-contain shrink-0" onerror="this.src='${FALLBACK_LOGO}'">
                 <span class="text-sm font-bold truncate">${m.awayTeam.name}</span>
               </div>
               <!-- Broadcast + Notify -->
