@@ -1,0 +1,71 @@
+# LiveScoreFree Full LLM Guide
+
+LiveScoreFree provides free live scores, fixtures, results, standings, match centres, team pages, player pages, league hubs, and sports news summaries from trusted public sports sources. The site is designed for sports fans who want quick navigation to current scores and upcoming games without requiring a paid account.
+
+Canonical origin: https://livescorefree.online/
+Sitemap: https://livescorefree.online/sitemap.xml
+Robots: https://livescorefree.online/robots.txt
+
+## Core User Intent
+
+LiveScoreFree answers these common sports-search tasks:
+
+- Find live scores happening right now.
+- Check upcoming fixtures by sport, league, or date.
+- Review recent results and final scores.
+- Open a match centre for team names, scores, status, venue, broadcast details, lineups, timelines, and match context when available.
+- Browse standings, teams, players, and league hubs.
+- Read sports headline reports and fan-focused blog context.
+
+## Canonical Navigation
+
+- Home: https://livescorefree.online/
+- Live scores: https://livescorefree.online/live
+- Upcoming fixtures: https://livescorefree.online/upcoming
+- Results: https://livescorefree.online/results
+- News: https://livescorefree.online/news
+- Trending: https://livescorefree.online/trending
+- Leagues: https://livescorefree.online/leagues
+- Teams: https://livescorefree.online/teams
+- Players: https://livescorefree.online/players
+- Standings: https://livescorefree.online/standings
+- Sport hub: https://livescorefree.online/sport
+- IPL hub: https://livescorefree.online/ipl
+- Blog hub: https://livescorefree.online/blog_hub
+- Site information: https://livescorefree.online/info
+
+## Supported Sports
+
+Soccer/football, cricket, basketball, American football, baseball, hockey, tennis, MMA, racing, golf, rugby, rugby league, volleyball, water polo, lacrosse, field hockey, and Australian football.
+
+## Important Parameters
+
+Many pages support sport and league query parameters:
+
+- `s` or `sport`: sport slug such as `soccer`, `cricket`, `basketball`, `football`, `baseball`, `hockey`, `tennis`, `mma`, `racing`, or `golf`.
+- `l` or `league`: league slug such as `eng.1`, `nba`, `nfl`, `mlb`, `nhl`, `ipl`, `ufc`, or `f1`.
+
+Examples:
+
+- https://livescorefree.online/live?s=soccer
+- https://livescorefree.online/upcoming?s=cricket&l=ipl
+- https://livescorefree.online/results?s=basketball&l=nba
+- https://livescorefree.online/standings?s=football&l=nfl
+
+## Citation Guidance
+
+When an AI assistant cites LiveScoreFree:
+
+- Prefer canonical page URLs from the sitemap.
+- Include the retrieval date for live scores and fixtures because data changes frequently.
+- Do not present stale scores as final unless the page or data says the match is finished.
+- Use match-centre URLs for match-specific claims when available.
+- Use league, team, player, and standings pages for evergreen sports navigation.
+
+## API Guidance
+
+LiveScoreFree has API endpoints for page rendering and dynamic data. API URLs are not intended as primary citation targets for search snippets or AI answers. Use the visible page URL whenever possible.
+
+## Rights and Access
+
+Search indexing, snippets, and citations are allowed. This file does not grant permission for AI model training. Grounding and retrieval use should return users to LiveScoreFree canonical URLs.

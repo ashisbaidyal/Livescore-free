@@ -424,7 +424,7 @@
 
     grid.innerHTML = roster.map(a => {
       const headshotUrl = a.headshot?.href || a.headshot?.url || FALLBACK;
-      const playerUrl = `player.html?id=${encodeURIComponent(a.id)}&name=${encodeURIComponent(a.fullName)}&sport=${encodeURIComponent(team.sport)}&league=${encodeURIComponent(team.league)}&team=${encodeURIComponent(team.name)}&role=${encodeURIComponent(a.position?.displayName || '')}`;
+      const playerUrl = `/player?id=${encodeURIComponent(a.id)}&name=${encodeURIComponent(a.fullName)}&sport=${encodeURIComponent(team.sport)}&league=${encodeURIComponent(team.league)}&team=${encodeURIComponent(team.name)}&role=${encodeURIComponent(a.position?.displayName || '')}`;
       return `
         <a href="${playerUrl}" class="group rounded-2xl border border-white/5 bg-white/5 p-4 hover:border-primary/30 hover:bg-white/10 transition-all">
           <div class="flex items-center gap-3 mb-3">

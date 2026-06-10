@@ -4143,7 +4143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mainContent) {
       mainContent.innerHTML = `
         <div class="py-20 px-6 max-w-4xl mx-auto text-center">
-          <span class="material-symbols-outlined text-6xl text-primary mb-6 block animate-pulse">${sportParams.endIcon}</span>
+          <span class="material-symbols-outlined text-6xl text-primary mb-6 block animate-pulse">${getSportParams(sport).timelineParams?.endIcon || 'sports_score'}</span>
           <h2 class="text-4xl font-black italic uppercase tracking-tighter mb-4">Select a Match</h2>
           <p class="text-sm font-bold text-on-surface/40 uppercase tracking-widest mb-12">Choose a match from the live scores below for full details</p>
           <div id="empty-state-matches" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
@@ -4405,7 +4405,7 @@ function renderArenaLiveFallback(matches) {
       <div class="space-y-3">
         <div class="w-full bg-white/5 h-[1px]"></div>
         <div class="w-full py-3 bg-primary/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white transition-all">
-          <span class="material-symbols-outlined text-sm">${sportParams.endIcon}</span>
+          <span class="material-symbols-outlined text-sm">${getSportParams(currentArenaTab || 'all').timelineParams?.endIcon || 'sports_score'}</span>
           Match Center
         </div>
       </div>
@@ -4449,7 +4449,7 @@ function renderArenaFinishedFallback(matches) {
       <div class="space-y-3">
         <div class="w-full bg-white/5 h-[1px]"></div>
         <div class="w-full py-3 bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest text-on-surface/40 flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white transition-all">
-          <span class="material-symbols-outlined text-sm">${sportParams.endIcon}</span>
+          <span class="material-symbols-outlined text-sm">${getSportParams(currentArenaTab || 'all').timelineParams?.endIcon || 'sports_score'}</span>
           View Details
         </div>
       </div>
@@ -4897,7 +4897,7 @@ function renderHomeHeroWidgets(upcomingMatches = [], newsList = []) {
           <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport?s=soccer"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_soccer</span></a>
           <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport?s=basketball&l=nba"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_basketball</span></a>
           <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/sport?s=football&l=nfl"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">sports_football</span></a>
-          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/results.html"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">history</span></a>
+          <a class="aspect-square bg-white/5 hover:bg-primary transition-all rounded-lg flex items-center justify-center group" href="/results"><span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">history</span></a>
         </div>
       </div>
       ${newsItem ? `
@@ -10110,7 +10110,7 @@ if (isCurrentPage('news')) {
               </div>
               <div class="flex gap-4 pt-4">
                 <a href="${buildMatchUrl(heroMatch)}" class="bg-primary text-white px-10 py-4 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-2 rounded">
-                  <span class="material-symbols-outlined">${sportParams.endIcon}</span> Match Center
+                  <span class="material-symbols-outlined">${sportParams.timelineParams?.endIcon || 'sports_score'}</span> Match Center
                 </a>
                 <a href="/live" class="bg-white/5 backdrop-blur-md border border-white/10 text-on-surface px-10 py-4 font-black uppercase text-xs tracking-widest rounded hover:bg-white/10 transition-colors">All Live Scores</a>
               </div>

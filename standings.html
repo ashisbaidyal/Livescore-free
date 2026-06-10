@@ -337,7 +337,7 @@
           </thead>
           <tbody>
             ${entries.slice(0, 12).map((entry) => `
-              <tr class="border-t border-white/5 hover:bg-white/5 transition-colors cursor-pointer" onclick="window.location.href='team.html?id=${encodeURIComponent(entry.id)}&name=${encodeURIComponent(entry.name)}&sport=${encodeURIComponent(entry.sport)}&league=${encodeURIComponent(entry.league)}'">
+              <tr class="border-t border-white/5 hover:bg-white/5 transition-colors cursor-pointer" onclick="window.location.href='/team?id=${encodeURIComponent(entry.id)}&name=${encodeURIComponent(entry.name)}&sport=${encodeURIComponent(entry.sport)}&league=${encodeURIComponent(entry.league)}'">
                 <td class="px-4 py-4 font-black text-primary">${entry.rank}</td>
                 <td class="px-4 py-4">
                   <div class="flex items-center gap-3">

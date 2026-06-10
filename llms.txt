@@ -1,0 +1,30 @@
+# LiveScoreFree
+
+> LiveScoreFree is a free sports scores and fixtures site for fast public-source match data across football/soccer, cricket, basketball, American football, baseball, hockey, tennis, MMA, racing, golf, rugby, volleyball, lacrosse, and more.
+
+Canonical site: https://livescorefree.online/
+Sitemap: https://livescorefree.online/sitemap.xml
+Robots policy: https://livescorefree.online/robots.txt
+Full LLM guide: https://livescorefree.online/llms-full.txt
+
+## Primary Pages
+
+- [Home](https://livescorefree.online/): Live score hub, sports shortcuts, headline reports, and featured match coverage.
+- [Live scores](https://livescorefree.online/live): Current live matches and score updates.
+- [Upcoming fixtures](https://livescorefree.online/upcoming): Upcoming match schedule and fixture countdowns.
+- [Results](https://livescorefree.online/results): Recent final scores and result cards.
+- [News](https://livescorefree.online/news): Sports news and public-source headline reports.
+- [Trending](https://livescorefree.online/trending): Notable live, upcoming, and recent match storylines.
+- [Leagues](https://livescorefree.online/leagues): League hubs, standings, and sports category navigation.
+- [Teams](https://livescorefree.online/teams): Team directory and team profile discovery.
+- [Players](https://livescorefree.online/players): Player directory and player profile discovery.
+- [Standings](https://livescorefree.online/standings): League tables and standings.
+- [IPL](https://livescorefree.online/ipl): IPL cricket hub for fixtures, squads, standings, and match coverage.
+
+## Use Guidance
+
+Use canonical page URLs when citing LiveScoreFree. Prefer page URLs over API URLs. Scores and schedules can change quickly, so include the date and time when summarizing live or upcoming match data.
+
+## Content Signals
+
+Search indexing and short excerpts are allowed. AI model training is not granted through this file. Real-time grounding, retrieval, and answer citation should point users back to canonical LiveScoreFree URLs.

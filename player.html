@@ -400,10 +400,10 @@
 
     // Navigation Links
     const teamLink = a.team?.id
-      ? `team.html?id=${encodeURIComponent(a.team.id)}&name=${encodeURIComponent(a.team.name)}&sport=${encodeURIComponent(a.sport)}&league=${encodeURIComponent(a.league)}`
+      ? `/team?id=${encodeURIComponent(a.team.id)}&name=${encodeURIComponent(a.team.name)}&sport=${encodeURIComponent(a.sport)}&league=${encodeURIComponent(a.league)}`
       : a.team?.name
-        ? `team.html?name=${encodeURIComponent(a.team.name)}&sport=${encodeURIComponent(a.sport)}&league=${encodeURIComponent(a.league)}`
-        : 'teams.html';
+        ? `/team?name=${encodeURIComponent(a.team.name)}&sport=${encodeURIComponent(a.sport)}&league=${encodeURIComponent(a.league)}`
+        : '/teams';
 
     document.getElementById("player-links").innerHTML = `
       <a href="/players" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">
@@ -500,8 +500,8 @@
     }
 
     const teamLink = athlete.team?.id
-      ? `team.html?id=${encodeURIComponent(athlete.team.id)}&name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`
-      : `team.html?name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`;
+      ? `/team?id=${encodeURIComponent(athlete.team.id)}&name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`
+      : `/team?name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`;
 
     card.innerHTML = `
       <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Current Team</div>
@@ -613,10 +613,10 @@
     renderTeamCard(athlete);
 
     const teamLink = athlete.team?.id
-      ? `team.html?id=${encodeURIComponent(athlete.team.id)}&name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`
+      ? `/team?id=${encodeURIComponent(athlete.team.id)}&name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`
       : athlete.team?.name
-        ? `team.html?name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`
-        : "teams.html";
+        ? `/team?name=${encodeURIComponent(athlete.team.name)}&sport=${encodeURIComponent(athlete.sport)}&league=${encodeURIComponent(athlete.league)}`
+        : "/teams";
 
     document.getElementById("player-links").innerHTML = `
       <a href="/players" class="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 hover:border-primary/40 hover:bg-white/10 transition-all">

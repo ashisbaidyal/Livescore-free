@@ -1,4 +1,4 @@
-const STATIC_CACHE = "lsf-static-v31";
+const STATIC_CACHE = "lsf-static-v32";
 const DATA_CACHE = "lsf-data-v20";
 const APP_SHELL = [
   "/index.html",
@@ -18,12 +18,16 @@ const APP_SHELL = [
   "/standings.html",
   "/match.html",
   "/upcoming_match_detail.html",
+  "/sport.html",
   "/info.html",
   "/robots.txt",
+  "/llms.txt",
+  "/llms-full.txt",
   "/manifest.webmanifest",
   "/offline.html",
   "/js/config.js",
   "/js/script.js?v=1.0.31",
+  "/js/databus.js?v=1.0.1",
   "/js/ipl-hub.js?v=1.0.18",
   "/css/style.css",
   "/css/runtime-enhancements.css",

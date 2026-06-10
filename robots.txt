@@ -1,4 +1,7 @@
 User-agent: *
+Content-Signal: search=yes,ai-train=no
 Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
 
 Sitemap: https://livescorefree.online/sitemap.xml

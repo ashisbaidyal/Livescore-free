@@ -164,7 +164,7 @@
       if (score) score.textContent = "0-0";
       if (time) time.textContent = "Loading";
       if (meta) meta.textContent = "Watching for live or upcoming IPL matches";
-      if (link) link.href = "upcoming.html?s=cricket&l=ipl";
+      if (link) link.href = "/upcoming?s=cricket&l=ipl";
       return;
     }
 

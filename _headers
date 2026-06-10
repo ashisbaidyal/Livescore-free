@@ -4,6 +4,16 @@
 /offline.html
   X-Robots-Tag: noindex, follow
 
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600
+  X-Robots-Tag: index, follow
+
+/llms-full.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600
+  X-Robots-Tag: index, follow
+
 /*.json
   X-Robots-Tag: noindex, nofollow
 
