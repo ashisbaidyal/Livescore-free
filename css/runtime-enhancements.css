@@ -769,3 +769,19 @@
     display: none !important;
   }
 }
+
+/* === PREMIUM MOBILE TOUCH STATES === */
+@media (max-width: 1023px) {
+  .lsf-premium-card:active {
+    border-color: rgba(204,22,22,0.35);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 16px rgba(204,22,22,0.1);
+    transform: scale(0.99);
+  }
+  .lsf-live-badge {
+    font-size: 0.6rem;
+    padding: 0.25rem 0.6rem;
+  }
+  .lsf-glow-md {
+    box-shadow: 0 0 16px rgba(204,22,22,0.16);
+  }
+}

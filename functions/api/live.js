@@ -1,5 +1,6 @@
 import {
   buildFeedMeta,
+  checkRateLimit,
   SPORT_LEAGUES,
   calculateTTL,
   dedupeById,
@@ -66,6 +67,13 @@ function sortMatches(left, right) {
 
 export async function onRequest(context) {
   const { request } = context;
+  const clientIp = request.headers.get("CF-Connecting-IP") || "unknown";
+  if (!checkRateLimit(clientIp, "live", 120, 60000)) {
+    return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": "60" }
+    });
+  }
   const url = new URL(request.url);
   const sportParam = String(url.searchParams.get("sport") || url.searchParams.get("s") || "all").toLowerCase();
   const leagueParam = url.searchParams.get("league") || url.searchParams.get("l") || "";

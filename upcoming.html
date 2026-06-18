@@ -1,4 +1,4 @@
--<!DOCTYPE html>
+﻿-<!DOCTYPE html>
 
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
@@ -181,7 +181,7 @@
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-active:scale-110 group-hover:rotate-6 group-active:rotate-6 transition-transform group-hover:text-primary group-active:text-primary">public</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 group-active:translate-x-2 transition-transform">All Leagues</span>
 </a>
-<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary active:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary active:border-primary hover:bg-white/5 active:bg-white/5" href="/leagues">
+<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary active:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary active:border-primary hover:bg-white/5 active:bg-white/5" href="/standings">
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-active:scale-110 group-hover:rotate-6 group-active:rotate-6 transition-transform group-hover:text-primary group-active:text-primary">leaderboard</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 group-active:translate-x-2 transition-transform">Standings</span>
 </a>
@@ -189,7 +189,7 @@
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-active:scale-110 group-hover:rotate-6 group-active:rotate-6 transition-transform group-hover:text-primary group-active:text-primary">calendar_month</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 group-active:translate-x-2 transition-transform">Fixtures</span>
 </a>
-<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary active:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary active:border-primary hover:bg-white/5 active:bg-white/5" href="/leagues">
+<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary active:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary active:border-primary hover:bg-white/5 active:bg-white/5" href="/teams">
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-active:scale-110 group-hover:rotate-6 group-active:rotate-6 transition-transform group-hover:text-primary group-active:text-primary">groups</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 group-active:translate-x-2 transition-transform">Teams Hub</span>
 </a>
@@ -217,9 +217,9 @@
 <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Today's Live Scores</div>
 <div id="sidebar-live-container" class="space-y-3">
 <!-- Live score snippets will be insected here -->
-<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
-<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
-<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+<div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
+<div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
+<div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
 </div>
 </div>
 <!-- Quick Links -->
@@ -309,49 +309,24 @@
 
   <!-- Sidebar -->
   <aside class="xl:col-span-4 space-y-8">
-    <!-- Trending Series -->
+    <!-- Next Up — real-time upcoming fixtures -->
     <div class="bg-surface-container-high p-8 rounded-xl border border-outline-variant/10">
-      <h3 class="text-xl font-black uppercase tracking-tighter mb-6 flex items-center gap-2">
-        <span class="w-2 h-4 bg-primary rounded-full"></span> Trending Series
-      </h3>
-      <div id="trending-series-container" class="space-y-4">
-        <div class="p-4 bg-surface-container-lowest border-l-2 border-secondary hover:translate-x-1 transition-transform cursor-pointer">
-          <p class="text-[10px] uppercase font-bold text-secondary mb-1">Playoffs - Game 7</p>
-          <p class="font-bold text-sm">Nuggets vs Timberwolves</p>
-          <p class="text-[10px] opacity-40 mt-1 uppercase">Series tied 3-3</p>
-        </div>
-        <div class="p-4 bg-surface-container-lowest border-l-2 border-primary-container hover:translate-x-1 transition-transform cursor-pointer">
-          <p class="text-[10px] uppercase font-bold text-primary mb-1">UCL - Semi-Finals</p>
-          <p class="font-bold text-sm">Dortmund vs PSG</p>
-          <p class="text-[10px] opacity-40 mt-1 uppercase">Agg: 1-0</p>
-        </div>
-        <div class="p-4 bg-surface-container-lowest border-l-2 border-outline-variant hover:translate-x-1 transition-transform cursor-pointer">
-          <p class="text-[10px] uppercase font-bold opacity-60 mb-1">F1 - Miami GP</p>
-          <p class="font-bold text-sm">Qualifying Rounds</p>
-          <p class="text-[10px] opacity-40 mt-1 uppercase">Live in 12h</p>
-        </div>
+      <h3 class="lsf-section-label text-xl font-black uppercase tracking-tighter mb-6">Next Up</h3>
+      <div id="trending-series-container" class="space-y-3">
+        <div class="lsf-shimmer h-16 rounded-lg bg-surface-container-lowest"></div>
+        <div class="lsf-shimmer h-16 rounded-lg bg-surface-container-lowest opacity-70"></div>
+        <div class="lsf-shimmer h-16 rounded-lg bg-surface-container-lowest opacity-40"></div>
       </div>
-    </div>
-    <!-- Fan Poll -->
-    <div class="bg-surface-container-high p-8 rounded-xl border border-outline-variant/10 relative overflow-hidden">
-      <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-[60px]"></div>
-      <h3 class="text-xl font-black uppercase tracking-tighter mb-6">Fan Poll</h3>
-      <p class="text-sm font-bold mb-6">Who wins tonight's match between Arsenal and Man City?</p>
-      <div class="space-y-3">
-        <button class="w-full p-4 bg-surface-container-lowest border border-white/5 hover:border-primary/40 transition-all text-left flex justify-between items-center group cursor-pointer"><span class="font-bold text-sm uppercase">Arsenal</span><span class="text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">42%</span></button>
-        <button class="w-full p-4 bg-surface-container-lowest border border-white/5 hover:border-primary/40 transition-all text-left flex justify-between items-center group cursor-pointer"><span class="font-bold text-sm uppercase">Man City</span><span class="text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">51%</span></button>
-        <button class="w-full p-4 bg-surface-container-lowest border border-white/5 hover:border-primary/40 transition-all text-left flex justify-between items-center group cursor-pointer"><span class="font-bold text-sm uppercase">Draw</span><span class="text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">7%</span></button>
-      </div>
-      <p class="text-[10px] opacity-40 mt-6 text-center uppercase tracking-widest">1.2M Votes Cast</p>
     </div>
     <!-- Promo Card -->
     <div class="relative rounded-xl h-64 overflow-hidden group cursor-pointer">
       <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Sports action promo" src="/icons/hero-fallback.svg"/>
       <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest to-transparent"></div>
-      <div class="absolute bottom-6 left-6">
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] bg-secondary-container text-on-secondary-container px-2 py-1 mb-2 inline-block">Pro Access</p>
-        <h4 class="text-2xl font-black italic uppercase tracking-tighter">Livescorefree+</h4>
-        <p class="text-xs font-bold opacity-80 mt-1">Multi-angle streams &amp; ad-free experience.</p>
+      <div class="lsf-ambient-glow"></div>
+      <div class="absolute bottom-6 left-6 relative z-10">
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] bg-primary/20 text-primary px-2 py-1 mb-2 inline-block rounded">Free Forever</p>
+        <h4 class="text-2xl font-black italic uppercase tracking-tighter">LiveScoreFree</h4>
+        <p class="text-xs font-bold opacity-80 mt-1">Real-time scores, no account needed.</p>
       </div>
     </div>
   </aside>
@@ -433,6 +408,8 @@
     <script src="/js/databus.js?v=1.0.1"></script>
 </body>
 </html>
+
+
 
 
 

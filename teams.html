@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -111,9 +111,9 @@
       <div class="px-6 mb-8">
         <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Live Feed</div>
         <div id="sidebar-live-container" class="space-y-3">
-          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
-          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
-          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
         </div>
       </div>
       <div class="px-6">
@@ -166,9 +166,9 @@
       <div class="grid gap-8 xl:grid-cols-[1fr_320px]">
         <div>
           <div id="teams-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div>
-            <div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div>
-            <div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div>
+            <div class="h-72 rounded-3xl bg-white/5 lsf-shimmer"></div>
+            <div class="h-72 rounded-3xl bg-white/5 lsf-shimmer"></div>
+            <div class="h-72 rounded-3xl bg-white/5 lsf-shimmer"></div>
           </div>
         </div>
         <aside class="space-y-6">
@@ -335,7 +335,7 @@
 
   function renderTeamsLoading() {
     const grid = document.getElementById("teams-grid");
-    grid.innerHTML = '<div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div><div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div><div class="h-72 rounded-3xl bg-white/5 animate-pulse"></div>';
+    grid.innerHTML = '<div class="h-72 rounded-3xl bg-white/5 lsf-shimmer"></div><div class="h-72 rounded-3xl bg-white/5 lsf-shimmer"></div><div class="h-72 rounded-3xl bg-white/5 lsf-shimmer"></div>';
   }
 
   function subscribeToTeams(key) {
@@ -376,6 +376,7 @@
 </script>
 </body>
 </html>
+
 
 
 

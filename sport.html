@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
@@ -119,7 +119,7 @@
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">public</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">All Leagues</span>
 </a>
-<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/leagues">
+<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/standings">
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">leaderboard</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Standings</span>
 </a>
@@ -127,7 +127,7 @@
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">calendar_month</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Fixtures</span>
 </a>
-<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/leagues">
+<a class="flex items-center gap-4 py-3 px-6 -mx-6 text-on-surface/60 hover:text-primary transition-all duration-300 group border-l-[3px] border-transparent hover:border-primary hover:bg-white/5" href="/teams">
 <span class="material-symbols-outlined text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform group-hover:text-primary">groups</span>
 <span class="font-black uppercase tracking-widest text-[10px] group-hover:translate-x-2 transition-transform">Teams Hub</span>
 </a>
@@ -148,8 +148,8 @@
 <div class="px-6 mb-8">
 <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Today's Live Scores</div>
 <div id="sidebar-live-container" class="space-y-3">
-<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
-<div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+<div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
+<div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
 </div>
 </div>
 <div class="px-6 mb-8">
@@ -190,7 +190,7 @@
     <div id="hero-bg" class="absolute inset-0 bg-cover bg-center opacity-30 transition-all duration-[3s]"></div>
     <div class="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/70 to-transparent"></div>
     <div class="relative h-full flex flex-col justify-end p-8 md:p-12 max-w-7xl mx-auto">
-        <span id="sport-badge" class="bg-primary px-4 py-1.5 rounded text-[10px] font-black uppercase tracking-[.2em] mb-4 self-start animate-pulse">Loading...</span>
+        <span id="sport-badge" class="bg-primary px-4 py-1.5 rounded text-[10px] font-black uppercase tracking-[.2em] mb-4 self-start lsf-shimmer">Loading...</span>
         <h1 id="sport-title" class="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none mb-2">SPORT HUB</h1>
         <p id="sport-desc" class="text-xs font-bold text-white/40 uppercase tracking-widest">Real-time statistics and live coverage</p>
     </div>
@@ -212,8 +212,8 @@
                     <h2 class="text-2xl font-black italic uppercase border-l-4 border-primary pl-4">Live & Upcoming</h2>
                 </div>
                 <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="h-48 bg-white/5 rounded-xl animate-pulse"></div>
-                    <div class="h-48 bg-white/5 rounded-xl animate-pulse"></div>
+                    <div class="h-48 bg-white/5 rounded-xl lsf-shimmer"></div>
+                    <div class="h-48 bg-white/5 rounded-xl lsf-shimmer"></div>
                 </div>
             </section>
 
@@ -224,8 +224,8 @@
                     <a href="/results" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">View All</a>
                 </div>
                 <div id="sport-results-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="h-32 bg-white/5 rounded-xl animate-pulse"></div>
-                    <div class="h-32 bg-white/5 rounded-xl animate-pulse"></div>
+                    <div class="h-32 bg-white/5 rounded-xl lsf-shimmer"></div>
+                    <div class="h-32 bg-white/5 rounded-xl lsf-shimmer"></div>
                 </div>
             </section>
 
@@ -236,8 +236,8 @@
                     <a href="/news" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">All News</a>
                 </div>
                 <div id="sport-news-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="h-48 bg-white/5 rounded-xl animate-pulse"></div>
-                    <div class="h-48 bg-white/5 rounded-xl animate-pulse"></div>
+                    <div class="h-48 bg-white/5 rounded-xl lsf-shimmer"></div>
+                    <div class="h-48 bg-white/5 rounded-xl lsf-shimmer"></div>
                 </div>
             </section>
 
@@ -248,12 +248,12 @@
                 </div>
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <div id="sport-blog-featured-container" class="xl:col-span-2">
-                        <div class="h-[360px] bg-white/5 rounded-[1.75rem] animate-pulse"></div>
+                        <div class="h-[360px] bg-white/5 rounded-[1.75rem] lsf-shimmer"></div>
                     </div>
                     <div id="sport-blog-stack-container" class="space-y-4">
-                        <div class="h-28 bg-white/5 rounded-[1.5rem] animate-pulse"></div>
-                        <div class="h-28 bg-white/5 rounded-[1.5rem] animate-pulse"></div>
-                        <div class="h-28 bg-white/5 rounded-[1.5rem] animate-pulse"></div>
+                        <div class="h-28 bg-white/5 rounded-[1.5rem] lsf-shimmer"></div>
+                        <div class="h-28 bg-white/5 rounded-[1.5rem] lsf-shimmer"></div>
+                        <div class="h-28 bg-white/5 rounded-[1.5rem] lsf-shimmer"></div>
                     </div>
                 </div>
             </section>
@@ -273,9 +273,9 @@
             <section>
                 <h2 class="text-lg font-black italic uppercase mb-6 border-l-4 border-primary pl-4">Top Players</h2>
                 <div id="sport-players-container" class="space-y-3">
-                    <div class="h-16 bg-white/5 rounded-xl animate-pulse"></div>
-                    <div class="h-16 bg-white/5 rounded-xl animate-pulse"></div>
-                    <div class="h-16 bg-white/5 rounded-xl animate-pulse"></div>
+                    <div class="h-16 bg-white/5 rounded-xl lsf-shimmer"></div>
+                    <div class="h-16 bg-white/5 rounded-xl lsf-shimmer"></div>
+                    <div class="h-16 bg-white/5 rounded-xl lsf-shimmer"></div>
                 </div>
             </section>
 
@@ -412,6 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.leagueOptions = {
         soccer: [
+            { league: 'fifa.world', label: 'World Cup' },
             { league: 'eng.1', label: 'Premier League' },
             { league: 'esp.1', label: 'La Liga' },
             { league: 'ger.1', label: 'Bundesliga' },
@@ -520,7 +521,7 @@ function fetchSportStandings(sport, league) {
         maxAgeMs: 45000
     }, (snapshot) => {
         if (snapshot.status === 'loading' && !snapshot.data) {
-            container.innerHTML = '<div class="h-48 rounded-2xl bg-white/5 animate-pulse"></div>';
+            container.innerHTML = '<div class="h-48 rounded-2xl bg-white/5 lsf-shimmer"></div>';
             return;
         }
 
@@ -588,7 +589,7 @@ function fetchSportNews(sport, league) {
         maxAgeMs: 120000
     }, (snapshot) => {
         if (snapshot.status === 'loading' && !snapshot.data) {
-            container.innerHTML = '<div class="col-span-full h-48 rounded-2xl bg-white/5 animate-pulse"></div>';
+            container.innerHTML = '<div class="col-span-full h-48 rounded-2xl bg-white/5 lsf-shimmer"></div>';
             return;
         }
 
@@ -636,7 +637,7 @@ function fetchSportResults(sport, league) {
         maxAgeMs: 15000
     }, (snapshot) => {
         if (snapshot.status === 'loading' && !snapshot.data) {
-            container.innerHTML = '<div class="col-span-full h-40 rounded-2xl bg-white/5 animate-pulse"></div>';
+            container.innerHTML = '<div class="col-span-full h-40 rounded-2xl bg-white/5 lsf-shimmer"></div>';
             return;
         }
 
@@ -689,7 +690,7 @@ function fetchSportPlayers(sport, league) {
         maxAgeMs: 60000
     }, (snapshot) => {
         if (snapshot.status === 'loading' && !snapshot.data) {
-            container.innerHTML = '<div class="h-40 rounded-2xl bg-white/5 animate-pulse"></div>';
+            container.innerHTML = '<div class="h-40 rounded-2xl bg-white/5 lsf-shimmer"></div>';
             return;
         }
 
@@ -721,6 +722,8 @@ function fetchSportPlayers(sport, league) {
 </script>
 </body>
 </html>
+
+
 
 
 

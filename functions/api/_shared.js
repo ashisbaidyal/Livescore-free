@@ -1,5 +1,48 @@
 export const FALLBACK_LOGO = "/icons/icon-192.png";
 export const FALLBACK_HERO = "/icons/hero-fallback.svg";
+
+// --- INPUT VALIDATION ---
+export function validateParam(value, pattern = /^[a-zA-Z0-9._\-]{1,64}$/) {
+  if (!value) return null;
+  const str = String(value).trim();
+  return pattern.test(str) ? str : null;
+}
+
+export function sanitizeTextParam(value, maxLen = 100) {
+  if (!value) return null;
+  return String(value).trim().slice(0, maxLen).replace(/[<>"'`]/g, '');
+}
+
+// --- RATE LIMITING (in-memory per worker isolate) ---
+const _rlMap = new Map();
+export function checkRateLimit(ip, endpoint, maxReqs = 120, windowMs = 60000) {
+  const key = `${ip}:${endpoint}`;
+  const now = Date.now();
+  const entry = _rlMap.get(key) || { count: 0, reset: now + windowMs };
+  if (now > entry.reset) { entry.count = 0; entry.reset = now + windowMs; }
+  entry.count++;
+  _rlMap.set(key, entry);
+  if (_rlMap.size > 5000) { // prevent unbounded growth
+    const oldest = Array.from(_rlMap.entries()).sort((a,b) => a[1].reset - b[1].reset).slice(0, 500);
+    oldest.forEach(([k]) => _rlMap.delete(k));
+  }
+  return entry.count <= maxReqs;
+}
+
+// --- CORS ORIGIN RESOLUTION ---
+export function resolveAllowedOrigin(request, env) {
+  const allowed = ((env && env.ALLOWED_ORIGINS) || 'https://livescorefree.online,https://www.livescorefree.online').split(',').map(s => s.trim());
+  const reqOrigin = request.headers.get('Origin') || '';
+  if (!reqOrigin) return allowed[0];
+  for (const o of allowed) {
+    if (o === reqOrigin) return reqOrigin;
+    if (o.includes('*')) {
+      const pattern = new RegExp('^' + o.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
+      if (pattern.test(reqOrigin)) return reqOrigin;
+    }
+  }
+  return allowed[0];
+}
 export const IPL_SERIES_ID = "8048";
 export const IPL_SEASON = "2026";
 export const IPL_SQUAD_ARTICLE_URL = "https://www.espn.in/cricket/story/_/id/47324999/ipl-2026-how-csk-dc-gt-kkr-lsg-mi-pbks-rcb-rr-srh-stack-auction";

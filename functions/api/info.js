@@ -1,5 +1,6 @@
 import {
   buildFeedMeta,
+  checkRateLimit,
   SPORT_LEAGUES,
   coreApiUrl,
   dedupeById,
@@ -21,7 +22,9 @@ import {
   normalizeTeamEntry,
   normalizeRosterGroups,
   resolveTeamFromRef,
-  siteApiUrl
+  sanitizeTextParam,
+  siteApiUrl,
+  validateParam
 } from "./_shared.js";
 
 function getLeaguePairs(sport, league, limit = 4) {
@@ -658,6 +661,13 @@ async function getNormalizedScores(sport, league, date = "") {
 
 export async function onRequest(context) {
   const { request } = context;
+  const clientIp = request.headers.get("CF-Connecting-IP") || "unknown";
+  if (!checkRateLimit(clientIp, "info", 120, 60000)) {
+    return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": "60" }
+    });
+  }
   const url = new URL(request.url);
   const type = String(url.searchParams.get("type") || "news").toLowerCase();
   const inputLeague = url.searchParams.get("league") || url.searchParams.get("l") || "";
@@ -665,8 +675,8 @@ export async function onRequest(context) {
   const sport = normalizeSportParam(inputSport, inputLeague);
   const league = inputLeague ? normalizeLeagueParam(inputLeague, sport) : sport === "all" ? "" : normalizeLeagueParam("", sport);
   const teamId = url.searchParams.get("team") || "";
-  const id = url.searchParams.get("id") || "";
-  const name = url.searchParams.get("name") || "";
+  const id = validateParam(url.searchParams.get("id")) || "";
+  const name = sanitizeTextParam(url.searchParams.get("name"), 100) || "";
   const parsedLimit = parseInt(url.searchParams.get("limit") || "16", 10);
   const limit = Math.max(1, Math.min(Number.isFinite(parsedLimit) ? parsedLimit : 16, 24));
   const date = url.searchParams.get("date") || "";

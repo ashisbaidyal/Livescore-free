@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -110,9 +110,9 @@
       <div class="px-6 mb-8">
         <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Live Feed</div>
         <div id="sidebar-live-container" class="space-y-3">
-          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
-          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
-          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
         </div>
       </div>
     </nav>
@@ -142,10 +142,10 @@
     <section class="max-w-7xl mx-auto px-8 py-10 grid gap-8 xl:grid-cols-[1fr_320px]">
       <div class="space-y-8">
         <div id="team-meta-grid" class="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div class="h-28 rounded-3xl bg-white/5 animate-pulse"></div>
-          <div class="h-28 rounded-3xl bg-white/5 animate-pulse"></div>
-          <div class="h-28 rounded-3xl bg-white/5 animate-pulse"></div>
-          <div class="h-28 rounded-3xl bg-white/5 animate-pulse"></div>
+          <div class="h-28 rounded-3xl bg-white/5 lsf-shimmer"></div>
+          <div class="h-28 rounded-3xl bg-white/5 lsf-shimmer"></div>
+          <div class="h-28 rounded-3xl bg-white/5 lsf-shimmer"></div>
+          <div class="h-28 rounded-3xl bg-white/5 lsf-shimmer"></div>
         </div>
 
         <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
@@ -165,9 +165,9 @@
           <div class="glass-card rounded-3xl border border-white/5 p-6 lg:p-8">
             <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Profile Signals</div>
             <div id="team-signals" class="grid gap-4">
-              <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
-              <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
-              <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
+              <div class="h-20 rounded-2xl bg-white/5 lsf-shimmer"></div>
+              <div class="h-20 rounded-2xl bg-white/5 lsf-shimmer"></div>
+              <div class="h-20 rounded-2xl bg-white/5 lsf-shimmer"></div>
             </div>
           </div>
         </div>
@@ -182,10 +182,10 @@
             <span class="material-symbols-outlined text-primary text-3xl">groups</span>
           </div>
           <div id="team-roster-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            <div class="h-28 rounded-2xl bg-white/5 animate-pulse"></div>
-            <div class="h-28 rounded-2xl bg-white/5 animate-pulse"></div>
-            <div class="h-28 rounded-2xl bg-white/5 animate-pulse"></div>
-            <div class="h-28 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-28 rounded-2xl bg-white/5 lsf-shimmer"></div>
+            <div class="h-28 rounded-2xl bg-white/5 lsf-shimmer"></div>
+            <div class="h-28 rounded-2xl bg-white/5 lsf-shimmer"></div>
+            <div class="h-28 rounded-2xl bg-white/5 lsf-shimmer"></div>
           </div>
         </div>
 
@@ -199,8 +199,8 @@
             <span class="material-symbols-outlined text-primary text-3xl">calendar_month</span>
           </div>
           <div id="team-schedule-list" class="space-y-3">
-            <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
-            <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-16 rounded-2xl bg-white/5 lsf-shimmer"></div>
+            <div class="h-16 rounded-2xl bg-white/5 lsf-shimmer"></div>
           </div>
         </div>
 
@@ -545,7 +545,10 @@
     renderTeam(profile);
   }
 
-  document.addEventListener("DOMContentLoaded", hydrateTeamProfile);
+  document.addEventListener("DOMContentLoaded", () => {
+    hydrateTeamProfile();
+    setInterval(hydrateTeamProfile, 120000);
+  });
 </script>
 <script>
   document.removeEventListener("DOMContentLoaded", hydrateTeamProfile);
@@ -715,6 +718,7 @@
 </script>
 </body>
 </html>
+
 
 
 

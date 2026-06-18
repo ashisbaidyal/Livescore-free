@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -110,9 +110,9 @@
       <div class="px-6 mb-8">
         <div class="text-[9px] font-black text-on-surface/30 uppercase tracking-[0.3em] mb-4">Live Feed</div>
         <div id="sidebar-live-container" class="space-y-3">
-          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
-          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
-          <div class="bg-white/5 rounded-lg p-3 h-16 animate-pulse"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
+          <div class="bg-white/5 rounded-lg p-3 h-16 lsf-shimmer"></div>
         </div>
       </div>
     </nav>
@@ -180,16 +180,16 @@
               <span class="material-symbols-outlined text-primary text-3xl">sports</span>
             </div>
             <div id="player-overview" class="space-y-4 text-sm text-on-surface/70 leading-relaxed">
-              <div class="h-40 rounded-2xl bg-white/5 animate-pulse"></div>
+              <div class="h-40 rounded-2xl bg-white/5 lsf-shimmer"></div>
             </div>
           </div>
 
           <div class="glass-card rounded-3xl border border-white/5 p-6 lg:p-8">
             <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Physical & Status</div>
             <div id="player-modules" class="grid gap-4">
-              <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
-              <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
-              <div class="h-20 rounded-2xl bg-white/5 animate-pulse"></div>
+              <div class="h-20 rounded-2xl bg-white/5 lsf-shimmer"></div>
+              <div class="h-20 rounded-2xl bg-white/5 lsf-shimmer"></div>
+              <div class="h-20 rounded-2xl bg-white/5 lsf-shimmer"></div>
             </div>
           </div>
         </div>
@@ -204,7 +204,7 @@
             <span class="material-symbols-outlined text-primary text-3xl">analytics</span>
           </div>
           <div id="player-stats-container" class="overflow-x-auto">
-            <div class="h-48 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-48 rounded-2xl bg-white/5 lsf-shimmer"></div>
           </div>
         </div>
 
@@ -218,8 +218,8 @@
             <span class="material-symbols-outlined text-primary text-3xl">newspaper</span>
           </div>
           <div id="player-news-container" class="grid gap-4 md:grid-cols-2">
-            <div class="h-32 rounded-2xl bg-white/5 animate-pulse"></div>
-            <div class="h-32 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-32 rounded-2xl bg-white/5 lsf-shimmer"></div>
+            <div class="h-32 rounded-2xl bg-white/5 lsf-shimmer"></div>
           </div>
         </div>
       </div>
@@ -228,7 +228,7 @@
         <!-- Team Card -->
         <div id="player-team-card" class="glass-card rounded-3xl border border-white/5 p-6">
           <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Current Team</div>
-          <div class="h-24 rounded-2xl bg-white/5 animate-pulse"></div>
+          <div class="h-24 rounded-2xl bg-white/5 lsf-shimmer"></div>
         </div>
         <div class="glass-card rounded-3xl border border-white/5 p-6">
           <div class="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">Navigate</div>
@@ -544,7 +544,10 @@
     renderPlayerProfile(payload);
   }
 
-  document.addEventListener("DOMContentLoaded", hydratePlayerProfile);
+  document.addEventListener("DOMContentLoaded", () => {
+    hydratePlayerProfile();
+    setInterval(hydratePlayerProfile, 120000);
+  });
 </script>
 <script>
   document.removeEventListener("DOMContentLoaded", hydratePlayerProfile);
@@ -679,6 +682,7 @@
 </script>
 </body>
 </html>
+
 
 
 

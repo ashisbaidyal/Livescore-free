@@ -302,6 +302,7 @@ class RealtimeManager {
         renderMatches(sortMatchesForDisplay(window._cachedResults, 'finished'));
       }
       if (typeof updateResultsSectionMeta === 'function') updateResultsSectionMeta(window._cachedResults);
+      renderTopResultsSection(window._cachedResults);
     } else if (message.type === 'upcoming') {
       const matches = Array.isArray(message?.data?.matches) ? message.data.matches : null;
       if (!matches) return;
@@ -309,6 +310,9 @@ class RealtimeManager {
       window._cachedUpcomingMatches = window._cachedUpcoming;
       if (typeof renderArenaSchedule === 'function' && document.getElementById('arena-schedule-container')) {
         renderArenaSchedule(window._cachedUpcoming.slice(0, 12));
+      }
+      if (typeof renderUpcomingNextUp === 'function' && document.getElementById('trending-series-container')) {
+        renderUpcomingNextUp(window._cachedUpcoming);
       }
     } else if (message.type === 'standings') {
       if (typeof window._lsfDataBus !== 'undefined') {
@@ -425,6 +429,9 @@ function broadcastLiveMatches(matches) {
     renderMatches(combineMatchPools(liveMatches, window._cachedUpcoming || window._cachedUpcomingMatches || [], window._cachedResults || []).slice(0, 18));
   }
   if (typeof renderSidebarLive === 'function') renderSidebarLive(liveMatches.slice(0, 5));
+  if (typeof renderUpcomingNextUp === 'function' && isCurrentPage('upcoming')) {
+    renderUpcomingNextUp(window._cachedUpcoming || window._cachedUpcomingMatches || []);
+  }
   if (typeof updateResultsSectionMeta === 'function' && (isResultsHubPage() || currentPageFilter === 'finished')) {
     updateResultsSectionMeta(window._cachedResults || []);
   }
@@ -1019,7 +1026,7 @@ function renderResultsLeagueFilter(matches = []) {
   const options = buildResultLeagueOptions(matches);
   resultsLeagueFilter.innerHTML = [
     '<option value="">All leagues</option>',
-    ...options.map((option) => `<option value="${option.slug}" data-sport="${option.sport}">${option.label}</option>`)
+    ...options.map((option) => `<option value="${escapeHtml(option.slug)}" data-sport="${escapeHtml(option.sport)}">${escapeHtml(option.label)}</option>`)
   ].join('');
   resultsLeagueFilter.disabled = !options.length;
   resultsLeagueFilter.value = currentLeagueFilter || '';
@@ -4219,7 +4226,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setupNewsletter();
       if (newsContainer) fetchNews(currentTab);
       if (headlinesContainer) fetchNews(currentTab);
-      if (playersContainer || document.getElementById('trending-players-container')) fetchPlayers(currentTab);
+      if (playersContainer || trendingPlayersContainer || document.getElementById('trending-players-container')) fetchPlayers(currentTab);
       if (leaguesContainer || topTierContainer) fetchLeagues && fetchLeagues(currentTab);
       if (recentResultsContainer) fetchRecentResults();
       if (document.getElementById("featured-match-analysis")) fetchFeaturedAnalysis();
@@ -6103,6 +6110,59 @@ async function fetchMatches(statusFilter = null, sidebarOnly = false) {
   }
 }
 
+// --- RENDER TOP RESULTS SECTION (results.html #featured-match-analysis) ---
+function renderTopResultsSection(results) {
+  const container = document.getElementById('featured-match-analysis');
+  if (!container) return;
+  const top = (results || []).filter(m => m.status === 'finished').slice(0, 6);
+  if (!top.length) { container.innerHTML = ''; return; }
+  container.innerHTML = top.map(m => {
+    const url = buildMatchUrl(m);
+    const homeScore = m.homeTeam?.score ?? '';
+    const awayScore = m.awayTeam?.score ?? '';
+    const homeWin = homeScore !== '' && awayScore !== '' && Number(homeScore) > Number(awayScore);
+    const awayWin = homeScore !== '' && awayScore !== '' && Number(awayScore) > Number(homeScore);
+    return `<a href="${url}" class="lsf-premium-card p-5 rounded-2xl flex flex-col gap-4 block group">
+      <div class="flex justify-between items-center">
+        <span class="text-[9px] font-black uppercase tracking-widest text-on-surface/40">${escapeHtml(m.league || m.sport || '')}</span>
+        <span class="text-[9px] font-black uppercase tracking-widest bg-white/8 text-white/40 px-2 py-0.5 rounded-full">FT</span>
+      </div>
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex flex-col items-center gap-2 flex-1">
+          <img src="${getSafeImageUrl(m.homeTeam?.logo, FALLBACK_LOGO)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
+          <span class="text-[9px] font-black uppercase tracking-tighter text-center line-clamp-2 ${homeWin ? 'text-on-surface' : 'text-on-surface/50'}">${escapeHtml(m.homeTeam?.name || '')}</span>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-black italic ${homeWin || awayWin ? 'text-on-surface' : 'text-on-surface/50'}">${escapeHtml(String(homeScore))} - ${escapeHtml(String(awayScore))}</div>
+        </div>
+        <div class="flex flex-col items-center gap-2 flex-1">
+          <img src="${getSafeImageUrl(m.awayTeam?.logo, FALLBACK_LOGO)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
+          <span class="text-[9px] font-black uppercase tracking-tighter text-center line-clamp-2 ${awayWin ? 'text-on-surface' : 'text-on-surface/50'}">${escapeHtml(m.awayTeam?.name || '')}</span>
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+// --- RENDER UPCOMING NEXT-UP SIDEBAR (upcoming.html) ---
+function renderUpcomingNextUp(matches) {
+  const container = document.getElementById('trending-series-container');
+  if (!container) return;
+  const upcoming = (matches || []).filter(m => m.status === 'upcoming').slice(0, 5);
+  if (!upcoming.length) { container.innerHTML = '<p class="text-[10px] text-on-surface/30 uppercase tracking-widest font-black text-center py-4">No upcoming fixtures</p>'; return; }
+  container.innerHTML = upcoming.map(m => {
+    const url = buildMatchUrl(m);
+    const borderColor = m.sport === 'soccer' ? 'border-primary' : m.sport === 'basketball' ? 'border-secondary' : 'border-outline-variant';
+    return `<a href="${url}" class="flex items-center justify-between p-4 bg-surface-container-lowest border-l-2 ${borderColor} rounded-r-lg hover:translate-x-1 transition-transform gap-3 group">
+      <div class="flex-1 min-w-0">
+        <p class="text-[9px] uppercase font-black text-on-surface/40 tracking-widest mb-0.5">${escapeHtml(m.league || m.sport)}</p>
+        <p class="font-black text-xs truncate">${escapeHtml(m.homeTeam?.name || '')} vs ${escapeHtml(m.awayTeam?.name || '')}</p>
+      </div>
+      <span class="text-[9px] font-black text-on-surface/40 uppercase tracking-widest shrink-0">${escapeHtml(m.time || '')}</span>
+    </a>`;
+  }).join('');
+}
+
 // --- RENDER SIDEBAR LIVE ---
 function renderSidebarLive(matches) {
   if (!sidebarLiveContainer) return;
@@ -6754,71 +6814,70 @@ function renderMatches(matches) {
     const isFinished = match.status === 'finished';
 
     const statusLabel = isLive
-      ? `<span class="flex items-center gap-1.5 bg-primary text-white px-2.5 py-1 rounded-sm text-[9px] font-black italic">
+      ? `<span class="lsf-live-badge text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE
          </span>`
       : isFinished
-        ? `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">FINAL</span>`
-        : `<span class="flex items-center gap-1.5 bg-white/10 text-white/50 px-2.5 py-1 rounded-sm text-[9px] font-black italic">UPCOMING</span>`;
+        ? `<span class="flex items-center gap-1.5 bg-white/10 text-white/40 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">FINAL</span>`
+        : `<span class="flex items-center gap-1.5 bg-white/8 text-white/35 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">UPCOMING</span>`;
 
     const detailUrl = buildMatchUrl(match);
 
     return `
-      <a href="${detailUrl}" class="block group h-full">
-        <div class="bg-surface-container border border-white/5 p-6 rounded-lg flex flex-col gap-6  
-                    hover:border-primary/50 transition-all shadow-2xl relative overflow-hidden h-full">
-          
-          ${isLive ? '<div class="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full pointer-events-none"></div>' : ''}
-          
+      <a href="${detailUrl}" class="block group h-full lsf-card-in">
+        <div class="lsf-premium-card ${isLive ? 'lsf-premium-card--live' : ''} p-6 rounded-2xl flex flex-col gap-6 relative overflow-hidden h-full">
+
+          ${isLive ? '<div class="absolute inset-0 bg-gradient-to-br from-primary/4 via-transparent to-transparent pointer-events-none"></div>' : ''}
+
           <div class="flex justify-between items-center relative">
             <div class="flex items-center gap-2">
               <span class="${isLive ? 'text-primary' : 'text-on-surface/50'} lsf-pretext-card-meta font-black italic text-[10px] tracking-widest truncate max-w-[150px]"
                     data-pretext-fit
                     data-pretext-mode="single"
                     data-pretext-min="8">
-                ${currentTab === 'all' ? `<span class="bg-white/10 px-1.5 py-0.5 rounded text-[8px] mr-1.5 text-on-surface/60">${match.sport.toUpperCase()}</span>` : ''}${match.league || 'Event'}
+                ${currentTab === 'all' ? `<span class="bg-white/10 px-1.5 py-0.5 rounded text-[8px] mr-1.5 text-on-surface/60">${escapeHtml(match.sport.toUpperCase())}</span>` : ''}${escapeHtml(match.league || 'Event')}
               </span>
             </div>
             ${statusLabel}
           </div>
-          
+
           <div class="flex justify-between items-center relative flex-1">
             <div class="flex flex-col items-center gap-3 w-1/3">
-              <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center font-black italic">
-                <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" alt="${match.homeTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
+              <div class="w-14 h-14 bg-white/5 rounded-2xl ring-1 ring-white/8 flex items-center justify-center overflow-hidden">
+                <img src="${getSafeImageUrl(match.homeTeam.logo, FALLBACK_LOGO)}" alt="${escapeHtml(match.homeTeam.name)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
               </div>
               <span class="lsf-pretext-card-title text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2"
                     data-pretext-fit
                     data-pretext-mode="block"
                     data-pretext-max-lines="2"
                     data-pretext-min="9">
-                ${match.homeTeam.name}
+                ${escapeHtml(match.homeTeam.name)}
               </span>
             </div>
-            
+
             <div class="flex flex-col items-center justify-center">
               ${isLive || isFinished
-        ? `<span class="lsf-pretext-card-title text-4xl font-black italic ${isLive ? 'text-primary' : 'text-on-surface/50'}"
+        ? `<span class="lsf-pretext-card-title ${isLive ? 'text-5xl lsf-gradient-text-primary' : 'text-4xl text-on-surface/50'} font-black italic"
                  data-pretext-fit
                  data-pretext-mode="single"
-                 data-pretext-min="18">${match.homeTeam.score} - ${match.awayTeam.score}</span>`
+                 data-pretext-min="18">${escapeHtml(String(match.homeTeam.score))} - ${escapeHtml(String(match.awayTeam.score))}</span>`
         : `<span class="text-4xl font-black italic text-on-surface/20">VS</span>`
       }
               <span class="text-[10px] font-black text-on-surface-variant mt-2 tracking-widest uppercase truncate max-w-[80px]">
                 ${match.time}
               </span>
             </div>
-            
+
             <div class="flex flex-col items-center gap-3 w-1/3">
-              <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center font-black italic">
-                <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" alt="${match.awayTeam.name}" class="w-8 h-8 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
+              <div class="w-14 h-14 bg-white/5 rounded-2xl ring-1 ring-white/8 flex items-center justify-center overflow-hidden">
+                <img src="${getSafeImageUrl(match.awayTeam.logo, FALLBACK_LOGO)}" alt="${escapeHtml(match.awayTeam.name)}" class="w-10 h-10 object-contain" onerror="this.src='${FALLBACK_LOGO}'">
               </div>
               <span class="lsf-pretext-card-title text-[10px] font-black uppercase italic tracking-tighter text-center line-clamp-2"
                     data-pretext-fit
                     data-pretext-mode="block"
                     data-pretext-max-lines="2"
                     data-pretext-min="9">
-                ${match.awayTeam.name}
+                ${escapeHtml(match.awayTeam.name)}
               </span>
             </div>
           </div>

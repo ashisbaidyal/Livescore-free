@@ -1,6 +1,7 @@
 import {
   buildFallbackUrls,
   buildFeedMeta,
+  checkRateLimit,
   FALLBACK_LOGO,
   fetchJson,
   fetchText,
@@ -17,7 +18,8 @@ import {
   normalizeScoreboardEvent,
   normalizeSportParam,
   parseDateRange,
-  siteApiUrl
+  siteApiUrl,
+  validateParam
 } from "./_shared.js";
 
 function buildInternalApiUrl(request, path, params = {}) {
@@ -1769,8 +1771,13 @@ function jsonMatchResponse(payload, fallbackCacheSeconds = 15, status = 200) {
 
 export async function onRequest(context) {
   const { request } = context;
+  const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!checkRateLimit(clientIp, 'match', 60, 60000)) {
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': '60' } });
+  }
   const url = new URL(request.url);
-  const id = url.searchParams.get("id");
+  const rawId = url.searchParams.get("id");
+  const id = validateParam(rawId, /^[a-zA-Z0-9._\-]{1,64}$/);
   const sport = normalizeSportParam(url.searchParams.get("sport") || "soccer", url.searchParams.get("league") || "");
   const league = normalizeLeagueParam(url.searchParams.get("league") || "", sport || getDefaultLeague("soccer"));
 

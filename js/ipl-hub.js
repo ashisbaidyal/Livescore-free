@@ -355,8 +355,9 @@
             league: IPL_CONTEXT.league,
             sport: IPL_CONTEXT.sport
           }, IPL_CONTEXT.sport, IPL_CONTEXT.league);
+          const rowRank = index + 1;
           return `
-            <a href="${teamUrl}" class="grid grid-cols-[40px_minmax(0,1fr)_42px_42px_42px_48px_56px] gap-3 border-b border-white/5 px-4 py-4 text-[10px] font-black uppercase tracking-[0.18em] transition-colors hover:bg-white/5 last:border-b-0">
+            <a href="${teamUrl}" class="lsf-standings-row grid grid-cols-[40px_minmax(0,1fr)_42px_42px_42px_48px_56px] gap-3 border-b border-white/5 px-4 py-4 text-[10px] font-black uppercase tracking-[0.18em] last:border-b-0 ${rowRank <= 3 ? 'lsf-standings-rank-top3' : ''}">
               <span class="text-on-surface/45">${iplEscape(entry?.stats?.find((stat) => stat.name === "rank")?.displayValue || entry?.stats?.find((stat) => stat.name === "rank")?.value || index + 1)}</span>
               <span class="min-w-0 flex items-center gap-3">
                 <img src="${iplEscape(team.logos?.[0]?.href || IPL_FALLBACK)}" alt="" class="h-8 w-8 rounded-full bg-white/5 object-contain p-1" onerror="this.src='${IPL_FALLBACK}'"/>
