@@ -65,6 +65,25 @@ function sortMatches(left, right) {
   return new Date(left.date) - new Date(right.date);
 }
 
+function isFreshLiveFeedMatch(match = {}, now = new Date()) {
+  if (match.status === "live") return true;
+
+  const matchTime = new Date(match.date || "");
+  if (Number.isNaN(matchTime.getTime())) return false;
+
+  const hoursFromNow = (matchTime.getTime() - now.getTime()) / 36e5;
+
+  if (match.status === "upcoming") {
+    return hoursFromNow >= -6 && hoursFromNow <= 168;
+  }
+
+  if (match.status === "finished") {
+    return hoursFromNow >= -36 && hoursFromNow <= 1;
+  }
+
+  return false;
+}
+
 export async function onRequest(context) {
   const { request } = context;
   const clientIp = request.headers.get("CF-Connecting-IP") || "unknown";
@@ -92,7 +111,9 @@ export async function onRequest(context) {
       })
     );
 
-    const matches = dedupeById(results.flat()).sort(sortMatches);
+    const allMatches = dedupeById(results.flat());
+    const now = new Date();
+    const matches = allMatches.filter((match) => isFreshLiveFeedMatch(match, now)).sort(sortMatches);
 
     // Calculate TTL based on match statuses
     const hasLive = matches.some(m => m.status === "live");
@@ -106,6 +127,7 @@ export async function onRequest(context) {
           league: normalizeLeagueParam(leagueParam),
           endpoints: endpoints.length,
           hasLive,
+          staleRemoved: Math.max(0, allMatches.length - matches.length),
           ...buildFeedMeta()
         }
       },
